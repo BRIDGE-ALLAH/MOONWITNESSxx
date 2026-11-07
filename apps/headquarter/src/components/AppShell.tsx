@@ -66,7 +66,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <aside className={cn('w-72 shrink-0 border-r border-acid-lime/20 bg-panel-charcoal/40 p-4', !navOpen && 'hidden md:block')}>
           <Link href="/" className="block border-2 border-acid-lime/40 p-3">
             <div className="font-display text-xl uppercase leading-none">MOONWITNESS</div>
-            <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">// RIOTWORKS</div>
+            <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{'// RIOTWORKS'}</div>
           </Link>
           <div className="mt-4"><Badge variant="lime">{t.demo}</Badge></div>
           <nav className="mt-6 space-y-5">
