@@ -5,6 +5,9 @@ export type SafetyViolationCode =
   | 'approval_missing'
   | 'effect_incomplete'
   | 'cross_tenant_effect'
+  | 'duplicate_effect_start'
+  | 'multiple_effect_terminals'
+  | 'effect_terminal_actor_mismatch'
 
 export interface SafetyTraceEvent {
   sequence: number
@@ -42,7 +45,7 @@ export function diagnoseSafetyTrace(trace: readonly SafetyTraceEvent[]): SafetyF
   const decisions = new Map<string, SafetyTraceEvent>()
   const approvals = new Map<string, number>()
   const started = new Map<string, SafetyTraceEvent>()
-  const terminal = new Set<string>()
+  const terminal = new Map<string, SafetyTraceEvent>()
 
   trace.forEach((event, index) => {
     if (event.sequence !== index) {
@@ -66,11 +69,15 @@ export function diagnoseSafetyTrace(trace: readonly SafetyTraceEvent[]): SafetyF
       if (decision?.approvalRequired && (approvals.get(event.actionId) ?? Number.POSITIVE_INFINITY) >= event.sequence) {
         findings.push({ code: 'approval_missing', actionId: event.actionId, sequence: event.sequence })
       }
+      if (started.has(event.actionId)) findings.push({ code: 'duplicate_effect_start', actionId: event.actionId, sequence: event.sequence })
       started.set(event.actionId, event)
     }
     if (event.kind === 'effect.completed' || event.kind === 'effect.failed') {
-      if (!started.has(event.actionId)) findings.push({ code: 'effect_without_prior_allow', actionId: event.actionId, sequence: event.sequence })
-      terminal.add(event.actionId)
+      const start = started.get(event.actionId)
+      if (!start) findings.push({ code: 'effect_without_prior_allow', actionId: event.actionId, sequence: event.sequence })
+      else if (start.actorId !== event.actorId) findings.push({ code: 'effect_terminal_actor_mismatch', actionId: event.actionId, sequence: event.sequence })
+      if (terminal.has(event.actionId)) findings.push({ code: 'multiple_effect_terminals', actionId: event.actionId, sequence: event.sequence })
+      terminal.set(event.actionId, event)
     }
   })
   for (const [actionId, event] of started) {
