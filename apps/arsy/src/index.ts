@@ -1,56 +1,41 @@
-import Fastify from 'fastify'
-import Zod from 'zod'
-import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
-import { pool, setupDatabase } from './db.ts'
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { createApp } from './app.ts'
+import { createDatabasePool } from './db.ts'
 import { resolveServerConfig } from './config.ts'
-// ARSY application composition root. Core governance primitives live in @riotworks/arsy-core.
 
-const app = Fastify({
-  logger: true,
-})
+export { createApp }
 
-app.setValidatorCompiler(validatorCompiler)
-app.setSerializerCompiler(serializerCompiler)
+export async function startServer() {
+  const app = createApp({ databasePool: createDatabasePool() })
 
-const typedApp = app.withTypeProvider<ZodTypeProvider>()
+  try {
+    await app.listen(resolveServerConfig())
+  } catch (error) {
+    await app.close().catch(() => undefined)
+    throw error
+  }
 
-// Example route
-typedApp.get(
-  '/',
-  {
-    schema: {
-      response: {
-        200: Zod.object({
-          status: Zod.string(),
-          message: Zod.string(),
-        }),
-      },
-    },
-  },
-  async () => {
-    return {
-      status: 'ok',
-      message: 'ARSY Command Center is running',
+  const shutdown = async () => {
+    try {
+      await app.close()
+    } catch (error) {
+      app.log.error({ err: error }, 'ARSY graceful shutdown failed')
+      process.exitCode = 1
     }
   }
-)
 
-// Database connector setup
-setupDatabase(app)
+  process.once('SIGTERM', shutdown)
+  process.once('SIGINT', shutdown)
+  return app
+}
 
-typedApp.get('/health/live', async () => ({ status: 'alive' }))
-typedApp.get('/health/ready', async () => {
-  await pool.query('SELECT 1')
-  return { status: 'ready' }
-})
-
-const { host, port } = resolveServerConfig()
-app.listen({ host, port })
-  .then(() => app.log.info({ host, port }, 'ARSY Command Center is listening'))
-  .catch((error) => {
-    app.log.error({ err: error }, 'ARSY failed to start')
-    process.exit(1)
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
+) {
+  startServer().catch((error: unknown) => {
+    console.error('ARSY startup failed:', error)
+    process.exitCode = 1
   })
-
-export { app }
+}
