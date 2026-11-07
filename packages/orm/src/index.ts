@@ -179,17 +179,7 @@ export type OrmErrorCode =
   | "ORM_INVALID_ENVIRONMENT"
   | "ORM_PROVIDER_CAPABILITY_MISSING";
 
-export class OrmError extends Error {
-  readonly code: OrmErrorCode;
-  readonly details?: Readonly<Record<string, unknown>>;
-
-  constructor(code: OrmErrorCode, message: string, details?: Readonly<Record<string, unknown>>) {
-    super(message);
-    this.name = "OrmError";
-    this.code = code;
-    this.details = details;
-  }
-}
+export { OrmError } from "./errors.js";
 
 export type DomainOperator =
   | "eq" | "ne" | "gt" | "gte" | "lt" | "lte"
