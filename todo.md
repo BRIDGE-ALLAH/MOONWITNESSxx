@@ -1058,3 +1058,14 @@ See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract c
 - [x] Make DB readiness return 503 and require DATABASE_URL when creating the production pool.
 - [x] Route SIGTERM/SIGINT through one idempotent app.close() operation so Fastify onClose closes the pool.
 - [ ] Verify current-head Repository CI, full workspace build and CodeQL before merge.
+
+
+---
+
+## Product integrity Phases 36–38 (2026-11-08)
+
+- [x] Phase 36: ARSY app factory, validated runtime configuration, cached DB readiness, typed Fastify lifecycle, health semantics and local-container hardening.
+- [x] Phase 37: persistent, localized, accessible Headquarter prototype/data disclosure in the topbar.
+- [x] Phase 38: DevX workspace-contract, route/navigation and release-preflight audit with real-repository tests.
+- [ ] Merge only after Repository CI, full workspace typecheck/build, CodeQL and both container-image builds pass on the current head.
+- [ ] Production release remains blocked until release publisher, deployment provider, secret management, backups, rollback and production smoke tests are verified.
