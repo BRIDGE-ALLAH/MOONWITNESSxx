@@ -16,12 +16,13 @@ export interface OperatorSessionConfig {
 }
 
 export function getOperatorSessionConfig(env: NodeJS.ProcessEnv = process.env): OperatorSessionConfig | null {
-  const operatorId = env.ARSY_OPERATOR_ID?.trim() || 'primary-owner'
+  const operatorId = env.ARSY_OPERATOR_ID?.trim()
   const password = env.HEADQUARTER_OPERATOR_PASSWORD?.trim()
   const secret = env.HEADQUARTER_SESSION_SECRET?.trim()
   const publicOrigin = env.HEADQUARTER_PUBLIC_ORIGIN?.trim()
 
-  if (!password || password.length < 16 || !secret || Buffer.byteLength(secret, 'utf8') < 32 || !publicOrigin) return null
+  if (!operatorId || operatorId.length > 128 || !password || password.length < 16 ||
+      !secret || Buffer.byteLength(secret, 'utf8') < 32 || !publicOrigin) return null
 
   try {
     const parsedOrigin = new URL(publicOrigin)
