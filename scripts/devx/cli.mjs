@@ -22,6 +22,7 @@ import {
   verifyFlightRecorder,
 } from './lib.mjs'
 import { assessAutonomyBudget, compileIncidentRegression, planAdaptiveSwarm } from './frontier.mjs'
+import { runProductAudit } from './product-audit.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const [command = 'help', ...args] = process.argv.slice(2)
@@ -195,6 +196,24 @@ async function incidentCompile() {
   const report = compileIncidentRegression({ incident: input.incident, now: input.now })
   console.log(JSON.stringify(report, null, 2))
 }
+async function productAudit() {
+  const report = await runProductAudit({ root })
+  if (has('json')) console.log(JSON.stringify(report, null, 2))
+  else {
+    const sections = [
+      ['Workspace contracts', report.workspace],
+      ['Headquarter experience', report.experience],
+      ['Release readiness', report.release],
+    ]
+    console.log(sections.map(([title, section]) => [
+      title + ': ' + (section.ok === false || section.ready === false ? 'BLOCKED' : 'PASS'),
+      ...section.findings.map((item) => '- [' + item.severity + '] ' + item.id + ': ' + item.message),
+    ].join('\\n')).join('\\n\\n'))
+    console.log('Release readiness: ' + (report.readyForRelease ? 'READY' : 'NOT READY'))
+  }
+  if (!report.ok || !report.release.ready) process.exitCode = 1
+}
+
 function help() {
   console.log([
     'MOONWITNESS DX',
@@ -217,6 +236,7 @@ function help() {
     '  pnpm devx swarm-plan --input=.moonwitness/swarm.json',
     '  pnpm devx autonomy-budget --input=.moonwitness/autonomy.json',
     '  pnpm devx incident-compile --input=.moonwitness/incident.json',
+    '  pnpm devx product-audit [--json]',
     '',
     'Collision plans use { "agents": [{ "id": "agent-a", "writePaths": ["packages/foo"] }] }.',
     'Flight records are local evidence, not signed or tamper-proof attestations.',
@@ -242,6 +262,7 @@ try {
   else if (command === 'swarm-plan') await swarmPlan()
   else if (command === 'autonomy-budget') await autonomyBudget()
   else if (command === 'incident-compile') await incidentCompile()
+  else if (command === 'product-audit') await productAudit()
   else help()
 } catch (error) {
   console.error(error.message)
