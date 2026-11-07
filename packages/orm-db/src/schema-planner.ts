@@ -1,9 +1,7 @@
 import { createHash } from "node:crypto";
-import type { FieldDefinition, RegistrySnapshot } from "@riotworks/orm";
+import type { FieldDefinition, FieldMap, RegistrySnapshot } from "@riotworks/orm";
 import type {
-  ColumnSnapshot,
   DatabaseSnapshot,
-  FieldMap,
   SchemaOperation,
 } from "@riotworks/orm-db-adaptor";
 import type {
@@ -99,7 +97,7 @@ function literalDefault(field: FieldDefinition, provider: "postgres" | "sqlite")
 }
 
 function normalizeType(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, "").replace("character varying", "varchar");
+  return value.toLowerCase().replace(/\s+/g, "").replace("charactervarying", "varchar");
 }
 
 function operation(
