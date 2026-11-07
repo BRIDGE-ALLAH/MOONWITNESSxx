@@ -119,19 +119,20 @@ test('production login identity requires a signed assertion from the configured 
   const now = Date.parse('2026-11-08T00:00:00.000Z')
   const ip = '198.51.100.42'
   const timestamp = String(Math.floor(now / 1000))
-  const signature = createHmac('sha256', secret).update(`${ip}.${timestamp}`).digest('hex')
+  const signature = createHmac('sha256', secret).update(`${ip}.${timestamp}.1`).digest('hex')
   const signed = new Request('https://hq.example/login', {
     headers: {
       'x-forwarded-for': '203.0.113.99',
       'x-mw-client-ip': ip,
       'x-mw-client-timestamp': timestamp,
+      'x-mw-proxy-hops': '1',
       'x-mw-client-signature': signature,
     },
   })
   assert.equal(resolveTrustedClientNetworkIdentity(signed, 1, secret, 'production', now), ip)
   assert.equal(resolveTrustedClientNetworkIdentity(signed, 0, secret, 'production', now), null)
   const spoofed = new Request('https://hq.example/login', {
-    headers: { 'x-forwarded-for': ip, 'x-mw-client-ip': ip, 'x-mw-client-timestamp': timestamp, 'x-mw-client-signature': '0'.repeat(64) },
+    headers: { 'x-forwarded-for': ip, 'x-mw-client-ip': ip, 'x-mw-client-timestamp': timestamp, 'x-mw-proxy-hops': '1', 'x-mw-client-signature': '0'.repeat(64) },
   })
   assert.equal(resolveTrustedClientNetworkIdentity(spoofed, 1, secret, 'production', now), null)
   assert.equal(resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
