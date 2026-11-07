@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHmac } from 'node:crypto'
 import { isIP } from 'node:net'
 
 export type LoginLimitAction = 'check' | 'failure' | 'success'
@@ -25,28 +25,30 @@ function canonicalIp(address: string): string | null {
   }
 }
 
-function hashNetwork(address: string): string {
-  return createHash('sha256').update(`ip:${address}`).digest('hex')
+function hashNetwork(address: string, secret: string): string {
+  return createHmac('sha256', secret).update('moonwitness-login-network-v1:').update(address).digest('hex')
 }
 
 export function resolveLoginNetworkHash(request: Request, env: NodeJS.ProcessEnv = process.env): string | null {
-  const hops = Number(env.HEADQUARTER_TRUSTED_PROXY_HOPS)
+  const secret = env.HEADQUARTER_SESSION_SECRET?.trim()
+  if (!secret || Buffer.byteLength(secret, 'utf8') < 32) return null
+  const trustedSingleProxy = env.HEADQUARTER_TRUSTED_PROXY_HOPS === '1'
   if (env.NODE_ENV === 'production') {
-    if (hops !== 1) return null
+    if (!trustedSingleProxy) return null
     const forwarded = request.headers.get('x-forwarded-for')?.trim()
     if (!forwarded || forwarded.includes(',')) return null
     const address = canonicalIp(forwarded)
-    return address ? hashNetwork(address) : null
+    return address ? hashNetwork(address, secret) : null
   }
 
-  if (hops === 1) {
+  if (trustedSingleProxy) {
     const forwarded = request.headers.get('x-forwarded-for')?.trim()
     if (forwarded && !forwarded.includes(',')) {
       const address = canonicalIp(forwarded)
-      if (address) return hashNetwork(address)
+      if (address) return hashNetwork(address, secret)
     }
   }
-  return createHash('sha256').update('local-development-network').digest('hex')
+  return hashNetwork('local-development-network', secret)
 }
 
 export async function requestSharedLoginLimit(
