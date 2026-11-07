@@ -119,7 +119,7 @@ function allowedPayoutTransitions(status: PayoutStatus, paidAt: Date | string | 
   if (status === 'pending') return ['paid', 'failed', 'disputed']
   if (status === 'paid') return ['reversed', 'disputed']
   if (status === 'failed') return ['disputed']
-  if (status === 'disputed') return paidAt === null ? ['paid', 'failed'] : ['paid', 'failed', 'reversed']
+  if (status === 'disputed') return paidAt === null ? ['paid', 'failed'] : ['paid', 'reversed']
   return []
 }
 
@@ -290,7 +290,10 @@ export class PayoutRepository {
             (p.status = 'pending' AND $3 IN ('paid', 'failed', 'disputed')) OR
             (p.status = 'paid' AND $3 IN ('reversed', 'disputed')) OR
             (p.status = 'failed' AND $3 = 'disputed') OR
-            (p.status = 'disputed' AND ($3 IN ('paid', 'failed') OR ($3 = 'reversed' AND p.paid_at IS NOT NULL)))
+            (p.status = 'disputed' AND (
+              (($3 IN ('paid', 'failed')) AND p.paid_at IS NULL) OR
+              ($3 = 'reversed' AND p.paid_at IS NOT NULL)
+            ))
           )
         RETURNING p.*, (SELECT status FROM current) AS from_status
       ), history AS (
