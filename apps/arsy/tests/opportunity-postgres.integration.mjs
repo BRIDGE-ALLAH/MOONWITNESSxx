@@ -311,10 +311,23 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     }
     const fee = await finance.create(ownerId, ownerId, feeInput)
     assert.ok(fee)
-    assert.equal((await finance.summary(ownerId))[0].pending_minor, '5500')
+    const taxReserveInput = {
+      productId: product.id,
+      eventType: 'tax-reserve',
+      amountMinor: '300',
+      currency: 'IDR',
+      occurredAt: new Date().toISOString(),
+      source: 'Isolated PostgreSQL tax reserve fixture',
+      idempotencyKey: `tax-reserve-${randomUUID()}`,
+      metadata: { fixture: true },
+    }
+    const taxReserve = await finance.create(ownerId, ownerId, taxReserveInput)
+    assert.ok(taxReserve)
+    assert.equal((await finance.summary(ownerId))[0].pending_minor, '5800')
 
     assert.ok(await finance.reconcile(ownerId, ownerId, gross.event.id, 'verified', 'Matched to the isolated test statement.', 'https://example.com/gross-receipt'))
     assert.ok(await finance.reconcile(ownerId, ownerId, fee.event.id, 'verified', 'Matched to the isolated test fee statement.', 'https://example.com/platform-fee'))
+    assert.ok(await finance.reconcile(ownerId, ownerId, taxReserve.event.id, 'verified', 'Matched to the isolated tax reserve statement.', 'https://example.com/tax-reserve'))
 
     // Reconnect again so product versions and financial events are read from PostgreSQL.
     await pool.end()
@@ -329,12 +342,13 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(reloadedOpportunity.title, revisedInput.title)
     assert.equal(reloadedOpportunity.version, 4)
     const financialEvents = await persistedFinance.list(ownerId)
-    assert.equal(financialEvents.length, 2)
+    assert.equal(financialEvents.length, 3)
     assert.equal(financialEvents.find((event) => event.id === gross.event.id)?.amountMinor, '5000')
     const [summary] = await persistedFinance.summary(ownerId)
     assert.equal(summary.currency, 'IDR')
     assert.equal(summary.gross_receipts_minor, '5000')
     assert.equal(summary.deductions_minor, '500')
+    assert.equal(summary.tax_reserve_minor, '300')
     assert.equal(summary.net_contribution_minor, '4500')
     assert.equal(summary.pending_minor, '0')
 
