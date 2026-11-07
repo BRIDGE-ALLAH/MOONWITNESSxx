@@ -9,7 +9,8 @@
     "build": "fastify build",
     "start": "fastify start --listen 0.0.0.0:3000",
     "type-check": "tsc --noEmit",
-    "lint": "../../packages/lint/node_modules/.bin/eslint src --config ../../packages/lint/eslint.config.mjs --max-warnings 0"
+    "lint": "../../packages/lint/node_modules/.bin/eslint src --config ../../packages/lint/eslint.config.mjs --max-warnings 0",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
   },
   "dependencies": {
     "@riotworks/arsy-core": "workspace:*",
