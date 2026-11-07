@@ -29,8 +29,12 @@ type PortfolioMetrics = {
   }
 }
 
-function localInput(daysAgo: number) {
+function localInput(daysAgo: number, includeCurrentMinute = false) {
   const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
+  // The API uses an end-exclusive [from, to) window. Round the default
+  // "to" value up to the next minute so records created during this minute
+  // are not silently excluded by the datetime-local minute precision.
+  if (includeCurrentMinute) date.setMinutes(date.getMinutes() + 1, 0, 0)
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
 }
 function formatPercent(value: string | null) {
@@ -46,7 +50,7 @@ export function AftershockBoard() {
   const [summary, setSummary] = useState<Summary[]>([])
   const [metrics, setMetrics] = useState<PortfolioMetrics | null>(null)
   const [from, setFrom] = useState(() => localInput(30))
-  const [to, setTo] = useState(() => localInput(0))
+  const [to, setTo] = useState(() => localInput(0, true))
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
