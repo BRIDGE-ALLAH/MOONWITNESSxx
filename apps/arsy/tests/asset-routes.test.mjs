@@ -271,6 +271,59 @@ test('asset upload rejects unsupported media and malformed base64 before storage
   }
 })
 
+test('trusted inspection principals can write only qualified inspection records', async () => {
+  const database = createPool()
+  const storage = createMemoryStorage()
+  const inspectorId = 'independent-rights-reviewer'
+  const inspectorToken = 'trusted-inspection-token-that-is-at-least-32-characters'
+  const trustedEnv = {
+    ...env,
+    ARSY_INSPECTION_PRINCIPALS: JSON.stringify({ [inspectorId]: inspectorToken }),
+  }
+  const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env: trustedEnv })
+  const bytes = Buffer.from('trusted reviewer asset fixture')
+  try {
+    const upload = await app.inject({
+      method: 'POST', url: '/api/v1/assets',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'trusted-inspector-upload-0001' },
+      payload: { productId, productVersion, fileName: 'review.txt', mediaType: 'text/plain', contentBase64: bytes.toString('base64'), provenance },
+    })
+    assert.equal(upload.statusCode, 201)
+
+    const forged = await app.inject({
+      method: 'POST', url: `/api/v1/assets/${assetId}/inspections`,
+      headers: { 'x-arsy-operator-token': token },
+      payload: {
+        inspectionType: 'rights', status: 'pass', inspectionSource: 'independent-review',
+        rationale: 'An operator cannot self-assert independent review.',
+        findings: [], evidence: [{ label: 'Operator supplied reference', reference: 'manual://self-attestation' }],
+      },
+    })
+    assert.equal(forged.statusCode, 403)
+    assert.equal(forged.json().error.code, 'TRUSTED_INSPECTOR_REQUIRED')
+
+    const trusted = await app.inject({
+      method: 'POST', url: `/api/v1/assets/${assetId}/inspections`,
+      headers: { 'x-arsy-inspector-id': inspectorId, 'x-arsy-inspector-token': inspectorToken },
+      payload: {
+        inspectionType: 'rights', status: 'pass', inspectionSource: 'independent-review',
+        rationale: 'The trusted reviewer inspected the source and recorded the evidence.',
+        findings: [], evidence: [{ label: 'Independent reviewer report', reference: 'review://rights/001' }],
+      },
+    })
+    assert.equal(trusted.statusCode, 201)
+    assert.equal(trusted.json().data.reviewedBy, inspectorId)
+
+    const deniedElsewhere = await app.inject({
+      method: 'GET', url: '/api/v1/assets',
+      headers: { 'x-arsy-inspector-id': inspectorId, 'x-arsy-inspector-token': inspectorToken },
+    })
+    assert.equal(deniedElsewhere.statusCode, 401)
+  } finally {
+    await app.close()
+  }
+})
+
 test('inspection records preserve source type and readiness fails closed until all checks pass', async () => {
   const database = createPool()
   const storage = createMemoryStorage()
