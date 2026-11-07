@@ -118,19 +118,43 @@ export class ListingRepository {
             'providerReference', $3, 'evidenceUrl', $6, 'recordedAt', now(), 'recordedBy', $5
           ))
         WHERE owner_id = $1 AND id = $2 AND status IN ('ready', 'submitted')
+          AND EXISTS (
+            SELECT 1 FROM arsy_channels c
+            WHERE c.id = arsy_listings.channel_id AND c.capability = 'C1' AND c.enabled = true
+          )
+          AND EXISTS (
+            SELECT 1
+            FROM arsy_product_versions pv
+            JOIN arsy_products p ON p.id = pv.product_id
+            WHERE pv.id = arsy_listings.product_version_id
+              AND p.owner_id = $1 AND p.lifecycle_state IN ('ready', 'listed')
+              AND pv.version = (SELECT MAX(latest.version) FROM arsy_product_versions latest WHERE latest.product_id = p.id)
+          )
         RETURNING *
+      ), product AS (
+        UPDATE arsy_products p SET lifecycle_state = 'listed', updated_at = now(), updated_by = $5
+        WHERE p.owner_id = $1 AND p.id = (
+          SELECT pv.product_id FROM arsy_product_versions pv JOIN changed ON changed.product_version_id = pv.id LIMIT 1
+        )
+        RETURNING p.id
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
         SELECT $7, $1, 'listing', changed.id, 'manual-publication-receipt-recorded', $5,
           jsonb_build_object('providerReference', $3, 'evidenceUrl', $6, 'publishedAt', $4)
         FROM changed
+      ), product_audited AS (
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $8, $1, 'product', product.id, 'listed', $5,
+          jsonb_build_object('listingId', changed.id)
+        FROM product CROSS JOIN changed
       )
       SELECT ${columns} FROM changed l
       JOIN arsy_channels c ON c.id = l.channel_id
       JOIN arsy_product_versions pv ON pv.id = l.product_version_id
       JOIN arsy_products p ON p.id = pv.product_id`,
-      [ownerId, id, providerReference, publishedAt, actorId, evidenceUrl, randomUUID()],
+      [ownerId, id, providerReference, publishedAt, actorId, evidenceUrl, randomUUID(), randomUUID()],
     )
     const row = rows<ListingRow>(result)[0]
     return row ? map(row) : null
