@@ -71,6 +71,9 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
 
   const requiredScripts = [
     'check:repo',
+    'governance:check',
+    'governance:doctor',
+    'governance:report',
     'audit:repo',
     'format:check',
     'test',
