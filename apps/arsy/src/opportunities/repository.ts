@@ -17,6 +17,7 @@ export interface OpportunityRecord {
   scores: OpportunityInput['scores']
   scoreDetails: OpportunityInput['scoreDetails']
   hardGates: OpportunityInput['hardGates']
+  hardGateDetails: OpportunityInput['hardGateDetails']
   evaluation: OpportunityEvaluation
   decisionRationale: string | null
   createdAt: string
@@ -96,7 +97,7 @@ export class OpportunityRepository {
      ), audited AS (
        INSERT INTO arsy_commerce_audit_events
          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-       SELECT $16, owner_id, 'opportunity', id, 'created', $15,
+       SELECT $18, owner_id, 'opportunity', id, 'created', $17,
          jsonb_build_object('decision', decision, 'score', score)
        FROM created
      )
@@ -132,11 +133,19 @@ export class OpportunityRepository {
 
   async decide(ownerId: string, actorId: string, id: string, decision: OpportunityEvaluation['decision'], rationale: string): Promise<OpportunityRecord | null> {
     const result = await this.db.query(
-      `UPDATE arsy_opportunities SET decision = $3, decision_rationale = $4,
-       updated_at = now(), updated_by = $5
+      `WITH changed AS (
+       UPDATE arsy_opportunities SET decision = $3, decision_rationale = $4,
+         updated_at = now(), updated_by = $5
        WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
-       RETURNING ${SELECT_COLUMNS}`,
-      [ownerId, id, decision, rationale, actorId],
+       RETURNING *
+     ), audited AS (
+       INSERT INTO arsy_commerce_audit_events (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+       SELECT $6, owner_id, 'opportunity', id, 'decision-changed', $5,
+         jsonb_build_object('decision', decision, 'rationale', decision_rationale)
+       FROM changed
+     )
+     SELECT ${SELECT_COLUMNS} FROM changed`,
+      [ownerId, id, decision, rationale, actorId, randomUUID()],
     )
     const row = rows<OpportunityRow>(result)[0]
     return row ? mapOpportunity(row) : null
@@ -144,9 +153,15 @@ export class OpportunityRepository {
 
   async archive(ownerId: string, actorId: string, id: string): Promise<boolean> {
     const result = await this.db.query(
-      `UPDATE arsy_opportunities SET archived_at = now(), updated_at = now(), updated_by = $3
-       WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL RETURNING id`,
-      [ownerId, id, actorId],
+      `WITH changed AS (
+       UPDATE arsy_opportunities SET archived_at = now(), updated_at = now(), updated_by = $3
+       WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL RETURNING *
+     ), audited AS (
+       INSERT INTO arsy_commerce_audit_events (id, owner_id, aggregate_type, aggregate_id, action, actor_id)
+       SELECT $4, owner_id, 'opportunity', id, 'archived', $3 FROM changed
+     )
+     SELECT id FROM changed`,
+      [ownerId, id, actorId, randomUUID()],
     )
     return rows<{ id: string }>(result).length > 0
   }
