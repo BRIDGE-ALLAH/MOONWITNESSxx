@@ -28,6 +28,7 @@ test('autonomy budget degrades with risk and never grants merge or deploy', () =
   assert.ok(critical.prohibitedCapabilities.includes('merge'))
   assert.ok(critical.prohibitedCapabilities.includes('deploy'))
   assert.throws(() => assessAutonomyBudget({ risk: 'unknown' }), /risk/)
+  assert.throws(() => assessAutonomyBudget({ signals: { unverifiedWrite: 1 } }), /unknown autonomy signal/)
 })
 
 test('incident compiler builds dependency-closed deterministic replay and fault variants', () => {
