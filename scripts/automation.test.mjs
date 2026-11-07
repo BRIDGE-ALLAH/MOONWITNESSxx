@@ -19,3 +19,9 @@ test('rejects subjects longer than 72 characters', () => {
     false
   )
 })
+
+test('accepts a valid subject at the 72-character limit', () => {
+  const subject = 'chore: ' + 'x'.repeat(65)
+  assert.equal(subject.length, 72)
+  assert.equal(isValidCommitSubject(subject), true)
+})
