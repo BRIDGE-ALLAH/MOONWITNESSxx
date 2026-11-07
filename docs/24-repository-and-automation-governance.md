@@ -75,16 +75,18 @@ These are required native/build dependencies in the current Next.js toolchain. D
 
 ### Lockfile integrity
 
-pnpm 12 can write `pnpm-lock.yaml` as a multi-document YAML stream. The first (boot) document records the resolved pnpm version and config dependencies. The last (project) document contains the workspace importer graph and the normal project dependency resolutions. Both documents are intentional; never delete the first document or treat it as an accidental duplicate. The repository audit must inspect the **last** document when checking workspace importers. See the official [pnpm lockfile format documentation](https://github.com/pnpm/pnpm/blob/main/pnpm/docs/lockfile.md).
+pnpm 12 can write `pnpm-lock.yaml` as a multi-document YAML stream. The first (boot) document records the resolved pnpm version and config dependencies. The last (project) document contains the workspace importer graph and project dependency resolutions. Both documents are intentional; never delete the first document or treat it as an accidental duplicate. The repository audit inspects the **last** document when checking workspace importers. See the official [pnpm lockfile format documentation](https://github.com/pnpm/pnpm/blob/main/pnpm/docs/lockfile.md).
 
 The supported workflow is:
 
-1. Run `pnpm run lockfile:refresh`, or let the manifest-change workflow run after a push to `main).
+1. Run `pnpm run lockfile:refresh`, or let the manifest-change workflow run after a push to `main`.
 2. Review the generated lockfile diff and confirm the project document contains every workspace importer.
 3. Verify with `pnpm run lockfile:check` and `pnpm install --frozen-lockfile`.
-4. Merge the dedicated lockfile PR; never normalize or hand-edit the two-document stream.
+4. The workflow commits only the verified lockfile to `main` without force-pushing, then dispatches CI for the new commit. Never normalize or hand-edit the two-document stream.
 
 The check script refuses to regenerate the lockfile when it already has staged or unstaged local edits. This preserves local work. Ordinary CI and deployment installs remain frozen.
+
+The lockfile workflow makes one narrow exception to PR governance: the current repository setting does not permit Actions' `GITHUB_TOKEN` to create pull requests. Rather than leaving lockfile synchronization permanently failing, it commits only a generated lockfile after a frozen install has passed. If repository administration later enables Actions PR creation, the workflow may be switched back to a reviewable PR.
 
 ## 4. Command contract
 
@@ -152,7 +154,7 @@ A normal commit must not bump versions, update release notes, create tags, gener
 | `weekly-detection.yml` | Weekly, manual | Read-only audit report and automation tests | `contents: read` |
 | `codeql.yml` | Push, PR, weekly | Static security analysis | `contents: read`, `security-events: write`, `actions: read` |
 | `pr-labeler.yml` | PR updates | Apply path-based labels | `contents: read`, `pull-requests: write` |
-| `refresh-lockfile.yml` | Manifest/workspace/lockfile changes on `main`, manual | Regenerate lockfile and open/update a reviewable PR | `contents: write`, `pull-requests: write` |
+| `refresh-lockfile.yml` | Manifest/workspace/lockfile changes on `main`, manual | Regenerate, frozen-verify, commit a lockfile-only bot change to `main`, then dispatch CI | `contents: write`, `actions: write` |
 | Dependabot | Weekly | Propose dependency and Actions updates | Managed by GitHub |
 
 ### CI staging

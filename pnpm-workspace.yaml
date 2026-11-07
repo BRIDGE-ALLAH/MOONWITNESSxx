@@ -5,6 +5,7 @@ packages:
 # Legacy services are intentionally excluded until their unique behavior is migrated
 # into the single canonical app/package owner and covered by tests.
 # Only approve install/build scripts for dependencies that require audited native setup.
+# Lockfile synchronization is intentionally handled by the dedicated workflow.
 allowBuilds:
   esbuild: true
   msgpackr-extract: true
