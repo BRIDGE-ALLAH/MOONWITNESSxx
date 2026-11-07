@@ -25,7 +25,7 @@ const listSchema = z.object({ limit: z.coerce.number().int().min(1).max(200).def
 
 export function registerFinancialRoutes(app: FastifyInstance, db: DatabasePool, env: NodeJS.ProcessEnv = process.env): void {
   const repository = new FinancialRepository(db)
-  const ownerId = env.ARSY_OPERATOR_ID?.trim() || 'primary-owner'
+  const ownerId = env.ARSY_OPERATOR_ID?.trim() ?? ''
   const actorId = ownerId
 
   app.get('/api/v1/financial-events', async (request, reply) => {
