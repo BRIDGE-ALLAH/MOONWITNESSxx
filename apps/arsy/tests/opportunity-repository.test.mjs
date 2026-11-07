@@ -145,9 +145,8 @@ test('updates an opportunity only when the expected revision matches and advance
   assert.equal(result.status, 'updated')
   assert.equal(result.opportunity.revision, 2)
   assert.equal(result.opportunity.title, 'Revised opportunity')
-  assert.match(fake.calls[0].sql, /revision = revision \+ 1/)
-  assert.match(fake.calls[0].sql, /revision = \$3/)
-  assert.match(fake.calls[0].sql, /NOT EXISTS[\s\S]*FROM arsy_products/)
+  assert.ok(fake.calls[0].sql.includes('revision = $3'))
+  assert.match(fake.calls[0].sql, /product_promoted_at IS NULL/)
   assert.equal(fake.calls[0].values[0], 'owner-a')
   assert.equal(fake.calls[0].values[1], row.id)
   assert.equal(fake.calls[0].values[2], 1)
@@ -156,7 +155,7 @@ test('updates an opportunity only when the expected revision matches and advance
 
 test('rejects a stale opportunity revision and returns the current record without overwriting it', async () => {
   const latest = { ...row, revision: 2, title: 'Latest persisted title' }
-  const fake = createDatabase([[], [latest], []])
+  const fake = createDatabase([[], [latest], [{ promoted: false }]])
   const repository = new OpportunityRepository(fake.db)
   const result = await repository.update('owner-a', 'owner-a', row.id, 1, { ...input, title: 'Stale overwrite' }, evaluation)
 
@@ -164,15 +163,36 @@ test('rejects a stale opportunity revision and returns the current record withou
   assert.equal(result.opportunity.revision, 2)
   assert.equal(result.opportunity.title, 'Latest persisted title')
   assert.equal(fake.calls.length, 3)
-  assert.match(fake.calls[2].sql, /FROM arsy_products/)
+  assert.match(fake.calls[2].sql, /product_promoted_at IS NOT NULL/)
 })
 
 test('prevents editing an opportunity after it has been promoted into a versioned product', async () => {
   const latest = { ...row, revision: 2 }
-  const fake = createDatabase([[], [latest], [{ id: 'product-1' }]])
+  const fake = createDatabase([[], [latest], [{ promoted: true }]])
   const repository = new OpportunityRepository(fake.db)
   const result = await repository.update('owner-a', 'owner-a', row.id, 2, input, evaluation)
 
   assert.equal(result.status, 'promoted')
   assert.equal(fake.calls.length, 3)
+})
+
+
+test('decision writes compare and advance the opportunity revision', async () => {
+  const changed = { ...row, revision: 2, decision: 'research-more', decision_rationale: 'Need one more independent source.' }
+  const fake = createDatabase([[changed]])
+  const repository = new OpportunityRepository(fake.db)
+  const result = await repository.decide('owner-a', 'owner-a', row.id, 'research-more', 'Need one more independent source.', 1)
+
+  assert.equal(result.revision, 2)
+  assert.equal(result.evaluation.decision, 'research-more')
+  assert.ok(fake.calls[0].sql.includes('revision = $6'))
+  assert.match(fake.calls[0].sql, /product_promoted_at IS NULL/)
+  assert.equal(fake.calls[0].values[5], 1)
+})
+
+test('promoted state is read from the atomically stored opportunity marker', async () => {
+  const fake = createDatabase([[{ promoted: true }]])
+  const repository = new OpportunityRepository(fake.db)
+  assert.equal(await repository.isPromoted('owner-a', row.id), true)
+  assert.match(fake.calls[0].sql, /product_promoted_at IS NOT NULL/)
 })

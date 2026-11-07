@@ -62,14 +62,26 @@ export class ProductRepository {
       `WITH eligible AS (
         SELECT * FROM arsy_opportunities
         WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
+          AND product_promoted_at IS NULL
           AND decision = 'prototype-candidate' AND score >= 80
           AND hard_gates @> '{"rights":"pass","countryEligibility":"pass","channelPolicy":"pass","payoutFeasibility":"pass"}'::jsonb
         FOR UPDATE
+      ), frozen AS (
+        UPDATE arsy_opportunities AS opportunity
+        SET product_promoted_at = now(),
+          revision = revision + 1,
+          updated_at = now(),
+          updated_by = $4
+        FROM eligible
+        WHERE opportunity.owner_id = $1
+          AND opportunity.id = eligible.id
+          AND opportunity.product_promoted_at IS NULL
+        RETURNING opportunity.*
       ), created AS (
         INSERT INTO arsy_products
           (id, owner_id, opportunity_id, title, product_family, lifecycle_state, created_by, updated_by)
         SELECT $3, $1, eligible.id, eligible.title, eligible.product_family, 'brief', $4, $4
-        FROM eligible
+        FROM frozen AS eligible
         ON CONFLICT (opportunity_id) WHERE opportunity_id IS NOT NULL DO NOTHING
         RETURNING *
       ), versioned AS (

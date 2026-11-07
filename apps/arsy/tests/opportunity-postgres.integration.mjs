@@ -107,6 +107,26 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.ok(afterRevision)
     assert.equal(afterRevision.title, revisedInput.title)
 
+    const researchDecision = await persistedOpportunities.decide(
+      ownerId, ownerId, created.id, 'research-more',
+      'Capture one additional independent source before product promotion.',
+      afterRevision.revision,
+    )
+    assert.ok(researchDecision)
+    assert.equal(researchDecision.revision, afterRevision.revision + 1)
+    assert.equal(researchDecision.evaluation.decision, 'research-more')
+
+    const promotionDecision = await persistedOpportunities.decide(
+      ownerId, ownerId, created.id, 'prototype-candidate',
+      'The completed fixture evidence now passes the test promotion gate.',
+      researchDecision.revision,
+    )
+    assert.ok(promotionDecision)
+    assert.equal(promotionDecision.revision, researchDecision.revision + 1)
+    assert.equal(promotionDecision.evaluation.decision, 'prototype-candidate')
+    const readyToPromote = await persistedOpportunities.get(ownerId, created.id)
+    assert.ok(readyToPromote)
+
     const products = new ProductRepository(pool)
     const product = await products.createFromOpportunity(ownerId, ownerId, created.id, [
       'Imports a CSV without losing source rows',
@@ -120,11 +140,49 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
       ownerId,
       ownerId,
       created.id,
-      afterRevision.revision,
+      readyToPromote.revision,
       revisedInput,
       evaluation,
     )
     assert.equal(locked.status, 'promoted')
+    const lockedDecision = await new OpportunityRepository(pool).decide(
+      ownerId, ownerId, created.id, 'research-more',
+      'A promoted source opportunity must no longer be editable.',
+      readyToPromote.revision,
+    )
+    assert.equal(lockedDecision, null)
+    assert.equal(await new OpportunityRepository(pool).isPromoted(ownerId, created.id), true)
+
+    // Race a real opportunity edit against promotion. Exactly one ordering is valid:
+    // either the edit wins and the product freezes its new content, or promotion wins
+    // and the stale edit is rejected. A mixed/overwritten snapshot is never acceptable.
+    const raceOpportunity = await opportunities.create(
+      ownerId,
+      ownerId,
+      input,
+      evaluation,
+      `race-opportunity-${randomUUID()}`,
+    )
+    const raceInput = {
+      ...input,
+      title: 'Concurrent opportunity revision fixture',
+      buyerProblem: 'The concurrent edit is allowed only when it wins before the product lock.',
+    }
+    const [raceEdit, raceProduct] = await Promise.all([
+      opportunities.update(ownerId, ownerId, raceOpportunity.opportunity.id, 1, raceInput, evaluation),
+      products.createFromOpportunity(ownerId, ownerId, raceOpportunity.opportunity.id, ['Concurrent promotion preserves an atomic source snapshot.']),
+    ])
+    assert.ok(raceProduct)
+    assert.ok(raceEdit.status === 'updated' || raceEdit.status === 'promoted')
+    if (raceEdit.status === 'updated') {
+      assert.equal(raceEdit.opportunity.revision, 2)
+      assert.equal(raceProduct.title, raceInput.title)
+      assert.equal(raceProduct.brief.buyerProblem, raceInput.buyerProblem)
+    } else {
+      assert.equal(raceProduct.title, input.title)
+      assert.equal(raceProduct.brief.buyerProblem, input.buyerProblem)
+    }
+    assert.equal(await new OpportunityRepository(pool).isPromoted(ownerId, raceOpportunity.opportunity.id), true)
 
     const otherOwnerId = randomUUID()
     await assert.rejects(
@@ -236,14 +294,6 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(usd.net_contribution_minor, '750')
     assert.equal(usd.pending_minor, '0')
 
-    const decided = await new OpportunityRepository(pool).decide(
-      ownerId,
-      ownerId,
-      created.id,
-      'research-more',
-      'Recheck the evidence before any product promotion.',
-    )
-    assert.equal(decided?.evaluation.decision, 'research-more')
     assert.equal(await new OpportunityRepository(pool).archive(ownerId, ownerId, created.id), true)
     assert.equal(await new OpportunityRepository(pool).get(ownerId, created.id), null)
 

@@ -113,7 +113,18 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
     if (body.data.decision === 'prototype-candidate' && (gateBlocked || gateUnknown || existing.evaluation.score === null || existing.evaluation.score < 80)) {
       return reply.code(409).send({ error: { code: 'PROMOTION_BLOCKED', message: 'Opportunity cannot be promoted while a hard gate is blocked/unknown or the evidence score is below 80.' } })
     }
-    const record = await repository.decide(ownerId, actorId, params.data.id, body.data.decision, body.data.rationale)
+    const record = await repository.decide(ownerId, actorId, params.data.id, body.data.decision, body.data.rationale, existing.revision)
+    if (!record) {
+      const current = await repository.get(ownerId, params.data.id)
+      if (!current) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
+      if (await repository.isPromoted(ownerId, params.data.id)) {
+        return reply.code(409).send({ error: { code: 'OPPORTUNITY_VERSION_LOCKED', message: 'This opportunity has an immutable product snapshot.' } })
+      }
+      return reply.code(409).send({
+        error: { code: 'STALE_WRITE', message: 'The opportunity changed while this decision was being saved. Reload and retry.' },
+        current,
+      })
+    }
     return { data: record }
   })
 

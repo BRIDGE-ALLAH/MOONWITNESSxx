@@ -58,9 +58,23 @@ function fakePool() {
     calls,
     query: async (sql, values) => {
       calls.push(sql)
+      if (sql.includes('SELECT product_promoted_at IS NOT NULL AS promoted')) {
+        const current = records.find((record) => record.id === values[1])
+        return { rows: [{ promoted: Boolean(current?.product_promoted_at) }] }
+      }
+      if (sql.includes('UPDATE arsy_opportunities SET decision')) {
+        const current = records.find((record) => record.id === values[1])
+        if (!current || current.revision !== values[5] || current.product_promoted_at) return { rows: [] }
+        Object.assign(current, {
+          decision: values[2],
+          decision_rationale: values[3],
+          revision: current.revision + 1,
+        })
+        return { rows: [{ ...current }] }
+      }
       if (sql.includes('UPDATE arsy_opportunities')) {
         const current = records.find((record) => record.id === values[1])
-        if (!current || current.revision !== values[2]) return { rows: [] }
+        if (!current || current.revision !== values[2] || current.product_promoted_at) return { rows: [] }
         Object.assign(current, {
           title: values[3],
           buyer_problem: values[4],
@@ -89,6 +103,7 @@ function fakePool() {
         const record = {
           id: '11111111-1111-4111-8111-111111111111',
           revision: 1,
+          product_promoted_at: null,
           title: body.title,
           buyer_problem: body.buyerProblem,
           buyer_segment: body.buyerSegment,
@@ -115,6 +130,7 @@ function fakePool() {
       if (sql.includes('FROM arsy_opportunities')) return { rows: records }
       return { rows: [] }
     },
+    records,
     end: async () => undefined,
   }
 }
@@ -296,6 +312,44 @@ test('opportunity content update rejects malformed source data and missing revis
     })
     assert.equal(response.statusCode, 400)
     assert.equal(response.json().error.code, 'VALIDATION_ERROR')
+  } finally {
+    await app.close()
+  }
+})
+
+
+test('operator decisions increment revisions and become locked after product promotion', async () => {
+  const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
+  const pool = fakePool()
+  const app = await createApp({ databasePool: pool, logger: false, env })
+  try {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/v1/opportunities',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'decision-revision-0001' },
+      payload: body,
+    })
+    assert.equal(created.statusCode, 201)
+    const id = created.json().data.id
+    const decision = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/opportunities/' + id + '/decision',
+      headers: { 'x-arsy-operator-token': token, 'content-type': 'application/json' },
+      payload: { decision: 'research-more', rationale: 'One more independent source is needed.' },
+    })
+    assert.equal(decision.statusCode, 200)
+    assert.equal(decision.json().data.revision, 2)
+    assert.equal(decision.json().data.evaluation.decision, 'research-more')
+
+    pool.records[0].product_promoted_at = '2026-11-08T02:00:00.000Z'
+    const locked = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/opportunities/' + id + '/decision',
+      headers: { 'x-arsy-operator-token': token, 'content-type': 'application/json' },
+      payload: { decision: 'park', rationale: 'The source record is now frozen by a product brief.' },
+    })
+    assert.equal(locked.statusCode, 409)
+    assert.equal(locked.json().error.code, 'OPPORTUNITY_VERSION_LOCKED')
   } finally {
     await app.close()
   }

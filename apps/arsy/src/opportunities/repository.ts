@@ -164,24 +164,41 @@ export class OpportunityRepository {
     return row ? mapOpportunity(row) : null
   }
 
-  async decide(ownerId: string, actorId: string, id: string, decision: OpportunityEvaluation['decision'], rationale: string): Promise<OpportunityRecord | null> {
+  async decide(
+    ownerId: string,
+    actorId: string,
+    id: string,
+    decision: OpportunityEvaluation['decision'],
+    rationale: string,
+    expectedRevision: number,
+  ): Promise<OpportunityRecord | null> {
     const result = await this.db.query(
       `WITH changed AS (
        UPDATE arsy_opportunities SET decision = $3, decision_rationale = $4,
+         revision = revision + 1,
          updated_at = now(), updated_by = $5
-       WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
+       WHERE owner_id = $1 AND id = $2 AND revision = $6
+         AND archived_at IS NULL AND product_promoted_at IS NULL
        RETURNING *
      ), audited AS (
        INSERT INTO arsy_commerce_audit_events (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-       SELECT $6, owner_id, 'opportunity', id, 'decision-changed', $5,
-         jsonb_build_object('decision', decision, 'rationale', decision_rationale)
+       SELECT $7, owner_id, 'opportunity', id, 'decision-changed', $5,
+         jsonb_build_object('decision', decision, 'rationale', decision_rationale, 'revision', revision)
        FROM changed
      )
      SELECT ${SELECT_COLUMNS} FROM changed`,
-      [ownerId, id, decision, rationale, actorId, randomUUID()],
+      [ownerId, id, decision, rationale, actorId, expectedRevision, randomUUID()],
     )
     const row = rows<OpportunityRow>(result)[0]
     return row ? mapOpportunity(row) : null
+  }
+
+  async isPromoted(ownerId: string, id: string): Promise<boolean> {
+    const result = await this.db.query(
+      'SELECT product_promoted_at IS NOT NULL AS promoted FROM arsy_opportunities WHERE owner_id = $1 AND id = $2 LIMIT 1',
+      [ownerId, id],
+    )
+    return rows<{ promoted: boolean }>(result)[0]?.promoted === true
   }
 
 
@@ -224,10 +241,7 @@ export class OpportunityRepository {
           AND id = $2
           AND revision = $3
           AND archived_at IS NULL
-          AND NOT EXISTS (
-            SELECT 1 FROM arsy_products
-            WHERE owner_id = $1 AND opportunity_id = $2
-          )
+          AND product_promoted_at IS NULL
         RETURNING *
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
@@ -271,11 +285,7 @@ export class OpportunityRepository {
 
     const existing = await this.get(ownerId, id);
     if (!existing) return { status: 'not-found' };
-    const linkedProduct = await this.db.query(
-      'SELECT id FROM arsy_products WHERE owner_id = $1 AND opportunity_id = $2 LIMIT 1',
-      [ownerId, id],
-    );
-    if (rows<{ id: string }>(linkedProduct).length > 0) return { status: 'promoted' };
+    if (await this.isPromoted(ownerId, id)) return { status: 'promoted' };
     if (existing.revision !== expectedRevision) return { status: 'stale', opportunity: existing };
     return { status: 'conflict' };
   }
