@@ -1,9 +1,10 @@
 import { z } from 'zod'
+import { httpEvidenceUrlSchema } from '../http-url.ts'
 
 export const opportunityEvidenceSchema = z.object({
   evidenceId: z.string().trim().min(1).max(120),
   sourceName: z.string().trim().min(1).max(160),
-  sourceUrl: z.string().url().max(2048),
+  sourceUrl: httpEvidenceUrlSchema,
   sourceType: z.enum([
     'official-marketplace',
     'public-review',
