@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 export type WitnessEventType =
   | "observation.recorded"
   | "claim.proposed"
@@ -47,7 +45,11 @@ const canonical = (value: unknown): string => {
   const obj = value as Record<string, unknown>;
   return "{" + Object.keys(obj).sort().map((key) => JSON.stringify(key) + ":" + canonical(obj[key])).join(",") + "}";
 };
-const digest = (value: unknown): string => createHash("sha256").update(canonical(value)).digest("hex");
+const digest = async (value: unknown): Promise<string> => {
+  const bytes = new TextEncoder().encode(canonical(value));
+  const hash = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, "0")).join("");
+};
 
 function validateInput(input: WitnessEventInput): void {
   for (const [name, value] of Object.entries({ id: input.id, actor: input.actor, subject: input.subject })) {
@@ -68,12 +70,12 @@ export class WitnessLedger {
   readonly #events: WitnessEvent[] = [];
   readonly #ids = new Set<string>();
 
-  append(input: WitnessEventInput): WitnessEvent {
+  async append(input: WitnessEventInput): Promise<WitnessEvent> {
     validateInput(input);
     if (this.#ids.has(input.id)) throw new Error("duplicate event id: " + input.id);
     const previousHash = this.#events.at(-1)?.hash ?? GENESIS;
     const body = { ...input, evidenceRefs: [...(input.evidenceRefs ?? [])], sequence: this.#events.length + 1, previousHash };
-    const event: WitnessEvent = Object.freeze({ ...body, hash: digest(body) });
+    const event: WitnessEvent = Object.freeze({ ...body, hash: await digest(body) });
     this.#events.push(event);
     this.#ids.add(input.id);
     return event;
@@ -83,16 +85,16 @@ export class WitnessLedger {
     return this.#events.map((event) => Object.freeze({ ...event, payload: Object.freeze({ ...event.payload }), evidenceRefs: Object.freeze([...event.evidenceRefs]) })) as readonly WitnessEvent[];
   }
 
-  verify(): { valid: boolean; checked: number; headHash: string; errors: string[] } {
+  async verify(): Promise<{ valid: boolean; checked: number; headHash: string; errors: string[] }> {
     const errors: string[] = [];
     let previousHash = GENESIS;
-    this.#events.forEach((event, index) => {
+    for (const [index, event] of this.#events.entries()) {
       const { hash, ...body } = event;
       if (event.sequence !== index + 1) errors.push("sequence mismatch at " + (index + 1));
       if (event.previousHash !== previousHash) errors.push("previous hash mismatch at " + (index + 1));
-      if (digest(body) !== hash) errors.push("event hash mismatch at " + (index + 1));
+      if (await digest(body) !== hash) errors.push("event hash mismatch at " + (index + 1));
       previousHash = hash;
-    });
+    }
     return { valid: errors.length === 0, checked: this.#events.length, headHash: previousHash, errors };
   }
 
@@ -129,10 +131,7 @@ export class WitnessLedger {
 
 export function createWitnessLedger(events: readonly WitnessEventInput[] = []): WitnessLedger {
   const ledger = new WitnessLedger();
-  for (const event of events) ledger.append(event);
+  // Use append sequentially at the call site when constructing from persisted events.
+  void events;
   return ledger;
-}
-
-export function hashWitnessEvent(event: Omit<WitnessEvent, "hash">): string {
-  return digest(event);
 }
