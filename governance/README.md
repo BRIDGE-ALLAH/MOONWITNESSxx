@@ -83,6 +83,21 @@ Contracts are Markdown with small programmatic checks where objective enforcemen
 - **Enforcement/evidence:** CodeQL, Dependabot, secret scanning, workflow review, installer tests.
 - **Exceptions:** maintainer approval, exposure statement, compensating controls, expiry.
 
+## Rule-to-enforcement map
+
+| Rule family | Canonical rule | Current enforcement | State |
+|---|---|---|---|
+| Root identity and required commands | Identity / Repository | `scripts/repo-audit.mjs` + CI audit | Implemented; CI audit passes |
+| Workspace manifests and package names | Repository | `scripts/repo-audit.mjs` | Implemented; dependency pre-index is order-independent |
+| Lockfile and dependency reproducibility | Repository / Security | `scripts/check-lockfile.mjs` + frozen CI install | Implemented; current lockfile is stale and gate correctly fails |
+| App/package dependency direction | Repository | Governance Engine graph validation | Planned in Phase 2 |
+| GitHub workflow permissions and branch rules | GitHub / Automation | Workflow declarations + administrator ruleset | Partial; ruleset requires administrator |
+| Read-only scheduled detection | Automation | `.github/workflows/weekly-detection.yml` + read-only permissions | Existing workflow; test idempotency in Phase 3 |
+| Installer safety/idempotency | Installation / Security | Node + shell/PowerShell tests | Planned in Phase 4 |
+| Production migration/deployment approval | Installation / Security | Human approval and runtime gates | Planned in Phase 5 |
+
+A rule family marked planned is not yet enforced. Do not describe a future check as active until its test and CI evidence exist.
+
 ## Enforcement levels
 
 | Level | Meaning | Example |
