@@ -1045,7 +1045,7 @@ Evidence: https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42395999916
 - [x] Add explicit System Mode lifecycle orchestration: recovery, discovery, trust validation, registry composition, persistence preflight, approval, reconciliation, verification, activation, and runtime handoff.
 - [x] Require actor identity and fenced deployment lease.
 - [x] Persist plan and verified receipt before activation.
-- [x] Keep readiness false until runtime handoff succeeds.
+- [x] Keep readiness false until runtime handoff succeeds; prewarm and health-check shadow runtime before activation.
 - [x] Add SQLite-backed deployment journal with optimistic stage transitions and incomplete-run discovery.
 - [x] Add test source for lifecycle ordering, journal recovery listing, stale transition rejection, and handoff failure.
 - [ ] Integrate orchestrator and journal into ARSY Core and an explicit deployment/admin command.
