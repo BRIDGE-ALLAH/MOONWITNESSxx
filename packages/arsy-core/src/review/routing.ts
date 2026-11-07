@@ -15,6 +15,7 @@ export function routeReviewQueue(items: readonly ReviewQueueItem[], now = new Da
   const routed = items.map((item) => {
     if (!item.id.trim() || ids.has(item.id)) throw new Error('Duplicate or empty review item id: ' + item.id)
     ids.add(item.id)
+    if (!['critical', 'high', 'normal'].includes(item.severity)) throw new Error('Invalid severity for review item: ' + item.id)
     const createdMs = Date.parse(item.createdAt)
     if (Number.isNaN(createdMs)) throw new Error('Invalid createdAt for review item: ' + item.id)
     const ageMinutes = Math.max(0, Math.floor((nowMs - createdMs) / 60000))
