@@ -22,6 +22,8 @@ This document describes the current persisted opportunity, product-brief, and fi
 | `DATABASE_URL` | Yes | PostgreSQL connection string for ARSY and the migration command |
 | `ARSY_OPERATOR_TOKEN` | Yes for `/api/v1/*` | Shared secret accepted by the protected versioned business API |
 | `ARSY_OPERATOR_ID` | Yes | Stable owner/actor ID shared by ARSY and Headquarter; no implicit production owner is created |
+| `ASSET_STORAGE_DRIVER` | Yes for asset uploads | `local` for the current persistent-volume adapter; unknown drivers fail closed |
+| `ASSET_STORAGE_PATH` | Yes in production | Absolute path to the persistent asset volume; Compose uses `/var/lib/arsy/assets` |
 
 ### Headquarter
 
@@ -65,17 +67,18 @@ Run this first against an isolated development/staging database and verify backu
 8. Open `/mizan-ledger` to record source-backed financial events; each event remains pending until evidence-backed reconciliation.
 9. Review verified summaries, which are computed only from persisted verified events.
 
-## Current capability boundary
+## Asset storage and provenance\n\nSee [Money Maker Asset Storage, Provenance & Inspection](./30-money-maker-asset-storage-and-inspection.md) for the storage adapter contract, persistent Docker volume, upload limits, provenance schema, inspection source qualifications and restore requirements. The current local adapter verifies bytes after storage and requires a matching PostgreSQL backup/restore.\n\n## Current capability boundary
 
 Implemented in the current development branch (implementation presence is not equivalent to verified production readiness):
 - evidence-backed opportunity input validation, weighted scoring, hard-gate precedence, and missing-dimension preservation;
-- owner-scoped opportunity create/list/read/decision/archive API with owner-scoped idempotent create and operator-facing decision/archive actions;
+- owner-scoped opportunity create/list/read/content-update/decision/archive API with idempotent create, optimistic revision conflicts, and evidence/score/hard-gate review and edit UI;
 - server-side Headquarter signed sessions, same-origin mutation checks, and server-only ARSY service credentials;
-- eligible opportunity → version-1 product brief creation, product list/detail API, and acceptance criteria;
+- eligible opportunity → version-1 product brief creation, product list/detail API, append-only version history, audited lifecycle transitions and The Forge editing controls;
 - financial event ingestion with idempotency, event listing, currency-grouped verified summaries, and evidence-backed reconciliation;
+- version-bound asset binary storage, server-computed SHA-256, upload idempotency, provenance, private attachment downloads, append-only inspections, and fail-closed inspection readiness; the current operator API cannot impersonate a trusted reviewer or automated inspection principal;
 - audit events for opportunity, product, and financial operations;
-- explicit PostgreSQL migrations limited to implemented opportunity/product/version/financial-event/audit tables, checksum runner, and isolated integration-test coverage for migration reruns, opportunity/product/finance lifecycle, idempotency, reconciliation, audit events and persistence after reconnect;
-- Playwright browser E2E coverage configured for login → opportunity capture/decision → product brief → financial event/reconciliation → Aftershock metrics → archive → logout. The current-head workflow result is pending.
+- explicit PostgreSQL migrations for opportunity/product/version/financial-event/audit/asset/provenance/inspection tables, checksum runner, and isolated integration-test coverage for migration reruns, lifecycle, idempotency, reconciliation, audit events and persistence after reconnect;
+- Playwright browser E2E coverage configured for login → opportunity capture/review/edit/decision → product brief/version/lifecycle → asset upload/provenance/inspection → financial event/reconciliation → Aftershock metrics → archive → logout. The current-head workflow result is pending.
 
 Not yet implemented or verified:
 - generic opportunity editing and operator-facing detail/evidence-history UI; decision and archive actions are implemented. Product detail UI and version editing beyond version 1 remain incomplete;
@@ -84,6 +87,6 @@ Not yet implemented or verified:
 - current-head CI, CodeQL, container build, PostgreSQL integration and Playwright E2E execution evidence;
 - production deployment, managed secrets, HTTPS ingress, backups, restore drills, rollback and live smoke tests;
 - search/filter/cursor pagination and complete lifetime counts; current portfolio counts are explicitly bounded to the latest 100 records;
-- asset binary storage/provenance, inspection workflows, channel listing/publication receipts, payout provider integrations and verified FX conversion.
+- channel listing/publication receipts, payout provider integrations and verified FX conversion.
 
 No sample transaction, revenue figure, payout, market trend or publication is created by this workflow.
