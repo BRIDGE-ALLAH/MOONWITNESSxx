@@ -19,3 +19,6 @@ Avatar.displayName='Avatar'
 export const AvatarImage=React.forwardRef<HTMLImageElement,React.ImgHTMLAttributes<HTMLImageElement>>(({className,onLoad,onError,...props},ref)=>{const state=React.useContext(AvatarContext);return <img ref={ref} className={cn('aspect-square h-full w-full object-cover',className)} onLoad={e=>{state?.setLoaded(true);onLoad?.(e)}} onError={e=>{state?.setLoaded(false);onError?.(e)}} {...props}/>})
 AvatarImage.displayName='AvatarImage'
 export const AvatarFallback=({className,...props}:React.HTMLAttributes<HTMLDivElement>)=>{const state=React.useContext(AvatarContext);if(state?.loaded)return null;return <div className={cn('flex h-full w-full items-center justify-center bg-muted font-mono text-xs text-muted-foreground',className)} {...props}/>}
+
+export const Spinner=React.forwardRef<SVGSVGElement,React.SVGAttributes<SVGSVGElement> & {label?:string}>(({className,label='Loading',...props},ref)=><LoaderCircle ref={ref} role="status" aria-label={label} className={cn('h-4 w-4 animate-spin motion-reduce:animate-none',className)} {...props}/>)
+Spinner.displayName='Spinner'
