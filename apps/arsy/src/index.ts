@@ -4,9 +4,7 @@ import { createApp } from './app.ts'
 
 export { createApp }
 
-export function getListenConfig(
-  env: NodeJS.ProcessEnv = process.env
-): { host: string; port: number } {
+export function getListenConfig(env: NodeJS.ProcessEnv = process.env) {
   const port = Number(env.PORT ?? '3001')
   if (!Number.isInteger(port) || port < 1 || port > 65_535) {
     throw new Error('PORT must be an integer between 1 and 65535')
@@ -42,10 +40,11 @@ export async function startServer() {
   return app
 }
 
-if (
-  process.argv[1] &&
+const isDirectExecution =
+  process.argv[1] !== undefined &&
   import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
-) {
+
+if (isDirectExecution) {
   startServer().catch((error: unknown) => {
     console.error('ARSY startup failed:', error)
     process.exitCode = 1
