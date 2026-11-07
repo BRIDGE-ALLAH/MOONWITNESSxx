@@ -355,3 +355,8 @@ A component is not complete until all applicable checks pass:
 - [ ] Run UI package type-check, build, theme-token check, consumer smoke test, and Headquarter production build.
 - [ ] Render both themes and verify all text/non-text contrast states in a browser.
 - The previous CI run confirms the lockfile is synchronized; its next failure was the unconfigured pnpm build-script policy, now explicitly configured in `pnpm-workspace.yaml`.
+
+
+- CI run #100 identified a missing `@types/node` declaration in `apps/arsy`; it is now declared and added to the workspace lockfile. This is an application type dependency, not a UI runtime dependency.
+- Root `validate:repo` now includes `pnpm --filter @riotworks/ui run test`, so the UI theme-token contract and built-package consumer smoke test are part of the repository validation gate.
+- The latest observed CI run proved the UI package type-check passes, while workspace type-check was blocked by the ARSY Node types issue. Re-run CI after these changes before marking Milestone 1 complete.
