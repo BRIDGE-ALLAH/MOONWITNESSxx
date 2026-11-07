@@ -129,7 +129,7 @@
 
 **Acceptance:** offline CLI, passing positive/negative fixtures, deterministic output, no mutation during check/report, and clean-checkout CI evidence.
 
-**Status:** implementation committed to the Phase 0/1 branch; CI verification and owner approval are pending. Import detection is intentionally a lightweight static guard, not a semantic TypeScript AST or security proof.
+**Status:** implementation committed to the governance branch; clean-checkout CI verification and owner approval are pending. Import detection is intentionally a lightweight static guard, not a semantic TypeScript AST or security proof.
 
 ## Phase 3 — GitHub governance and automation
 
