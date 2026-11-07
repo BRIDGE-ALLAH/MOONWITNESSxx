@@ -185,6 +185,31 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(finalInspection.productLifecycleState, 'ready')
     assert.equal((await inspections.list(ownerId, revisedProduct.versionId)).length, 4)
 
+    const blockedInspection = await inspections.record(ownerId, ownerId, {
+      productVersionId: revisedProduct.versionId,
+      inspectionType: 'technical',
+      status: 'blocked',
+      findings: [{
+        severity: 'blocker',
+        description: 'The generated package contains an executable file that failed the safety review.',
+        evidenceUrl: 'https://example.com/blocker-review',
+      }],
+    })
+    assert.equal(blockedInspection?.productReady, false)
+    assert.equal(blockedInspection?.productLifecycleState, 'review')
+    const recoveredInspection = await inspections.record(ownerId, ownerId, {
+      productVersionId: revisedProduct.versionId,
+      inspectionType: 'technical',
+      status: 'pass',
+      findings: [{
+        severity: 'info',
+        description: 'The revised package passed the repeatable technical checklist.',
+      }],
+    })
+    assert.equal(recoveredInspection?.productReady, true)
+    assert.equal(recoveredInspection?.productLifecycleState, 'ready')
+    assert.equal((await inspections.list(ownerId, revisedProduct.versionId)).length, 6)
+
     const channels = new ChannelRepository(pool)
     const channel = await channels.create(ownerId, channelSlug, 'Integration Manual Channel')
     assert.equal(channel.capability, 'C0')
