@@ -1,0 +1,24 @@
+:root {
+  /* MOONWITNESS master identity — map these primitives into semantic UI tokens. */
+  --mw-void: #090a0f;
+  --mw-observatory: #121521;
+  --mw-slate: #242a38;
+  --mw-moonlight: #f4f1e8;
+  --mw-lunar-silver: #aeb6c6;
+  --mw-signal-gold: #e8bd62;
+  --mw-eclipse-violet: #7664a8;
+  --mw-signal-red: #c95b5b;
+  --mw-deep-ink: #171923;
+
+  --mw-font-display: "Space Grotesk", "Arial", sans-serif;
+  --mw-font-body: "Space Grotesk", "Segoe UI", sans-serif;
+  --mw-font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+
+  --mw-text-primary-dark: var(--mw-moonlight);
+  --mw-text-secondary-dark: var(--mw-lunar-silver);
+  --mw-surface-dark: var(--mw-void);
+  --mw-surface-elevated-dark: var(--mw-observatory);
+  --mw-focus-ring: var(--mw-signal-gold);
+}
+
+/* Font files are intentionally not bundled. Confirm licenses and hosting rights first. */

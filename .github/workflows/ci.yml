@@ -182,6 +182,30 @@ jobs:
       - name: Test asset registry
         run: node --experimental-strip-types --test packages/assets/tests/*.test.mjs
 
+  witness-fabric:
+    name: WITNESS FABRIC integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Test evidence ledger, replay, and policy-gated actions
+        run: node --experimental-strip-types --test packages/witness-fabric/tests/*.test.mjs
+
+      - name: Type-check WITNESS FABRIC
+        run: pnpm --filter @moonwitness/witness-fabric type-check
+
   full-workspace-quality:
     name: Full workspace typecheck and build
     needs: repository-integrity
