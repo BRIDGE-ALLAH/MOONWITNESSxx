@@ -35,6 +35,7 @@ body:
     id: risk
     attributes:
       label: Migration and recovery
-      description: Describe rollout, compatibility, and rollback needs, or explain why they do not apply.
+      description: >-
+        Describe rollout, compatibility, and rollback needs, or explain why they do not apply.
     validations:
       required: true
