@@ -39,6 +39,12 @@ test("persists plans, receipts and atomically activates a verified registry unde
   const active = await store.activateRegistry(snapshot, receipt, renewed, "operator-1");
   assert.equal(active.generation, 1);
   assert.equal((await store.getActiveRegistry())?.snapshot.fingerprint, "registry-1");
+  await adapter.query({
+    text: "UPDATE mw_registry_snapshots SET payload_json = ? WHERE fingerprint = ?",
+    parameters: [{ value: "{}" }, { value: "registry-1" }],
+    operation: "write",
+  });
+  await assert.rejects(() => store.getActiveRegistry(), /integrity check failed/);
 
   await store.releaseLease(renewed);
   const nextLease = await store.acquireLease("registry-activation", 5_000);
