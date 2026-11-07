@@ -13,7 +13,7 @@ export interface RiotAppShellProps extends React.HTMLAttributes<HTMLDivElement> 
   statusBar?: React.ReactNode
   sidebarCollapsed?: boolean
 }
-export function RiotAppShell({sidebar,topbar,contextPanel,statusBar,sidebarCollapsed,onSidebarCollapsedChange,children,className,...props}:RiotAppShellProps){
+export function RiotAppShell({sidebar,topbar,contextPanel,statusBar,sidebarCollapsed,children,className,...props}:RiotAppShellProps){
  const collapsed=sidebarCollapsed??false
  const [mobileOpen,setMobileOpen]=React.useState(false)
  return <div className={cn('flex min-h-screen min-w-0 flex-col bg-background text-foreground',className)} {...props}>
