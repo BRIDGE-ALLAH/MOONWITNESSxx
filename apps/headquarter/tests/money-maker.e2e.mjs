@@ -109,6 +109,8 @@ try {
   })
   await productCard.getByLabel('Creator / owner').fill('Playwright isolated fixture author')
   await productCard.getByLabel('License').fill('Original test fixture')
+  await productCard.getByLabel('Source reference (optional)').fill(`https://example.com/original-source/${runId}`)
+  await productCard.getByLabel('Edit history (optional)').fill('Created as an isolated fixture and exported as UTF-8 text.')
   await productCard.getByLabel('Permission basis').fill('Generated inside the isolated CI workflow and not distributed.')
   await productCard.getByLabel('Disclosure').fill('Synthetic CI fixture; not a production asset.')
   await productCard.getByRole('button', { name: 'Store bytes & provenance' }).click()
