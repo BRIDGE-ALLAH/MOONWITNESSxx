@@ -30,17 +30,18 @@ export function compileDecisionDebt({ snapshot, now }: DecisionDebtInput): Decis
     const contradictionEdges = incoming.filter((edge) => edge.relation === 'contradicts')
     const supportingEvidence = supportEdges.map((edge) => nodes.get(edge.from)).filter((node): node is DecisionGraphNode => node?.kind === 'evidence')
     const contradictoryEvidence = contradictionEdges.map((edge) => nodes.get(edge.from)).filter((node): node is DecisionGraphNode => node?.kind === 'evidence')
-    const stale = supportingEvidence.filter((node) => {
+    const linkedEvidence = [...supportingEvidence, ...contradictoryEvidence]
+    const stale = linkedEvidence.filter((node) => {
       if (!node.validUntil) return false
       const expiry = Date.parse(node.validUntil)
       return !Number.isFinite(expiry) || expiry < now.getTime()
     })
-    const invalidProvenance = supportingEvidence.filter((node) => !node.provenance || !node.provenance.sourceRef.trim() || !Number.isFinite(Date.parse(node.provenance.capturedAt)))
+    const invalidProvenance = linkedEvidence.filter((node) => !node.provenance || !node.provenance.sourceRef.trim() || !Number.isFinite(Date.parse(node.provenance.capturedAt)))
     const reasons: DecisionDebtReason[] = []
     if (supportingEvidence.length === 0) reasons.push('missing_support')
-    if (stale.length > 0) reasons.push('stale_support')
+    if (stale.length > 0) reasons.push('stale_evidence')
     if (contradictoryEvidence.length > 0) reasons.push('unresolved_contradiction')
-    if (invalidProvenance.length > 0) reasons.push('invalid_support_provenance')
+    if (invalidProvenance.length > 0) reasons.push('invalid_evidence_provenance')
     if (!reasons.length) continue
     const score = (reasons.includes('missing_support') ? 100 : 0)
       + stale.length * 35
