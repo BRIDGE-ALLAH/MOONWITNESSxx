@@ -5,7 +5,8 @@ import {
   containsBackgroundShelling,
   containsSuppressedFailure,
   findMissingWorkspaceImporters,
-  getProjectLockfileDocument
+  getProjectLockfileDocument,
+  getRequiredWorkspaceImporterPaths
 } from './repo-audit.mjs'
 
 test('accepts conventional commit subjects with and without scopes', () => {
@@ -71,7 +72,7 @@ snapshots:
 `
 
   const projectDocument = getProjectLockfileDocument(lockfile)
-  assert.match(projectDocument, /apps\/headquarter:/)
+  assert.ok(projectDocument.includes('apps/headquarter:'))
   assert.deepEqual(
     findMissingWorkspaceImporters(lockfile, ['apps/headquarter', 'packages/ui']),
     ['packages/ui']
@@ -88,4 +89,16 @@ packages: {}
 snapshots: {}
 `
   assert.deepEqual(findMissingWorkspaceImporters(lockfile, ['apps/arsy']), [])
+})
+
+test('does not require pnpm importers for empty scaffold packages', () => {
+  assert.deepEqual(
+    getRequiredWorkspaceImporterPaths([
+      { path: 'packages/arsy-core', manifest: {} },
+      { path: 'packages/contract', manifest: { scripts: { generate: 'node generate.mjs' } } },
+      { path: 'apps/headquarter', manifest: { dependencies: { next: '15.1.0' } } },
+      { path: 'packages/ui', manifest: { peerDependencies: { react: '^19' } } }
+    ]),
+    ['apps/headquarter', 'packages/ui']
+  )
 })

@@ -50,7 +50,22 @@ export function findMissingWorkspaceImporters(lockfileContent, workspacePaths) {
   return workspacePaths.filter((path) => !importerPaths.has(path))
 }
 
-function containsBackgroundShelling(command) {
+export function getRequiredWorkspaceImporterPaths(workspacePackages) {
+  const dependencySections = [
+    'dependencies',
+    'devDependencies',
+    'peerDependencies',
+    'optionalDependencies'
+  ]
+
+  return workspacePackages
+    .filter(({ manifest }) =>
+      dependencySections.some((section) => Object.keys(manifest[section] ?? {}).length > 0)
+    )
+    .map(({ path }) => path)
+}
+
+export function containsBackgroundShelling(command) {
   return /(?:^|\s)&(?:\s|$)/.test(String(command))
 }
 
@@ -203,7 +218,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   const lockfile = await readText('pnpm-lock.yaml')
   const missingImporters = findMissingWorkspaceImporters(
     lockfile,
-    workspacePackages.map((item) => item.path)
+    getRequiredWorkspaceImporterPaths(workspacePackages)
   )
 
   if (missingImporters.length > 0) {

@@ -18,7 +18,7 @@
     "audit:repo": "node scripts/repo-audit.mjs --write-report",
     "check:staged": "node scripts/check-staged.mjs",
     "lockfile:check": "node scripts/check-lockfile.mjs",
-    "lockfile:refresh": "pnpm install --lockfile-only --no-frozen-lockfile --ignore-scripts",
+    "lockfile:refresh": "node scripts/refresh-lockfile.mjs",
     "validate:repo": "pnpm run check:repo && pnpm run format:check && pnpm run test",
     "validate": "pnpm run validate:repo && pnpm run type-check && pnpm run build",
     "commit:assist": "node scripts/ai/generate-commit.js",

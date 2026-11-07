@@ -62,8 +62,8 @@ Channels are enabled only after current country eligibility, payout, policy, fee
 
 ### Applications
 
-- **apps/headquarter** — intended Next.js frontend and operator experience. Current files are a prototype; its package manifest still needs correction.
-- **apps/arsy** — canonical Fastify backend application. Current implementation is only a minimal health/status route.
+- **apps/headquarter** — Next.js App Router frontend and operator experience. Its package manifest and runtime dependencies are now aligned; pages still use prototype/demo data and must pass the full application build gate before production claims.
+- **apps/arsy** — canonical Fastify backend application with a minimal status route and TSX development runner. Lifecycle, authentication, database integration, and production API contracts remain future work.
 
 ### Existing package inventory (prototype stage)
 
@@ -140,9 +140,9 @@ Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm
 
 The repository is a **mixed documentation + early prototype baseline**, not a production-ready application. Headquarter and ARSY exist as thin prototypes; several utility packages exist; the custom ORM, database runtime/adapters, Base Platform addons and end-to-end commercial workflow do not yet exist. The tracked `services/` directory contains duplicate/stranded prototypes and is not part of the pnpm workspace.
 
-The authoritative current-state audit and execution order are [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md). Do not infer implementation from a planned package name. A package is implemented only when its source, exports, tests and build evidence exist. The engineering and automation contract is [docs/24-repository-and-automation-governance.md](./docs/24-repository-and-automation-governance.md); it distinguishes repository-level checks from full application build readiness.
+The authoritative architecture and execution order are [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md). Repository identity, workspace manifests, local hooks, deterministic scripts, lockfile synchronization, CodeQL, Dependabot, and CI automation have now been aligned. At commit `b65006f`, repository audit, lockfile verification, and frozen install passed; the formatting/test gate still exposed the legacy worker syntax and documentation-format issues now being corrected. Do not infer implementation from a planned package name. A package is implemented only when its source, exports, tests and build evidence exist. The engineering and automation contract is [docs/24-repository-and-automation-governance.md](./docs/24-repository-and-automation-governance.md); it distinguishes repository-level checks from full application build readiness.
 
-**Next delivery order:** (1) regenerate and verify the pnpm lockfile, then align app/package manifests and actual entrypoints; (2) complete full workspace CI and safely retire duplicate legacy services; (3) make Headquarter and ARSY/arsy-core/contracts buildable; (4) implement ORM and schema API; (5) implement SQL adapters; (6) stage required Base Platform addons; (7) business modules and first commercial slice; (8) jobs and safe automation.
+**Next delivery order:** (1) make repository integrity, formatting, automation tests, and frozen-lockfile CI fully green; (2) complete Headquarter and ARSY build/type-check contracts; (3) migrate unique behavior out of legacy `services/*` and retire duplicates; (4) implement ORM and private schema API; (5) implement libSQL/PostgreSQL adapters; (6) stage the required Base Platform addons; (7) deliver the first commercial workflow; (8) add queue transport and bounded automation.
 
 ## Financial truth
 

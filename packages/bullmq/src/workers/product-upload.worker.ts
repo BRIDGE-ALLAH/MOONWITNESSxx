@@ -17,25 +17,25 @@ export const productUploadWorker = new Worker(
     connection: {
       host: process.env.REDIS_HOST || 'localhost',
       port: Number(process.env.REDIS_PORT) || 6379,
-      password: process.env.REDIS_PASSWORD,
+      password: process.env.REDIS_PASSWORD
     },
     // Concurrency: berapa job yang bisa diproses sekaligus
     concurrency: 4,
-    
+
     // Retry konfigurasi
     attempts: 3,
     backoff: {
       type: 'exponential',
-      delay: 5000,
+      delay: 5000
     },
-    
+
     // Priority handling
     firstFailureAttemptDelay: 1000,
     subsequentFailureAttemptDelay: 5000,
-    
+
     // Remove job dari queue setelah selesai (jika false, job tetap ada)
     removeOnComplete: true,
-    removeOnFail: false, // Tahan job yang gagal untuk debugging
+    removeOnFail: false // Tahan job yang gagal untuk debugging
   }
 )
 
@@ -56,5 +56,5 @@ productUploadWorker.on('completed', (job) => {
 })
 
 productUploadWorker.on('failed', (job, error) => {
-  console.error(`❌ Job failed: ${job?.id}`, error))
+  console.error(`❌ Job failed: ${job?.id}`, error)
 })

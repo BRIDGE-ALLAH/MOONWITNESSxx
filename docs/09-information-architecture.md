@@ -92,20 +92,20 @@ These technical diagnostics belong in restricted administration views, not the d
 
 ## 4. Module responsibilities
 
-| Module | Main object | Primary actions |
-|---|---|---|
-| ARSY DECK | Workspace pulse | Review, prioritize, resolve |
-| SIGNAL ROOM | Evidence / research run | Search, capture, classify |
-| RIOT RADAR | Opportunity | Score, compare, decide |
-| THE FORGE | Product / production job | Brief, produce, version |
-| ZILL WATCH | Inspection | Inspect, block, review |
-| LAUNCH BAY | Channel / listing | Verify, prepare, publish where permitted |
-| SIDRA ARCHIVE | Asset | Preview, version, trace |
-| AFTERSHOCK | Performance insight | Compare, improve, retire |
-| MIZAN LEDGER | Financial event | Reconcile, classify, export |
-| RIOT ENGINE | Workflow / run | Schedule, pause, inspect |
-| Addon Manager | Installed addon | Inspect, install/upgrade via controlled operator flow |
-| ORM/DB Health | Adapter/model registry | Diagnose, capability check |
+| Module        | Main object              | Primary actions                                       |
+| ------------- | ------------------------ | ----------------------------------------------------- |
+| ARSY DECK     | Workspace pulse          | Review, prioritize, resolve                           |
+| SIGNAL ROOM   | Evidence / research run  | Search, capture, classify                             |
+| RIOT RADAR    | Opportunity              | Score, compare, decide                                |
+| THE FORGE     | Product / production job | Brief, produce, version                               |
+| ZILL WATCH    | Inspection               | Inspect, block, review                                |
+| LAUNCH BAY    | Channel / listing        | Verify, prepare, publish where permitted              |
+| SIDRA ARCHIVE | Asset                    | Preview, version, trace                               |
+| AFTERSHOCK    | Performance insight      | Compare, improve, retire                              |
+| MIZAN LEDGER  | Financial event          | Reconcile, classify, export                           |
+| RIOT ENGINE   | Workflow / run           | Schedule, pause, inspect                              |
+| Addon Manager | Installed addon          | Inspect, install/upgrade via controlled operator flow |
+| ORM/DB Health | Adapter/model registry   | Diagnose, capability check                            |
 
 ## 5. Global context
 

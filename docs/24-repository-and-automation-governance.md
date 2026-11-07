@@ -75,7 +75,7 @@ These are required native/build dependencies in the current Next.js toolchain. D
 
 ### Lockfile integrity
 
-pnpm 12 can write `pnpm-lock.yaml` as a multi-document YAML stream. The first (boot) document records the resolved pnpm version and config dependencies. The last (project) document contains the workspace importer graph and project dependency resolutions. Both documents are intentional; never delete the first document or treat it as an accidental duplicate. The repository audit inspects the **last** document when checking workspace importers. See the official [pnpm lockfile format documentation](https://github.com/pnpm/pnpm/blob/main/pnpm/docs/lockfile.md).
+pnpm 12 can write `pnpm-lock.yaml` as a multi-document YAML stream. The first (boot) document records the resolved pnpm version and config dependencies. The last (project) document contains the workspace importer graph and project dependency resolutions. Both documents are intentional; never delete the first document or treat it as an accidental duplicate. The repository audit inspects the **last** document when checking workspace importers. It requires importer entries only for workspace packages that declare dependencies, devDependencies, peerDependencies, or optionalDependencies; empty reserved/scaffold packages do not need an importer. See the official [pnpm lockfile format documentation](https://github.com/pnpm/pnpm/blob/main/pnpm/docs/lockfile.md).
 
 The supported workflow is:
 
@@ -84,7 +84,7 @@ The supported workflow is:
 3. Verify with `pnpm run lockfile:check` and `pnpm install --frozen-lockfile`.
 4. The workflow commits only the verified lockfile to `main` without force-pushing, then dispatches CI for the new commit. Never normalize or hand-edit the two-document stream.
 
-The check script refuses to regenerate the lockfile when it already has staged or unstaged local edits. This preserves local work. Ordinary CI and deployment installs remain frozen.
+The lockfile check is read-only: it runs pnpm with `--lockfile-only --frozen-lockfile --ignore-scripts` and never rewrites the lockfile. The explicit refresh command has a separate guard that refuses to run when `pnpm-lock.yaml` already has staged or unstaged changes; it never stages files automatically. Ordinary CI and deployment installs remain frozen.
 
 The lockfile workflow makes one narrow exception to PR governance: the current repository setting does not permit Actions' `GITHUB_TOKEN` to create pull requests. Rather than leaving lockfile synchronization permanently failing, it commits only a generated lockfile after a frozen install has passed. If repository administration later enables Actions PR creation, the workflow may be switched back to a reviewable PR.
 
@@ -240,7 +240,7 @@ The repository foundation is complete only when all of these are evidenced from 
 
 - [ ] Root package identity, workspace names, and repo identity are consistent.
 - [ ] Every workspace package has a valid manifest, entrypoint, and real scripts.
-- [ ] pnpm lockfile importer entries match every workspace package.
+- [ ] pnpm lockfile importer entries match every workspace package that declares dependencies.
 - [ ] `pnpm install --frozen-lockfile` succeeds.
 - [ ] Root commands use deterministic orchestration and propagate failures.
 - [ ] Pre-commit and commit-msg hooks are local, predictable, and tested.
