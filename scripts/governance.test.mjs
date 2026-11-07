@@ -99,3 +99,18 @@ test('report analysis is read-only and does not create artifacts', async t => {
   assert.ok(report.result)
   await assert.rejects(access(join(root, '.artifacts')))
 })
+
+test('governance engine rejects forbidden scoped source imports', async t => {
+  const { root, put } = await fixture()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await put('packages/contracts/src/leak.ts', "import type { AppProps } from '@riotworks/headquarter'\\n")
+  const report = await analyzeGovernance(root)
+  assert.ok(report.findings.some(item => item.code === 'GOV-SOURCE-PACKAGE-TO-APP'))
+})
+
+test('governance engine reports rule coverage without writing files', async t => {
+  const { root } = await fixture()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const report = await analyzeGovernance(root)
+  assert.deepEqual(report.ruleCoverage, { total: 1, withEnforcement: 1, withState: 1, complete: 1 })
+})
