@@ -69,16 +69,22 @@ export function registerAssetRoutes(app: FastifyInstance, db: DatabasePool, env:
       throw error
     }
 
-    const asset = await repository.create(ownerId, actorId, {
-      id: assetId,
-      productVersionId: body.data.productVersionId,
-      filename: body.data.filename,
-      mediaType: body.data.mediaType,
-      storageKey: stored.storageKey,
-      checksumSha256: stored.checksumSha256,
-      provenance: body.data.provenance,
-      rightsState: body.data.rightsState,
-    })
+    let asset
+    try {
+      asset = await repository.create(ownerId, actorId, {
+        id: assetId,
+        productVersionId: body.data.productVersionId,
+        filename: body.data.filename,
+        mediaType: body.data.mediaType,
+        storageKey: stored.storageKey,
+        checksumSha256: stored.checksumSha256,
+        provenance: body.data.provenance,
+        rightsState: body.data.rightsState,
+      })
+    } catch (error) {
+      await storage.delete(stored.storageKey)
+      throw error
+    }
     if (!asset) {
       await storage.delete(stored.storageKey)
       return reply.code(404).send({ error: { code: 'PRODUCT_VERSION_NOT_FOUND', message: 'Product version was not found for this operator.' } })
