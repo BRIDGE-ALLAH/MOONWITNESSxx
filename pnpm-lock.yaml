@@ -264,6 +264,12 @@ importers:
       ajv-formats:
         specifier: ^3.0.0
         version: 3.0.1(ajv@8.20.0)
+      fastify:
+        specifier: ^5.0.0
+        version: 5.12.8
+      fastify-type-provider-zod:
+        specifier: ^1.1.0
+        version: 1.2.0(fastify@5.12.8)(zod@3.25.76)
       zod:
         specifier: ^3.23.8
         version: 3.25.76
