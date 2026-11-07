@@ -111,3 +111,8 @@ Both modules are domain foundations only. Their UI, persistence, read-only ARSY 
 - `features/decision-debt` compiles missing/stale/contradictory decision rationale and traverses downstream `causes` links into a review backlog. Scores prioritize attention; they are not probabilities.
 - `features/uncertainty-gate` validates low/base/high ranges, source quality, evidence coverage, stale evidence, contradictions, and unresolved assumptions. It can block or route to human review; it never approves.
 - `/governance-lab` presents these engines with synthetic fixtures. No live ARSY integration, persistence, or production mutation path exists.
+
+
+## Phase 14–16 Sentinel Fabric
+
+Three additional pure domain kernels live under `features/belief-drift`, `features/blast-radius`, and `features/evidence-expiry`. They compare versioned belief snapshots, traverse explicit causal edges, and calculate evidence freshness budgets. These are deterministic review aids only: they do not infer causal truth, renew evidence, authorize actions, persist state, or connect to ARSY. See `PHASE-14-16-SENTINEL-FABRIC.md` and `PHASE-14-16-RESEARCH.md`.

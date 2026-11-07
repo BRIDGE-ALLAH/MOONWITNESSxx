@@ -474,3 +474,15 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Added domain tests for capsule tamper detection/replay, decision debt, downstream impact, and governance gate states.
 - [ ] ARSY versioned read contracts, identity/workspace authorization, append-only persistence, trusted signatures/timestamps, and audit event integration remain production gates.
 - [ ] Browser E2E, keyboard/screen-reader verification, visual regression, and deployment smoke/rollback remain open.
+
+
+## Phase 14–16 — Sentinel Fabric
+
+- [x] Phase 14: Belief Drift Sentinel compares versioned claims, confidence deltas, and evidence-reference changes; malformed snapshots fail closed.
+- [x] Phase 15: Counterfactual Blast-Radius traverses explicit causal edges with cycle detection and bounded traversal.
+- [x] Phase 16: Evidence Expiry Budget ranks expired/near-expiry evidence and counts exposed decisions without extending validity.
+- [x] Add deterministic Node test coverage and research/prior-art notes.
+- [ ] Connect only after ARSY publishes versioned, tenant-scoped read contracts and evidence provenance.
+- [ ] Validate drift/impact/expiry thresholds against labelled historical outcomes before operational use.
+
+**Execution boundary:** phases 14–16 are pure TypeScript domain engines. They are not cryptographic authorization, causal discovery, evidence renewal, or production enforcement.
