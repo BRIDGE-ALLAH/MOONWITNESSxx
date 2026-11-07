@@ -26,7 +26,7 @@ export function AssetImage({
     <img
       {...imageProps}
       src={asset.src}
-      alt={isDecorative ? "" : alt ?? asset.alt ?? asset.description}
+      alt={isDecorative ? "" : alt ?? ("alt" in asset ? asset.alt : undefined) ?? asset.description}
       width={width ?? asset.width}
       height={height ?? asset.height}
       loading={loading}
