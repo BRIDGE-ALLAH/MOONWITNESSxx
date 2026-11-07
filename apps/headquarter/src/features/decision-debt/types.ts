@@ -1,6 +1,6 @@
 import type { DecisionGraphSnapshot } from '../decision-graph/types'
 
-export type DecisionDebtReason = 'missing_support' | 'stale_support' | 'unresolved_contradiction' | 'invalid_support_provenance'
+export type DecisionDebtReason = 'missing_support' | 'stale_evidence' | 'unresolved_contradiction' | 'invalid_evidence_provenance'
 
 export type DecisionDebtFinding = {
   decisionId: string
