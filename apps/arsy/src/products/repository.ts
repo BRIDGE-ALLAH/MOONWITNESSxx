@@ -67,6 +67,7 @@ export class ProductRepository {
       `WITH eligible AS MATERIALIZED (
         SELECT * FROM arsy_opportunities
         WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
+          AND product_promoted_at IS NULL
           AND decision = 'prototype-candidate' AND score >= 80
           AND hard_gates @> '{"rights":"pass","countryEligibility":"pass","channelPolicy":"pass","payoutFeasibility":"pass"}'::jsonb
         FOR UPDATE
@@ -95,12 +96,14 @@ export class ProductRepository {
         RETURNING *
       ), opportunity_updated AS (
         UPDATE arsy_opportunities AS opportunity
-        SET version = opportunity.version + 1,
+        SET product_promoted_at = now(),
+            version = opportunity.version + 1,
             updated_at = now(),
             updated_by = $4
         FROM created
         WHERE opportunity.owner_id = $1
           AND opportunity.id = created.opportunity_id
+          AND opportunity.product_promoted_at IS NULL
         RETURNING opportunity.id, opportunity.version
       ), opportunity_audited AS (
         INSERT INTO arsy_commerce_audit_events
