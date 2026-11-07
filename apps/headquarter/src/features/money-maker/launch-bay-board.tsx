@@ -14,12 +14,12 @@ type Listing = { id: string; productVersionId: string; channelId: string; channe
 type ReviewDraft = {
   countryStatus: 'pass' | 'blocked' | 'unknown'; countrySourceUrl: string; countryCheckedAt: string
   payoutStatus: 'pass' | 'blocked' | 'unknown'; payoutSourceUrl: string; payoutCheckedAt: string; payoutNotes: string
-  policyUrl: string; policyCheckedAt: string; manualFallback: string
+  policyStatus: 'pass' | 'blocked' | 'unknown'; policyUrl: string; policyCheckedAt: string; manualFallback: string
 }
 const emptyDraft: ReviewDraft = {
   countryStatus: 'unknown', countrySourceUrl: '', countryCheckedAt: '',
   payoutStatus: 'unknown', payoutSourceUrl: '', payoutCheckedAt: '', payoutNotes: 'Not verified yet.',
-  policyUrl: '', policyCheckedAt: '',
+  policyStatus: 'unknown', policyUrl: '', policyCheckedAt: '',
   manualFallback: 'Owner manually uploads the prepared listing package. No automated publishing is authorized.',
 }
 function iso(value: string) { return value ? new Date(value).toISOString() : undefined }
@@ -82,7 +82,7 @@ export function LaunchBayBoard() {
         body: JSON.stringify({
           countryEligibility: [{ country: 'ID', status: draft.countryStatus, ...(draft.countrySourceUrl ? { sourceUrl: draft.countrySourceUrl } : {}), ...(draft.countryCheckedAt ? { checkedAt: iso(draft.countryCheckedAt) } : {}) }],
           payoutRequirements: { status: draft.payoutStatus, ...(draft.payoutSourceUrl ? { sourceUrl: draft.payoutSourceUrl } : {}), ...(draft.payoutCheckedAt ? { checkedAt: iso(draft.payoutCheckedAt) } : {}), notes: draft.payoutNotes },
-          ...(draft.policyUrl ? { policyUrl: draft.policyUrl } : {}), ...(draft.policyCheckedAt ? { policyCheckedAt: iso(draft.policyCheckedAt) } : {}),
+          policyStatus: draft.policyStatus, ...(draft.policyUrl ? { policyUrl: draft.policyUrl } : {}), ...(draft.policyCheckedAt ? { policyCheckedAt: iso(draft.policyCheckedAt) } : {}),
           manualFallback: draft.manualFallback,
         }),
       })
@@ -167,6 +167,7 @@ export function LaunchBayBoard() {
             <label className="space-y-1 text-xs font-mono uppercase">Payout evidence URL<input type="url" value={draft.payoutSourceUrl} onChange={(e) => updateDraft(channel.id, { payoutSourceUrl: e.target.value })} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs" /></label>
             <label className="space-y-1 text-xs font-mono uppercase">Payout checked at<input type="datetime-local" value={draft.payoutCheckedAt} onChange={(e) => updateDraft(channel.id, { payoutCheckedAt: e.target.value })} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs" /></label>
             <label className="space-y-1 text-xs font-mono uppercase md:col-span-2">Payout notes<textarea value={draft.payoutNotes} onChange={(e) => updateDraft(channel.id, { payoutNotes: e.target.value })} rows={2} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs" /></label>
+            <label className="space-y-1 text-xs font-mono uppercase">Official policy assessment<select value={draft.policyStatus} onChange={(e) => updateDraft(channel.id, { policyStatus: e.target.value as ReviewDraft['policyStatus'] })} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs"><option value="unknown">Unknown</option><option value="pass">Pass — reviewed</option><option value="blocked">Blocked</option></select></label>
             <label className="space-y-1 text-xs font-mono uppercase">Official policy URL<input type="url" value={draft.policyUrl} onChange={(e) => updateDraft(channel.id, { policyUrl: e.target.value })} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs" /></label>
             <label className="space-y-1 text-xs font-mono uppercase">Policy checked at<input type="datetime-local" value={draft.policyCheckedAt} onChange={(e) => updateDraft(channel.id, { policyCheckedAt: e.target.value })} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs" /></label>
             <label className="space-y-1 text-xs font-mono uppercase md:col-span-2">Manual fallback<textarea value={draft.manualFallback} onChange={(e) => updateDraft(channel.id, { manualFallback: e.target.value })} rows={2} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs" /></label>
