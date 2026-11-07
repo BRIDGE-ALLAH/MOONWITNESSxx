@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
 import { isIP } from 'node:net'
+import { lookup } from 'node:dns/promises'
 
 export interface DockerTlsCredentials { ca: string; cert: string; key: string }
 
@@ -47,6 +48,56 @@ export function validateRemoteDockerEndpoint(input: string, env = process.env): 
   const allowlist = (env.DOCKER_REMOTE_ALLOWED_HOSTS ?? '').split(',').map((item) => item.trim().toLowerCase()).filter(Boolean)
   if (!allowlist.includes(host)) throw new Error('Remote Docker endpoint host is not in DOCKER_REMOTE_ALLOWED_HOSTS')
   return url
+}
+
+
+type ResolvedDockerAddress = { address: string; family: number }
+type AddressClass = 'public' | 'private' | 'blocked'
+
+function classifyAddress(address: string): AddressClass {
+  const family = isIP(address)
+  if (family === 4) {
+    const [a, b, c] = address.split('.').map(Number)
+    if (a === 0 || a === 127 || (a === 169 && b === 254) || a >= 224 ||
+        (a === 192 && b === 0 && (c === 0 || c === 2)) ||
+        (a === 192 && b === 88 && c === 99) ||
+        (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) ||
+        (a === 203 && b === 0 && c === 113)) return 'blocked'
+    if (a === 10 || (a === 172 && b >= 16 && b <= 31) ||
+        (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127)) return 'private'
+    return 'public'
+  }
+  if (family === 6) {
+    const normalized = address.toLowerCase().split('%')[0]
+    if (normalized === '::' || normalized === '::1' || normalized.startsWith('fe8') ||
+        normalized.startsWith('fe9') || normalized.startsWith('fea') || normalized.startsWith('feb') ||
+        normalized.startsWith('ff') || normalized.startsWith('2001:db8:') ||
+        normalized.startsWith('2002:') || normalized.startsWith('3fff:')) return 'blocked'
+    if (normalized.startsWith('fc') || normalized.startsWith('fd')) return 'private'
+    const firstSegment = Number.parseInt(normalized.split(':')[0] || '0', 16)
+    return firstSegment >= 0x2000 && firstSegment <= 0x3fff ? 'public' : 'blocked'
+  }
+  return 'blocked'
+}
+
+export async function resolveRemoteDockerEndpoint(
+  input: string,
+  env = process.env,
+  resolver: (hostname: string) => Promise<ResolvedDockerAddress[]> =
+    (hostname) => lookup(hostname, { all: true, verbatim: true }),
+): Promise<{ url: URL; addresses: string[] }> {
+  const url = validateRemoteDockerEndpoint(input, env)
+  const records = await resolver(url.hostname)
+  if (records.length === 0) throw new Error('Remote Docker endpoint did not resolve to an address')
+  const addresses = records.map((record) => record.address)
+  const classes = addresses.map(classifyAddress)
+  if (classes.some((value) => value === 'blocked')) {
+    throw new Error('Remote Docker endpoint resolves to a loopback, link-local, reserved, or otherwise blocked address')
+  }
+  if (classes.includes('private') && env.DOCKER_REMOTE_ALLOW_PRIVATE_NETWORKS !== '1') {
+    throw new Error('Remote Docker endpoint resolves to a private address; set DOCKER_REMOTE_ALLOW_PRIVATE_NETWORKS=1 only for a trusted deployment')
+  }
+  return { url, addresses }
 }
 
 export function validateTlsCredentials(value: unknown): DockerTlsCredentials {
