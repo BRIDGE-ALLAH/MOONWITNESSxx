@@ -85,14 +85,14 @@ test('product version route rejects stale expected versions without inserting', 
       url: `/api/v1/products/${productId}/versions`,
       headers: { 'x-arsy-operator-token': token },
       payload: {
-        expectedVersion: 0,
+        expectedVersion: 2,
         brief: { buyerProblem: 'Stale revision.' },
         acceptanceCriteria: ['A valid acceptance criterion'],
       },
     })
-    assert.equal(response.statusCode, 400)
-    assert.equal(response.json().error.code, 'VALIDATION_ERROR')
-    assert.equal(pool.calls.length, 0)
+    assert.equal(response.statusCode, 409)
+    assert.equal(response.json().error.code, 'VERSION_CONFLICT')
+    assert.equal(pool.calls.length, 1, 'a stale write may read the current product but must not insert a version')
   } finally {
     await app.close()
   }
