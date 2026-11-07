@@ -20,7 +20,7 @@ INSERT INTO engine_instances (
     'http://victoriametrics:8428',
     TRUE,
     JSON_OBJECT('managed_by', 'atlas-compose'),
-    JSON_OBJECT(),
+    NULL,
     NULL
 ),
 (

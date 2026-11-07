@@ -51,7 +51,7 @@ From apps/atlas, copy .env.example to .env, replace all placeholder passwords an
     cp .env.example .env
     docker compose up --build -d
 
-The dashboard is bound to 127.0.0.1:5150 by default. Set `ATLAS_CONTROL_TOKEN`, `RADIUS_STATUS_SECRET`, and database/cache passwords to at least 32 random characters. Engine and RADIUS management endpoints require `ATLAS_CONTROL_TOKEN` as a Bearer token. The default internal subnet is `172.31.240.0/24`; override `ATLAS_DOCKER_SUBNET` if it conflicts with an existing route. MariaDB and Redis are internal-only. VictoriaMetrics and VictoriaLogs are exposed on loopback at ports 8428 and 9428. FreeRADIUS UDP ports 1812 and 1813 are also loopback-bound by default.
+The dashboard is bound to 127.0.0.1:5150 by default. Set `ATLAS_CONTROL_TOKEN`, `RADIUS_STATUS_SECRET`, and database/cache passwords to at least 32 random characters. Engine and RADIUS management endpoints require `ATLAS_CONTROL_TOKEN` as a Bearer token. The default internal subnet is `172.31.240.0/24`. If it conflicts with an existing route, change the subnet and the fixed ATLAS/FreeRADIUS status-client addresses together in Compose and the FreeRADIUS status virtual-server config. MariaDB and Redis are internal-only. VictoriaMetrics and VictoriaLogs are exposed on loopback at ports 8428 and 9428. FreeRADIUS UDP ports 1812 and 1813 are also loopback-bound by default.
 
 Do not change RADIUS_BIND_ADDRESS to a public or LAN interface until you have installed a production clients.conf, replaced test certificates, configured real NAS clients with unique strong secrets, configured firewall rules, and set up an authentication/accounting backend.
 
