@@ -13,7 +13,7 @@
     "typecheck:all": "pnpm run type-check",
     "typecheck": "pnpm run type-check",
     "clean": "turbo run clean",
-    "check:repo": "pnpm exec node scripts/repo-audit.mjs && pnpm run lockfile:check",
+    "check:repo": "pnpm exec node scripts/repo-audit.mjs && pnpm run lockfile:check && pnpm run governance:check",
     "audit:repo": "pnpm exec node scripts/repo-audit.mjs --write-report",
     "format:check": "node scripts/format-changed.mjs --check",
     "validate:repo": "pnpm run check:repo && pnpm run format:check && pnpm test",
@@ -24,7 +24,10 @@
     "format": "node scripts/format-changed.mjs --write",
     "test": "node --test",
     "check:commit": "node scripts/check-commit-message.mjs",
-    "check:staged": "node scripts/check-staged.mjs"
+    "check:staged": "node scripts/check-staged.mjs",
+    "governance:check": "node scripts/governance.mjs check",
+    "governance:doctor": "node scripts/governance.mjs doctor",
+    "governance:report": "node scripts/governance.mjs report"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
