@@ -11,7 +11,7 @@
 | EMPIRE OF THE LIGHT | Overarching MoonWitness narrative universe and values framework |
 | MOONWITNESS | Master brand and evidence-first knowledge-sharing ecosystem |
 | Core Promise | SEE MORE. KNOW MORE. |
-| Brand Manifesto | WHEN THE MOON RISES, WE SHARE WHAT MATTERS. |
+| Brand Manifesto | WHEN THE MOON RISES, WE SHARE MESSAGES. |
 | Observatory | Research, observation, evidence workflows, and command experience |
 | Archive | Durable records, knowledge, retrieval, and provenance experience |
 | MOONWITNESS XV | Program/release designation within the master brand |
