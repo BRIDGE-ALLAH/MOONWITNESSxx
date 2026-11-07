@@ -29,21 +29,21 @@
 - [x] Add archive ruled-paper pattern.
 - [x] Add observation desk and evidence constellation illustrations.
 - [x] Register new assets with static TypeScript declarations and provenance.
-- [ ] Add dedicated logo SVG safety and dimension tests.
+- [x] Add dedicated logo SVG safety, external-reference, and viewBox/registry-dimension tests.
 - [ ] Add optimized raster artwork only where a real use case requires it.
 
 ## Phase 4 — Typography
 - [x] Specify display, body, and technical font families with fallback stacks.
-- [ ] Verify font licenses and hosting/redistribution rights.
-- [ ] Bundle only fonts with approved licenses and documented provenance.
+- [x] Verify Space Grotesk and IBM Plex Mono upstream SIL OFL 1.1 licenses and permitted software embedding/redistribution conditions.
+- [x] Document compliant font-bundling policy, copyright notices, license text, and pinned-source/hash requirements; defer binaries until a reproducible pinned import is justified.
 
 ## Phase 5 — Product integration
 - [x] Replace RIOTWORKS master-brand lockup in Headquarter shell and metadata.
 - [x] Add Core Promise and Brand Manifesto to Headquarter landing experience.
 - [x] Map primary UI colors and typography to MoonWitness design tokens.
 - [x] Review Headquarter product screens and replace visible RIOTWORKS product branding with MOONWITNESS identity.
-- [ ] Create dedicated Observatory and Archive theme mappings.
-- [ ] Run visual regression and accessibility review.
+- [x] Create semantic Observatory and Archive theme mappings and apply them to Headquarter route roots.
+- [ ] Run browser visual regression and full component accessibility review (manual release gate; browser evidence not available in this execution).
 
 ## Phase 6 — Release
 - [ ] Owner approval of logo and brand DNA.
