@@ -28,7 +28,7 @@ export default async function MizanLedgerPage() {
   const cookieStore = await cookies()
   const token = cookieStore.get(OPERATOR_SESSION_COOKIE)?.value
   const session = verifyOperatorSession(token, config.secret)
-  if (!session || session.operatorId !== config.operatorId) return <OperatorLoginForm />
+  if (!session || session.operatorId !== config.operatorId) return <OperatorLoginForm returnTo="/mizan-ledger" />
 
   return (
     <main className="min-h-screen bg-obsidian p-6 text-paper-bone md:p-8">
