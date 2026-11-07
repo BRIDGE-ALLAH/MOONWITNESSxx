@@ -954,3 +954,19 @@ These implementations are not production completion. See `PHASE-12-14-EXECUTION.
 - [x] Phase 17: exact source-span citation mutation lab for offset drift, zero-width/bidi marks, whitespace, Unicode normalization, confusable substitutions and quote truncation.
 - [ ] Causal model validation, empirically calibrated provenance partitions, language-specific gold sets, comprehensive script-aware confusable catalogs and independent scholarly review remain open.
 See `PHASE-15-17-EXECUTION.md`. These are deterministic research tools, not truth or causal oracles.
+
+
+---
+
+## Phase 18–20 implementation update (2026-11-08)
+
+**Implementation:** provenance assurance primitives in `src/provenance-assurance/index.ts`.
+
+- [x] Phase 18: transitive source-lineage closure; independence requires complete acyclic ancestry, explicit witness-family attribution and disjoint ancestry.
+- [x] Phase 19: deterministic red-team mutations for hidden shared ancestors, family collisions, incomplete lineage, missing family attribution and cycles.
+- [x] Phase 20: claim/scope/method/Corpus-release-bound provenance assurance capsule with canonical SHA-256 integrity verification.
+- [x] Export `ProvenanceAssurance` and run its tests in Repository CI.
+- [ ] Authenticate Corpus lineage assertions, source identities, rights, tenant/access boundaries and trusted timestamps.
+- [ ] Validate lineage partitions against rights-cleared, expert-labelled Corpus fixtures and independent scholarly review.
+
+**Boundary:** declared metadata only; no truth score, source-authenticity claim, trusted timestamp, digital signature, Corpus mutation or production authorization. See `PHASE-18-20-EXECUTION.md`.
