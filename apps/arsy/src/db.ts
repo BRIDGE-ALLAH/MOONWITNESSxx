@@ -28,7 +28,10 @@ export function createDatabasePool(env: NodeJS.ProcessEnv = process.env): Pool {
 export function setupDatabase(app: FastifyInstance, pool: DatabasePool): void {
   app.decorate('db', pool)
 
-  app.get('/health/db', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (_request, reply) => {
+  app.get(
+    '/health/db',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (_request, reply) => {
     try {
       await pool.query('SELECT 1')
       return { status: 'ok', message: 'Database connection healthy' }
