@@ -197,6 +197,56 @@ test('asset download is private, attachment-only and returns original bytes', as
   }
 })
 
+test('asset upload fails closed when storage is unavailable or stored checksum differs', async () => {
+  const database = createPool()
+  let deleted = false
+  const storage = {
+    put: async () => undefined,
+    get: async () => Buffer.from('corrupted bytes'),
+    delete: async () => { deleted = true },
+  }
+  const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env })
+  try {
+    const bytes = Buffer.from('valid text bytes')
+    const response = await app.inject({
+      method: 'POST', url: '/api/v1/assets',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'checksum-mismatch-0001' },
+      payload: { productId, productVersion, fileName: 'asset.txt', mediaType: 'text/plain', contentBase64: bytes.toString('base64'), provenance },
+    })
+    assert.equal(response.statusCode, 503)
+    assert.equal(response.json().error.code, 'ASSET_STORAGE_CHECKSUM_MISMATCH')
+    assert.equal(deleted, true)
+    assert.equal(database.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
+
+test('asset upload rejects a product version not owned by the current operator and cleans stored bytes', async () => {
+  const database = createPool()
+  const storage = createMemoryStorage()
+  const originalQuery = database.query
+  database.query = async (sql, values) => {
+    database.calls.push({ sql, values })
+    if (sql.includes('INSERT INTO arsy_assets')) return { rows: [] }
+    if (sql.includes('idempotency_key')) return { rows: [] }
+    return originalQuery(sql, values)
+  }
+  const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env })
+  try {
+    const response = await app.inject({
+      method: 'POST', url: '/api/v1/assets',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'missing-product-version-01' },
+      payload: { productId, productVersion, fileName: 'asset.txt', mediaType: 'text/plain', contentBase64: Buffer.from('valid text').toString('base64'), provenance },
+    })
+    assert.equal(response.statusCode, 409)
+    assert.equal(response.json().error.code, 'PRODUCT_VERSION_NOT_FOUND')
+    assert.equal(storage.files.size, 0)
+  } finally {
+    await app.close()
+  }
+})
+
 test('asset upload rejects unsupported media and malformed base64 before storage', async () => {
   const database = createPool()
   const storage = createMemoryStorage()
