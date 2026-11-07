@@ -61,6 +61,9 @@ jobs:
       - name: Test Divine epistemic and provenance suites
         run: pnpm --filter @riotworks/divine test
 
+      - name: Test ARSY application runtime contract
+        run: pnpm --filter @riotworks/arsy test
+
       - name: Smoke test developer experience commands
         run: |
           pnpm devx doctor --json

@@ -1,51 +1,30 @@
-import Fastify from 'fastify'
-import Zod from 'zod'
-import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
-// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { createApp } from './app.ts'
 
-const app = Fastify({
-  logger: true,
-})
+export { createApp }
 
-app.setValidatorCompiler(validatorCompiler)
-app.setSerializerCompiler(serializerCompiler)
-
-const typedApp = app.withTypeProvider<ZodTypeProvider>()
-
-// Example route
-typedApp.get(
-  '/',
-  {
-    schema: {
-      response: {
-        200: Zod.object({
-          status: Zod.string(),
-          message: Zod.string(),
-        }),
-      },
-    },
-  },
-  async () => {
-    return {
-      status: 'ok',
-      message: 'ARSY Command Center is running',
-    }
+export function getListenConfig(env: NodeJS.ProcessEnv = process.env): { host: string; port: number } {
+  const port = Number(env.PORT ?? '3001')
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error('PORT must be an integer between 1 and 65535')
   }
-)
 
-// Database connector setup
-import { setupDatabase } from './db'
-setupDatabase(app)
+  return {
+    host: env.HOST?.trim() || '0.0.0.0',
+    port,
+  }
+}
 
-app
-  .listen({ port: 3000 })
-  .then(() => {
-    console.log('🚀 ARSY Command Center running on http://localhost:3000')
+export async function startServer() {
+  const app = createApp()
+  await app.listen(getListenConfig())
+  return app
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  startServer().catch((error: unknown) => {
+    console.error('ARSY startup failed:', error)
+    process.exitCode = 1
   })
-  .catch((err) => {
-    console.error(err)
-    process.exit(1)
-  })
-
-export { app }
+}

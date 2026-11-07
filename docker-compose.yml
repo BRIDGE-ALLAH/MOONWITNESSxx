@@ -1,19 +1,17 @@
-version: '3.9'
-
+# Local development stack only. Do not use this file as a production deployment profile.
 services:
-  # PostgreSQL database — recommended for production
   postgres:
     image: postgres:16-alpine
     container_name: moonwitness-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-moonwitness}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your ignored .env.docker file}
       POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=en_US.UTF-8'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - '${POSTGRES_PORT:-5432}:5432'
+      - '${POSTGRES_BIND_ADDRESS:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-moonwitness}']
       interval: 10s
@@ -23,12 +21,11 @@ services:
       - moonwitness
     restart: unless-stopped
 
-  # Redis for queue/cache (optional — used by BullMQ if needed)
   redis:
     image: redis:7-alpine
     container_name: moonwitness-redis
     ports:
-      - '${REDIS_PORT:-6379}:6379'
+      - '${REDIS_BIND_ADDRESS:-127.0.0.1}:${REDIS_PORT:-6379}:6379'
     volumes:
       - redis_data:/data
     healthcheck:
@@ -40,7 +37,6 @@ services:
       - moonwitness
     restart: unless-stopped
 
-  # ARSY backend — Fastify application
   arsy:
     build:
       context: .
@@ -48,12 +44,13 @@ services:
     container_name: moonwitness-arsy
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${ARSY_PORT:-3001}
+      HOST: 0.0.0.0
+      PORT: 3001
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-moonwitness}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your ignored .env.docker file}@postgres:5432/${POSTGRES_DB:-moonwitness}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     ports:
-      - '${ARSY_PORT:-3001}:3001'
+      - '${ARSY_BIND_ADDRESS:-127.0.0.1}:${ARSY_PORT:-3001}:3001'
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,16 +60,16 @@ services:
       - ./apps/arsy:/app/apps/arsy
       - ./packages:/app/packages
       - /app/node_modules
+    command: ['pnpm', 'dev']
     networks:
       - moonwitness
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3001/']
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3001/health/ready').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Headquarter frontend — Next.js application
   headquarter:
     build:
       context: .
@@ -81,9 +78,9 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${HEADQUARTER_PORT:-3000}
-      NEXT_PUBLIC_ARSY_URL: ${NEXT_PUBLIC_ARSY_URL:-http://arsy:3001}
+      NEXT_PUBLIC_ARSY_URL: ${NEXT_PUBLIC_ARSY_URL:-http://localhost:3001}
     ports:
-      - '${HEADQUARTER_PORT:-3000}:3000'
+      - '${HEADQUARTER_BIND_ADDRESS:-127.0.0.1}:${HEADQUARTER_PORT:-3000}:3000'
     depends_on:
       arsy:
         condition: service_healthy
