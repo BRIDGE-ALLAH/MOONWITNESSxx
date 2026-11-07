@@ -2,8 +2,7 @@ name: ARSY PostgreSQL Integration
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main, "feat-*", "feat/**", "fix-*", "fix/**"]
   push:
     branches:
       - main
