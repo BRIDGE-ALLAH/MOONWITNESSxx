@@ -26,6 +26,10 @@
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `ARSY_OPERATOR_ID` | Yes for business APIs | Stable owner/actor ID |
 | `ARSY_OPERATOR_TOKEN` | Yes for business APIs | Private service-to-service credential |
+| `ARSY_ASSET_STORAGE_DRIVER` | Optional | `local` for development; blank defaults to `s3` in production |
+| `ARSY_ASSET_STORAGE_ENDPOINT` / `BUCKET` / `REGION` | Required for S3 | Private path-style S3-compatible endpoint and bucket |
+| `ARSY_ASSET_STORAGE_ACCESS_KEY_ID` / `SECRET_ACCESS_KEY` | Required for S3 | Server-only object-storage credentials |
+| `ARSY_ASSET_STORAGE_SESSION_TOKEN` | Optional | Temporary credential session token |
 
 ### Headquarter
 
@@ -73,7 +77,7 @@ Run against an isolated development or staging database first. Verify backup and
 - Owner-scoped ARSY opportunity create/list/read/update/decision/archive API and audit events. Updates use `expectedVersion` optimistic concurrency; edits, decisions, archives and product promotion advance the opportunity version. A stale edit receives `VERSION_CONFLICT`; an opportunity with a product brief cannot be edited.
 - Product brief creation from an approved opportunity, append-only version revisions and owner-scoped product reads.
 - Append-only rights, policy, technical and creative inspections; a product becomes READY only when the latest inspection of all four types passes. A passing inspection cannot contain a blocker finding, and readiness includes the inspection written by the same transaction.
-- Asset upload/download/archive on a persistent local Docker volume, 5 MiB file cap, safe media-type allowlist, SHA-256 checksum and structured provenance metadata.
+- Asset upload/download/archive with a 5 MiB file cap, safe media-type allowlist, SHA-256 verification and structured provenance metadata. Development uses the persistent local Docker volume; production defaults to the S3-compatible SigV4 adapter with server-only credentials and HTTPS.
 - C0/C1 channel registry with Indonesia eligibility, payout and policy evidence. A country can appear once per review; C1 enables manual listing packages only.
 - Persisted manual listing package generation from the latest READY product version and an enabled C1 channel; publication receipts are entered by the owner after external publication and are not independently verified by a marketplace API.
 - Financial event ingestion using integer minor units, ISO currency, request hashes and idempotency keys.
@@ -84,7 +88,7 @@ Run against an isolated development or staging database first. Verify backup and
 
 ## Not yet implemented or not production-verified
 
-- Automated MIME sniffing, malware scanning, upload quotas/retention, distributed object storage, and multi-replica asset consistency are not implemented. The local adapter accepts an operator-declared allowlisted media type, enforces a 5 MiB cap, stores binaries under an owner-hashed filesystem key, and verifies SHA-256 on download; this is not independent malware or rights verification.
+- Malware scanning, upload quotas/retention and multi-replica consistency verification are not implemented. Development uses the owner-hashed local filesystem adapter; production defaults to the S3-compatible SigV4 adapter and requires an HTTPS endpoint, bucket and server-only credentials. Configure bucket versioning/replication, encryption-at-rest and lifecycle policy at the provider, then verify restore separately. The 5 MiB cap and SHA-256 check do not constitute malware or rights verification.
 - Marketplace account OAuth, official marketplace APIs, automated publishing, and independent verification of publication receipts. Current channel capability C1 means manual listing package only.
 - Automated market-source connectors, freshness/recheck jobs, and measured discovery/conversion cohorts. Signal Room intentionally remains an honest no-source empty state.
 - Payout import and provider reconciliation; current financial events are manually recorded by the operator. Operator-supplied evidence/reconciliation is not a bank or payment-provider verification.
@@ -92,6 +96,6 @@ Run against an isolated development or staging database first. Verify backup and
 - Trusted-ingress enforcement and production login-throttle monitoring have not been verified outside isolated CI; configure one ingress that overwrites the client IP header and block direct access.
 - Browser E2E, screen-reader/visual regression review, production deployment, managed secret provisioning, backup/restore drill, rollback and live smoke tests.
 
-The current asset adapter is single-node filesystem storage. Asset rights/provenance fields are operator-entered and do not independently establish legal permission. Back up the `arsy_assets` Docker volume with the database and test restore before production. Do not run multiple ARSY replicas against independent local volumes.
+Local development uses the `arsy_assets` Docker volume. Production can use the S3-compatible adapter; object versioning, replication, encryption-at-rest policy and restore drills remain provider/deployment responsibilities. Asset rights/provenance fields are operator-entered and do not independently establish legal permission.
 
 No sample transactions, sales, marketplace listings, payout states, market trend values, or revenue claims are generated by this workflow. The login throttle is now stored in PostgreSQL and shared across independent ARSY/Headquarter instances. Exact-head integration/CI evidence is still required, and production must not be exposed until the trusted ingress, network isolation, managed secrets, backup/restore, rollback and live smoke tests are verified.
