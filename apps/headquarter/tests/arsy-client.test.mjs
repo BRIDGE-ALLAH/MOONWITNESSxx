@@ -68,6 +68,18 @@ test('normalizes a non-JSON gateway error without exposing its body', async () =
   )
 })
 
+test('rejects absolute URLs and path traversal before issuing a request', async () => {
+  let calls = 0
+  globalThis.fetch = async () => {
+    calls += 1
+    return jsonResponse({ ok: true })
+  }
+
+  await assert.rejects(arsyRequest('https://untrusted.example/collect'), TypeError)
+  await assert.rejects(arsyRequest('../admin'), TypeError)
+  assert.equal(calls, 0)
+})
+
 test('maps request timeout to a stable safe error', async () => {
   globalThis.fetch = async (_url, init) => new Promise((_resolve, reject) => {
     init.signal.addEventListener('abort', () => reject(init.signal.reason), { once: true })
