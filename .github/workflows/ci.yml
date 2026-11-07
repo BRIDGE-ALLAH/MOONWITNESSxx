@@ -222,13 +222,15 @@ jobs:
           cleanup() { docker rm -f aegis-ci >/dev/null 2>&1 || :; }
           trap cleanup EXIT
           docker run --detach --name aegis-ci --read-only --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=16m -p 127.0.0.1:3102:3102 moonwitness-aegis:ci
-          status=""
+          ready="false"
           for attempt in $(seq 1 30); do
-            status="$(docker inspect --format '{{.State.Health.Status}}' aegis-ci)"
-            if [ "$status" = "healthy" ]; then break; fi
+            if curl --fail --silent http://127.0.0.1:3102/health/ready >/dev/null; then
+              ready="true"
+              break
+            fi
             sleep 1
           done
-          test "$status" = "healthy"
+          test "$ready" = "true"
           curl --fail --silent http://127.0.0.1:3102/health/ready
 
   asset-integrity:
