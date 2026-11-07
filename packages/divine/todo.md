@@ -4,10 +4,10 @@
 
 - **Repository:** BRIDGE-ALLAH/MOONWITNESS
 - **Target path:** packages/divine/todo.md
-- **Proposed package:** @moonwitness/divine
+- **Implemented package:** @riotworks/divine (the current workspace namespace)
 - **Codename:** SIDRATUL MUNTAHA
-- **Architecture status:** proposed; implementation not yet started
-- **Document status:** research-informed execution baseline
+- **Architecture status:** Phase 0–5 foundations implemented; production integration and remaining acceptance gates are still open
+- **Document status:** live execution ledger; checked tasks require code and verification
 - **Last researched:** 2026-11-08
 
 > This file is the executable task ledger for Divine. It is deliberately more detailed than a feature wishlist: every phase defines ownership, dependencies, deliverables, acceptance criteria, and explicit non-goals. A checked item means implementation and verification exist in the repository; documentation alone is not implementation.
@@ -55,13 +55,13 @@ Dependency direction must remain acyclic. Divine may define ports and adapters f
 
 ## 0.2 Package and naming decision
 
-- Package target: @moonwitness/divine.
+- Package target: @riotworks/divine. The @moonwitness/divine scope is deferred until repository-wide package governance changes.
 - Repository path: packages/divine.
 - Internal codename: SIDRATUL MUNTAHA.
 - Preservation concept: LAWH AL-MAHFUZ.
 - Product category: Sacred Knowledge & Epistemic Research Infrastructure.
 
-The current MOONWITNESS root manifest still uses the riotworks package scope. Before publishing or declaring the package name final, reconcile workspace naming with the authoritative repository governance decision. Do not silently introduce a conflicting package scope or mass-rename existing packages as part of this task.
+The current MOONWITNESS workspace uses the @riotworks package scope. Divine follows that existing governance rather than introducing a one-off namespace. A future repository-wide namespace migration must be handled as a separate coordinated change.
 
 ## 0.3 Conceptual inspiration boundary
 
@@ -466,22 +466,22 @@ Adoption policy:
 **Priority:** P1.
 
 ### Tasks
-- [ ] DIV-P3-001 Define Ontology, OntologyVersion and OntologyProfile contracts.
-- [ ] DIV-P3-002 Define ConceptScheme and ConceptReference without duplicating Corpus lexicon records.
-- [ ] DIV-P3-003 Define typed relation registry with explicit domain/range and semantic notes.
-- [ ] DIV-P3-004 Support broader, narrower, related, part-of, instance-of and domain-specific relations without forcing all into universal truth.
-- [ ] DIV-P3-005 Define relation semantics and whether a relation is structural, asserted, derived or mapping-only.
-- [ ] DIV-P3-006 Define ontology namespace and identifier policy; distinguish ontology IDs from Corpus canonical IDs.
-- [ ] DIV-P3-007 Support multiple ontology versions side by side.
-- [ ] DIV-P3-008 Support scoped ontology profiles by tradition, community, school, period, research method or project.
-- [ ] DIV-P3-009 Define mapping relation vocabulary: exact, close, broader, narrower, partial, related, disputed, none.
-- [ ] DIV-P3-010 Require evidence/method/reviewer for promoted cross-ontology mappings.
-- [ ] DIV-P3-011 Implement candidate generation interface without automatic identity/equivalence promotion.
-- [ ] DIV-P3-012 Implement ontology validation and unresolved-reference reports.
-- [ ] DIV-P3-013 Implement ontology diff and impact analysis.
-- [ ] DIV-P3-014 Implement deprecation/replacement and migration plans.
-- [ ] DIV-P3-015 Add SKOS export/import adapter with mapping fidelity report.
-- [ ] DIV-P3-016 Add tests for multilingual concepts, ambiguous labels, conflicting mappings and deprecated concepts.
+- [x] DIV-P3-001 Define Ontology, OntologyVersion and OntologyProfile contracts.
+- [x] DIV-P3-002 Define ConceptScheme and ConceptReference without duplicating Corpus lexicon records.
+- [x] DIV-P3-003 Define typed relation registry with explicit domain/range and semantic notes.
+- [x] DIV-P3-004 Support broader, narrower, related, part-of, instance-of and domain-specific relations without forcing all into universal truth.
+- [x] DIV-P3-005 Define relation semantics and whether a relation is structural, asserted, derived or mapping-only.
+- [x] DIV-P3-006 Define ontology namespace and identifier policy; distinguish ontology IDs from Corpus canonical IDs.
+- [x] DIV-P3-007 Support multiple ontology versions side by side.
+- [x] DIV-P3-008 Support scoped ontology profiles by tradition, community, school, period, research method or project.
+- [x] DIV-P3-009 Define mapping relation vocabulary: exact, close, broader, narrower, partial, related, disputed, none.
+- [x] DIV-P3-010 Require evidence/method/reviewer for promoted cross-ontology mappings.
+- [x] DIV-P3-011 Implement candidate generation interface without automatic identity/equivalence promotion.
+- [x] DIV-P3-012 Implement ontology validation and unresolved-reference reports.
+- [x] DIV-P3-013 Implement ontology diff and impact analysis.
+- [x] DIV-P3-014 Implement deprecation/replacement and migration plans.
+- [x] DIV-P3-015 Add SKOS export/import adapter with mapping fidelity report.
+- [x] DIV-P3-016 Add tests for multilingual concepts, ambiguous labels, conflicting mappings and deprecated concepts.
 
 ### Acceptance
 - Two conflicting ontology views can coexist without forced merge.
@@ -497,18 +497,18 @@ Adoption policy:
 **Priority:** P1 / requires ontology and Corpus adapter.
 
 ### Tasks
-- [ ] DIV-P4-001 Define RevelationResearchProfile as a scoped research profile, not a metaphysical truth oracle.
-- [ ] DIV-P4-002 Separate revelation-related theological claims from textual witness identity and historical transmission.
-- [ ] DIV-P4-003 Represent claims that a community/tradition regards a work or passage as revelation through Corpus Assertion plus scope/evidence/provenance.
-- [ ] DIV-P4-004 Distinguish theological attribution, canonical recognition, textual attestation, historical-critical assessment and editorial status.
-- [ ] DIV-P4-005 Define tradition and school references as open, versioned domain data, not closed universal enums.
-- [ ] DIV-P4-006 Define doctrine/position/interpretation profiles with source, scope, period and method.
-- [ ] DIV-P4-007 Preserve intra-tradition disagreement and historical change.
-- [ ] DIV-P4-008 Define comparison frames that state which dimensions are being compared.
-- [ ] DIV-P4-009 Define explicit non-equivalence and incomparable states.
-- [ ] DIV-P4-010 Prevent the engine from generating normative religious verdicts or universal authority rankings.
-- [ ] DIV-P4-011 Define review workflows for domain experts and authorized communities without claiming one reviewer speaks for all adherents.
-- [ ] DIV-P4-012 Add fixtures for multiple traditions and competing interpretations without fabricating sacred source text.
+- [x] DIV-P4-001 Define RevelationResearchProfile as a scoped research profile, not a metaphysical truth oracle.
+- [x] DIV-P4-002 Separate revelation-related theological claims from textual witness identity and historical transmission.
+- [x] DIV-P4-003 Represent claims that a community/tradition regards a work or passage as revelation through Corpus Assertion plus scope/evidence/provenance.
+- [x] DIV-P4-004 Distinguish theological attribution, canonical recognition, textual attestation, historical-critical assessment and editorial status.
+- [x] DIV-P4-005 Define tradition and school references as open, versioned domain data, not closed universal enums.
+- [x] DIV-P4-006 Define doctrine/position/interpretation profiles with source, scope, period and method.
+- [x] DIV-P4-007 Preserve intra-tradition disagreement and historical change.
+- [x] DIV-P4-008 Define comparison frames that state which dimensions are being compared.
+- [x] DIV-P4-009 Define explicit non-equivalence and incomparable states.
+- [x] DIV-P4-010 Prevent the engine from generating normative religious verdicts or universal authority rankings.
+- [x] DIV-P4-011 Define review workflows for domain experts and authorized communities without claiming one reviewer speaks for all adherents.
+- [x] DIV-P4-012 Add fixtures for multiple traditions and competing interpretations without fabricating sacred source text.
 
 ### Acceptance
 - A claim about revelation is attributable to its source/scope and not silently converted to universal fact.
@@ -524,20 +524,20 @@ Adoption policy:
 **Priority:** P1 / central differentiator.
 
 ### Tasks
-- [ ] DIV-P5-001 Define epistemic dimensions separately from Corpus assertion and assessment fields.
-- [ ] DIV-P5-002 Define knowledge states: known-within-scope, unknown, not-recorded, not-applicable, unobservable, unverifiable and out-of-scope.
-- [ ] DIV-P5-003 Define evidence sufficiency as method-specific, not universal.
-- [ ] DIV-P5-004 Define claim scope validation and explicit scope propagation rules.
-- [ ] DIV-P5-005 Prevent cross-tradition inference unless a declared comparison/mapping rule permits it.
-- [ ] DIV-P5-006 Define uncertainty representation without one universal confidence score.
-- [ ] DIV-P5-007 Distinguish aleatoric, epistemic, source, temporal and interpretation uncertainty where useful and method-supported.
-- [ ] DIV-P5-008 Define abstention outcomes and machine-readable reasons.
-- [ ] DIV-P5-009 Define boundary policies for unobservable/metaphysical questions.
-- [ ] DIV-P5-010 Define missing-data semantics and ensure absence never becomes negation.
-- [ ] DIV-P5-011 Define user-facing explanation contract: known evidence, missing evidence, scope, method and limitations.
-- [ ] DIV-P5-012 Add property-based tests for unknown/not-recorded/not-applicable/false distinctions.
-- [ ] DIV-P5-013 Add tests proving an unsupported query returns abstention rather than invented content.
-- [ ] DIV-P5-014 Add documentation on the Sidrat conceptual inspiration and its non-literal software interpretation.
+- [x] DIV-P5-001 Define epistemic dimensions separately from Corpus assertion and assessment fields.
+- [x] DIV-P5-002 Define knowledge states: known-within-scope, unknown, not-recorded, not-applicable, unobservable, unverifiable and out-of-scope.
+- [x] DIV-P5-003 Define evidence sufficiency as method-specific, not universal.
+- [x] DIV-P5-004 Define claim scope validation and explicit scope propagation rules.
+- [x] DIV-P5-005 Prevent cross-tradition inference unless a declared comparison/mapping rule permits it.
+- [x] DIV-P5-006 Define uncertainty representation without one universal confidence score.
+- [x] DIV-P5-007 Distinguish aleatoric, epistemic, source, temporal and interpretation uncertainty where useful and method-supported.
+- [x] DIV-P5-008 Define abstention outcomes and machine-readable reasons.
+- [x] DIV-P5-009 Define boundary policies for unobservable/metaphysical questions.
+- [x] DIV-P5-010 Define missing-data semantics and ensure absence never becomes negation.
+- [x] DIV-P5-011 Define user-facing explanation contract: known evidence, missing evidence, scope, method and limitations.
+- [x] DIV-P5-012 Add property-based tests for unknown/not-recorded/not-applicable/false distinctions.
+- [x] DIV-P5-013 Add tests proving an unsupported query returns abstention rather than invented content.
+- [x] DIV-P5-014 Add documentation on the Sidrat conceptual inspiration and its non-literal software interpretation.
 
 ### Acceptance
 - Engine can say “not established by the available evidence” without converting it to false.
@@ -896,6 +896,9 @@ Phases may be parallelized only when their dependency contracts are stable. Do n
 - [x] Phase 0 architecture baseline and ADRs committed; repository-audit re-read, non-Corpus adapter ports and license governance follow-ups remain.
 - [x] Phase 1 foundational core, addon registry, lifecycle and tests implemented; example/clean-runtime proof and CI verification remain.
 - [x] Phase 2 read-only Corpus adapter and migration runbook implemented; profile-specific mapping, round-trip tests and stale-projection invalidation remain.
-- [ ] Subsequent phases.
+- [x] Phase 3 ontology intelligence core implemented, including candidate-only generation, deprecation plans, ontology diffs and a scoped SKOS subset adapter with fidelity reports; SHACL validation remains deferred.
+- [x] Phase 4 scoped revelation/theology research profiles implemented with attributed Corpus assertion/evidence/provenance references and bounded expert-review authority.
+- [x] Phase 5 SIDRAT epistemic boundary engine implemented with explicit knowledge states, method-bound sufficiency, non-widening scope rules and hard abstention for metaphysical/normative queries.
+- [ ] Remaining profile-specific and external interoperability tasks.
 
-**Execution update (2026-11-08):** Phase 0–2 foundational deliverables have been committed on `feat/divine-phase-0-2`. This is not a production release. The full Corpus repository has NOT been migrated: its source owner/repository currently grants this connection read-only access. See `docs/CORPUS-MIGRATION.md`.
+**Execution update (2026-11-08):** Phase 0–2 merged to `main`; Phases 3–5 domain modules are implemented on `feat-divine-phases-3-5`; TypeScript, lint, repository validation and Divine unit tests (37/37) passed in GitHub Actions. The pull-request CI must still confirm the full workspace build on the final head. External SHACL conformance and full standards round-trip tests remain open. Not a production release. The full Corpus repository has NOT been migrated: the source has no repository-wide license and third-party dataset redistribution must be rights-reviewed first. Read-only access is sufficient to fetch the source. A guarded, pinned subtree importer is prepared; see `docs/CORPUS-MIGRATION.md`.
