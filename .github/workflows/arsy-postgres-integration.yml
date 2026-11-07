@@ -110,7 +110,7 @@ jobs:
                 port: 3002,
                 path: request.url,
                 method: request.method,
-                headers: { ...request.headers, host: "localhost:3000", "x-forwarded-proto": "https" }
+                headers: { ...request.headers, host: "localhost:3000", "x-forwarded-proto": "https", "x-forwarded-for": request.socket.remoteAddress ?? "127.0.0.1" }
               }, (upstreamResponse) => {
                 response.writeHead(upstreamResponse.statusCode ?? 502, upstreamResponse.headers);
                 upstreamResponse.pipe(response);

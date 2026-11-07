@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import { createApp } from '../src/app.ts'
 import { createDatabasePool } from '../src/db.ts'
 import { evaluateOpportunity, opportunityInputSchema } from '../src/opportunities/domain.ts'
 import { OpportunityRepository } from '../src/opportunities/repository.ts'
@@ -135,6 +136,28 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.ok(product)
     assert.equal(product.version, 1)
     assert.equal(product.lifecycleState, 'brief')
+    assert.deepEqual(product.allowedNextLifecycleStates, ['production'])
+
+    const inProduction = await products.transitionLifecycle(ownerId, ownerId, product.id, 'brief', 'production')
+    assert.equal(inProduction?.lifecycleState, 'production')
+    const inReview = await products.transitionLifecycle(ownerId, ownerId, product.id, 'production', 'review')
+    assert.equal(inReview?.lifecycleState, 'review')
+    const readyProduct = await products.transitionLifecycle(ownerId, ownerId, product.id, 'review', 'ready')
+    assert.equal(readyProduct?.lifecycleState, 'ready')
+    assert.deepEqual(readyProduct?.allowedNextLifecycleStates, ['production', 'listed'])
+
+    const versionTwo = await products.createVersion(
+      ownerId,
+      ownerId,
+      product.id,
+      1,
+      { ...product.brief, productHypothesis: 'Version two adds a verified reconciliation report.' },
+      ['Imports a CSV without losing source rows', 'Exports a reconciliation report'],
+    )
+    assert.equal(versionTwo?.version, 2)
+    const versionHistory = await products.listVersions(ownerId, product.id)
+    assert.deepEqual(versionHistory.map((version) => version.version), [2, 1])
+    assert.equal(versionHistory[1].brief.productHypothesis, product.brief.productHypothesis)
 
     const locked = await new OpportunityRepository(pool).update(
       ownerId,
@@ -274,6 +297,9 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const reloadedProduct = await persistedProducts.get(ownerId, product.id)
     assert.ok(reloadedProduct)
     assert.equal(reloadedProduct.brief.buyerProblem, input.buyerProblem)
+    assert.equal(reloadedProduct.version, 2)
+    assert.equal(reloadedProduct.lifecycleState, 'ready')
+    assert.deepEqual((await persistedProducts.listVersions(ownerId, product.id)).map((version) => version.version), [2, 1])
     const financialEvents = await persistedFinance.list(ownerId)
     assert.equal(financialEvents.length, 8)
     assert.equal(financialEvents.find((event) => event.id === gross.event.id)?.amountMinor, '5000')
@@ -323,5 +349,48 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     await pool.query('DELETE FROM arsy_products WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_opportunities WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.end()
+  }
+})
+
+
+test('shared PostgreSQL login throttling is consistent across two ARSY instances', {
+  skip: !process.env.DATABASE_URL,
+}, async () => {
+  const ownerId = `login-limit-${randomUUID()}`
+  const token = 'integration-shared-login-token'
+  const networkHash = createHash('sha256').update(ownerId).digest('hex')
+  const poolA = createDatabasePool()
+  const poolB = createDatabasePool()
+  const appA = createApp({ databasePool: poolA, logger: false, env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token } })
+  const appB = createApp({ databasePool: poolB, logger: false, env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token } })
+  const send = (app, action) => app.inject({
+    method: 'POST',
+    url: '/api/v1/auth/login-attempts',
+    headers: { 'x-arsy-operator-token': token },
+    payload: { action, networkHash },
+  })
+
+  try {
+    for (let index = 0; index < 4; index += 1) {
+      const response = await send(index % 2 === 0 ? appA : appB, 'failure')
+      assert.equal(response.statusCode, 200)
+      assert.equal(response.json().data.allowed, true)
+    }
+    const fifth = await send(appB, 'failure')
+    assert.equal(fifth.statusCode, 200)
+    assert.equal(fifth.json().data.allowed, false)
+    assert.ok(fifth.json().data.retryAfterSeconds > 0)
+
+    const blockedFromOtherInstance = await send(appA, 'check')
+    assert.equal(blockedFromOtherInstance.json().data.allowed, false)
+
+    const successfulLoginClearsBuckets = await send(appB, 'success')
+    assert.equal(successfulLoginClearsBuckets.json().data.allowed, true)
+    const clearedFromOtherInstance = await send(appA, 'check')
+    assert.equal(clearedFromOtherInstance.json().data.allowed, true)
+  } finally {
+    await poolA.query('DELETE FROM arsy_login_attempt_buckets WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    await appA.close()
+    await appB.close()
   }
 })
