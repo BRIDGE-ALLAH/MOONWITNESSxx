@@ -45,7 +45,7 @@ jobs:
       - name: Commit generated lockfile and formatting
         shell: bash
         run: |
-          if git diff --quiet -- pnpm-lock.yaml; then
+          if git diff --quiet -- pnpm-lock.yaml package.json pnpm-workspace.yaml turbo.json; then
             echo "Lockfile is already synchronized."
             exit 0
           fi
