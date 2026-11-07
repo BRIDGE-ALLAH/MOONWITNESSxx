@@ -413,3 +413,10 @@ These are contract surfaces only. They do not yet implement the field engine, mo
 The package identity contract now encodes SQLite as the System Database and PostgreSQL as the Business Database. The SQLite adapter target is named `packages/orm-db-adaptor-sqlite`; concrete driver packages are intentionally not created as empty placeholders.
 
 Phase 1 remains open. No local pnpm install, lockfile regeneration, typecheck, lint, tests, build or CI workflow result has been recorded for these new packages. See `docs/25-phase-1-package-contracts.md` and the Phase 1 execution log in `todo.md` for exact scope and remaining verification gates.
+
+
+## 14. Phase 1/3 implementation follow-up — 2026-11-07
+
+The Phase 1 branch now includes workspace manifests and export maps for `@riotworks/orm`, `@riotworks/orm-db-adaptor` and `@riotworks/orm-db`. The follow-on Phase 3 branch adds `packages/orm/src/registry.ts` with a first deterministic composer for addon/module dependencies, model declarations, extension contributions, relation-target checks and registry fingerprinting.
+
+This remains unverified source code. Concrete PostgreSQL and SQLite adapters, ARSY Core integration, System Database persistence/atomic activation, complete inheritance and override semantics, automated tests, clean install, lockfile and CI checks are not yet complete. See `todo.md`, `docs/25-phase-1-package-contracts.md` and `docs/26-phase-3-registry-foundation.md`.
