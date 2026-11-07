@@ -20,7 +20,11 @@ interface EvidenceRow {
  * The advisory transaction lock + expected previous hash prevents cross-process hash-chain forks.
  */
 export class PostgresEvidenceStore implements EvidenceStore {
-  constructor(private readonly pool: Pool) {}
+  private readonly pool: Pool
+
+  constructor(pool: Pool) {
+    this.pool = pool
+  }
 
   async append(event: EvidenceEvent): Promise<void> {
     const client = await this.pool.connect()
