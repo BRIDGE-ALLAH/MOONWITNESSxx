@@ -13,7 +13,7 @@
 - Configure SQLite foreign keys, busy timeout, WAL for file-backed databases and synchronous NORMAL.
 - Restrict SQLite to one active transaction per connection and reject concurrent transaction starts.
 - Reject unsupported/destructive DDL such as automatic type alteration, drops and custom SQL; these require versioned semantic upgrade handlers.
-- Add real in-memory SQLite integration test source and PostgreSQL identity/connection-guard test source.
+- Add real in-memory and file-backed SQLite integration tests, live PostgreSQL container integration tests, and ARSY Fastify provider bootstrap/shutdown test source.
 - Explicitly allow the reviewed better-sqlite3 native build in pnpm workspace configuration.
 
 ## Boundaries and limitations
@@ -30,7 +30,7 @@
 
 1. Run pnpm lockfile sync, install, typecheck, lint and adapter tests in CI.
 2. Add PostgreSQL container integration tests for query, pool lifecycle, rollback and catalog introspection.
-3. Add SQLite file-backed tests for WAL, restart persistence, busy timeout and concurrent writer behavior.
+3. Add SQLite file-backed tests for WAL and restart persistence; busy timeout and concurrent writer stress remain.
 4. Add adapter contract suite shared by both providers.
 5. Add secret-reference configuration and connection rotation lifecycle.
 6. Integrate providers into ARSY registry and System Mode bootstrap; keep business and system transaction domains separate.
