@@ -86,23 +86,26 @@ test('operator login issues an HttpOnly strict cookie after shared throttle appr
     }))
     assert.equal(login.status, 200)
     assert.deepEqual(calls.map((call) => call.body.action), ['check', 'success'])
-    const cookie = login.cookies.get(OPERATOR_SESSION_COOKIE)
-    assert.ok(cookie?.value)
-    assert.equal(cookie.httpOnly, true)
-    assert.equal(cookie.sameSite, 'strict')
+    const setCookie = login.headers.get('set-cookie') ?? ''
+    const cookieValue = setCookie.match(new RegExp(`${OPERATOR_SESSION_COOKIE}=([^;]+)`))?.[1]
+    assert.ok(cookieValue)
+    assert.match(setCookie, /; HttpOnly(?:;|$)/i)
+    assert.match(setCookie, /; SameSite=Strict(?:;|$)/i)
 
     const session = await GET(new Request(`${origin}/api/auth/session`, {
-      headers: { cookie: `${OPERATOR_SESSION_COOKIE}=${cookie.value}` },
+      headers: { cookie: `${OPERATOR_SESSION_COOKIE}=${cookieValue}` },
     }))
     assert.equal(session.status, 200)
     assert.equal((await session.json()).data.operatorId, operatorId)
 
     const logout = await DELETE(new Request(`${origin}/api/auth/session`, {
       method: 'DELETE',
-      headers: { origin, cookie: `${OPERATOR_SESSION_COOKIE}=${cookie.value}` },
+      headers: { origin, cookie: `${OPERATOR_SESSION_COOKIE}=${cookieValue}` },
     }))
     assert.equal(logout.status, 200)
-    assert.equal(logout.cookies.get(OPERATOR_SESSION_COOKIE)?.value, '')
+    const clearedCookie = logout.headers.get('set-cookie') ?? ''
+    assert.match(clearedCookie, new RegExp(`${OPERATOR_SESSION_COOKIE}=;`))
+    assert.match(clearedCookie, /Max-Age=0/i)
   } finally {
     restore()
   }
