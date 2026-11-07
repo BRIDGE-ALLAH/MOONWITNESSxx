@@ -167,7 +167,7 @@ Provide health/readiness, versioned contracts, private schema operations, struct
 
 ## 11. Canonical references and status
 
-- Detailed Base Platform and ORM capability matrix: `docs/22-base-platform-and-orm-capability-blueprint.md`.
+- Accepted decisions and supersession history: `docs/24-architecture-decision-records.md` (ADR-001–ADR-012).\n- Detailed Base Platform and ORM capability matrix: `docs/22-base-platform-and-orm-capability-blueprint.md`.
 - Actual repository inventory, gaps, and execution order: `docs/23-repository-audit-and-current-execution-plan.md`.
 - Odoo reference concepts: https://www.odoo.com/documentation/master/developer/reference/backend/orm.html
 - Kysely (adapter-internal only): https://kysely.dev/docs/getting-started
