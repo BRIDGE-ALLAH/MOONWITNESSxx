@@ -13,6 +13,13 @@ const createSchema = z.object({
     evidenceUrl: z.string().url().optional(),
   })).min(1).max(100),
 }).superRefine((input, context) => {
+  if (input.status === 'pass' && input.findings.some((finding) => finding.severity === 'blocker')) {
+    context.addIssue({
+      code: 'custom',
+      path: ['findings'],
+      message: 'An inspection with blocker findings cannot be marked as passing.',
+    })
+  }
   if (input.status === 'pass' && ['rights', 'policy'].includes(input.inspectionType) &&
     !input.findings.some((finding) => finding.evidenceUrl)) {
     context.addIssue({ code: 'custom', path: ['findings'], message: 'Passing rights or policy inspection requires at least one evidence URL.' })
