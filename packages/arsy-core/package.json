@@ -2,7 +2,7 @@
   "name": "@riotworks/arsy-core",
   "version": "0.0.0",
   "private": true,
-  "description": "RIOTWORKS ARSY core — Fastify server with ZOD validation",
+  "description": "RIOTWORKS ARSY framework-neutral governance primitives",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
@@ -10,7 +10,8 @@
     "dev": "fastify dev",
     "build": "fastify build",
     "lint": "pnpm --filter @riotworks/lint run lint",
-    "type-check": "pnpm --filter @riotworks/types run type-check"
+    "type-check": "pnpm --filter @riotworks/types run type-check",
+    "test:governance": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "@fastify/jwt": "^8.0.0",

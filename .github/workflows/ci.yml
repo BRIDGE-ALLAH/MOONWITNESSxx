@@ -5,12 +5,15 @@ on:
     branches:
       - main
       - "feat-*"
+      - "feat/**"
       - "fix-*"
       - "chore-*"
       - "headquarter/**"
   pull_request:
     branches:
       - main
+      - "feat-*"
+      - "feat/**"
   workflow_dispatch:
 
 concurrency:
@@ -54,6 +57,9 @@ jobs:
 
       - name: Validate repository, formatting, and automation tests
         run: pnpm run validate:repo
+
+      - name: Test ARSY governance primitives
+        run: pnpm --filter @riotworks/arsy-core test:governance
 
       - name: Upload repository audit
         if: always()

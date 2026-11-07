@@ -775,7 +775,7 @@ Use these labels consistently when updating this file:
 
 ## 19. Phase 14 — Living Evidence Graph & Epistemic Memory
 
-**Status:** Research-backed proposal; implementation not yet started.  
+**Status:** [~] Event ledger + PostgreSQL transactional adapter/migration + native tests authored; System Mode migration orchestration, evidence graph projections, source-span capture, and runtime wiring remain. See implementation PR.  
 **Goal:** Make every consequential ARSY conclusion reconstructable from the evidence, assumptions, decisions, and system state that existed at the time.
 
 - [ ] Define a versioned Evidence Graph schema: Evidence, Claim, Source, Observation, Belief, Decision, Action, Outcome, Counterevidence, and Supersession edges.
@@ -795,7 +795,7 @@ Use these labels consistently when updating this file:
 
 ## 20. Phase 15 — ARSY Reality Replay & Counterfactual Safety Engine
 
-**Status:** Research-backed proposal; implementation not yet started.  
+**Status:** [~] Initial code vertical slice in `packages/arsy-core/src/replay/`; sandbox runner, external fixture adapters, capsule persistence, and automated safety tests remain. See implementation PR.  
 **Goal:** Evaluate high-impact actions against a reproducible snapshot before execution, and preserve the relationship between prediction and observed outcome.
 
 - [ ] Define a Replay Capsule: registry fingerprint, policy version, actor/tenant scope, input snapshot, evidence IDs, tool versions, random seeds where controllable, and external dependency declarations.
@@ -821,4 +821,92 @@ Use these labels consistently when updating this file:
 - [ ] Do not use “first in the world”, “never done before”, or equivalent claims without a defensible prior-art search and independent review.
 - [ ] Prefer measurable hypotheses and reproducible prototypes over speculative feature claims.
 - [ ] Re-run the research review before public release because the agent infrastructure ecosystem changes quickly.
+
+
+## 22. Phase 16 — Causal Blast-Radius Mesh & Change Digital Twin
+
+**Status:** [~] Framework-neutral impact graph traversal and tests authored; trace ingestion, scenario runner, calibration, and real workflow benchmark remain.  
+**Goal:** Predict the downstream impact of a proposed change across data, policies, agents, integrations, and user-visible workflows before it is applied.
+
+- [~] Add framework-neutral typed impact graph and conservative blast-radius traversal in `packages/arsy-core/src/causal/impact.ts`; event ingestion and production graph projection remain.
+- [ ] Distinguish correlation, declared dependency, and experimentally supported causal edge; attach confidence and provenance to each edge.
+- [ ] Create a Change Impact Capsule containing proposed diff, affected entities, policy/registry fingerprints, and current evidence snapshot.
+- [ ] Run bounded counterfactual scenarios against isolated fixtures; estimate blast radius, reversibility, affected tenants, and recovery cost.
+- [ ] Add a “no-op / do nothing” baseline so ARSY can recommend delaying an action when evidence is weak.
+- [ ] Generate a machine-readable impact report and a human-readable explanation with uncertainty intervals and missing evidence.
+- [ ] Calibrate predictions against post-deployment observations; track false-positive and missed-impact rates.
+- [ ] Start with schema/policy changes and a single reversible workflow; do not claim a general digital twin prematurely.
+
+**Exit gate:** Impact predictions are benchmarked against recorded changes; causal edges are provenance-backed; uncertainty is explicit; no scenario can touch live external systems.
+
+## 23. Phase 17 — Knowledge Immune System & Adversarial Provenance Defense
+
+**Status:** [~] Evidence quality vector, trust disposition, independent-source corroboration, contamination index, and tests authored; persistent source registry, adversarial corpus, operator review, and calibrated policy remain.  
+**Goal:** Detect poisoned, manipulated, stale, coordinated, or context-stripped evidence before it contaminates beliefs and downstream actions.
+
+- [~] Add separate authenticity/authority/freshness/context/signature dimensions and fail-closed quarantine evaluation in `packages/arsy-core/src/knowledge/provenance.ts`; persistent source identity and signed acquisition remain.
+- [ ] Detect near-duplicate campaigns, sudden source behavior changes, quote/context mismatch, temporal anomalies, and conflicting independent observations.
+- [~] Add in-memory source → evidence → claim → decision contamination index; durable dependency graph and action gate integration remain.
+- [ ] Introduce quarantined evidence state and reversible belief promotion; never delete counterevidence during conflict resolution.
+- [ ] Use independent corroboration classes and diversity constraints; multiple copies of one origin do not count as independent sources.
+- [ ] Add adversarial fixtures for prompt injection in retrieved content, forged citations, source spoofing, replayed stale evidence, and coordinated repetition.
+- [ ] Add a “belief circuit breaker” that freezes promotion and high-impact actions when provenance integrity falls below policy thresholds.
+- [ ] Provide explainable quarantine reports and an operator appeal/release path.
+- [ ] Evaluate precision/recall, time-to-detection, contamination depth, false quarantine rate, and downstream action prevention.
+- [ ] Ensure privacy, retention, deletion, and user correction semantics remain enforceable.
+
+**Exit gate:** Poisoned evidence fixtures are quarantined before belief promotion; contamination can be traced and rolled back; false-positive rates are measured; safety gates fail closed without blocking unrelated trusted evidence.
+
+
+
+## Phase 18 — Provenance-Bound Capability Delegation & Runtime Contract
+
+**Status:** [~] Initial capability-chain evaluator and escalation tests authored in `packages/arsy-core/src/runtime-contract/capability.ts`; trusted issuer registry, canonical signature format, enforcement middleware integration, and production key rotation remain.
+
+**Goal:** Ensure every tool action is authorized for the original principal, current tenant, purpose, resource and action—not merely because an agent or intermediary possesses ambient credentials.
+
+- [~] Add root-to-leaf capability grants with subject, issuer, tenant, purpose, action/resource scopes, validity window and signature envelope.
+- [~] Enforce attenuation-only delegation: child grants cannot widen parent action/resource scope, tenant, purpose or lifetime.
+- [~] Verify each grant through an injected trusted verifier; do not let the model provide or override the trust anchor.
+- [ ] Add issuer trust registry, key rotation/revocation, canonical serialization and signature verification backed by the deployment key-management system.
+- [ ] Bind capability evaluation to actual MCP/tool gateway and deny before credentials or side effects are exposed.
+- [ ] Add TOCTOU protection: bind the authorization decision to immutable normalized tool arguments and a short-lived one-time nonce.
+- [ ] Add explicit delegation chain to audit/evidence events, including the initiating human principal and every intermediate agent.
+- [ ] Add cross-tenant, replayed-grant, expired-grant, privilege-escalation and confused-deputy adversarial tests.
+
+**Exit gate:** No agent or sub-agent can exceed the original principal's grant; every effectful tool invocation is denied at the enforcement boundary when capability verification or context binding fails.
+
+## Phase 19 — Proof-Carrying Execution & Attestable Outcomes
+
+**Status:** [~] Trace invariant validator and digest-bound attestation prototype authored in `packages/arsy-core/src/attestation/proof.ts`; signature anchoring, durable storage, trusted effect receipts and runtime issuance remain.
+
+**Goal:** An action is considered completed only when the system can present a verifiable contract, policy decision, observed effect and terminal outcome—not merely a successful model response.
+
+- [~] Define typed execution events for policy allow/deny, approval and effect lifecycle.
+- [~] Validate sequence continuity, tenant consistency, prior authorization, approval timing, actor consistency and terminal effect records.
+- [~] Generate a SHA-256 trace digest and trace-consistent attestation only when the validator reports no invariant violation.
+- [ ] Bind the attestation to a signed execution contract and append-only Evidence Ledger event.
+- [ ] Require effectors to emit receipts with idempotency key, normalized request hash, provider reference and observed result hash.
+- [ ] Add external trust anchoring (KMS/HSM-backed signature or equivalent) and verifier CLI/API.
+- [ ] Define partial-commit and compensation states; an effect marked failed is not equivalent to an effect that never happened.
+- [ ] Test forged receipts, trace truncation, reordered events, tenant switching, denied-but-executed actions and approval-after-effect.
+
+**Exit gate:** An independent verifier can reject forged, incomplete, reordered or unauthorized execution traces; no success status is issued without an effect receipt and valid terminal state.
+
+## Phase 20 — Continuous Agent Safety Lab & Counterfactual Policy Testing
+
+**Status:** [~] Deterministic trace diagnosis and confusion-matrix evaluator authored in `packages/arsy-core/src/evaluation/safety-suite.ts`; benchmark corpus, CI thresholds, mutation runner and regression dashboard remain.
+
+**Goal:** Turn every incident, policy change and new agent capability into a reproducible adversarial regression test.
+
+- [~] Add deterministic trace findings for denied effects, missing authorization, actor mismatch, missing approval, incomplete effect and cross-tenant execution.
+- [~] Add scenario suite evaluation with true/false positive and negative counts, precision and recall.
+- [ ] Import a curated subset of public AgentDojo/TraceProbe-style scenarios after checking dataset and code licenses.
+- [ ] Add mutation testing for policy rules: remove, weaken or reorder one rule and prove that known attack traces become detectable.
+- [ ] Add metamorphic tests: duplicate tool calls, reorder independent events, alter tenant IDs, expire grants, replace source provenance, and truncate traces.
+- [ ] Add CI release gates for unsafe-action escape rate, false-block rate, trace coverage and replay determinism; thresholds must be calibrated to a declared corpus.
+- [ ] Persist minimized failing traces as regression fixtures with privacy-safe redaction and provenance.
+- [ ] Add incident-to-test workflow: an operator-approved incident report generates a reproducible test proposal, never an automatically trusted policy update.
+
+**Exit gate:** Each release runs a versioned adversarial suite; policy regressions are detected before deployment; metrics and false positives are reported with the exact corpus version.
 
