@@ -94,3 +94,23 @@ test('operator login issues an HttpOnly strict cookie that authenticates and can
     restore()
   }
 })
+
+test('operator login rate-limits repeated invalid credentials', async () => {
+  const restore = configureEnvironment()
+  try {
+    const attempt = () => POST(new Request(`${origin}/api/auth/session`, {
+      method: 'POST',
+      headers: { origin, 'content-type': 'application/json' },
+      body: JSON.stringify({ password: 'incorrect-password' }),
+    }))
+    for (let index = 0; index < 4; index += 1) {
+      assert.equal((await attempt()).status, 401)
+    }
+    const limited = await attempt()
+    assert.equal(limited.status, 429)
+    assert.ok(Number(limited.headers.get('retry-after')) > 0)
+    assert.equal((await attempt()).status, 429)
+  } finally {
+    restore()
+  }
+})
