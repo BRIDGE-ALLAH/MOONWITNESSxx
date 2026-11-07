@@ -11,18 +11,28 @@ export type LoginAttemptOperation = 'check' | 'failure' | 'success'
 export function resolveTrustedClientNetworkIdentity(
   request: Request,
   trustedProxyHops: number,
+  proxyIdentitySecret: string | undefined,
   nodeEnv = process.env.NODE_ENV,
+  now = Date.now(),
 ): string | null {
   if (trustedProxyHops === 0) return nodeEnv === 'production' ? null : 'local-development'
-  if (!Number.isSafeInteger(trustedProxyHops) || trustedProxyHops < 1 || trustedProxyHops > 8) return null
+  if (!Number.isSafeInteger(trustedProxyHops) || trustedProxyHops < 1 || trustedProxyHops > 8 ||
+      !proxyIdentitySecret || Buffer.byteLength(proxyIdentitySecret, 'utf8') < 32) return null
 
-  // The configured edge ingress must strip inbound X-Forwarded-For and replace it
-  // with exactly one canonical client address before forwarding to this private app.
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (!forwarded) return null
-  const addresses = forwarded.split(',').map((address) => address.trim())
-  if (addresses.length !== 1 || isIP(addresses[0]) === 0) return null
-  return addresses[0].toLowerCase()
+  // Only a private ingress that strips inbound x-mw-client-* headers may create
+  // this short-lived HMAC assertion after resolving the configured trusted proxy chain.
+  const address = request.headers.get('x-mw-client-ip')?.trim().toLowerCase()
+  const timestamp = request.headers.get('x-mw-client-timestamp')?.trim()
+  const suppliedSignature = request.headers.get('x-mw-client-signature')?.trim()
+  if (!address || isIP(address) === 0 || !timestamp || !/^[0-9]{10}$/.test(timestamp) ||
+      !suppliedSignature || !/^[a-f0-9]{64}$/i.test(suppliedSignature)) return null
+  const issuedAt = Number(timestamp)
+  if (!Number.isSafeInteger(issuedAt) || Math.abs(Math.floor(now / 1000) - issuedAt) > 60) return null
+
+  const expected = createHmac('sha256', proxyIdentitySecret).update(`${address}.${timestamp}`).digest()
+  const supplied = Buffer.from(suppliedSignature, 'hex')
+  if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) return null
+  return address
 }
 
 export function createLoginAttemptBucketHashes(
