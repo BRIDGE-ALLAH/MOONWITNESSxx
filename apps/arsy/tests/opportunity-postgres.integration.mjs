@@ -99,6 +99,12 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.ok(product)
     assert.equal(product.version, 1)
     assert.equal(product.lifecycleState, 'brief')
+    const productionProduct = await products.transitionLifecycle(ownerId, ownerId, product.id, 'brief', 'production')
+    assert.equal(productionProduct?.lifecycleState, 'production')
+    const reviewProduct = await products.transitionLifecycle(ownerId, ownerId, product.id, 'production', 'review')
+    assert.equal(reviewProduct?.lifecycleState, 'review')
+    const readyProduct = await products.transitionLifecycle(ownerId, ownerId, product.id, 'review', 'ready')
+    assert.equal(readyProduct?.lifecycleState, 'ready')
 
     const otherOwnerId = randomUUID()
     await assert.rejects(
@@ -190,6 +196,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const reloadedProduct = await persistedProducts.get(ownerId, product.id)
     assert.ok(reloadedProduct)
     assert.equal(reloadedProduct.brief.buyerProblem, input.buyerProblem)
+    assert.equal(reloadedProduct.lifecycleState, 'ready')
     const financialEvents = await persistedFinance.list(ownerId)
     assert.equal(financialEvents.length, 8)
     assert.equal(financialEvents.find((event) => event.id === gross.event.id)?.amountMinor, '5000')
@@ -229,6 +236,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     for (const expected of [
       'created',
       'created-from-opportunity',
+      'lifecycle-changed',
       'recorded-pending-reconciliation',
       'reconciled',
       'decision-changed',
