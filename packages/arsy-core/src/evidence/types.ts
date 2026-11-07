@@ -98,6 +98,7 @@ export class EvidenceLedger {
     try {
       const history = await this.store.list(input.aggregateId)
       const normalizedEvidenceIds = [...new Set(input.evidenceIds ?? [])]
+      const normalizedOccurredAt = new Date(input.occurredAt).toISOString()
       const existing = history.find((item) => item.id === input.id)
       if (existing) {
         const sameInput =
