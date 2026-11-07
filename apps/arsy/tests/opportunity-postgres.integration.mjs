@@ -157,7 +157,8 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(await new OpportunityRepository(pool).update(ownerId, ownerId, created.id, revisedInput, revisedEvaluation, promotedOpportunity.version), null, 'promoted opportunities must reject edits')
 
 
-    const revisedProduct = await products.createVersion(ownerId, ownerId, product.id, {
+    assert.ok(transitionedProduct)
+    const revisedProduct = await products.createVersion(ownerId, ownerId, product.id, transitionedProduct.version, {
       buyerProblem: input.buyerProblem,
       revisionNotes: 'Version two adds clear reorder threshold behavior.',
       sourceOpportunityId: created.id,
