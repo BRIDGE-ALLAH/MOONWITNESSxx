@@ -90,6 +90,7 @@ export class ProductRepository {
         WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
           AND decision = 'prototype-candidate' AND score >= 80
           AND hard_gates @> '{"rights":"pass","countryEligibility":"pass","channelPolicy":"pass","payoutFeasibility":"pass"}'::jsonb
+        FOR UPDATE
       ), created AS (
         INSERT INTO arsy_products
           (id, owner_id, opportunity_id, title, product_family, lifecycle_state, created_by, updated_by)
