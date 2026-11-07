@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, time::Duration};
 
 use serde::Serialize;
 use sqlx::{MySqlPool, mysql::MySqlPoolOptions};
@@ -26,39 +26,42 @@ impl DatabaseStatus {
     }
 }
 
-pub async fn probe() -> DatabaseStatus {
-    let Ok(database_url) = env::var("DATABASE_URL") else {
-        return DatabaseStatus::NotConfigured;
-    };
+pub async fn pool() -> Result<&'static MySqlPool, sqlx::Error> {
+    POOL.get_or_try_init(|| async {
+        let database_url = env::var("DATABASE_URL")
+            .map_err(|error| sqlx::Error::Configuration(Box::new(error)))?;
+        if database_url.trim().is_empty() {
+            return Err(sqlx::Error::Configuration(
+                "DATABASE_URL is empty".into(),
+            ));
+        }
 
-    if database_url.trim().is_empty() {
+        let max_connections =
+            parse_db_max_connections(env::var("DB_MAX_CONNECTIONS").ok().as_deref())
+                .map_err(|error| {
+                    sqlx::Error::Configuration(std::io::Error::other(error).into())
+                })?;
+
+        MySqlPoolOptions::new()
+            .max_connections(max_connections)
+            .acquire_timeout(Duration::from_secs(3))
+            .connect(&database_url)
+            .await
+    })
+    .await
+}
+
+pub async fn probe() -> DatabaseStatus {
+    if env::var("DATABASE_URL").map_or(true, |value| value.trim().is_empty()) {
         return DatabaseStatus::NotConfigured;
     }
 
-    let max_connections =
-        match parse_db_max_connections(env::var("DB_MAX_CONNECTIONS").ok().as_deref()) {
-            Ok(value) => value,
-            Err(error) => {
-                tracing::error!(%error, "invalid ATLAS database pool configuration");
-                return DatabaseStatus::Unavailable;
-            }
-        };
-
-    let pool = POOL
-        .get_or_try_init(|| async {
-            MySqlPoolOptions::new()
-                .max_connections(max_connections)
-                .connect(&database_url)
-                .await
-        })
-        .await;
-
-    let Ok(pool) = pool else {
+    let Ok(pool) = pool().await else {
         return DatabaseStatus::Unavailable;
     };
 
     match sqlx::query_scalar::<_, i32>("SELECT 1")
-        .fetch_one(pool)
+        .fetch_one(*pool)
         .await
     {
         Ok(1) => DatabaseStatus::Available,

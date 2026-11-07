@@ -62,6 +62,7 @@ Install Rust 1.94+ and the Loco CLI:
     cargo install loco --version 1.3.1
     export DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas'
     export REDIS_URL='redis://:password@127.0.0.1:6379/0'
+    export ATLAS_CONTROL_TOKEN='replace-with-a-long-random-control-token'
     cargo loco start
 
 The dashboard is served at http://127.0.0.1:5150/.
@@ -71,7 +72,15 @@ The dashboard is served at http://127.0.0.1:5150/.
 - GET /api/v1/system/health — liveness plus actual MariaDB and Redis probe results.
 - GET /api/v1/system/readiness — returns 503 unless both MariaDB and Redis are reachable.
 - GET /api/v1/system/version — build/package version.
-- GET /api/v1/engines/catalog — engine integration catalog and explicit adapter status.
+- GET /api/v1/engines/catalog — engine integration catalog and adapter status.
+- GET /api/v1/engines — list registered engines (Bearer token required).
+- POST /api/v1/engines — register an engine (Bearer token required).
+- GET /api/v1/engines/{id} — retrieve an engine (Bearer token required).
+- PUT /api/v1/engines/{id} — update an engine (Bearer token required).
+- DELETE /api/v1/engines/{id} — remove an engine (Bearer token required).
+- GET /api/v1/engines/{id}/health — run a live backend probe (Bearer token required).
+
+Set ATLAS_CONTROL_TOKEN to a long random secret in standalone mode. Do not expose the control API directly to the public internet. In integrated deployments, place it behind ARSY's authenticated authorization gateway; the local bearer token is a bootstrap/standalone guard, not a replacement for ARSY governance.
 
 Loco's built-in /_ping, /_health, and /_readiness routes remain available.
 
@@ -86,7 +95,7 @@ Install SQLx CLI and apply versioned migrations:
     cargo install sqlx-cli --no-default-features --features mysql,rustls
     DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas' sqlx migrate run --source migrations
 
-The initial migration creates the engine registry table. Application readiness checks MariaDB with a real SELECT 1 and Redis with PING; it does not imply that every future domain is implemented.
+The initial migration creates the engine registry table; the next migration adds non-secret adapter configuration and secret environment-variable references. Apply all migrations in order. Application readiness checks MariaDB with a real SELECT 1 and Redis with PING; it does not imply that every future domain is implemented.
 
 ## Development checks
 
@@ -103,6 +112,9 @@ The initial migration creates the engine registry table. Application readiness c
 - Loco application and runtime CLI.
 - ATLAS dashboard shell with DNS, RADIUS, database, Redis, and observability status surfaces.
 - Versioned health, readiness, version, and engine catalog endpoints.
+- Persistent engine registry CRUD (list, create, retrieve, update, delete) with input validation.
+- Bearer-token protection for engine management and health probes; control routes remain disabled until ATLAS_CONTROL_TOKEN is configured.
+- Live HTTP health probes for PowerDNS Authoritative, VictoriaMetrics, and VictoriaLogs; unsupported native protocols are reported as unsupported rather than falsely healthy.
 - MariaDB connectivity probe with bounded connection pool configuration.
 - Required Redis connectivity probe; readiness fails when Redis is unavailable.
 - Compose services for MariaDB, Redis, VictoriaMetrics, VictoriaLogs, and FreeRADIUS.
@@ -111,10 +123,10 @@ The initial migration creates the engine registry table. Application readiness c
 
 ### Planned; not yet implemented
 
-- Persistent inventory and engine CRUD.
-- PowerDNS, Unbound, and dnsdist control adapters.
-- FreeRADIUS configuration/API adapter and secure NAS/subscriber provisioning workflows.
-- VictoriaMetrics and VictoriaLogs query/configuration adapters.
+- Unbound and dnsdist native control adapters.
+- FreeRADIUS RADIUS Status-Server probing, SQL module configuration, and secure NAS/subscriber provisioning workflows.
+- Full PowerDNS zone/record management API adapter.
+- VictoriaMetrics and VictoriaLogs query/configuration APIs beyond basic health probes.
 - Dedicated RADIUS subscriber/accounting database provisioning and schema migrations.
 - Collector management, desired/actual state reconciliation, and durable operational jobs.
 - ARSY authorization/approval integration and AEGIS execution integration.
