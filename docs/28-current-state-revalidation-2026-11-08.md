@@ -124,3 +124,31 @@ This section supersedes the earlier point-in-time mainline and release snapshots
 
 ### Verification boundary
 This revalidation used GitHub repository files, branch/PR metadata, review records, and check-run metadata. It did not execute a local clone, package install, local tests/build, Docker image runtime against PostgreSQL, browser E2E, screen-reader tests, or production infrastructure operations. Those remain NOT RUN / NOT AVAILABLE, not PASS.
+
+
+## 9. Revalidation after mainline theme contract update — 2026-11-08
+
+This section supersedes the prior verified HEAD and current PR #106 snapshot above.
+
+### Current mainline
+- Verified default branch HEAD at this inspection: `01af20609452e922506dc80e85ed361b469627c9`.
+- The latest main commit adds canonical Observatory and Archive theme tokens, display typography alignment, and CI-enforced theme contract tests.
+- PR #107 and PR #109 remain merged. Signal Room no longer presents unsupported market signals; The Forge, Mizan Ledger, and ZILL Watch no longer present invented products, finance records, or inspection outcomes.
+- Several other legacy Headquarter pages remain explicitly marked as prototype/demo-only: Aftershock demo metrics, Launch Bay publication history, Riot Engine agent statuses, Settings Policy placeholders, and Sidra Archive sample assets. These are disclosed demonstrations, not connected production capabilities. Keep their disclosure persistent and do not count them as completed workflows.
+- Repository workflow inventory includes CI, CodeQL, container build, corpus migration, PR labeling, lockfile refresh, and weekly detection. No production deployment workflow or target-specific deployment configuration was found in the current main tree.
+
+### Money Maker PR #106 — latest inspected state
+- PR #106 remains draft and its branch is based on `dc25eb8e5a1e5db3252b6f5bb70d08b9a6e17f5a`, not current main.
+- The branch contains the opportunity → product brief/version → financial event/reconciliation slice, Headquarter operator session/BFF and three connected screens.
+- Migration 002 on the latest inspected branch contains the required opportunity archive/idempotency columns and the product/financial/audit tables. An earlier malformed snapshot was superseded by a subsequent correction; do not use the cancelled run from that malformed snapshot as verification.
+- A dedicated PostgreSQL integration workflow and integration test now cover migrations, opportunity idempotency/ownership/decision/archive, product creation/version, financial idempotency/reconciliation, exact minor-unit summaries, audit events, and persistence across pool reconnects.
+- At this inspection the branch was 159 commits ahead and 11 behind current main, GitHub reported it dirty/non-mergeable, and the current exact-head check snapshot showed JavaScript/TypeScript analysis queued with no completed PostgreSQL integration result. Reconcile the branch and require fresh green checks on the final head.
+- No browser E2E proves the full signed-login → opportunity → product → financial event → reconciliation → reload journey. Login attempt throttling is also absent.
+- Asset binary storage/provenance, inspection workflow, channel/listing lifecycle, external provider ingestion, payout execution, and full product version/update lifecycle remain incomplete.
+
+### Release and verification
+- Root package version remains `1.0.11`; the visible stable release remains `v1.0.0`. Do not create a new version merely to conceal incomplete acceptance.
+- No production deployment target, managed production secret injection, TLS/ingress, backup/restore, rollback, monitoring, or live smoke-test evidence is available.
+- Production release remains **NO-GO**. Current mainline data-truth improvements and the draft commerce workflow do not establish production readiness.
+
+This audit remains a point-in-time repository/API review. It does not claim local tests, Docker/PostgreSQL execution, browser E2E, or production operations unless the corresponding exact-head workflow evidence is green and recorded.
