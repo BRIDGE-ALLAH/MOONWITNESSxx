@@ -251,10 +251,12 @@ export function LaunchBayBoard() {
     const draft = listingDrafts[product.id]
     if (!draft?.channelId) { setError('Select a channel before generating a listing package.'); return }
     setSaving(product.id); setError(''); setMessage('')
+    const idempotencyKey = packageKeys[product.id] ?? crypto.randomUUID()
+    setPackageKeys((current) => ({ ...current, [product.id]: idempotencyKey }))
     try {
       const response = await fetch('/api/listings/packages', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'idempotency-key': packageKeys[product.id] ?? crypto.randomUUID() },
+        headers: { 'content-type': 'application/json', 'idempotency-key': idempotencyKey },
         body: JSON.stringify({ productId: product.id, productVersion: product.version, channelId: draft.channelId, disclosure: draft.disclosure }),
       })
       const payload = await response.json()
