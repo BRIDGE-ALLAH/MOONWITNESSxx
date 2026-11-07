@@ -1,0 +1,138 @@
+import { createHash } from "node:crypto";
+
+export type WitnessEventType =
+  | "observation.recorded"
+  | "claim.proposed"
+  | "claim.assessed"
+  | "relation.asserted"
+  | "decision.recorded";
+
+export interface WitnessEventInput {
+  id: string;
+  type: WitnessEventType;
+  actor: string;
+  occurredAt: string;
+  subject: string;
+  payload: Readonly<Record<string, unknown>>;
+  evidenceRefs?: readonly string[];
+}
+
+export interface WitnessEvent extends WitnessEventInput {
+  sequence: number;
+  previousHash: string;
+  hash: string;
+}
+
+export interface ClaimState {
+  claimId: string;
+  statement: string;
+  confidence: number;
+  status: "proposed" | "supported" | "contested" | "rejected";
+  evidenceRefs: string[];
+  lastUpdatedAt: string;
+}
+
+export interface WitnessSnapshot {
+  eventCount: number;
+  headHash: string;
+  claims: Record<string, ClaimState>;
+  observations: Record<string, { observationId: string; content: unknown; actor: string; occurredAt: string }>;
+  decisions: Record<string, { decisionId: string; rationale: unknown; actor: string; occurredAt: string }>;
+}
+
+const GENESIS = "0".repeat(64);
+const canonical = (value: unknown): string => {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
+  const obj = value as Record<string, unknown>;
+  return "{" + Object.keys(obj).sort().map((key) => JSON.stringify(key) + ":" + canonical(obj[key])).join(",") + "}";
+};
+const digest = (value: unknown): string => createHash("sha256").update(canonical(value)).digest("hex");
+
+function validateInput(input: WitnessEventInput): void {
+  for (const [name, value] of Object.entries({ id: input.id, actor: input.actor, subject: input.subject })) {
+    if (!value.trim()) throw new Error(name + " must not be empty");
+  }
+  if (!Number.isFinite(Date.parse(input.occurredAt))) throw new Error("occurredAt must be a valid ISO date");
+  if (!input.payload || typeof input.payload !== "object" || Array.isArray(input.payload)) throw new Error("payload must be an object");
+  if (input.evidenceRefs?.some((ref) => !ref.trim())) throw new Error("evidenceRefs must not contain empty references");
+  if (input.type === "claim.proposed" && typeof input.payload.statement !== "string") throw new Error("claim.proposed requires payload.statement");
+  if (input.type === "claim.assessed") {
+    const confidence = input.payload.confidence;
+    if (typeof confidence !== "number" || confidence < 0 || confidence > 1) throw new Error("confidence must be between 0 and 1");
+    if (!["supported", "contested", "rejected"].includes(String(input.payload.status))) throw new Error("invalid claim assessment status");
+  }
+}
+
+export class WitnessLedger {
+  readonly #events: WitnessEvent[] = [];
+  readonly #ids = new Set<string>();
+
+  append(input: WitnessEventInput): WitnessEvent {
+    validateInput(input);
+    if (this.#ids.has(input.id)) throw new Error("duplicate event id: " + input.id);
+    const previousHash = this.#events.at(-1)?.hash ?? GENESIS;
+    const body = { ...input, evidenceRefs: [...(input.evidenceRefs ?? [])], sequence: this.#events.length + 1, previousHash };
+    const event: WitnessEvent = Object.freeze({ ...body, hash: digest(body) });
+    this.#events.push(event);
+    this.#ids.add(input.id);
+    return event;
+  }
+
+  events(): readonly WitnessEvent[] {
+    return this.#events.map((event) => Object.freeze({ ...event, payload: Object.freeze({ ...event.payload }), evidenceRefs: Object.freeze([...event.evidenceRefs]) })) as readonly WitnessEvent[];
+  }
+
+  verify(): { valid: boolean; checked: number; headHash: string; errors: string[] } {
+    const errors: string[] = [];
+    let previousHash = GENESIS;
+    this.#events.forEach((event, index) => {
+      const { hash, ...body } = event;
+      if (event.sequence !== index + 1) errors.push("sequence mismatch at " + (index + 1));
+      if (event.previousHash !== previousHash) errors.push("previous hash mismatch at " + (index + 1));
+      if (digest(body) !== hash) errors.push("event hash mismatch at " + (index + 1));
+      previousHash = hash;
+    });
+    return { valid: errors.length === 0, checked: this.#events.length, headHash: previousHash, errors };
+  }
+
+  replay(): WitnessSnapshot {
+    const snapshot: WitnessSnapshot = { eventCount: 0, headHash: GENESIS, claims: {}, observations: {}, decisions: {} };
+    for (const event of this.#events) {
+      snapshot.eventCount += 1;
+      snapshot.headHash = event.hash;
+      if (event.type === "observation.recorded") {
+        snapshot.observations[event.subject] = { observationId: event.id, content: event.payload.content, actor: event.actor, occurredAt: event.occurredAt };
+      } else if (event.type === "claim.proposed") {
+        snapshot.claims[event.subject] = {
+          claimId: event.subject,
+          statement: String(event.payload.statement),
+          confidence: 0.5,
+          status: "proposed",
+          evidenceRefs: [...(event.evidenceRefs ?? [])],
+          lastUpdatedAt: event.occurredAt
+        };
+      } else if (event.type === "claim.assessed") {
+        const claim = snapshot.claims[event.subject];
+        if (!claim) throw new Error("assessment references unknown claim: " + event.subject);
+        claim.confidence = Number(event.payload.confidence);
+        claim.status = event.payload.status as ClaimState["status"];
+        claim.evidenceRefs = [...new Set([...claim.evidenceRefs, ...(event.evidenceRefs ?? [])])];
+        claim.lastUpdatedAt = event.occurredAt;
+      } else if (event.type === "decision.recorded") {
+        snapshot.decisions[event.subject] = { decisionId: event.id, rationale: event.payload.rationale, actor: event.actor, occurredAt: event.occurredAt };
+      }
+    }
+    return snapshot;
+  }
+}
+
+export function createWitnessLedger(events: readonly WitnessEventInput[] = []): WitnessLedger {
+  const ledger = new WitnessLedger();
+  for (const event of events) ledger.append(event);
+  return ledger;
+}
+
+export function hashWitnessEvent(event: Omit<WitnessEvent, "hash">): string {
+  return digest(event);
+}
