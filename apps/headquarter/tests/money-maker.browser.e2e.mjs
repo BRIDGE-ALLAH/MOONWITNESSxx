@@ -240,7 +240,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
 
     async function recordAndVerifyEvent({ type, amount, source, reference, evidenceUrl, rationale }) {
       await ledgerForm.getByLabel('Event type').selectOption(type)
-      await ledgerForm.getByLabel('Product (optional)').selectOption({ label: `${title} · v1` })
+      await ledgerForm.getByLabel('Product (optional)').selectOption({ label: `${title} · v2` })
       await ledgerForm.getByLabel('Amount · minor units').fill(amount)
       await ledgerForm.getByLabel('ISO currency').fill('IDR')
       await ledgerForm.getByLabel('Occurred at').fill(localDateTime(-30_000))
