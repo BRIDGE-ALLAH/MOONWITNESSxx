@@ -43,6 +43,28 @@ pub struct EngineHealth {
     pub detail: &'static str,
 }
 
+fn contains_secret_key(value: &serde_json::Value) -> bool {
+    match value {
+        serde_json::Value::Object(fields) => fields.iter().any(|(key, child)| {
+            let key = key.to_ascii_lowercase();
+            matches!(
+                key.as_str(),
+                "password"
+                    | "secret"
+                    | "token"
+                    | "api_key"
+                    | "apikey"
+                    | "credential"
+                    | "private_key"
+                    | "client_secret"
+                    | "authorization"
+            ) || contains_secret_key(child)
+        }),
+        serde_json::Value::Array(items) => items.iter().any(contains_secret_key),
+        _ => false,
+    }
+}
+
 pub fn validate(input: &EngineWriteRequest) -> Result<(), &'static str> {
     if input.name.trim().is_empty() || input.name.len() > 120 {
         return Err("name must contain 1 to 120 characters");
@@ -190,5 +212,25 @@ mod tests {
         input.endpoint = "http://pdns:8081".to_string();
         input.engine_type = "unknown".to_string();
         assert!(validate(&input).is_err());
+    }
+}
+
+#[cfg(test)]
+mod secret_config_tests {
+    use super::*;
+
+    #[test]
+    fn rejects_secret_fields_in_persisted_engine_config() {
+        let value = serde_json::json!({
+            "http": {
+                "timeout_seconds": 5,
+                "api_key": "must-not-be-persisted"
+            }
+        });
+        assert!(contains_secret_key(&value));
+        assert!(!contains_secret_key(&serde_json::json!({
+            "http": { "timeout_seconds": 5 },
+            "labels": ["dns", "primary"]
+        })));
     }
 }
