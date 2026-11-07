@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 
-export function OperatorLoginForm() {
+export function OperatorLoginForm({ returnTo = '/riot-radar' }: { returnTo?: string }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -18,7 +18,7 @@ export function OperatorLoginForm() {
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error?.message || 'Login failed.')
-      window.location.assign('/riot-radar')
+      window.location.assign(returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/riot-radar')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Login failed.')
     } finally { setLoading(false) }
