@@ -29,7 +29,7 @@ test('Replay Capsule rejects tampered payload and mismatched supplied result', a
 test('Decision Debt compiler detects stale support, contradictions, and downstream impact', () => {
   const report = compileDecisionDebt({ snapshot: decisionGraphDemo, now: new Date('2026-11-08T00:00:00.000Z') })
   assert.equal(report.findings.length, 1)
-  assert.ok(report.findings[0].reasons.includes('stale_support'))
+  assert.ok(report.findings[0].reasons.includes('stale_evidence'))
   assert.ok(report.findings[0].reasons.includes('unresolved_contradiction'))
   assert.deepEqual(report.findings[0].downstreamNodeIds, ['action-01', 'outcome-01'])
   assert.ok(report.totalDebt > 0)
