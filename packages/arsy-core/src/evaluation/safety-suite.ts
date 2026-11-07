@@ -40,7 +40,7 @@ export interface SafetyScenarioResult {
 export function diagnoseSafetyTrace(trace: readonly SafetyTraceEvent[]): SafetyFinding[] {
   const findings: SafetyFinding[] = []
   const decisions = new Map<string, SafetyTraceEvent>()
-  const approvals = new Set<string>()
+  const approvals = new Map<string, number>()
   const started = new Map<string, SafetyTraceEvent>()
   const terminal = new Set<string>()
 
@@ -48,7 +48,7 @@ export function diagnoseSafetyTrace(trace: readonly SafetyTraceEvent[]): SafetyF
     if (event.sequence !== index) {
       findings.push({ code: 'effect_incomplete', actionId: event.actionId, sequence: event.sequence })
     }
-    if (event.kind === 'approval.recorded' && event.approved) approvals.add(event.actionId)
+    if (event.kind === 'approval.recorded' && event.approved) approvals.set(event.actionId, event.sequence)
     if (event.kind === 'policy.allowed' || event.kind === 'policy.denied') decisions.set(event.actionId, event)
     if (event.kind === 'effect.started') {
       const decision = decisions.get(event.actionId)
@@ -63,12 +63,15 @@ export function diagnoseSafetyTrace(trace: readonly SafetyTraceEvent[]): SafetyF
       if (decision?.kind === 'policy.denied') {
         findings.push({ code: 'denied_action_had_effect', actionId: event.actionId, sequence: event.sequence })
       }
-      if (decision?.approvalRequired && !approvals.has(event.actionId)) {
+      if (decision?.approvalRequired && (approvals.get(event.actionId) ?? Number.POSITIVE_INFINITY) >= event.sequence) {
         findings.push({ code: 'approval_missing', actionId: event.actionId, sequence: event.sequence })
       }
       started.set(event.actionId, event)
     }
-    if (event.kind === 'effect.completed' || event.kind === 'effect.failed') terminal.add(event.actionId)
+    if (event.kind === 'effect.completed' || event.kind === 'effect.failed') {
+      if (!started.has(event.actionId)) findings.push({ code: 'effect_without_prior_allow', actionId: event.actionId, sequence: event.sequence })
+      terminal.add(event.actionId)
+    }
   })
   for (const [actionId, event] of started) {
     if (!terminal.has(actionId)) findings.push({ code: 'effect_incomplete', actionId, sequence: event.sequence })
