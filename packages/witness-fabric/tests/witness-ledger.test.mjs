@@ -93,7 +93,7 @@ test("nested event payloads are immutable and event snapshots are defensive", as
   const appended = await ledger.append(base({ payload: { statement: "Stable", meta: { page: 2 } } }));
   assert.throws(() => { appended.payload.meta.page = 99; }, TypeError);
   const exposed = ledger.events();
-  exposed[0].payload.meta.page = 88;
+  assert.throws(() => { exposed[0].payload.meta.page = 88; }, TypeError);
   assert.equal(ledger.replay().claims["claim:moon-water"].statement, "Stable");
   assert.equal((await ledger.verify()).valid, true);
 });
