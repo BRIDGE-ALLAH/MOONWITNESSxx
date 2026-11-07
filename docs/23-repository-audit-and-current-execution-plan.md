@@ -372,3 +372,22 @@ This follow-up is based on tracked file contents retrieved from the default bran
 5. Repair ARSY Core/app integration and DB lifecycle without introducing ORM implementation prematurely.
 6. Add root .dockerignore and run clean install, lockfile check, lint, typecheck, tests and builds.
 7. Update this audit with exact commit SHA and CI evidence after verification.
+
+
+### 12.4 Phase 0 changes prepared on branch
+
+The following changes have been committed to the Phase 0 working branch:
+
+- docs/08 rewritten as the architecture overview for programmatic TypeScript declarations, registry composition, Environment/Recordset, System Mode/Runtime Mode and provider ownership.
+- docs/18 corrected so its old package-inventory statements are explicitly historical and its current ORM/provider contract points to docs/22 and docs/23.
+- docs/22 extended with the canonical static field declaration form, System Mode lifecycle, Environment/Recordset contract, provider roles and plugin trust boundary.
+- docs/24 added to record the accepted architecture decisions as ADR-001 through ADR-012.
+- Root package identity/scripts aligned with the repository audit contract.
+- pnpm workspace build-script permissions changed from placeholder strings to explicit boolean values.
+- Headquarter lint success masking removed and Next lint config added.
+- ARSY placeholder lint script removed rather than reporting false success.
+- UI, types and ARSY Core lint tasks routed through a shared flat ESLint config; config-only lint package no longer claims to lint a nonexistent src directory.
+- Root .dockerignore added.
+- A Node test for the repository governance audit added.
+
+**Not yet verified:** no local pnpm install, lockfile refresh, lint, typecheck, test, Next build, Fastify startup, Docker build or CI run was available during this edit. These changes must not be described as passing until the branch is run in a clean checkout. ARSY Core/app integration, its undeclared runtime imports, DB pool lifecycle, duplicate legacy service retirement, workflow validation, and lockfile verification remain open.
