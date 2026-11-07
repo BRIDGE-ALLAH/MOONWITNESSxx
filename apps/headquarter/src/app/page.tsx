@@ -24,7 +24,7 @@ export default function Home() {
         <section aria-labelledby="manifesto-title" className="border-y border-signal-gold/30 py-8 md:py-10">
           <p className="mb-3 font-mono text-xs uppercase tracking-[0.22em] text-signal-gold">THE MOONWITNESS MANIFESTO</p>
           <h2 id="manifesto-title" className="max-w-4xl font-display text-3xl font-semibold leading-tight md:text-5xl">
-            WHEN THE MOON RISES,<br />WE SHARE <span className="text-signal-gold">WHAT MATTERS.</span>
+            WHEN THE MOON RISES,<br />WE SHARE <span className="text-signal-gold">MESSAGES.</span>
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Every observation can become understanding. Every verified discovery deserves its context. We bring evidence and human curiosity together, then share what we learn.
