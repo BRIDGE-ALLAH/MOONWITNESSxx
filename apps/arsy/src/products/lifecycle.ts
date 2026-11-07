@@ -3,12 +3,13 @@ export const productLifecycleStates = ['brief', 'production', 'review', 'ready',
 export type ProductLifecycleState = typeof productLifecycleStates[number]
 
 const allowedTransitions: Record<ProductLifecycleState, readonly ProductLifecycleState[]> = {
-  brief: ['production'],
-  production: ['review'],
-  // READY is inspection-derived; it must never be set by a generic lifecycle mutation.
-  review: ['production'],
-  // READY and LISTED are system-derived from inspections and publication receipts.
-  ready: [],
+  brief: ['production', 'retired'],
+  production: ['review', 'retired'],
+  review: ['production', 'retired'],
+  // READY is derived exclusively from the latest passing inspection set.
+  // Operators may return it to production for rework, or retire it.
+  ready: ['production', 'retired'],
+  // LISTED is derived exclusively from a verified publication receipt.
   listed: ['retired'],
   retired: [],
 }
