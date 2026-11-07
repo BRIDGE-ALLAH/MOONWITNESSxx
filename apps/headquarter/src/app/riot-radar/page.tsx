@@ -7,7 +7,7 @@ const opportunities = [
     sourceEvidence: 'Twitter thread analysis showing 10,000+ artists complaining about platform fees; forum discussions about direct fan payment solutions.',
     demandSignals: 'High engagement with artist content; growing creator economy; creator-funding platforms growing 40% YoY.',
     competitionGap: 'Most existing platforms take 15-30% fees; few focus on direct fan-artist relationship; few integrate royalty royalties automatically.',
-    productDifferentiation: 'RIOTWORKS platform takes 5% fees; built-in fan club functionality; automatic royalty distribution via smart contracts; artist-owned portfolio management.',
+    productDifferentiation: 'MOONWITNESS workflow takes 5% fees; built-in fan club functionality; automatic royalty distribution via smart contracts; artist-owned portfolio management.',
     channelSuitability: 'Twitter community; Discord artist communities; NFT marketplace integrations; creator platform integrations.',
     unitEconomicsAssumptions: 'Average artist lifetime value: $2,400; platform fee: 5% of sales; customer acquisition cost: $48; payback period: 6 months.',
     productionComplexity: 'Low - platform is digital-only; no physical inventory; smart contract deployment required; artist onboarding flow needed.',
@@ -26,7 +26,7 @@ const opportunities = [
     sourceEvidence: 'Forum discussions; creator surveys; analysis of existing platform limitations.',
     demandSignals: 'Growing creator economy; 50M+ creators seeking monetization; high engagement with token-gated content.',
     competitionGap: 'Most platforms take 20-30% fees; few integrate royalty royalties; few have artist-owned portfolio management.',
-    productDifferentiation: 'RIOTWORKS platform takes 5% fees; built-in fan club functionality; automatic royalty distribution via smart contracts; artist-owned portfolio management.',
+    productDifferentiation: 'MOONWITNESS workflow takes 5% fees; built-in fan club functionality; automatic royalty distribution via smart contracts; artist-owned portfolio management.',
     channelSuitability: 'Twitter community; Discord creator communities; NFT marketplace integrations; creator platform integrations.',
     unitEconomicsAssumptions: 'Average creator lifetime value: $1,800; platform fee: 5% of sales; customer acquisition cost: $42; payback period: 5 months.',
     productionComplexity: 'Low - platform is digital-only; no physical inventory; smart contract deployment required; creator onboarding flow needed.',
@@ -45,7 +45,7 @@ const opportunities = [
     sourceEvidence: 'Forum discussions; creator surveys; analysis of existing platform limitations.',
     demandSignals: 'Growing creator economy; 50M+ creators seeking monetization; high engagement with token-gated content.',
     competitionGap: 'Most platforms take 20-30% fees; few integrate royalty royalties; few have artist-owned portfolio management.',
-    productDifferentiation: 'RIOTWORKS platform takes 5% fees; built-in fan club functionality; automatic royalty distribution via smart contracts; artist-owned portfolio management.',
+    productDifferentiation: 'MOONWITNESS workflow takes 5% fees; built-in fan club functionality; automatic royalty distribution via smart contracts; artist-owned portfolio management.',
     channelSuitability: 'Twitter community; Discord creator communities; NFT marketplace integrations; creator platform integrations.',
     unitEconomicsAssumptions: 'Average creator lifetime value: $1,800; platform fee: 5% of sales; customer acquisition cost: $42; payback period: 5 months.',
     productionComplexity: 'Low - platform is digital-only; no physical inventory; smart contract deployment required; creator onboarding flow needed.',
@@ -66,7 +66,7 @@ export default function RIOTRadar() {
       <div className="mx-auto max-w-7xl">
         <header className="border-b border-acid-lime/30 pb-8 mb-8">
           <h1 className="text-5xl font-display uppercase leading-none mb-4">
-            RIOT RADAR
+            OPPORTUNITY RADAR
           </h1>
           <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">
             Opportunity Lab
