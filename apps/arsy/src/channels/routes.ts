@@ -30,6 +30,16 @@ const channelObjectSchema = z.object({
   channelStatus: z.enum(['active', 'paused']),
   evidence: z.array(evidenceSchema).max(100),
 })
+const allowedMediaTypes = new Set(['image/png', 'image/jpeg', 'image/webp', 'application/pdf', 'application/zip', 'text/plain'])
+const allowedProductFamilies = new Set(['digital-utility', 'stock-asset', 'affiliate-media', 'publishing', 'workflow-product', 'media', 'game-asset', 'microgame'])
+function hasSensitiveConfiguration(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasSensitiveConfiguration)
+  if (!value || typeof value !== 'object') return false
+  return Object.entries(value as Record<string, unknown>).some(([key, nested]) =>
+    /(password|secret|api[_-]?key|access[_-]?token|refresh[_-]?token|session|cookie|bank[_-]?account|account[_-]?number|routing[_-]?number|private[_-]?key|credential)/i.test(key) ||
+    hasSensitiveConfiguration(nested),
+  )
+}
 const validateChannel = (value: z.infer<typeof channelObjectSchema>, context: z.RefinementCtx) => {
   const types = new Set(value.evidence.map((item) => item.evidenceType))
   if (value.accountEligibility === 'eligible' && !types.has('account-eligibility')) {
@@ -37,6 +47,9 @@ const validateChannel = (value: z.infer<typeof channelObjectSchema>, context: z.
   }
   if (value.payoutSetupStatus === 'configured' && !types.has('payout-requirements')) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['evidence'], message: 'Configured payout status requires dated payout evidence.' })
+  }
+  if (hasSensitiveConfiguration(value.payoutRequirements) || hasSensitiveConfiguration(value.listingRequirements) || hasSensitiveConfiguration(value.quotaNotes)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['payoutRequirements'], message: 'Channel configuration must not contain passwords, API keys, cookies, bank account numbers or other credentials.' })
   }
   if (value.capability === 'C1') {
     if (!value.officialPolicyUrl || !value.policyReviewedAt || !value.policyRecheckAt || !types.has('official-policy')) {
@@ -48,9 +61,21 @@ const validateChannel = (value: z.infer<typeof channelObjectSchema>, context: z.
     const acceptedMediaTypes = value.listingRequirements.acceptedMediaTypes
     const acceptedProductFamilies = value.listingRequirements.acceptedProductFamilies
     if (!Array.isArray(acceptedMediaTypes) || acceptedMediaTypes.length === 0 ||
+        acceptedMediaTypes.some((item) => typeof item !== 'string' || !allowedMediaTypes.has(item)) ||
         !Array.isArray(acceptedProductFamilies) || acceptedProductFamilies.length === 0 ||
+        acceptedProductFamilies.some((item) => typeof item !== 'string' || !allowedProductFamilies.has(item)) ||
         !types.has('format-requirements')) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['listingRequirements'], message: 'C1 requires accepted media types, product families and dated format-requirements evidence.' })
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['listingRequirements'], message: 'C1 requires supported accepted media types, supported product families and dated format-requirements evidence.' })
+    }
+    for (const key of ['maxAssetBytes', 'maxTitleLength', 'maxDescriptionLength']) {
+      const limit = value.listingRequirements[key]
+      if (limit !== undefined && (typeof limit !== 'number' || !Number.isSafeInteger(limit) || limit < 1)) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: ['listingRequirements', key], message: 'Channel limits must be positive safe integers.' })
+      }
+    }
+    const requiredMetadata = value.listingRequirements.requiredMetadata
+    if (requiredMetadata !== undefined && (!Array.isArray(requiredMetadata) || requiredMetadata.some((item) => typeof item !== 'string' || item.trim().length === 0))) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['listingRequirements', 'requiredMetadata'], message: 'Required metadata must be a list of non-empty field names.' })
     }
   }
 }
