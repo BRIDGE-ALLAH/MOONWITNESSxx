@@ -2,7 +2,7 @@ export const CORPUS_SPEC_VERSION = "0.1" as const;
 export const CORPUS_CANONICAL_ID_MAX_LENGTH = 255;
 export const CORPUS_CANONICAL_ID_PATTERN = /^mw:[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*:[a-z0-9]+(?:[._-][a-z0-9]+)*(?::[a-z0-9]+(?:[._-][a-z0-9]+)*)*$/;
 
-export type CorpusCanonicalId = \`mw:\${string}\`;
+export type CorpusCanonicalId = `mw:${string}`;
 export type CorpusRecordKind = "entity" | "resource" | "assertion" | "evidence" | "provenance" | "assessment";
 
 /** Structural envelope matching Corpus BaseRecord; domain-specific fields remain opaque. */
