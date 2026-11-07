@@ -5,3 +5,6 @@ export * as Epistemology from "./epistemology/index.ts";
 export * as WitnessGraph from "./witness-graph/index.ts";
 export * as Reasoning from "./reasoning/index.ts";
 export * as Research from "./research/index.ts";
+
+export * as Corpus from "./corpus/index.ts";
+export * as Adapters from "./adapters/index.ts";

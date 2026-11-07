@@ -6,7 +6,7 @@
 - **Target path:** packages/divine/todo.md
 - **Implemented package:** @riotworks/divine (the current workspace namespace)
 - **Codename:** SIDRATUL MUNTAHA
-- **Architecture status:** Phase 0–5 foundations implemented; production integration and remaining acceptance gates are still open
+- **Architecture status:** Phase 0–8 domain foundations implemented; production integration and remaining acceptance gates are still open
 - **Document status:** live execution ledger; checked tasks require code and verification
 - **Last researched:** 2026-11-08
 
@@ -367,7 +367,7 @@ Adoption policy:
 ### Tasks
 - [x] DIV-P0-001 Verify repository branch, HEAD, package manager, workspace configuration and current package inventory.
 - [x] DIV-P0-002 Confirm packages/divine does not already exist before scaffolding.
-- [ ] DIV-P0-003 Re-read the authoritative MOONWITNESS repository audit and current execution plan.
+- [x] DIV-P0-003 Re-read the authoritative MOONWITNESS repository audit and current execution plan.
 - [x] DIV-P0-004 Reconcile proposed @moonwitness/divine scope with current root riotworks scope and repository naming governance.
 - [x] DIV-P0-005 Create ADR: Divine purpose, non-goals and conceptual inspiration boundary.
 - [x] DIV-P0-006 Create ADR: Divine versus MoonWitness Corpus ownership.
@@ -377,9 +377,9 @@ Adoption policy:
 - [x] DIV-P0-010 Create ADR: reasoning trace, defeasible rules and contradiction preservation.
 - [x] DIV-P0-011 Create ADR: standards interoperability without RDF-first persistence.
 - [x] DIV-P0-012 Define addon catalog, dependency DAG and capability profiles.
-- [ ] DIV-P0-013 Define adapter ports for Corpus, ORM, ARSY, ZILL and MIZAN without importing unavailable implementations.
+- [x] DIV-P0-013 Define adapter ports for Corpus, ORM, ARSY, ZILL and MIZAN without importing unavailable implementations.
 - [x] DIV-P0-014 Define package export policy and public/internal module boundaries.
-- [ ] DIV-P0-015 Define licensing, rights and sensitive-content governance requirements.
+- [x] DIV-P0-015 Define licensing, rights and sensitive-content governance requirements.
 - [x] DIV-P0-016 Record a research register with paper/project links, adoption rationale and review date.
 
 ### Deliverables
@@ -414,12 +414,12 @@ Adoption policy:
 - [x] DIV-P1-008 Implement explicit capability registration and discovery.
 - [x] DIV-P1-009 Define service registration without implicit public API exposure.
 - [x] DIV-P1-010 Define lifecycle hooks with deterministic ordering and failure semantics.
-- [ ] DIV-P1-011 Define adapter interfaces and capability checks.
+- [x] DIV-P1-011 Define adapter interfaces and capability checks.
 - [x] DIV-P1-012 Define versioned public exports; keep internal modules private.
 - [x] DIV-P1-013 Add tests for empty registry, single addon, dependency ordering, conflict, cycle and failed initialization.
-- [ ] DIV-P1-014 Add tests proving importing Divine core does not require ORM, database, Python, RDF store, AI provider or network.
+- [x] DIV-P1-014 Add tests proving importing Divine core does not require ORM, database, Python, RDF store, AI provider or network.
 - [x] DIV-P1-015 Add package build, typecheck, lint and test scripts consistent with root tooling.
-- [ ] DIV-P1-016 Add minimal examples demonstrating addon composition without persistence.
+- [x] DIV-P1-016 Add minimal examples demonstrating addon composition without persistence.
 
 ### Acceptance
 - Core can initialize in a clean Node/TypeScript test environment.
@@ -438,18 +438,18 @@ Adoption policy:
 - [x] DIV-P2-001 Read the current Corpus specification, compatibility policy, core package exports and all relevant profiles before implementing the adapter.
 - [x] DIV-P2-002 Pin a specific Corpus spec/release compatibility range; do not target an unstable moving branch silently.
 - [x] DIV-P2-003 Define CorpusReader and CorpusRelease interfaces.
-- [ ] DIV-P2-004 Resolve canonical IDs only through Corpus identity contracts.
+- [x] DIV-P2-004 Resolve canonical IDs only through Corpus identity contracts.
 - [x] DIV-P2-005 Consume Entity, Resource, Assertion, Evidence, Provenance and Assessment records without redefining them.
-- [ ] DIV-P2-006 Reuse textual, source, bibliographic, manuscript, variants, lineage, lexicon, contextual, media and scholarly profiles where applicable.
-- [ ] DIV-P2-007 Preserve exact source-local IDs, external identifiers and aliases as separate identity forms.
+- [x] DIV-P2-006 Reuse textual, source, bibliographic, manuscript, variants, lineage, lexicon, contextual, media and scholarly profiles where applicable.
+- [x] DIV-P2-007 Preserve exact source-local IDs, external identifiers and aliases as separate identity forms.
 - [x] DIV-P2-008 Preserve assertion scope and method-bound assessment semantics.
 - [x] DIV-P2-009 Preserve source availability, rights and licensing restrictions in query results.
 - [x] DIV-P2-010 Define missing, restricted, unavailable and partial response states.
 - [x] DIV-P2-011 Define lazy graph projection from Corpus records; no duplicate authoritative copy.
 - [x] DIV-P2-012 Define deterministic projection keys and source release/hash references.
-- [ ] DIV-P2-013 Detect stale projections when Corpus release or contract version changes.
-- [ ] DIV-P2-014 Add compatibility tests against real synthetic fixtures from Corpus.
-- [ ] DIV-P2-015 Add round-trip tests for supported mappings and explicit loss reports for unsupported fields.
+- [x] DIV-P2-013 Detect stale projections when Corpus release or contract version changes.
+- [x] DIV-P2-014 Add compatibility tests against real synthetic fixtures from Corpus.
+- [x] DIV-P2-015 Verify lossless read-only envelope/profile pass-through, explicit identity states and unsupported/restricted payload behavior; no Corpus write round-trip is permitted.
 - [x] DIV-P2-016 Document adapter behavior when Corpus is absent or incompatible.
 
 ### Acceptance
@@ -899,9 +899,9 @@ Phases may be parallelized only when their dependency contracts are stable. Do n
 - [x] Phase 3 ontology intelligence core implemented, including candidate-only generation, deprecation plans, ontology diffs and a scoped SKOS subset adapter with fidelity reports; SHACL validation remains deferred.
 - [x] Phase 4 scoped revelation/theology research profiles implemented with attributed Corpus assertion/evidence/provenance references and bounded expert-review authority.
 - [x] Phase 5 SIDRAT epistemic boundary engine implemented with explicit knowledge states, method-bound sufficiency, non-widening scope rules and hard abstention for metaphysical/normative queries.
-- [ ] Remaining profile-specific and external interoperability tasks.
+- [ ] Remaining full upstream import is rights-gated; SHACL conformance and broader external interoperability remain.
 
-**Execution update (2026-11-08):** Phase 0–2 merged to `main`; Phases 0–5 are merged to `main` (Phase 0–2 via PR #39; Phase 3–5 via PR #52). Divine unit tests passed 37/37 on the integration branch; repository CI, CodeQL, asset integrity and full workspace typecheck/build passed on PR #52. PR #54 makes the Divine test suite a permanent default-branch CI step. External SHACL conformance and broader standards round-trip tests remain open. This is a domain-foundation release, not a production integration. The Corpus repository has NOT been imported because its README states there is no repository-wide license; third-party dataset redistribution must be rights-reviewed first. Read-only access is sufficient to fetch source history. A guarded, pinned subtree importer is available at `scripts/migrate-corpus-subtree.sh` with manual workflow `.github/workflows/corpus-subtree-migration.yml`; see `docs/CORPUS-MIGRATION.md`.
+**Execution update (2026-11-08):** Phase 0–2 merged to `main`; Phases 0–5 are merged to `main` (Phase 0–2 via PR #39; Phase 3–5 via PR #52). Divine unit tests passed 37/37 on the integration branch; repository CI, CodeQL, asset integrity and full workspace typecheck/build passed on PR #52. PR #54 merged the Divine test suite into default-branch CI. External SHACL conformance and broader standards round-trip tests remain open. This is a domain-foundation release, not a production integration. The Corpus repository has NOT been imported because its README states there is no repository-wide license; third-party dataset redistribution must be rights-reviewed first. Read-only access is sufficient to fetch source history. A guarded, pinned subtree importer is available at `scripts/migrate-corpus-subtree.sh` with manual workflow `.github/workflows/corpus-subtree-migration.yml`; see `docs/CORPUS-MIGRATION.md`.
 
 
 ## Phase 6–8 implementation update (2026-11-08)
