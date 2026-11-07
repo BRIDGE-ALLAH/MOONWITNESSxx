@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { DatabasePool } from '../db.ts'
+import { nextProductLifecycleStates, type ProductLifecycleState } from './lifecycle.ts'
 
 type QueryResult<T> = { rows: T[] }
 type ProductRow = {
@@ -21,7 +22,8 @@ export interface ProductRecord {
   opportunityId: string | null
   title: string
   productFamily: string
-  lifecycleState: string
+  lifecycleState: ProductLifecycleState
+  allowedNextLifecycleStates: ProductLifecycleState[]
   version: number
   brief: Record<string, unknown>
   acceptanceCriteria: string[]
@@ -34,12 +36,14 @@ function rows<T>(result: unknown): T[] {
 }
 
 function mapProduct(row: ProductRow): ProductRecord {
+  const lifecycleState = row.lifecycle_state as ProductLifecycleState
   return {
     id: row.id,
     opportunityId: row.opportunity_id,
     title: row.title,
     productFamily: row.product_family,
-    lifecycleState: row.lifecycle_state,
+    lifecycleState,
+    allowedNextLifecycleStates: nextProductLifecycleStates(lifecycleState),
     version: row.version,
     brief: row.brief,
     acceptanceCriteria: row.acceptance_criteria,
@@ -109,6 +113,41 @@ export class ProductRepository {
       )
       SELECT ${columns} FROM created p JOIN versioned v ON v.product_id = p.id`,
       [ownerId, opportunityId, productId, actorId, versionId, JSON.stringify(acceptanceCriteria), auditId],
+    )
+    const row = rows<ProductRow>(result)[0]
+    return row ? mapProduct(row) : null
+  }
+
+  async transitionLifecycle(
+    ownerId: string,
+    actorId: string,
+    id: string,
+    expectedState: ProductLifecycleState,
+    nextState: ProductLifecycleState,
+  ): Promise<ProductRecord | null> {
+    const auditId = randomUUID()
+    const result = await this.db.query(
+      `WITH updated AS (
+        UPDATE arsy_products
+        SET lifecycle_state = $4, updated_at = now(), updated_by = $3
+        WHERE owner_id = $1 AND id = $2 AND lifecycle_state = $5
+        RETURNING *
+      ), audited AS (
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $6, $1, 'product', updated.id, 'lifecycle-changed', $3,
+          jsonb_build_object('from', $5, 'to', $4)
+        FROM updated
+      )
+      SELECT ${columns}
+      FROM updated p
+      JOIN arsy_product_versions v ON v.product_id = p.id
+      WHERE v.version = (
+        SELECT MAX(latest.version)
+        FROM arsy_product_versions latest
+        WHERE latest.product_id = p.id
+      )`,
+      [ownerId, id, actorId, nextState, expectedState, auditId],
     )
     const row = rows<ProductRow>(result)[0]
     return row ? mapProduct(row) : null
