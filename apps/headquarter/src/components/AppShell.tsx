@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               notify('Prototype: theme toggled')
             }}
           />
-          <main>{children}</main>
+          <div>{children}</div>
         </div>
       </div>
       <CommandPalette open={paletteOpen} items={NAVIGATION_ITEMS} onClose={closePalette} />
