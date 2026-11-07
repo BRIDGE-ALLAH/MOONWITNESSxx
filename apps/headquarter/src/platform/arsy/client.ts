@@ -31,18 +31,25 @@ function createRequestId(): string {
 }
 
 function makeUrl(path: string): string {
+  const normalizedPath = path.replace(/^\\/+/, '')
+  const hasTraversalSegment = path.split(/[/?#]/).some((segment) => {
+    try {
+      return decodeURIComponent(segment) === '..'
+    } catch {
+      return true
+    }
+  })
   if (
-    !path ||
-    /^[a-z][a-z0-9+.-]*:/i.test(path) ||
+    !normalizedPath ||
+    /^[a-z][a-z0-9+.-]*:/i.test(normalizedPath) ||
     path.startsWith('//') ||
-    path.includes('\\') ||
-    path.split(/[/?#]/).includes('..')
+    path.includes('\\\\') ||
+    hasTraversalSegment
   ) {
     throw new TypeError('ARSY request path must be a relative API path')
   }
-  const normalizedPath = path.replace(/^\/+/, '')
   const base = getBaseUrl()
-  if (/^https?:\/\//i.test(base)) return new URL(normalizedPath, base + '/').toString()
+  if (/^https?:\\/\\//i.test(base)) return new URL(normalizedPath, base + '/').toString()
   return base + '/' + normalizedPath
 }
 
