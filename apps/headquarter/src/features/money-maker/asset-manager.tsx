@@ -43,6 +43,7 @@ export function AssetManager({ productId, productVersion }: Props) {
   const [assets, setAssets] = useState<Asset[]>([])
   const [readiness, setReadiness] = useState<Record<string, Readiness>>({})
   const [file, setFile] = useState<File | null>(null)
+  const [uploadKey, setUploadKey] = useState<string | null>(null)
   const [creator, setCreator] = useState('')
   const [license, setLicense] = useState('')
   const [permissionBasis, setPermissionBasis] = useState('')
@@ -82,7 +83,9 @@ export function AssetManager({ productId, productVersion }: Props) {
   useEffect(() => { void refresh() }, [refresh])
 
   function selectFile(event: ChangeEvent<HTMLInputElement>) {
-    setFile(event.target.files?.[0] ?? null)
+    const selected = event.target.files?.[0] ?? null
+    setFile(selected)
+    setUploadKey(selected ? crypto.randomUUID() : null)
     setError('')
   }
 
@@ -98,7 +101,7 @@ export function AssetManager({ productId, productVersion }: Props) {
     try {
       const response = await fetch('/api/assets', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'idempotency-key': uploadKey ?? crypto.randomUUID() },
         body: JSON.stringify({
           productId,
           productVersion,
@@ -115,7 +118,7 @@ export function AssetManager({ productId, productVersion }: Props) {
       const payload = await response.json()
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to store asset.')
-      setFile(null); setCreator(''); setLicense(''); setPermissionBasis(''); setToolModel(''); setDisclosure('')
+      setFile(null); setUploadKey(null); setCreator(''); setLicense(''); setPermissionBasis(''); setToolModel(''); setDisclosure('')
       setMessage('Asset bytes and provenance stored. Inspection gates remain unknown until recorded.')
       await refresh()
     } catch (cause) {
