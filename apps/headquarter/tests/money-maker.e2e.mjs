@@ -147,10 +147,28 @@ try {
   assert.equal(lifecycleProduct?.lifecycleState, 'ready')
   assert.deepEqual(lifecycleProduct?.allowedNextLifecycleStates, ['production', 'listed'])
 
+  // Create an immutable second product version and prove the first remains in history.
+  const revisedBrief = {
+    ...lifecycleProduct.brief,
+    productHypothesis: 'A versioned reconciliation utility flags discrepancies and exports a reviewable audit report.',
+  }
+  await page.getByLabel(`Product brief JSON for ${title}`).fill(JSON.stringify(revisedBrief, null, 2))
+  await page.getByLabel(`Version acceptance criteria for ${title}`).fill('Imports source rows without loss.\\nExports a reconciliation report with stable row identifiers.\\nPreserves an immutable version history.')
+  await page.getByRole('button', { name: 'Save new product version' }).click()
+  await page.getByRole('status').filter({ hasText: `Product version created: ${title} · v2` }).waitFor({ state: 'visible', timeout: 30_000 })
+  await page.getByRole('button', { name: `Load version history for ${title}` }).click()
+  await page.getByText('Version 1', { exact: false }).waitFor({ state: 'visible' })
+  await page.getByText('Version 2', { exact: false }).waitFor({ state: 'visible' })
+  const versionsResponse = await context.request.get(`${baseUrl}/api/products/${lifecycleProduct.id}/versions`)
+  assert.equal(versionsResponse.status(), 200)
+  const versionsPayload = await versionsResponse.json()
+  assert.deepEqual(versionsPayload.data.map((version) => version.version), [2, 1])
+  assert.equal(versionsPayload.data[1].brief.productHypothesis, lifecycleProduct.brief.productHypothesis)
+
   // Record a real pending ledger event and reconcile it with a source URL.
   await page.goto(`${baseUrl}/mizan-ledger`, { waitUntil: 'domcontentloaded' })
   await page.getByLabel('Event type').selectOption('gross-receipt')
-  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v1` })
+  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v2` })
   await page.getByLabel('Amount · minor units').fill('5000')
   await page.getByLabel('ISO currency').fill('IDR')
   await page.getByLabel('Occurred at').fill(new Date(Date.now() - 60_000).toISOString().slice(0, 16))
@@ -178,7 +196,7 @@ try {
 
   // A verified tax reserve is reported separately and does not reduce operating contribution.
   await page.getByLabel('Event type').selectOption('tax-reserve')
-  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v1` })
+  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v2` })
   await page.getByLabel('Amount · minor units').fill('300')
   await page.getByLabel('ISO currency').fill('IDR')
   await page.getByLabel('Occurred at').fill(new Date(Date.now() - 30_000).toISOString().slice(0, 16))

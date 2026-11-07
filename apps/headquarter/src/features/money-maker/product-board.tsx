@@ -10,7 +10,8 @@ type Opportunity = {
   buyerSegment: string
   evaluation: { score: number | null; decision: string; blockedGates: string[]; unknownGates: string[]; missingScoreDimensions: string[] }
 }
-type Product = { id: string; opportunityId: string | null; title: string; productFamily: string; lifecycleState: string; allowedNextLifecycleStates: string[]; version: number; acceptanceCriteria: string[] }
+type Product = { id: string; opportunityId: string | null; title: string; productFamily: string; lifecycleState: string; allowedNextLifecycleStates: string[]; version: number; brief: Record<string, unknown>; acceptanceCriteria: string[] }
+type ProductVersion = { id: string; version: number; brief: Record<string, unknown>; acceptanceCriteria: string[]; createdAt: string; createdBy: string }
 
 export function ProductBoard() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
@@ -19,6 +20,10 @@ export function ProductBoard() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState('')
   const [updatingLifecycle, setUpdatingLifecycle] = useState('')
+  const [savingVersion, setSavingVersion] = useState('')
+  const [briefDrafts, setBriefDrafts] = useState<Record<string, string>>({})
+  const [criteriaDrafts, setCriteriaDrafts] = useState<Record<string, string>>({})
+  const [versionHistory, setVersionHistory] = useState<Record<string, ProductVersion[]>>({})
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
@@ -81,6 +86,53 @@ export function ProductBoard() {
     } finally { setUpdatingLifecycle('') }
   }
 
+  async function loadVersionHistory(productId: string) {
+    setError('')
+    try {
+      const response = await fetch(`/api/products/${productId}/versions`, { cache: 'no-store' })
+      const payload = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!response.ok) throw new Error(payload.error?.message || 'Unable to load product version history.')
+      setVersionHistory((current) => ({ ...current, [productId]: payload.data ?? [] }))
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to load product version history.')
+    }
+  }
+
+  async function saveProductVersion(product: Product) {
+    let brief: Record<string, unknown>
+    try {
+      const parsed: unknown = JSON.parse(briefDrafts[product.id] ?? JSON.stringify(product.brief, null, 2))
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('The product brief must be a JSON object.')
+      brief = parsed as Record<string, unknown>
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Product brief JSON is invalid.')
+      return
+    }
+    const acceptanceCriteria = (criteriaDrafts[product.id] ?? product.acceptanceCriteria.join('\\n'))
+      .split('\\n').map((line) => line.trim()).filter(Boolean)
+    if (acceptanceCriteria.length === 0) {
+      setError('Add at least one acceptance criterion before saving a new version.')
+      return
+    }
+    setSavingVersion(product.id); setError(''); setMessage('')
+    try {
+      const response = await fetch(`/api/products/${product.id}/versions`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ expectedVersion: product.version, brief, acceptanceCriteria }),
+      })
+      const payload = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!response.ok) throw new Error(payload.error?.message || 'Unable to create product version.')
+      setMessage(`Product version created: ${payload.data.title} · v${payload.data.version}`)
+      await refresh()
+      await loadVersionHistory(product.id)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to create product version.')
+    } finally { setSavingVersion('') }
+  }
+
   const productOpportunityIds = new Set(products.map((product) => product.opportunityId).filter(Boolean))
   const ready = opportunities.filter((opportunity) =>
     opportunity.evaluation.decision === 'prototype-candidate' &&
@@ -97,7 +149,7 @@ export function ProductBoard() {
     {error && <div role="alert" className="border border-red-500/50 p-4 text-sm">{error}</div>}
     {message && <div role="status" className="border border-acid-lime/40 p-4 text-sm">{message}</div>}
     <section className="space-y-3"><div className="flex items-end justify-between"><div><h2 className="font-display text-2xl uppercase">Product portfolio</h2><p className="text-xs text-muted-ink">Persisted products and version records</p></div><button type="button" onClick={() => void refresh()} className="border border-acid-lime/40 px-4 py-2 font-mono text-xs uppercase">Refresh</button></div>
-      {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading product records…</p> : products.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No product briefs exist yet. Only fully cleared opportunities can enter production.</p> : <div className="grid gap-3 md:grid-cols-2">{products.map((product) => <article key={product.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><h3 className="font-display text-xl uppercase">{product.title}</h3><span className="font-mono text-xs text-acid-lime">v{product.version}</span></div><p className="mt-2 text-xs text-muted-ink">{product.productFamily} · {product.lifecycleState}</p><label className="mt-3 flex items-center gap-3 text-xs font-mono uppercase text-muted-ink">Lifecycle<select aria-label={`Lifecycle state for ${product.title}`} value={product.lifecycleState} disabled={updatingLifecycle === product.id || product.allowedNextLifecycleStates.length === 0} onChange={(event) => void transitionProduct(product.id, event.target.value)} className="border border-acid-lime/30 bg-obsidian px-3 py-2 text-paper-bone disabled:opacity-50"><option value={product.lifecycleState}>{product.lifecycleState}</option>{product.allowedNextLifecycleStates.map((state) => <option key={state} value={state}>{state}</option>)}</select></label><ul className="mt-3 list-disc pl-5 text-sm">{product.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></article>)}</div>}
+      {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading product records…</p> : products.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No product briefs exist yet. Only fully cleared opportunities can enter production.</p> : <div className="grid gap-3 md:grid-cols-2">{products.map((product) => <article key={product.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><h3 className="font-display text-xl uppercase">{product.title}</h3><span className="font-mono text-xs text-acid-lime">v{product.version}</span></div><p className="mt-2 text-xs text-muted-ink">{product.productFamily} · {product.lifecycleState}</p><label className="mt-3 flex items-center gap-3 text-xs font-mono uppercase text-muted-ink">Lifecycle<select aria-label={`Lifecycle state for ${product.title}`} value={product.lifecycleState} disabled={updatingLifecycle === product.id || product.allowedNextLifecycleStates.length === 0} onChange={(event) => void transitionProduct(product.id, event.target.value)} className="border border-acid-lime/30 bg-obsidian px-3 py-2 text-paper-bone disabled:opacity-50"><option value={product.lifecycleState}>{product.lifecycleState}</option>{product.allowedNextLifecycleStates.map((state) => <option key={state} value={state}>{state}</option>)}</select></label><ul className="mt-3 list-disc pl-5 text-sm">{product.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul><details className="mt-4 border border-acid-lime/20 p-3"><summary className="cursor-pointer font-mono text-xs uppercase">Revise brief / create immutable version</summary><div className="mt-3 space-y-3"><label className="block space-y-1 text-[10px] font-mono uppercase">Product brief JSON<textarea aria-label={`Product brief JSON for ${product.title}`} value={briefDrafts[product.id] ?? JSON.stringify(product.brief, null, 2)} onChange={(event) => setBriefDrafts((current) => ({ ...current, [product.id]: event.target.value }))} rows={8} className="w-full border border-acid-lime/20 bg-obsidian p-3 font-mono text-xs normal-case" /></label><label className="block space-y-1 text-[10px] font-mono uppercase">Version acceptance criteria<textarea aria-label={`Version acceptance criteria for ${product.title}`} value={criteriaDrafts[product.id] ?? product.acceptanceCriteria.join('\\n')} onChange={(event) => setCriteriaDrafts((current) => ({ ...current, [product.id]: event.target.value }))} rows={3} className="w-full border border-acid-lime/20 bg-obsidian p-3 text-sm normal-case" /></label><button type="button" disabled={savingVersion === product.id} onClick={() => void saveProductVersion(product)} className="bg-acid-lime px-4 py-2 font-mono text-xs font-bold uppercase text-obsidian disabled:opacity-50">{savingVersion === product.id ? 'Saving version…' : 'Save new product version'}</button></div></details><div className="mt-3 space-y-2"><button type="button" onClick={() => void loadVersionHistory(product.id)} className="border border-acid-lime/30 px-3 py-2 font-mono text-[10px] uppercase">Load version history for {product.title}</button>{versionHistory[product.id] && <ol className="space-y-2 text-xs text-muted-ink">{versionHistory[product.id].map((version) => <li key={version.id} className="border-l border-acid-lime/40 pl-3"><strong className="text-paper-bone">Version {version.version}</strong> · {new Date(version.createdAt).toLocaleString()} · {version.acceptanceCriteria.length} acceptance criteria</li>)}</ol>}</div></article>)}</div>}
     </section>
     <section className="space-y-4"><div><h2 className="font-display text-2xl uppercase">Ready for production</h2><p className="text-xs text-muted-ink">Prototype candidates with all hard gates passed and no product yet</p></div>
       {!loading && ready.length === 0 && <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No opportunities currently meet the production gate. Research more or resolve the missing evidence first.</p>}
