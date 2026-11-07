@@ -75,7 +75,7 @@ test("rejects malformed dependency sections instead of emitting an incomplete gr
 
 test("CLI smoke tests execute cycle and changed-path commands", () => {
   const script = path.join(ROOT, "scripts", "counterfactual-repo-lab.mjs");
-  const cycles = spawnSync(process.execPath, [script, "--cycles"], {
+  const cycles = spawnSync(process.execPath, [script, "--", "--cycles"], {
     cwd: ROOT,
     encoding: "utf8",
   });
@@ -84,7 +84,7 @@ test("CLI smoke tests execute cycle and changed-path commands", () => {
 
   const changed = spawnSync(
     process.execPath,
-    [script, "--changed-files", "packages/divine/src/index.ts"],
+    [script, "--", "--changed-files", "packages/divine/src/index.ts"],
     { cwd: ROOT, encoding: "utf8" },
   );
   assert.equal(changed.status, 0, changed.stderr);

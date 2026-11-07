@@ -190,6 +190,7 @@ change files, install packages, contact external services, or weaken mandatory C
 }
 
 export async function run(args = process.argv.slice(2), root = ROOT) {
+  if (args[0] === "--") args = args.slice(1);
   if (args.includes("--help") || args.includes("-h")) return help();
   const graph = await buildGraph(root);
   const flag = args[0];
