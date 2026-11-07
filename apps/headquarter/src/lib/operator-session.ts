@@ -21,7 +21,7 @@ export function getOperatorSessionConfig(env: NodeJS.ProcessEnv = process.env): 
   const secret = env.HEADQUARTER_SESSION_SECRET?.trim()
   const publicOrigin = env.HEADQUARTER_PUBLIC_ORIGIN?.trim()
 
-  if (!operatorId || operatorId.length > 128 || !password || password.length < 16 || password.length > 1024 ||
+  if (!operatorId || operatorId.length > 128 || !password || password.length < 16 || password.length > 1024 || password.length > 1024 ||
       !secret || Buffer.byteLength(secret, 'utf8') < 32 || !publicOrigin) return null
 
   try {
