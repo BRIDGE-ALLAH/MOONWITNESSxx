@@ -58,6 +58,12 @@ jobs:
       - name: Test ARSY governance primitives
         run: pnpm --filter @riotworks/arsy-core test:governance
 
+      - name: Test ARSY application runtime configuration
+        run: pnpm --filter @riotworks/arsy test
+
+      - name: Validate Docker Compose configuration
+        run: docker compose --env-file .env.docker config --quiet
+
       - name: Test Divine epistemic and provenance suites
         run: pnpm --filter @riotworks/divine test
 
