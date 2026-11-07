@@ -1,71 +1,222 @@
-# Docker & Docker Compose Setup for MOONWITNESS
+# Docker & Docker Compose Setup for MOONWITNESS/RIOTWORKS
 
-> **Local-development configuration:** the default Compose stack and `.env.docker` are for local development only. The placeholder database credential must never be used in production. PostgreSQL, Redis, ARSY, Headquarter and AEGIS host ports bind to loopback. Production requires separately managed secrets, TLS/ingress, backups, monitoring, rollback, and a verified deployment target.
+> **Local-development configuration:** the default Compose stack and .env.docker are for local development only. .env.docker contains a deliberately local placeholder credential; never use it as a production secret. The PostgreSQL and Redis host ports bind to loopback. Production deployment still requires a separately managed secret, TLS/ingress, backups, monitoring, rollback, and a configured deployment target.
 
-## Quick start
+## Quick Start
 
-Prerequisites: Docker Engine with Compose v2, and 4GB+ free disk space.
+### Prerequisites
 
-```sh
-cp .env.docker .env
-docker compose up --build -d
-docker compose ps
-docker compose logs -f aegis
+- Docker Desktop (or Docker + Docker Compose separately)
+- 4GB+ free disk space for images and volumes
+- Ports 3000 (Headquarter), 3001 (ARSY), 3102 (AEGIS), 5432 (PostgreSQL), 6379 (Redis) available
+
+### Start services
+
+```bash
+# Start all services (Headquarter, ARSY, AEGIS, PostgreSQL, Redis)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop containers while preserving named PostgreSQL and Redis data volumes
 docker compose down
 ```
 
-Do not use `docker compose down -v` unless you intentionally want to delete local database/cache volumes.
+### Environment variables
 
-## Local endpoints
+Copy `.env.docker` to `.env` and adjust as needed:
 
-- Headquarter: http://localhost:3000
-- ARSY: http://localhost:3001
-- AEGIS: http://localhost:3102 (process health only)
-- PostgreSQL: localhost:5432
-- Redis: localhost:6379
+```bash
+cp .env.docker .env
+```
 
-All published host ports bind to loopback.
+Key variables:
 
-## Services
+- `NODE_ENV` — development or production
+- `POSTGRES_PASSWORD` — PostgreSQL password (default: postgres)
+- `ARSY_PORT` — ARSY backend port (default: 3001)
+- `HEADQUARTER_PORT` — Headquarter frontend port (default: 3000)
+- `NEXT_PUBLIC_ARSY_URL` — Frontend URL for backend API (default: http://localhost:3001)
 
-### PostgreSQL and Redis
+### Access services
 
-Local persistence and queue/cache infrastructure. Their named volumes persist across ordinary `docker compose down`.
+- **Headquarter frontend**: http://localhost:3000
+- **ARSY backend**: http://localhost:3001
+- **AEGIS network runtime**: http://localhost:3102 (process health only)
+- **PostgreSQL**: localhost:5432 (user: postgres, password: postgres)
+- **Redis**: localhost:6379
 
-### ARSY
+ARSY always listens on the fixed internal container port 3001. `ARSY_PORT` changes only the host-side published port and must not change the port used by its healthcheck or container-to-container requests. Headquarter likewise listens on fixed internal port 3000; `HEADQUARTER_PORT` changes only its host-side published port. ARSY liveness is `/health/live`; readiness at `/health/ready` checks PostgreSQL before Compose marks the service healthy.
 
-The Fastify backend and sole control-plane authority. It owns identity, policy, orchestration and canonical audit. Compose readiness uses `/health/ready`.
+## Service descriptions
 
-### Headquarter
+### PostgreSQL
 
-The Next.js operator experience. It calls ARSY and does not call AEGIS directly.
+- Image: `postgres:16-alpine`
+- Database: `moonwitness` (configurable)
+- Data persists in `postgres_data` volume
+- Healthcheck enabled
 
-### AEGIS
+### Redis
 
-A standalone Go network infrastructure runtime. Phase 1 includes only process health endpoints and graceful shutdown; it has no network-device credentials, privileged container mode, host-network access, VPN provisioning, or router/firewall mutation endpoints.
+- Image: `redis:7-alpine`
+- Used by BullMQ for job queues and caching
+- Data persists in `redis_data` volume
+- Healthcheck enabled
 
-- Internal container port: 3102
-- Local host port: `AEGIS_PORT` (default 3102), bound to `127.0.0.1`
-- Health: `/health/live` and `/health/ready`
-- Network: existing `moonwitness` bridge
-- Image: multi-stage Go build with a distroless non-root runtime
+### ARSY (Backend)
+
+- Built from `Dockerfile.arsy`
+- Fastify HTTP API running on port 3001
+- Depends on PostgreSQL and Redis
+- Mounts local source for development hot-reload
+- Healthcheck enabled
+
+### Headquarter (Frontend)
+
+- Built from `Dockerfile.headquarter`
+- Next.js application running on port 3000
+- Depends on ARSY backend
+- Mounts local source for development hot-reload
+- Configured with `NEXT_PUBLIC_ARSY_URL` for API communication
+
+### AEGIS (Network Infrastructure Runtime)
+
+- Standalone Go application under `apps/aegis`
+- Runs on internal port 3102 and is published to loopback only for local development
+- Provides `/health/live` and `/health/ready`; readiness is process-level only
+- Uses a distroless non-root image, read-only root filesystem and no-new-privileges
+- Does not yet provision VPNs, manage RouterOS, or mutate routes/firewalls
+- ARSY remains the sole authority for identity, authorization, orchestration and audit
 
 ## Development workflow
 
-Edit files in `apps/headquarter`, `apps/arsy`, `apps/aegis`, or `packages/`.
+### Local changes
 
-```sh
-docker compose up --build aegis
-docker compose logs -f aegis
-cd apps/aegis && go test ./...
+Edit files in `apps/headquarter`, `apps/arsy`, `apps/aegis`, or `packages/`. Changes are immediately reflected in running containers (thanks to volume mounts).
+
+### Rebuild services
+
+After changing package.json or dependencies:
+
+```bash
+docker-compose up --build
 ```
 
-After changing AEGIS source or its Dockerfile, rebuild its image with `docker compose up --build aegis`.
+### View service logs
 
-The ARSY and Headquarter source bind mounts retain nested anonymous `node_modules` volumes. These are intentional: source mounts otherwise hide the pnpm package-local dependency links baked into the image.
+```bash
+docker-compose logs -f arsy
+docker-compose logs -f aegis
+docker-compose logs -f headquarter
+docker-compose logs -f postgres
+```
 
-## Production warning
+### Access container shell
 
-The checked-in Compose file is a local development profile, not a production deployment. Do not expose AEGIS publicly or enable network mutations until service-to-service authentication, authorization, secret injection, network segmentation, least-privilege provider adapters, audit integration, rollback, monitoring, backup/recovery and production smoke tests are complete.
+```bash
+docker-compose exec arsy sh
+docker-compose exec headquarter sh
+docker-compose exec postgres psql -U postgres -d moonwitness
+```
 
-See [docs/29 — AEGIS blueprint](./docs/29-aegis-network-infrastructure-blueprint.md).
+## AEGIS safety boundary
+
+The checked-in AEGIS service is a local-development foundation only. Do not expose it publicly or enable network mutations until service-to-service authentication, authorization, secret injection, network segmentation, provider allowlists, audit integration, rollback and production smoke tests are complete. It is not privileged and does not mount the host network namespace.
+
+See [docs/29 — AEGIS network infrastructure blueprint](./docs/29-aegis-network-infrastructure-blueprint.md).
+
+## Production considerations
+
+For production deployments:
+
+1. **Security**:
+   - Set strong `POSTGRES_PASSWORD`
+   - Use secrets management (e.g., Docker secrets, Kubernetes)
+   - Never commit `.env` files with real secrets
+
+2. **Performance**:
+   - Use multi-stage builds (already in Dockerfiles)
+   - Disable hot-reload mounts in production
+   - Use PostgreSQL replicas and Redis Sentinel/Cluster
+
+3. **Monitoring**:
+   - Add health check endpoints to ARSY
+   - Configure centralized logging (ELK, Datadog, etc.)
+   - Set up alerts for service failures
+
+4. **Scaling**:
+   - Use Docker Swarm or Kubernetes for orchestration
+   - Implement load balancing (Nginx, HAProxy)
+   - Separate read/write database replicas
+
+## Troubleshooting
+
+### Services won't start
+
+```bash
+docker-compose logs -f
+```
+
+### Port already in use
+
+Change ports in `.env` or stop conflicting containers:
+
+```bash
+docker ps
+docker stop <container-id>
+```
+
+### Database connection errors
+
+Verify PostgreSQL is healthy:
+
+```bash
+docker-compose exec postgres pg_isready
+```
+
+### Troubleshoot an unhealthy ARSY container
+
+The development Compose stack bind-mounts `apps/arsy`, `apps/headquarter`, and `packages` over directories from the image. Those mounts hide pnpm's package-local `node_modules` links unless nested anonymous dependency volumes are retained. The Compose file keeps those nested dependency volumes for ARSY, Headquarter, and their shared packages.
+
+Inspect the actual startup failure before rebuilding:
+
+```bash
+docker compose logs --tail=200 --no-color arsy
+docker inspect --format '{{json .State.Health}}' moonwitness-arsy
+docker compose ps -a
+```
+
+After a dependency-volume or image change, recreate only the application services and renew their anonymous dependency volumes. The named PostgreSQL and Redis data volumes remain attached:
+
+```bash
+docker compose config --quiet
+docker compose up --build --force-recreate --renew-anon-volumes -d arsy headquarter
+docker compose ps
+docker compose logs --tail=100 --no-color arsy
+```
+
+Do not use `docker compose down -v` or `docker system prune --volumes` as a startup troubleshooting shortcut; they can delete persistent database data. If ARSY remains unhealthy, use its startup log and health history to identify the next failure rather than resetting data.
+
+## File structure
+
+```
+.
+├── docker-compose.yml          # Service orchestration
+├── Dockerfile.arsy             # ARSY backend image
+├── Dockerfile.headquarter      # Headquarter frontend image
+├── .env.docker                 # Docker environment template
+├── apps/
+│   ├── arsy/                   # Backend/control plane
+│   ├── aegis/                  # Go network infrastructure runtime
+│   └── headquarter/            # Frontend source
+├── packages/                   # Shared packages
+└── pnpm-workspace.yaml         # pnpm workspace config
+```
+
+## Related documentation
+
+- [docs/08-technical-architecture.md](../docs/08-technical-architecture.md) — Backend/ORM architecture
+- [docs/24-repository-and-automation-governance.md](../docs/24-repository-and-automation-governance.md) — Git/CI setup
+- [README.md](../README.md) — Project overview

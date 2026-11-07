@@ -1,54 +1,53 @@
 # MOONWITNESS
 
-MOONWITNESS is an evidence-first, agent-governed workspace and product-engineering ecosystem. Its promise is **SEE MORE. KNOW MORE.** It observes before concluding, verifies before claiming, preserves provenance, and shares discoveries with care.
+MOONWITNESS is an evidence-first, agent-governed workspace and product-engineering monorepo. RIOTWORKS is a product division within the ecosystem. The repository contains Headquarter (human-facing web prototype), ARSY (the authoritative backend and orchestration runtime), AEGIS (the Go network-infrastructure execution runtime), shared packages, WITNESS FABRIC, Divine research tooling, and repository automation.
 
-The wider narrative sits within EMPIRE OF THE LIGHT / A-L-L-A-H as a product and values universe—not as a claim of divine authority or supernatural software capability.
+**Product truth:** Headquarter currently contains prototype/demo screens. Static sample metrics, placeholder accounts, financial rows, and marketplace states are not live production data. ARSY runtime and integration readiness are tracked separately from UI prototypes.
 
 ## Repository map
 
-- `apps/headquarter` — human-facing command center and operator experience.
-- `apps/arsy` — authoritative Fastify backend, identity boundary, policy and orchestration runtime.
-- `apps/aegis` — Go network infrastructure execution runtime; controlled by ARSY.
-- `packages/*` — reusable UI, contracts, assets, ARSY core, evidence and research capabilities.
+- `apps/headquarter` — Next.js human-facing command center.
+- `apps/arsy` — Fastify HTTP API and sole backend/control-plane authority.
+- `apps/aegis` — standalone Go network infrastructure runtime, controlled by ARSY (not a second control plane).
+- `packages/*` — shared UI, contracts, assets, ARSY core, evidence and research capabilities.
 - `services/*` — legacy prototypes, intentionally excluded from the pnpm workspace.
 - `docs/` and `todo.md` — architecture decisions, research and implementation status.
+- `.agents/skills/`, `AGENTS.md`, and `GOAL.txt` — Codex engineering workflow pack included in this repository.
 
-AEGIS is a standalone Go application and is not a pnpm package. The existing pnpm workspace remains limited to `apps/*` and `packages/*`; the Go module is built and tested with the Go toolchain.
+## Development workflow pack
 
-## Product truth
+This repository also includes a lean, modular Codex engineering setup:
 
-Headquarter contains prototype/demo surfaces; static sample metrics and placeholder records are not live production data. ARSY and AEGIS capabilities are tracked separately from UI prototypes. AEGIS currently provides only its Go runtime foundation and process health endpoints; it does not yet provision VPNs, manage routers, or change network configuration.
+- `GOAL.txt` — full autonomous engineering cycle for the Codex Goal field.
+- `AGENTS.md` — durable repository rules.
+- `.agents/skills/` — on-demand workflows for repository maintenance, debugging, PR delivery, release management and docs/Wiki work.
 
-## Architecture boundaries
+Copy or adapt these instructions only after reading the existing repository rules. Do not overwrite project-specific instructions, user changes, branch-protection rules, or approval requirements.
 
-- Headquarter calls ARSY; it does not connect directly to databases or AEGIS.
-- ARSY is the single backend/control-plane authority for identity, policy, orchestration and canonical audit.
-- AEGIS is a bounded network execution runtime. Future network mutations must be explicitly authorized by ARSY and protected by least privilege, approval, idempotency, audit receipts and verification.
-- Existing monitoring, RADIUS and security-observation components retain their current ownership.
-- Do not add legacy `services/*` to the workspace as a shortcut.
-
-## Development
+## Engineering commands
 
 | Command | Purpose |
 |---|---|
-| `pnpm dev:headquarter` | Start Headquarter |
-| `pnpm dev:arsy` | Start ARSY |
-| `pnpm test` | Run repository and DevX tests |
-| `pnpm check:repo` | Run repository integrity checks |
-| `pnpm validate` | Validate, type-check and build the pnpm workspace |
+| `pnpm dev:headquarter` | Start Headquarter locally |
+| `pnpm dev:arsy` | Start ARSY locally |
 | `cd apps/aegis && go test ./...` | Test AEGIS |
 | `cd apps/aegis && go run ./cmd/aegis` | Run AEGIS locally |
-| `docker compose up --build aegis` | Build and start the AEGIS Compose service |
+| `docker compose up --build aegis` | Build and start AEGIS in local Compose |
+| `pnpm test` | Run repository and DevX unit tests |
+| `pnpm check:repo` | Run repository integrity checks |
+| `pnpm validate` | Validate, type-check and build the workspace |
+| `pnpm devx doctor --json` | Inspect local toolchain and workspace |
+| `pnpm devx product-audit --json` | Audit workspace contracts, navigation truth and release blockers |
 
-## Docker Compose
+## Design and safety rules
 
-The default Compose stack is for local development only. Host ports are loopback-bound. Copy `.env.docker` to `.env` as documented in [DOCKER.md](./DOCKER.md). AEGIS listens on port 3102 inside the Compose network and is published locally on `127.0.0.1:3102` by default.
+- Headquarter consumes ARSY through public API contracts; it must not import backend implementation source.
+- ARSY owns backend identity, policy, orchestration and canonical audit. `packages/arsy-core` owns framework-neutral governance primitives.
+- AEGIS performs network-specific execution only; future mutations must be explicitly authorized by ARSY and follow least privilege, plan/apply/verify, idempotency and auditable receipts. Phase 1 exposes process health only.
+- Do not add `services/*` to the workspace as a shortcut; move unique behavior into its canonical owner first.
+- A green build is not a production release. Stable release requires a versioned changelog, a verified tag, release automation, production deployment and live smoke tests.
+- This pack does not grant deployment credentials or override sandbox, approval, GitHub permissions, branch protection or production safety controls.
 
 ## Documentation
 
-- [AEGIS network infrastructure blueprint](./docs/29-aegis-network-infrastructure-blueprint.md)
-- [Technical architecture](./docs/08-technical-architecture.md)
-- [Repository reality and execution plan](./docs/23-repository-audit-and-current-execution-plan.md)
-- [Repository governance](./docs/24-repository-and-automation-governance.md)
-- [Docker Compose guide](./DOCKER.md)
-- [Contributing](./CONTRIBUTING.md)
+Start with the [AEGIS network infrastructure blueprint](./docs/29-aegis-network-infrastructure-blueprint.md), [CONTRIBUTING.md](./CONTRIBUTING.md), [Repository Reality Audit](./docs/23-repository-audit-and-current-execution-plan.md), [Repository Governance](./docs/24-repository-and-automation-governance.md), and the phase execution documents in `docs/`.

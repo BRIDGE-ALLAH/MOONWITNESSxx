@@ -1,6 +1,7 @@
 version: '3.9'
 
 services:
+  # PostgreSQL database — local development service
   postgres:
     image: postgres:16-alpine
     container_name: moonwitness-postgres
@@ -22,6 +23,7 @@ services:
       - moonwitness
     restart: unless-stopped
 
+  # Redis for queue/cache (optional — used by BullMQ if needed)
   redis:
     image: redis:7-alpine
     container_name: moonwitness-redis
@@ -38,7 +40,7 @@ services:
       - moonwitness
     restart: unless-stopped
 
-  # ARSY remains the sole backend/control-plane authority.
+  # ARSY backend — Fastify application
   arsy:
     build:
       context: .
@@ -62,6 +64,7 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/arsy:/app/apps/arsy
+      # Source mounts hide image node_modules; preserve pnpm's package-local dependency links.
       - /app/apps/arsy/node_modules
       - ./packages:/app/packages
       - /app/packages/arsy-core/node_modules
@@ -104,6 +107,7 @@ services:
     tmpfs:
       - /tmp:size=16m,noexec,nosuid
 
+  # Headquarter frontend — Next.js application
   headquarter:
     build:
       context: .
@@ -122,6 +126,7 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/headquarter:/app/apps/headquarter
+      # Preserve app and shared-package dependency links hidden by the source mounts.
       - /app/apps/headquarter/node_modules
       - ./packages:/app/packages
       - /app/packages/ui/node_modules
