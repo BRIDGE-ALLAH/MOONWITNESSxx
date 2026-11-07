@@ -89,11 +89,11 @@ Preserve existing URLs and shared UI tokens. Prioritize demo/data truth, accessi
 
 ## 7. Next safe execution order
 
-1. Fix ARSY runtime port/start/lint contract and Docker Compose development-vs-production safety.
-2. Add ARSY health/readiness and Headquarter browser accessibility/responsive checks.
-3. Reconcile ORM/database PR ancestry and run compatibility tests against current main.
-4. Reconcile version/tag history and changelog, then establish a real production target, secrets, backups, rollback, deployment workflow, and smoke tests.
-5. Only then declare a stable release candidate.
+1. Build a separate production runtime/deployment definition; build and run the ARSY image against PostgreSQL, and verify readiness from a real container.
+2. Establish production secrets, TLS/ingress, backup/restore, monitoring, rollback, deployment target, and smoke tests.
+3. Complete Headquarter browser accessibility/responsive checks and consistent demo/lifecycle-state UX.
+4. Reconcile ORM/database PR ancestry and run compatibility tests against current main.
+5. Reconcile version/tag history and changelog, then create a stable release only after production verification.
 
 ## Audit limitations
 
