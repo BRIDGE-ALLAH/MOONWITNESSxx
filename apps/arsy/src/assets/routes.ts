@@ -63,6 +63,18 @@ function decodeBase64(value: string): Buffer | null {
   const bytes = Buffer.from(normalized, 'base64')
   return bytes.toString('base64') === normalized ? bytes : null
 }
+function matchesMediaType(mediaType: string, bytes: Buffer): boolean {
+  if (mediaType === 'image/png') return bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+  if (mediaType === 'image/jpeg') return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
+  if (mediaType === 'image/webp') return bytes.length >= 12 && bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP'
+  if (mediaType === 'application/pdf') return bytes.subarray(0, 5).toString('ascii') === '%PDF-'
+  if (mediaType === 'application/zip') return bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && [0x03, 0x05, 0x07].includes(bytes[2]) && [0x04, 0x06, 0x08].includes(bytes[3])
+  if (mediaType === 'text/plain') {
+    if (bytes.includes(0)) return false
+    try { new TextDecoder('utf-8', { fatal: true }).decode(bytes); return true } catch { return false }
+  }
+  return false
+}
 function safeAsset(asset: Awaited<ReturnType<AssetRepository['get']>>) {
   if (!asset) return null
   const { storageKey: _storageKey, ...publicAsset } = asset
@@ -95,12 +107,24 @@ export function registerAssetRoutes(
     if (!parsed.success) return reply.code(400).send({
       error: { code: 'VALIDATION_ERROR', message: 'Asset upload metadata is invalid.', details: parsed.error.flatten() },
     })
+    const idempotencyKey = request.headers['idempotency-key']
+    if (typeof idempotencyKey !== 'string' || idempotencyKey.trim().length < 8 || idempotencyKey.length > 200) {
+      return reply.code(400).send({ error: { code: 'IDEMPOTENCY_KEY_REQUIRED', message: 'A valid Idempotency-Key header is required.' } })
+    }
     const bytes = decodeBase64(parsed.data.contentBase64)
     if (!bytes || bytes.length === 0 || bytes.length > MAX_ASSET_BYTES) {
       return reply.code(400).send({ error: { code: 'INVALID_ASSET_BYTES', message: 'Asset bytes must be valid base64 and no larger than 10 MiB.' } })
     }
+    if (!matchesMediaType(parsed.data.mediaType, bytes)) {
+      return reply.code(400).send({ error: { code: 'ASSET_CONTENT_TYPE_MISMATCH', message: 'The uploaded bytes do not match the declared safe media type.' } })
+    }
     const storageKey = randomUUID()
     const sha256 = createHash('sha256').update(bytes).digest('hex')
+    const requestHash = createHash('sha256').update(JSON.stringify({
+      productId: parsed.data.productId, productVersion: parsed.data.productVersion,
+      fileName: parsed.data.fileName, mediaType: parsed.data.mediaType, byteSize: bytes.length,
+      sha256, provenance: parsed.data.provenance,
+    })).digest('hex')
     const input: AssetInput = {
       productId: parsed.data.productId,
       productVersion: parsed.data.productVersion,
@@ -109,18 +133,24 @@ export function registerAssetRoutes(
       byteSize: bytes.length,
       storageKey,
       sha256,
+      idempotencyKey: idempotencyKey.trim(),
+      requestHash,
       provenance: parsed.data.provenance,
     }
     await storage.put(storageKey, bytes)
     try {
-      const asset = await repository.create(ownerId, actorId, input)
-      if (!asset) {
+      const result = await repository.create(ownerId, actorId, input)
+      if (!result) {
         await storage.delete(storageKey)
         return reply.code(409).send({ error: { code: 'PRODUCT_VERSION_NOT_FOUND', message: 'The product version does not exist under this operator.' } })
       }
-      return reply.code(201).send({ data: safeAsset(asset) })
+      if (result.replayed) await storage.delete(storageKey)
+      return reply.code(result.replayed ? 200 : 201).send({ data: safeAsset(result.asset), replayed: result.replayed })
     } catch (error) {
       await storage.delete(storageKey).catch(() => undefined)
+      if (error instanceof Error && error.message === 'ASSET_IDEMPOTENCY_KEY_REUSED') {
+        return reply.code(409).send({ error: { code: 'IDEMPOTENCY_CONFLICT', message: 'This idempotency key was already used for different asset bytes or provenance.' } })
+      }
       throw error
     }
   })
