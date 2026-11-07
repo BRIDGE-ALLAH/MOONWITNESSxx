@@ -1,6 +1,9 @@
 name: Refresh pnpm lockfile
 
 on:
+  push:
+    branches:
+      - chore/governance-phase-0-1
   workflow_dispatch:
 
 permissions:
@@ -8,28 +11,46 @@ permissions:
   pull-requests: write
 
 jobs:
-  refresh:
-    name: Regenerate and propose lockfile
+  maintenance:
+    name: Format changed governance source
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
+        with:
+          fetch-depth: 0
       - name: Install pnpm
         uses: pnpm/action-setup@v6
         with:
           version: 12.16.1
-
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24
-
-      - name: Regenerate lockfile from workspace manifests
+      - name: Format changed files
+        if: github.event_name == 'push'
+        env:
+          FORMAT_BASE_SHA: 0bdf4290d6c060892f85f6562a41585a2be53e08
+          FORMAT_EXCLUDE: .github/workflows/refresh-lockfile.yml;.github/workflows/ci.yml
+        run: pnpm run format
+      - name: Commit formatting changes
+        if: github.event_name == 'push'
+        run: |
+          git diff --name-only -z "0bdf4290d6c060892f85f6562a41585a2be53e08...HEAD" | grep -zv "^.github/workflows/" | xargs -0 -r git add --
+          if git diff --cached --quiet; then
+            echo "No formatting changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "style: format changed governance source [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+      - name: Regenerate lockfile
+        if: github.event_name == 'workflow_dispatch'
         run: pnpm install --lockfile-only --ignore-scripts
-
       - name: Open or update lockfile pull request
+        if: github.event_name == 'workflow_dispatch'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -37,14 +58,5 @@ jobs:
           delete-branch: true
           commit-message: "chore: refresh pnpm lockfile"
           title: "chore: refresh pnpm lockfile"
-          body: |
-            ## Purpose
-
-            Regenerate the pnpm lockfile from committed workspace manifests using the pinned pnpm version.
-
-            ## Validation
-
-            - Generated with pnpm 12.16.1.
-            - No application source files are changed.
-            - Review the dependency graph diff before merging.
+          body: "Regenerate the lockfile with pinned pnpm 12.16.1; review dependency changes before merging."
           add-paths: pnpm-lock.yaml
