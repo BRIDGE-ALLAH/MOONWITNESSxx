@@ -2,7 +2,7 @@ import Fastify from 'fastify'
 import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
-// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
+// ARSY application composition root. Core governance primitives live in @riotworks/arsy-core.
 
 const app = Fastify({
   logger: true,
@@ -35,16 +35,21 @@ typedApp.get(
 )
 
 // Database connector setup
-import { setupDatabase } from './db'
+import { pool, setupDatabase } from './db.ts'
+import { resolveServerConfig } from './config.ts'
 setupDatabase(app)
 
-app
-  .listen({ port: 3000 })
-  .then(() => {
-    console.log('🚀 ARSY Command Center running on http://localhost:3000')
-  })
-  .catch((err) => {
-    console.error(err)
+typedApp.get('/health/live', async () => ({ status: 'alive' }))
+typedApp.get('/health/ready', async () => {
+  await pool.query('SELECT 1')
+  return { status: 'ready' }
+})
+
+const { host, port } = resolveServerConfig()
+app.listen({ host, port })
+  .then(() => app.log.info({ host, port }, 'ARSY Command Center is listening'))
+  .catch((error) => {
+    app.log.error({ err: error }, 'ARSY failed to start')
     process.exit(1)
   })
 
