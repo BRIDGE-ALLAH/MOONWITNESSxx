@@ -11,26 +11,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WORKSPACE_DIRS = ["apps", "packages"];
 const INTERNAL_FIELDS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 
-async function discoverManifests(dir, found = []) {
-  let entries;
-  try { entries = await readdir(dir, { withFileTypes: true }); } catch { return found; }
-  for (const entry of entries) {
-    if (!entry.isDirectory() || entry.name === "node_modules" || entry.name.startsWith(".")) continue;
-    const candidate = path.join(dir, entry.name);
-    try {
-      const raw = await readFile(path.join(candidate, "package.json"), "utf8");
-      const manifest = JSON.parse(raw);
-      if (manifest.name) found.push({ name: manifest.name, path: path.relative(ROOT, candidate).split(path.sep).join("/"), manifest });
-    } catch (error) {
-      if (error?.code !== "ENOENT" && !(error instanceof SyntaxError)) throw error;
-    }
-    await discoverManifests(candidate, found);
-  }
-  return found;
-}
-
 export async function buildGraph(root = ROOT) {
-  const previousRoot = process.cwd();
   const manifests = [];
   for (const dir of WORKSPACE_DIRS) {
     const absolute = path.join(root, dir);
