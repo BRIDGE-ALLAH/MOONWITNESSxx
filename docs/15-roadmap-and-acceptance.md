@@ -1,71 +1,74 @@
 # 15 — Roadmap & Acceptance Criteria
 
-**Status:** Approved execution baseline | **Version:** 1.3 | **Updated:** 2026-11-07
+**Status:** Current execution baseline | **Version:** 2.0 | **Updated:** 2026-11-07
 
-## 1. Delivery strategy
-Build incrementally. Visual prototype, backend runtime, ORM, SQL providers, addons, and commercial workflows are separate milestones. Do not claim a package exists until code, tests, and build checks prove it.
+> **Authority:** docs/23-repository-audit-and-current-execution-plan.md is the current-state inventory and detailed execution plan. This roadmap is its concise milestone index. Older phase descriptions are superseded.
 
-## 2. Phases
-### Phase 0 — Product and architecture baseline
-Narrative, business model, marketplace matrix, factories, autonomy, Headquarter IA, design DNA, monorepo, Fastify, ORM/addons, minimal BaseEntity, audit, provider portability, programmatic schema API. Exit: docs are internally consistent and coding agents need not invent package/schema responsibilities.
+## 1. Delivery principles
 
-### Phase 1 — Headquarter prototype
-apps/headquarter, design system, ARSY DECK, SIGNAL ROOM, RIOT RADAR, THE FORGE, ZILL WATCH, secondary module shells, dual themes, explicit demo data. Exit: responsive UI, no dead controls, no fake integrations.
+- Build from actual repository state; do not assume target packages exist.
+- Keep main buildable at every milestone.
+- Fix P0 repository structure/tooling before adding major product features.
+- One owner per capability; no duplicate app/service implementations.
+- A feature is complete only with implementation, tests, security behavior, failure handling, documentation and CI evidence.
+- No production claims from mock/demo data or scaffolding.
 
-### Phase 2 — Workspace and contracts
-pnpm workspace, TypeScript/lint, types, contract, minimal apps/arsy, typed Headquarter API client. Exit: build/typecheck, health route and contract tests.
+## 2. Revised phases
 
-### Phase 3 — ARSY runtime
-arsy-core, Fastify factory, lifecycle, config validation, health/readiness, logs/errors, graceful shutdown. Exit: clean start/stop and Fastify injection tests.
+| Phase | Focus | Key deliverables | Exit criteria |
+|---|---|---|---|
+| 0 | Repository alignment | Correct app manifests, workspace graph, scripts, CI, hooks, workflows, duplicate service cleanup | Frozen install, build, lint, typecheck and tests reproducible from root |
+| 1 | Headquarter | Real Next.js package, responsive shell, design tokens, /id and /en, typed API client, explicit demo mode | Next build/typecheck; no dead controls or false live data |
+| 2 | ARSY Core + contracts | Contract schemas, types, Fastify factory/lifecycle, config, errors, logs, health/readiness, shutdown | Fastify injection and API contract tests pass |
+| 3 | ORM kernel | Metadata, fields, registry, addon graph, inheritance/extension, persistent/abstract/transient models, domain AST, recordsets | Deterministic composition and conflict/cycle tests pass |
+| 4 | DB runtime + adapters | Unit-of-work, transaction, provider contract, libSQL, PostgreSQL, schema reconciler and receipts | Shared provider suite, idempotency, drift, recovery and capability tests pass |
+| 5 | Base Platform | Required core/identity/security/workspace/audit/events; staged optional capabilities and mixins | Actor attribution, ACL/record rules, workspace isolation and audit atomicity pass |
+| 6 | Business addons | Project and Intelligent domains; ZILL policy and MIZAN ledger boundaries | No duplicated base fields/security/audit/job ownership |
+| 7 | Commercial vertical slice | Signal → evidence → opportunity → product → ZILL → listing package → MIZAN | One real product flow is traceable and financially reconcilable |
+| 8 | Jobs and automation | Queue-independent contracts, outbox, one transport, optional apps/worker, retries/idempotency/approval | Replay/recovery/budget/policy tests pass |
+| 9 | Production readiness | Threat model, backup/restore, observability, deployment, performance, accessibility, release/runbooks | Operational readiness review passes |
 
-### Phase 4 — ORM foundation
-Metadata/fields, registry, extension/composition, query AST, addon manifest/dependencies, typed CRUD. Exit: deterministic composition and invalid conflict/cycle errors.
+## 3. BaseEntity and Base Platform contract
 
-### Phase 5 — Database runtime and SQL adapters
-orm-db, provider-neutral contract, PostgreSQL/libSQL adapters, capability matrix, Kysely internal query execution, private schema API, schema-state ledger. Exit: shared provider tests pass, unsupported capability errors are explicit, sync is idempotent/recoverable.
+Every persisted model receives exactly five ORM-managed fields:
+- id
+- createdAt
+- createdById
+- updatedAt
+- updatedById
 
-### Phase 6 — Base addon and audit
-Minimal BaseEntity: id, createdAt, updatedAt. Opt-in ownership/archive/toggle/version/soft-delete mixins. Central AuditTrail and transaction/outbox. Exit: fields composed once, optional mixins only when requested, audit consistency tested.
+The ORM injects these exactly once. Actor values are derived from trusted server-side execution context. Archive, soft delete, active/enabled, revision, owner, workspace and company are not universal BaseEntity fields.
 
-### Phase 7 — Domain addons
-Project and Intelligent models/services/permissions; typed data-upgrade handlers only for semantic data transformations. Exit: dependency order and no duplicate base/audit fields.
+The full 17-manifest Odoo-inspired Base Platform catalog is defined in docs/22. Implementation order is staged in docs/23; do not implement all optional modules before the first business workflow needs them.
 
-### Phase 8 — Headquarter/ARSY integration
-Auth/permissions, typed APIs, audit/approval views, asset/product workflows. Exit: frontend/backend contract and integration tests.
+## 4. Database and schema contract
 
-### Phase 9 — First commercial slice
-One Digital Utility and one Stock Asset product family, evidence/provenance, inspection/listing package, manual marketplace submission first, financial reconciliation. Exit: real product QA and submitted through an allowed channel; actual financial records reconciled.
+- PostgreSQL is the production target; libSQL/SQLite is local/embedded/single-node.
+- PocketBase is excluded from v1 to avoid a second identity/API/schema authority.
+- Kysely is private to SQL adapters; the custom ORM is the only model registry.
+- TypeScript addon declarations are the desired schema source.
+- ARSY private schema API plans/reconciles through the chosen adapter.
+- Routine model changes do not require handwritten migration files.
+- Semantic data transformations use typed handlers; destructive changes require explicit approval, backup and recovery.
+- Provider switching requires export/import and verification, not only changing connection configuration.
 
-### Phase 10 — Safe automation
-Job scheduler/workers, approval inbox/budgets, verified marketplace integrations, Aftershock experiments and portfolio retirement. Exit: observable, bounded automation with recovery.
+## 5. Application boundaries
 
-## 3. First commercial pilot
-Start with one useful digital utility, one differentiated stock asset collection, optionally one affiliate experiment after eligibility, product truth, and disclosures are checked. Do not activate every factory/channel at once.
+- apps/headquarter is Next.js frontend only.
+- apps/arsy is the sole Fastify HTTP backend/composition root.
+- packages/arsy-core owns reusable Fastify lifecycle, not business models.
+- Optional apps/worker is a future deployable worker process.
+- packages/jobs owns queue-independent job contracts; a transport adapter owns BullMQ/Redis specifics.
+- No services/arsy or services/queue duplicate implementations.
 
-## 4. Technical acceptance
-- apps/headquarter is the frontend; no apps/web.
-- ARSY starts Fastify through arsy-core.
-- Package boundaries match docs/18 and docs/21.
-- ORM/addon composition is deterministic.
-- BaseEntity injects only id, createdAt, updatedAt.
-- Optional mixins have distinct semantics and tests.
-- Required SQL audit writes are transactionally consistent.
-- PostgreSQL/libSQL pass shared portable adapter tests.
-- Routine model additions need no handwritten schema files.
-- Private schema API applies safe changes and records receipts.
-- Destructive/semantic changes require explicit plan, authorization, typed handling.
-- No untrusted code loading or raw secrets in client/logs.
-- Shared contracts and provider-specific tests are maintained.
+## 6. Business acceptance
 
-## 5. Business acceptance
-Opportunity scores cite dated evidence/confidence. Products have clear buyer/job/differentiation. Rights/licenses/AI disclosures are recorded. Channel eligibility/fees verified. Revenue, fees, pending/settled, refunds, payouts, costs are distinct. Net contribution reconciles to evidence. No fabricated traffic, orders, reviews, sales.
+Opportunity scores cite dated evidence and confidence. Products have a clear buyer/job/differentiation. Rights/licenses/AI disclosures are recorded. Channel eligibility/fees are verified. Revenue, fees, pending/settled, refunds, payouts and costs are distinct. Net contribution reconciles to evidence. No fabricated traffic, orders, reviews or sales.
 
-## 6. Design acceptance
+## 7. Design acceptance
+
 RIOTWORKS identity, Extreme Riot + MoonWitness Comic + Industrial + Game HUD DNA, Night Riot/Paper Riot themes, consistent original characters, accessible data/forms, responsive and keyboard use, reduced motion. Avoid generic SaaS drift.
 
-## 7. Definition of done
-A feature is complete only when user problem, domain state, permissions, failure behavior, tests, audit/logs, docs, and visible states are covered. Scaffolding/placeholders are not done.
+## 8. Definition of done
 
-
-## 6. v1.3 ORM/base-platform acceptance
-BaseEntity injects five fields exactly once: id, createdAt, createdById, updatedAt and updatedById. Implement the Odoo-inspired foundation addon suite in dependency order as defined in docs/22. Prove persistent/abstract/transient models, registry extension, typed fields/relations, domain AST, recordset batching, cache invalidation, ACL/record rules and workspace isolation. Audit, events/outbox, chatter, activities, jobs and notifications must remain distinct. The complete target is staged; do not claim all capabilities are implemented before tests pass.
+A feature is complete only when user problem, domain state, ownership, permissions, failure behavior, tests, audit/logs, docs, and visible states are covered. Scaffolding/placeholders are not done.
