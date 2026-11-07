@@ -25,6 +25,7 @@ export default function Home() {
             <Button asChild variant="riot"><Link href="/the-forge">Forge Work</Link></Button>
             <Button asChild variant="electric"><Link href="/signal-room">Read Signal</Link></Button>
             <Button asChild variant="outline"><Link href="/zill-watch">Inspect</Link></Button>
+            <Button asChild variant="secondary"><Link href="/login">Operator Login</Link></Button>
           </CardContent>
         </Card>
       </div>
