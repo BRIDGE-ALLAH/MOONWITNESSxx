@@ -2,6 +2,7 @@
 FROM node:24-alpine
 
 WORKDIR /app
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=3001
 
 # Install pnpm
 RUN npm install -g pnpm@12.16.1
@@ -24,4 +25,4 @@ EXPOSE 3001
 
 # Start ARSY
 WORKDIR /app/apps/arsy
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "start"]
