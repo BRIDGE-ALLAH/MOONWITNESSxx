@@ -30,6 +30,7 @@ export function OpportunityBoard() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [opportunityIdempotencyKey, setOpportunityIdempotencyKey] = useState('')
+  const [evidenceCapturedAt, setEvidenceCapturedAt] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [scores, setScores] = useState(emptyScores)
@@ -71,6 +72,8 @@ export function OpportunityBoard() {
     const hardGateDetails = Object.fromEntries(gates.map(([key]) => [key, {
       status: hardGates[key], rationale: gateRationales[key].trim(), evidenceIds: hardGates[key] === 'unknown' ? [] : [evidenceId],
     }]))
+    const capturedAt = evidenceCapturedAt || new Date().toISOString()
+    setEvidenceCapturedAt(capturedAt)
     const payload = {
       title: String(data.get('title') || ''), buyerProblem: String(data.get('buyerProblem') || ''),
       buyerSegment: String(data.get('buyerSegment') || ''), jobToBeDone: String(data.get('jobToBeDone') || ''),
@@ -78,7 +81,7 @@ export function OpportunityBoard() {
       candidateChannels: String(data.get('candidateChannels') || '').split(',').map((v) => v.trim()).filter(Boolean),
       evidence: [{
         evidenceId, sourceName: String(data.get('sourceName') || ''), sourceUrl: String(data.get('sourceUrl') || ''),
-        sourceType: String(data.get('sourceType') || 'other'), capturedAt: new Date().toISOString(),
+        sourceType: String(data.get('sourceType') || 'other'), capturedAt,
         evidenceClass: String(data.get('evidenceClass') || 'unknown'), summary: String(data.get('summary') || ''),
         reliability: String(data.get('reliability') || 'unknown'), limitations: String(data.get('limitations') || ''),
         collectionMethod: String(data.get('collectionMethod') || ''), permissionBasis: String(data.get('permissionBasis') || ''),
@@ -94,6 +97,7 @@ export function OpportunityBoard() {
       if (!response.ok) throw new Error(result.error?.message || 'Unable to save opportunity.')
       form.reset()
       setOpportunityIdempotencyKey('')
+      setEvidenceCapturedAt('')
       setScores({ ...emptyScores }); setScoreRationales({ ...emptyRationales }); setHardGates({ ...emptyGates }); setGateRationales({ ...emptyGateRationales })
       setMessage('Opportunity saved. Review evidence and hard gates before production.')
       await refresh()
@@ -121,7 +125,7 @@ export function OpportunityBoard() {
         </article>
       })}</div>}
     </section>
-    <form onSubmit={createOpportunity} className="space-y-6 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
+    <form onSubmit={createOpportunity} onChange={() => { if (opportunityIdempotencyKey) { setOpportunityIdempotencyKey(''); setEvidenceCapturedAt('') } }} className="space-y-6 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
       <div><h2 className="font-display text-2xl uppercase">Capture opportunity</h2><p className="text-xs text-muted-ink">One source-backed opportunity per submission. No automated scraping or fabricated demand signals.</p></div>
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1 text-xs font-mono uppercase">Opportunity title<input name="title" required minLength={3} maxLength={180} className="w-full border border-acid-lime/20 bg-obsidian p-3 font-sans text-sm normal-case" /></label>
