@@ -87,7 +87,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   }
 
   const workspaceConfig = await readText('pnpm-workspace.yaml')
-  if (!workspaceConfig.includes('"apps/*"') || !workspaceConfig.includes('"packages/*"')) {
+  if (!/^\\s*-\\s*[\"']apps\\/\\*[\"']\\s*$/m.test(workspaceConfig) || !/^\\s*-\\s*[\"']packages\\/\\*[\"']\\s*$/m.test(workspaceConfig)) {
     errors.push('pnpm-workspace.yaml must include apps/* and packages/*.')
   }
   if (workspaceConfig.includes('"services/*"')) {
@@ -163,7 +163,10 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   }
 
   const lockfile = await readText('pnpm-lock.yaml')
-  const importerSection = lockfile.split(/\npackages:\s*\n/, 1)[0]
+  // pnpm 12 may include a package-manager lock document before the workspace lock document.
+  // Use the final top-level packages section so importer checks inspect the workspace document.
+  const packageSectionIndex = lockfile.lastIndexOf('\\npackages:\\n')
+  const importerSection = packageSectionIndex >= 0 ? lockfile.slice(0, packageSectionIndex) : lockfile
   const missingImporters = workspacePackages
     .map((item) => item.path.split(sep).join('/'))
     .filter((path) => !new RegExp(`^  ${escapeRegExp(path)}:\\s*$`, 'm').test(importerSection))
