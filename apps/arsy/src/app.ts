@@ -11,6 +11,7 @@ import { registerFinancialRoutes } from './finance/routes.ts'
 import { registerChannelRoutes } from './channels/routes.ts'
 import { registerInspectionRoutes } from './inspections/routes.ts'
 import { registerListingRoutes } from './listings/routes.ts'
+import { registerAssetRoutes } from './assets/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
@@ -72,6 +73,7 @@ export function createApp(options: CreateAppOptions = {}) {
     registerChannelRoutes(instance, databasePool, env)
     registerInspectionRoutes(instance, databasePool, env)
     registerListingRoutes(instance, databasePool, env)
+    registerAssetRoutes(instance, databasePool, env)
   })
 
   return app
