@@ -7,7 +7,7 @@
 - Brand Manifesto: WHEN THE MOON RISES, WE SHARE MESSAGES.
 - Observatory: research, observation, evidence workflows, and command experience.
 - Archive: durable records, knowledge, retrieval, and provenance.
-- RIOTWORKS: independent creative/engineering studio identity; not the product master brand.
+- RIOTWORKS: product and operating division within the MOONWITNESS master brand.
 
 See [Design DNA](../10-design-dna.md), [Design System](../11-design-system.md), [Brand Architecture](../12-brand-architecture.md), and [Asset Brand Kit](../../packages/assets/BRAND.md).
 
