@@ -48,6 +48,10 @@ export class InMemoryEvidenceStore implements EvidenceStore {
       if (existing.hash !== event.hash) throw new Error('Event id collision')
       return
     }
+    const currentHead = stream.at(-1)?.hash ?? null
+    if (currentHead !== event.previousHash) {
+      throw new Error('Evidence stream head changed; retry append from the latest stream version')
+    }
     stream.push(event)
     this.streams.set(event.aggregateId, stream)
   }
