@@ -13,7 +13,7 @@
 - Deliver reusable, composable React components.
 - Meet WCAG 2.2 AA as a design target.
 - Keep original graphic assets and their provenance in `@riotworks/assets`.
-- Avoid generic SaaS, decorative sci-fi HUD, and unrelated studio-brand drift.
+- Avoid generic SaaS, decorative sci-fi HUD, and unapproved division/sub-brand drift.
 
 ## 2. Brand foundations
 
