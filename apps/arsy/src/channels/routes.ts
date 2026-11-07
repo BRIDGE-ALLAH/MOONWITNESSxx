@@ -47,7 +47,7 @@ const validateChannel = (value: z.infer<typeof channelObjectSchema>, context: z.
   }
 }
 const channelBaseSchema = channelObjectSchema.superRefine(validateChannel)
-const updateSchema = channelObjectSchema.extend({ expectedRevision: z.number().int().positive() }).superRefine(validateChannel)
+const updateSchema = channelObjectSchema.extend({ expectedRevision: z.number().int().positive() })
 const idSchema = z.string().uuid()
 
 export function registerChannelRoutes(app: FastifyInstance, db: DatabasePool, env: NodeJS.ProcessEnv = process.env): void {
@@ -86,6 +86,22 @@ export function registerChannelRoutes(app: FastifyInstance, db: DatabasePool, en
       error: { code: 'VALIDATION_ERROR', message: 'Channel update input is invalid.', details: body.success ? undefined : body.error.flatten() },
     })
     const { expectedRevision, ...input } = body.data
+    const existingEvidence = await repository.evidence(ownerId, params.data.id)
+    if (!existingEvidence) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Channel was not found.' } })
+    const validated = channelBaseSchema.safeParse({
+      ...input,
+      evidence: [
+        ...existingEvidence.map((item) => ({
+          evidenceType: item.evidenceType, sourceName: item.sourceName, sourceUrl: item.sourceUrl,
+          capturedAt: item.capturedAt, reviewedAt: item.reviewedAt, evidenceClass: item.evidenceClass,
+          summary: item.summary, limitations: item.limitations,
+        })),
+        ...input.evidence,
+      ],
+    })
+    if (!validated.success) return reply.code(400).send({
+      error: { code: 'VALIDATION_ERROR', message: 'Channel update does not satisfy its evidence gates.', details: validated.error.flatten() },
+    })
     try {
       const result = await repository.update(ownerId, actorId, params.data.id, expectedRevision, input as ChannelInput)
       if (!result.channel) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Channel was not found.' } })
