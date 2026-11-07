@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 
 type ChannelEvidence = {
   id: string
-  evidenceType: 'official-policy' | 'account-eligibility' | 'payout-requirements' | 'api-capability' | 'other'
+  evidenceType: 'official-policy' | 'account-eligibility' | 'payout-requirements' | 'format-requirements' | 'api-capability' | 'other'
   sourceName: string
   sourceUrl: string
   capturedAt: string
@@ -23,6 +23,7 @@ type Channel = {
   policyReviewedAt: string | null
   policyRecheckAt: string | null
   payoutRequirements: Record<string, unknown>
+  listingRequirements: Record<string, unknown>
   payoutSetupStatus: 'configured' | 'not-configured' | 'unavailable' | 'unknown'
   capability: 'C0' | 'C1'
   grantedScopes: string[]
@@ -64,6 +65,7 @@ type ChannelDraft = {
   countryCode: string
   channelStatus: Channel['channelStatus']
   payoutRequirements: string
+  listingRequirements: string
   grantedScopes: string
   quotaNotes: string
 }
@@ -75,9 +77,9 @@ type ReceiptDraft = {
 }
 const initialChannelForm = {
   channelKey: '', displayName: '', countryCode: 'ID', accountEligibility: 'unknown' as Channel['accountEligibility'],
-  officialPolicyUrl: '', policyReviewedAt: '', policyRecheckAt: '', payoutRequirements: '{}',
+  officialPolicyUrl: '', policyReviewedAt: '', policyRecheckAt: '', payoutRequirements: '{}', listingRequirements: '{}',
   payoutSetupStatus: 'unknown' as Channel['payoutSetupStatus'], capability: 'C0' as Channel['capability'],
-  grantedScopes: '', quotaNotes: '{}', policySummary: '', accountEvidenceUrl: '', payoutEvidenceUrl: '',
+  grantedScopes: '', quotaNotes: '{}', policySummary: '', accountEvidenceUrl: '', payoutEvidenceUrl: '', formatEvidenceUrl: '',
 }
 const isoDate = (value: string) => value ? new Date(`${value}T00:00:00.000Z`).toISOString() : null
 
@@ -137,6 +139,7 @@ export function LaunchBayBoard() {
             countryCode: channel.countryCode,
             channelStatus: channel.channelStatus,
             payoutRequirements: JSON.stringify(channel.payoutRequirements, null, 2),
+            listingRequirements: JSON.stringify(channel.listingRequirements, null, 2),
             grantedScopes: channel.grantedScopes.join(', '),
             quotaNotes: JSON.stringify(channel.quotaNotes, null, 2),
           }
@@ -168,6 +171,12 @@ export function LaunchBayBoard() {
         summary: 'Operator-supplied evidence for the seller account and country eligibility.',
         limitations: 'Operator attestation; not independently verified by the channel.',
       })
+      if (channelForm.formatEvidenceUrl.trim()) evidence.push({
+        evidenceType: 'format-requirements', sourceName: `${channelForm.displayName} listing format requirements`,
+        sourceUrl: channelForm.formatEvidenceUrl.trim(), capturedAt, evidenceClass: 'observed-fact',
+        summary: 'Accepted product families and media formats captured from channel documentation.',
+        limitations: 'Manual capture; verify the current channel policy before each listing.',
+      })
       if (channelForm.payoutEvidenceUrl.trim()) evidence.push({
         evidenceType: 'payout-requirements', sourceName: `${channelForm.displayName} payout setup`,
         sourceUrl: channelForm.payoutEvidenceUrl.trim(), capturedAt, evidenceClass: 'operator-attestation',
@@ -183,6 +192,7 @@ export function LaunchBayBoard() {
           policyReviewedAt: isoDate(channelForm.policyReviewedAt),
           policyRecheckAt: isoDate(channelForm.policyRecheckAt),
           payoutRequirements: JSON.parse(channelForm.payoutRequirements),
+          listingRequirements: JSON.parse(channelForm.listingRequirements),
           payoutSetupStatus: channelForm.payoutSetupStatus, capability: channelForm.capability,
           grantedScopes: channelForm.grantedScopes.split(',').map((item) => item.trim()).filter(Boolean),
           quotaNotes: JSON.parse(channelForm.quotaNotes), channelStatus: 'active', evidence,
@@ -232,6 +242,7 @@ export function LaunchBayBoard() {
           policyReviewedAt: isoDate(draft.policyReviewedAt),
           policyRecheckAt: isoDate(draft.policyRecheckAt),
           payoutRequirements: JSON.parse(draft.payoutRequirements),
+          listingRequirements: JSON.parse(draft.listingRequirements),
           grantedScopes: draft.grantedScopes.split(',').map((item) => item.trim()).filter(Boolean),
           quotaNotes: JSON.parse(draft.quotaNotes), evidence: [],
         }),
@@ -318,7 +329,7 @@ export function LaunchBayBoard() {
           <div className="grid grid-cols-2 gap-2 text-xs"><p>Account: <strong>{channel.accountEligibility}</strong></p><p>Payout: <strong>{channel.payoutSetupStatus}</strong></p><p>Channel: <strong>{channel.channelStatus}</strong></p><p>Policy recheck: <strong>{channel.policyRecheckAt?.slice(0,10) ?? 'not set'}</strong></p></div>
           <details className="border-t border-acid-lime/10 pt-2"><summary className="cursor-pointer font-mono text-[10px] uppercase text-acid-lime">Evidence history · {(channelEvidence[channel.id] ?? []).length} records</summary><div className="mt-3 space-y-2">{(channelEvidence[channel.id] ?? []).map((item) => <div key={item.id} className="border-l border-acid-lime/30 pl-3 text-xs"><p className="font-mono">{item.evidenceType} · {item.evidenceClass}</p><a className="break-all text-acid-lime underline" href={item.sourceUrl} target="_blank" rel="noreferrer">{item.sourceUrl}</a><p className="mt-1">{item.summary}</p><p className="text-muted-ink">Captured {new Date(item.capturedAt).toLocaleString()} · {item.limitations}</p></div>)}
             {(() => { const draft = evidenceDrafts[channel.id] ?? { evidenceType: 'other' as const, sourceName: '', sourceUrl: '', summary: '', limitations: 'Manual capture; recheck before use.', evidenceClass: 'observed-fact' as const }; return <div className="mt-3 grid gap-2 md:grid-cols-2">
-              <label className="text-[10px] font-mono uppercase">Evidence type<select value={draft.evidenceType} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, evidenceType: event.target.value as ChannelEvidence['evidenceType'] } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="official-policy">Official policy</option><option value="account-eligibility">Account eligibility</option><option value="payout-requirements">Payout requirements</option><option value="api-capability">API capability</option><option value="other">Other</option></select></label>
+              <label className="text-[10px] font-mono uppercase">Evidence type<select value={draft.evidenceType} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, evidenceType: event.target.value as ChannelEvidence['evidenceType'] } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="official-policy">Official policy</option><option value="account-eligibility">Account eligibility</option><option value="payout-requirements">Payout requirements</option><option value="format-requirements">Format requirements</option><option value="api-capability">API capability</option><option value="other">Other</option></select></label>
               <label className="text-[10px] font-mono uppercase">Evidence class<select value={draft.evidenceClass} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, evidenceClass: event.target.value as ChannelEvidence['evidenceClass'] } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="observed-fact">Observed fact</option><option value="operator-attestation">Operator attestation</option><option value="inference">Inference</option><option value="unknown">Unknown</option></select></label>
               <label className="text-[10px] font-mono uppercase">Source name<input value={draft.sourceName} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, sourceName: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
               <label className="text-[10px] font-mono uppercase">Source URL<input value={draft.sourceUrl} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, sourceUrl: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
@@ -336,6 +347,7 @@ export function LaunchBayBoard() {
             <label className="text-[10px] font-mono uppercase">Policy reviewed<input type="date" value={draft.policyReviewedAt} onChange={(event) => setChannelDrafts((current) => ({ ...current, [channel.id]: { ...draft, policyReviewedAt: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
             <label className="text-[10px] font-mono uppercase">Policy recheck date<input type="date" value={draft.policyRecheckAt} onChange={(event) => setChannelDrafts((current) => ({ ...current, [channel.id]: { ...draft, policyRecheckAt: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
             <label className="text-[10px] font-mono uppercase">Payout requirements JSON<textarea value={draft.payoutRequirements} onChange={(event) => setChannelDrafts((current) => ({ ...current, [channel.id]: { ...draft, payoutRequirements: event.target.value } }))} rows={3} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
+            <label className="text-[10px] font-mono uppercase">Listing format requirements JSON<textarea value={draft.listingRequirements} onChange={(event) => setChannelDrafts((current) => ({ ...current, [channel.id]: { ...draft, listingRequirements: event.target.value } }))} rows={3} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
             <label className="text-[10px] font-mono uppercase">Granted scopes (comma-separated)<textarea value={draft.grantedScopes} onChange={(event) => setChannelDrafts((current) => ({ ...current, [channel.id]: { ...draft, grantedScopes: event.target.value } }))} rows={3} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
             <label className="text-[10px] font-mono uppercase md:col-span-2">Quota notes JSON<textarea value={draft.quotaNotes} onChange={(event) => setChannelDrafts((current) => ({ ...current, [channel.id]: { ...draft, quotaNotes: event.target.value } }))} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
             <label className="text-[10px] font-mono uppercase">Channel status<select value={draft.channelStatus} onChange={(event) => setChannelDrafts((current) => ({ ...current, [channel.id]: { ...draft, channelStatus: event.target.value as ChannelDraft['channelStatus'] } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="active">Active</option><option value="paused">Paused</option></select></label>
@@ -359,7 +371,9 @@ export function LaunchBayBoard() {
         <label className="text-[10px] font-mono uppercase">Policy evidence summary<input value={channelForm.policySummary} onChange={(event) => setChannelForm({ ...channelForm, policySummary: event.target.value })} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
         <label className="text-[10px] font-mono uppercase">Account eligibility evidence URL<input type="url" value={channelForm.accountEvidenceUrl} onChange={(event) => setChannelForm({ ...channelForm, accountEvidenceUrl: event.target.value })} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
         <label className="text-[10px] font-mono uppercase">Payout setup evidence URL<input type="url" value={channelForm.payoutEvidenceUrl} onChange={(event) => setChannelForm({ ...channelForm, payoutEvidenceUrl: event.target.value })} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
+        <label className="text-[10px] font-mono uppercase">Format requirements evidence URL<input type="url" value={channelForm.formatEvidenceUrl} onChange={(event) => setChannelForm({ ...channelForm, formatEvidenceUrl: event.target.value })} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
         <label className="text-[10px] font-mono uppercase">Payout requirements JSON<textarea value={channelForm.payoutRequirements} onChange={(event) => setChannelForm({ ...channelForm, payoutRequirements: event.target.value })} rows={3} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
+        <label className="text-[10px] font-mono uppercase">Listing format requirements JSON<textarea value={channelForm.listingRequirements} onChange={(event) => setChannelForm({ ...channelForm, listingRequirements: event.target.value })} rows={3} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" placeholder='{"acceptedMediaTypes":["application/pdf"],"acceptedProductFamilies":["digital-utility"]}' /></label>
         <label className="text-[10px] font-mono uppercase">Granted scopes (comma-separated)<input value={channelForm.grantedScopes} onChange={(event) => setChannelForm({ ...channelForm, grantedScopes: event.target.value })} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
         <label className="text-[10px] font-mono text-muted-ink uppercase md:col-span-2">Quota notes JSON<textarea value={channelForm.quotaNotes} onChange={(event) => setChannelForm({ ...channelForm, quotaNotes: event.target.value })} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
         <button type="submit" disabled={saving === 'channel'} className="bg-acid-lime px-4 py-3 font-mono text-xs font-bold uppercase text-obsidian disabled:opacity-40 md:col-span-2">{saving === 'channel' ? 'Registering…' : 'Register evidence-backed channel'}</button>
