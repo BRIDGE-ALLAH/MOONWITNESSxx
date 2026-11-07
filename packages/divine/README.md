@@ -28,3 +28,8 @@ Node 22+ is required for native TypeScript tests. No database, ORM, ARSY, Python
 - `./epistemology`: SIDRAT knowledge states, method-specific evidence sufficiency, scope boundaries and explainable abstention.
 
 These modules are deterministic domain contracts. They do not claim theological authority, infer metaphysical truth, or write into canonical Corpus.
+
+## Phases 15–17
+- `./counterfactual-surgery`: provenance-validated witness-graph edge removal, impact report and bounded minimal cut sets.
+- `./evidence-interactions`: bounded Möbius coalition decomposition, witness-family entropy and cross-partition sign stability.
+- `./citation-mutation-lab`: exact source-span mutation suite for offset drift, Unicode, bidi, confusables and truncation.

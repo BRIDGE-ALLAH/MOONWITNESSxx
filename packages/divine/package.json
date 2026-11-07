@@ -66,6 +66,21 @@
       "types": "./src/temporal/index.ts",
       "import": "./src/temporal/index.ts",
       "default": "./src/temporal/index.ts"
+    },
+    "./counterfactual-surgery": {
+      "types": "./src/counterfactual-surgery/index.ts",
+      "import": "./src/counterfactual-surgery/index.ts",
+      "default": "./src/counterfactual-surgery/index.ts"
+    },
+    "./evidence-interactions": {
+      "types": "./src/evidence-interactions/index.ts",
+      "import": "./src/evidence-interactions/index.ts",
+      "default": "./src/evidence-interactions/index.ts"
+    },
+    "./citation-mutation-lab": {
+      "types": "./src/citation-mutation-lab/index.ts",
+      "import": "./src/citation-mutation-lab/index.ts",
+      "default": "./src/citation-mutation-lab/index.ts"
     }
   },
   "scripts": {
