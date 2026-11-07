@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: { code: 'ORIGIN_REJECTED' } }, { status: 403 })
   }
 
-  const clientIdentity = resolveTrustedClientNetworkIdentity(request, config.trustedProxyHops)
+  const clientIdentity = resolveTrustedClientNetworkIdentity(request, config.trustedProxyHops, config.proxyIdentitySecret ?? undefined)
   if (!clientIdentity) return unavailable('TRUSTED_CLIENT_IDENTITY_UNAVAILABLE')
   const buckets = createLoginAttemptBucketHashes(config.operatorId, clientIdentity, config.secret)
   const currentLimit = await callSharedLoginLimiter('check', buckets)
