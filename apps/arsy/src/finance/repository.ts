@@ -126,7 +126,7 @@ export class FinancialRepository {
   async reconcile(ownerId: string, actorId: string, id: string, state: Exclude<ReconciliationState, 'pending'>, rationale: string, evidenceUrl: string): Promise<FinancialEventRecord | null> {
     const result = await this.db.query(
       `WITH changed AS (
-        UPDATE arsy_financial_events SET reconciliation_state = $3,
+        UPDATE arsy_financial_events SET reconciliation_state = $3::text,
           metadata = metadata || jsonb_build_object('reconciliation', jsonb_build_object(
             'rationale', $4::text, 'evidenceUrl', $5::text, 'actorId', $6::text, 'recordedAt', now()
           ))
