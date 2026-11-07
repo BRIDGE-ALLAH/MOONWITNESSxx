@@ -31,3 +31,17 @@ test('detects approval that arrives only after an effect starts', () => {
   }])
   assert.equal(suite.results[0].findings.some((finding) => finding.code === 'approval_missing'), true)
 })
+
+test('detects duplicate effect starts and actor changes at completion', () => {
+  const suite = evaluateSafetySuite([{
+    id: 'duplicate-and-actor', expectedUnsafe: true, trace: [
+      { sequence: 0, actionId: 'z', actorId: 'agent', tenantId: 't', kind: 'policy.allowed' },
+      { sequence: 1, actionId: 'z', actorId: 'agent', tenantId: 't', kind: 'effect.started' },
+      { sequence: 2, actionId: 'z', actorId: 'agent', tenantId: 't', kind: 'effect.started' },
+      { sequence: 3, actionId: 'z', actorId: 'other', tenantId: 't', kind: 'effect.completed' },
+    ],
+  }])
+  const codes = suite.results[0].findings.map((finding) => finding.code)
+  assert.ok(codes.includes('duplicate_effect_start'))
+  assert.ok(codes.includes('effect_terminal_actor_mismatch'))
+})
