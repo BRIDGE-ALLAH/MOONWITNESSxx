@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 
 type Opportunity = {
@@ -9,7 +10,8 @@ type Opportunity = {
   buyerProblem: string
   evaluation: { score: number | null; decision: string; blockedGates: string[]; unknownGates: string[]; missingScoreDimensions: string[] }
 }
-type Product = { id: string; opportunityId: string | null; title: string; productFamily: string; lifecycleState: string; version: number }
+type Decision = 'blocked' | 'research-more' | 'prototype-candidate' | 'park'
+type DecisionDraft = { decision: Decision; rationale: string }
 const dimensions = [
   ['demandEvidence', 'Demand evidence', 25],
   ['competitionGap', 'Competition / quality gap', 20],
@@ -27,14 +29,14 @@ const emptyGateRationales = Object.fromEntries(gates.map(([key]) => [key, 'Not v
 
 export function OpportunityBoard() {
   const [items, setItems] = useState<Opportunity[]>([])
-  const [products, setProducts] = useState<Product[]>([])
-  const [productCriteria, setProductCriteria] = useState<Record<string, string>>({})
-  const [promotingId, setPromotingId] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [opportunityIdempotencyKey, setOpportunityIdempotencyKey] = useState('')
+  const [evidenceCapturedAt, setEvidenceCapturedAt] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [actionId, setActionId] = useState<string | null>(null)
+  const [decisionDrafts, setDecisionDrafts] = useState<Record<string, DecisionDraft>>({})
   const [scores, setScores] = useState(emptyScores)
   const [scoreRationales, setScoreRationales] = useState(emptyRationales)
   const [hardGates, setHardGates] = useState(emptyGates)
@@ -44,19 +46,11 @@ export function OpportunityBoard() {
     setLoading(true)
     setError('')
     try {
-      const [opportunityResponse, productResponse] = await Promise.all([
-        fetch('/api/opportunities', { cache: 'no-store' }),
-        fetch('/api/products', { cache: 'no-store' }),
-      ])
-      const [opportunityPayload, productPayload] = await Promise.all([
-        opportunityResponse.json(),
-        productResponse.json(),
-      ])
-      if (opportunityResponse.status === 401 || productResponse.status === 401) throw new Error('Operator login required. Sign in at /login.')
-      if (!opportunityResponse.ok) throw new Error(opportunityPayload.error?.message || 'Unable to load opportunities.')
-      if (!productResponse.ok) throw new Error(productPayload.error?.message || 'Unable to load product briefs.')
-      setItems(opportunityPayload.data ?? [])
-      setProducts(productPayload.data ?? [])
+      const response = await fetch('/api/opportunities', { cache: 'no-store' })
+      const payload = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!response.ok) throw new Error(payload.error?.message || 'Unable to load opportunities.')
+      setItems(payload.data ?? [])
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to load opportunities.')
     } finally {
@@ -82,6 +76,8 @@ export function OpportunityBoard() {
     const hardGateDetails = Object.fromEntries(gates.map(([key]) => [key, {
       status: hardGates[key], rationale: gateRationales[key].trim(), evidenceIds: hardGates[key] === 'unknown' ? [] : [evidenceId],
     }]))
+    const capturedAt = evidenceCapturedAt || new Date().toISOString()
+    setEvidenceCapturedAt(capturedAt)
     const payload = {
       title: String(data.get('title') || ''), buyerProblem: String(data.get('buyerProblem') || ''),
       buyerSegment: String(data.get('buyerSegment') || ''), jobToBeDone: String(data.get('jobToBeDone') || ''),
@@ -89,7 +85,7 @@ export function OpportunityBoard() {
       candidateChannels: String(data.get('candidateChannels') || '').split(',').map((v) => v.trim()).filter(Boolean),
       evidence: [{
         evidenceId, sourceName: String(data.get('sourceName') || ''), sourceUrl: String(data.get('sourceUrl') || ''),
-        sourceType: String(data.get('sourceType') || 'other'), capturedAt: new Date().toISOString(),
+        sourceType: String(data.get('sourceType') || 'other'), capturedAt,
         evidenceClass: String(data.get('evidenceClass') || 'unknown'), summary: String(data.get('summary') || ''),
         reliability: String(data.get('reliability') || 'unknown'), limitations: String(data.get('limitations') || ''),
         collectionMethod: String(data.get('collectionMethod') || ''), permissionBasis: String(data.get('permissionBasis') || ''),
@@ -105,6 +101,7 @@ export function OpportunityBoard() {
       if (!response.ok) throw new Error(result.error?.message || 'Unable to save opportunity.')
       form.reset()
       setOpportunityIdempotencyKey('')
+      setEvidenceCapturedAt('')
       setScores({ ...emptyScores }); setScoreRationales({ ...emptyRationales }); setHardGates({ ...emptyGates }); setGateRationales({ ...emptyGateRationales })
       setMessage('Opportunity saved. Review evidence and hard gates before production.')
       await refresh()
@@ -113,31 +110,47 @@ export function OpportunityBoard() {
     } finally { setSaving(false) }
   }
 
-  async function promoteOpportunity(item: Opportunity) {
-    const criterion = productCriteria[item.id]?.trim()
-    if (!criterion) {
-      setError('Add at least one measurable acceptance criterion before creating a product brief.')
+
+  async function updateDecision(item: Opportunity) {
+    const draft = decisionDrafts[item.id] ?? { decision: item.evaluation.decision as Decision, rationale: '' }
+    if (draft.rationale.trim().length < 10) {
+      setError('Decision rationale must contain at least 10 characters.')
       return
     }
-    setPromotingId(item.id)
-    setError('')
-    setMessage('')
+    setActionId(item.id); setError(''); setMessage('')
     try {
-      const response = await fetch('/api/products', {
-        method: 'POST',
+      const response = await fetch(`/api/opportunities/${item.id}/decision`, {
+        method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ opportunityId: item.id, acceptanceCriteria: [criterion] }),
+        body: JSON.stringify({ decision: draft.decision, rationale: draft.rationale.trim() }),
       })
-      const payload = await response.json()
+      const result = await response.json()
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
-      if (!response.ok) throw new Error(payload.error?.message || 'Unable to create product brief.')
-      setMessage(`Product brief created: ${payload.data.title} · version ${payload.data.version}.`)
-      setProductCriteria((values) => ({ ...values, [item.id]: '' }))
+      if (!response.ok) throw new Error(result.error?.message || 'Unable to update opportunity decision.')
+      setDecisionDrafts((current) => ({ ...current, [item.id]: { ...draft, rationale: '' } }))
+      setMessage('Decision updated and recorded in the audit trail.')
       await refresh()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to create product brief.')
+      setError(cause instanceof Error ? cause.message : 'Unable to update opportunity decision.')
     } finally {
-      setPromotingId('')
+      setActionId(null)
+    }
+  }
+
+  async function archiveOpportunity(item: Opportunity) {
+    if (!window.confirm(`Archive "${item.title}"? The record will be retained in the audit history.`)) return
+    setActionId(item.id); setError(''); setMessage('')
+    try {
+      const response = await fetch(`/api/opportunities/${item.id}`, { method: 'DELETE' })
+      const result = response.status === 204 ? null : await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!response.ok) throw new Error(result?.error?.message || 'Unable to archive opportunity.')
+      setMessage('Opportunity archived. Its audit history is retained.')
+      await refresh()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to archive opportunity.')
+    } finally {
+      setActionId(null)
     }
   }
 
@@ -147,21 +160,34 @@ export function OpportunityBoard() {
     {message && <div role="status" className="border border-acid-lime/40 p-4 text-sm">{message}</div>}
     <section className="space-y-3"><div className="flex items-end justify-between"><div><h2 className="font-display text-2xl uppercase">Opportunity register</h2><p className="text-xs text-muted-ink">Persisted records from ARSY · no sample rows</p></div><button type="button" onClick={() => void refresh()} className="border border-acid-lime/40 px-4 py-2 font-mono text-xs uppercase">Refresh</button></div>
       {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading persisted opportunities…</p> : items.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No opportunities recorded yet. Capture the first source-backed buyer problem below.</p> : <div className="grid gap-3 md:grid-cols-2">{items.map((item) => {
-        const product = products.find((candidate) => candidate.opportunityId === item.id)
         const eligible = item.evaluation.decision === 'prototype-candidate'
           && item.evaluation.score !== null
           && item.evaluation.score >= 80
           && item.evaluation.blockedGates.length === 0
           && item.evaluation.unknownGates.length === 0
           && item.evaluation.missingScoreDimensions.length === 0
+        const draft = decisionDrafts[item.id] ?? { decision: item.evaluation.decision as Decision, rationale: '' }
         return <article key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><h3 className="font-display text-xl uppercase">{item.title}</h3><span className="font-mono text-xs text-acid-lime">{item.evaluation.score === null ? 'UNSCORED' : `${item.evaluation.score}/100`}</span></div><p className="mt-2 text-sm text-muted-ink">{item.buyerSegment}</p><p className="mt-3 text-sm">{item.buyerProblem}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase"><span className="border border-acid-lime/30 px-2 py-1">{item.evaluation.decision}</span>{item.evaluation.blockedGates.map((g) => <span key={g} className="border border-red-500/50 px-2 py-1 text-red-300">BLOCKED: {g}</span>)}{item.evaluation.unknownGates.map((g) => <span key={g} className="border border-orange-400/50 px-2 py-1 text-orange-200">UNKNOWN: {g}</span>)}</div>
-          {product ? <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs font-mono uppercase text-acid-lime">Product brief created · v{product.version} · {product.lifecycleState}</p>
-            : eligible ? <div className="mt-4 space-y-2 border-t border-acid-lime/20 pt-3"><label className="block text-xs font-mono uppercase">Acceptance criterion<textarea value={productCriteria[item.id] ?? ''} onChange={(event) => setProductCriteria((values) => ({ ...values, [item.id]: event.target.value }))} rows={2} maxLength={500} placeholder="Define a measurable condition for accepting the first product brief." className="mt-2 w-full border border-acid-lime/20 bg-obsidian p-2 text-sm normal-case" /></label><button type="button" disabled={!productCriteria[item.id]?.trim() || promotingId === item.id} onClick={() => void promoteOpportunity(item)} className="border border-acid-lime px-3 py-2 font-mono text-[10px] uppercase disabled:opacity-50">{promotingId === item.id ? 'Creating brief…' : 'Create product brief'}</button></div>
+          {eligible ? <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs"><Link href="/the-forge" className="font-mono uppercase text-acid-lime underline">Ready for product brief in The Forge →</Link></p>
             : <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs text-muted-ink">Product promotion is locked until every score dimension is complete and all hard gates are passed.</p>}
+          <div className="mt-4 space-y-2 border-t border-acid-lime/15 pt-4">
+            <label className="block space-y-1 text-[10px] font-mono uppercase text-muted-ink">Operator decision
+              <select value={draft.decision} onChange={(event) => setDecisionDrafts((current) => ({ ...current, [item.id]: { ...draft, decision: event.target.value as Decision } }))} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs text-paper-bone">
+                <option value="blocked">Blocked</option><option value="research-more">Research more</option><option value="prototype-candidate">Prototype candidate</option><option value="park">Park</option>
+              </select>
+            </label>
+            <label className="block space-y-1 text-[10px] font-mono uppercase text-muted-ink">Decision rationale (minimum 10 characters)
+              <textarea value={draft.rationale} onChange={(event) => setDecisionDrafts((current) => ({ ...current, [item.id]: { ...draft, rationale: event.target.value } }))} rows={2} maxLength={2000} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs text-paper-bone" placeholder="Why this decision is appropriate based on the current evidence." />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={actionId === item.id || draft.rationale.trim().length < 10} onClick={() => void updateDecision(item)} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase disabled:opacity-40">{actionId === item.id ? 'Saving…' : 'Save decision'}</button>
+              <button type="button" disabled={actionId === item.id} onClick={() => void archiveOpportunity(item)} className="border border-red-500/40 px-3 py-2 font-mono text-[10px] uppercase text-red-300 disabled:opacity-40">Archive</button>
+            </div>
+          </div>
         </article>
       })}</div>}
     </section>
-    <form onSubmit={createOpportunity} className="space-y-6 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
+    <form onSubmit={createOpportunity} onChange={() => { if (opportunityIdempotencyKey) { setOpportunityIdempotencyKey(''); setEvidenceCapturedAt('') } }} className="space-y-6 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
       <div><h2 className="font-display text-2xl uppercase">Capture opportunity</h2><p className="text-xs text-muted-ink">One source-backed opportunity per submission. No automated scraping or fabricated demand signals.</p></div>
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1 text-xs font-mono uppercase">Opportunity title<input name="title" required minLength={3} maxLength={180} className="w-full border border-acid-lime/20 bg-obsidian p-3 font-sans text-sm normal-case" /></label>
