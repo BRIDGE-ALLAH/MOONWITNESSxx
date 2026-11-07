@@ -39,6 +39,7 @@ export interface PayoutRecord {
   createdAt: string
   updatedAt: string
   history: Array<Record<string, unknown>>
+  allowedNextStatuses: PayoutStatus[]
 }
 
 interface PayoutRow {
@@ -114,6 +115,14 @@ function iso(value: Date | string | null): string | null {
   return value === null ? null : new Date(value).toISOString()
 }
 
+function allowedPayoutTransitions(status: PayoutStatus, paidAt: Date | string | null): PayoutStatus[] {
+  if (status === 'pending') return ['paid', 'failed', 'disputed']
+  if (status === 'paid') return ['reversed', 'disputed']
+  if (status === 'failed') return ['disputed']
+  if (status === 'disputed') return paidAt === null ? ['paid', 'failed'] : ['paid', 'failed', 'reversed']
+  return []
+}
+
 function mapPayout(row: PayoutRow): PayoutRecord {
   return {
     id: row.id,
@@ -131,6 +140,7 @@ function mapPayout(row: PayoutRow): PayoutRecord {
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
     history: row.history ?? [],
+    allowedNextStatuses: allowedPayoutTransitions(row.status, row.paid_at),
   }
 }
 
