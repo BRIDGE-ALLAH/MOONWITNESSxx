@@ -216,3 +216,21 @@ test('all versioned business API groups reject anonymous requests before databas
     await app.close()
   }
 })
+
+test('authenticated opportunity content update rejects stale revisions', async () => {
+  const pool = fakePool()
+  const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
+  const app = await createApp({ databasePool: pool, logger: false, env })
+  try {
+    const response = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/opportunities/11111111-1111-4111-8111-111111111111',
+      headers: { 'x-arsy-operator-token': token },
+      payload: { ...body, expectedRevision: 1 },
+    })
+    assert.equal(response.statusCode, 409)
+    assert.equal(response.json().error.code, 'REVISION_CONFLICT')
+  } finally {
+    await app.close()
+  }
+})
