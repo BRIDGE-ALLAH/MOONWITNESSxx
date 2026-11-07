@@ -46,7 +46,7 @@ export function scoreMemoryIntegrityBenchmark(trials: readonly MemoryIntegrityTr
   return {
     version: 1, totalTrials: trials.length, attackTrials: attacks.length, controlTrials: controls.length,
     blockedAtRead: attacks.filter((t) => t.verdict === 'blocked_at_read').length,
-    detectedOnlyAtAudit: attacks.filter((t) => t.verdict === 'served_then_flagged').length,
+    detectedOnlyAtAudit: attacks.filter((t) => t.verdict === 'blocked_without_read_detection' || t.verdict === 'served_then_flagged').length,
     undetectedAttacks: attacks.filter((t) => t.verdict === 'served_undetected').length,
     falseAlarms: controls.filter((t) => t.verdict === 'control_false_alarm').length,
     score: scored.reduce((sum, t) => sum + t.score, 0) / scored.length, trials: scored
