@@ -74,6 +74,12 @@ jobs:
           pnpm devx context --json --max-chars=12000 > /tmp/moonwitness-context.json
           node -e "JSON.parse(require('node:fs').readFileSync('/tmp/moonwitness-context.json', 'utf8'))"
 
+      - name: Test Counterfactual Repo Lab
+        run: |
+          pnpm run test:repo-lab
+          pnpm run repo:lab -- --cycles
+          pnpm run repo:lab -- --changed-files packages/divine/src/index.ts
+
       - name: Upload repository audit
         if: always()
         uses: actions/upload-artifact@v6
