@@ -4,10 +4,12 @@ async function digest(value:string){return hex(await globalThis.crypto.subtle.di
 export async function createPreservationManifest(input:PreservationInput):Promise<PreservationManifest>{
  if(!input.artifactRef||!input.corpusRelease||!input.contentDigest||!input.derivationMethod||!input.methodVersion||!input.createdAt)throw new Error("Preservation manifest is missing required lineage fields");
  if(input.sourceRefs.length===0)throw new Error("At least one source reference is required");
- const canonical=JSON.stringify({manifestVersion:"1",...input,sourceRefs:[...input.sourceRefs].sort(),rightsPolicyRefs:[...input.rightsPolicyRefs].sort()});
+ const canonical=JSON.stringify({manifestVersion:"1",artifactRef:input.artifactRef,corpusRelease:input.corpusRelease,contentDigest:input.contentDigest,digestAlgorithm:input.digestAlgorithm,derivationMethod:input.derivationMethod,methodVersion:input.methodVersion,sourceRefs:[...input.sourceRefs].sort(),rightsPolicyRefs:[...input.rightsPolicyRefs].sort(),createdAt:input.createdAt});
  return {...input,manifestVersion:"1",manifestDigest:await digest(canonical)};
 }
-export async function verifyPreservationManifest(m:PreservationManifest):Promise<boolean>{const rebuilt=await createPreservationManifest(m);return rebuilt.manifestDigest===m.manifestDigest}
+export async function verifyPreservationManifest(m:PreservationManifest):Promise<boolean>{
+ const {manifestDigest,manifestVersion,...input}=m;const rebuilt=await createPreservationManifest(input);return rebuilt.manifestDigest===manifestDigest&&manifestVersion==="1";
+}
 export function evaluateRights(policy:RightsPolicy,action:RightsAction):"allow"|"metadata-only"|"deny"{return policy.decisions[action]??"deny"}
 export function assertRights(policy:RightsPolicy,action:RightsAction,mode:"content"|"metadata"="content"):void{const d=evaluateRights(policy,action);if(d==="deny"||(d==="metadata-only"&&mode==="content"))throw new Error("Rights policy blocks "+action+" for "+policy.resourceRef)}
 export async function appendDecision(entries:readonly DecisionLedgerEntry[],decision:ResearchDecision):Promise<DecisionLedgerEntry[]>{
