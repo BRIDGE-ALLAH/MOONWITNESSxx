@@ -34,7 +34,7 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
     const storageKey = randomUUID()
     await storage.put(storageKey, bytes)
     const repository = new AssetRepository(pool)
-    const asset = await repository.create(ownerId, ownerId, {
+    const createdAsset = await repository.create(ownerId, ownerId, {
       productId,
       productVersion: 1,
       fileName: 'source.txt',
@@ -42,6 +42,8 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
       byteSize: bytes.length,
       storageKey,
       sha256: createHash('sha256').update(bytes).digest('hex'),
+      idempotencyKey: randomUUID(),
+      requestHash: createHash('sha256').update('asset-integration-request').digest('hex'),
       provenance: {
         creator: 'Integration fixture author',
         license: 'Original test fixture',
@@ -51,7 +53,9 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
         disclosure: 'Synthetic fixture used only in isolated CI.',
       },
     })
-    assert.ok(asset)
+    assert.ok(createdAsset)
+    assert.equal(createdAsset.replayed, false)
+    const asset = createdAsset.asset
     assert.equal(asset.sha256, createHash('sha256').update(bytes).digest('hex'))
     assert.equal(asset.provenance.license, 'Original test fixture')
     assert.equal(await repository.get(`${ownerId}-other`, asset.id), null)
