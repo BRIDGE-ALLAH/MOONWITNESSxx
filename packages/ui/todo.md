@@ -1,6 +1,6 @@
 # UI Package TODO
 
-> Scope: packages/ui — shared RIOTWORKS / MOONWITNESS React UI foundation.
+> Scope: packages/ui — shared MOONWITNESS React UI foundation. RIOTWORKS is a separately governed studio identity.
 > Status: Backlog created. Tasks remain unchecked until implemented and verified.
 
 ## Principles
@@ -8,7 +8,7 @@
 - Keep this package focused on reusable presentation and interaction infrastructure.
 - Keep domain rules, authorization, persistence, and workflow decisions in application/backend layers.
 - Prefer composable React + TypeScript APIs over a custom JSON/schema-driven UI framework.
-- Preserve RIOTWORKS visual identity and support Night Riot + Paper Riot.
+- Preserve the MOONWITNESS product identity and support Observatory + Archive. Keep legacy RIOTWORKS aliases only for existing prototype consumers.
 - Do not mark a task complete until its acceptance criteria are verified.
 
 ## Priority legend
@@ -31,7 +31,7 @@
   - [ ] Applications own data fetching, business rules, permissions, and persistence.
   - [ ] Domain components receive data and callbacks; they do not call backend services directly.
 - [ ] **P0** Define compatibility policy for React, TypeScript, Tailwind, and Radix dependencies.
-- [ ] **P1** Define naming policy for generic primitives and Riot-branded application components.
+- [ ] **P1** Define naming policy for generic primitives and MOONWITNESS-branded product components.
 - [ ] **P1** Record architecture decisions and known constraints.
 
 ## 1. Package architecture and distribution
@@ -75,7 +75,7 @@
   - [ ] Border: default, strong, subtle.
   - [ ] Interaction: focus, hover, pressed, selected, disabled.
   - [ ] Status: success, warning, danger, info, neutral, blocked.
-- [ ] **P0** Implement and verify Night Riot and Paper Riot.
+- [ ] **P0** Implement and verify Observatory and Archive.
   - [ ] Check every semantic token in both themes.
   - [ ] Check contrast for text, borders, controls, and status indicators.
   - [ ] Ensure theme switching does not cause layout or hydration issues in supported consumers.
@@ -96,7 +96,7 @@
 - [ ] **P1** Review external font loading; prefer self-hosted licensed assets or robust system fallbacks.
 - [ ] **P1** Establish icon policy and consistent icon sizing/stroke conventions.
 - [ ] **P1** Establish asset naming, source, licensing, and light/dark variant conventions.
-- [ ] **P2** Add original RIOTWORKS graphic assets and decorative surfaces only where they improve hierarchy or meaning.
+- [ ] **P2** Add original MOONWITNESS graphic assets and decorative surfaces only where they improve hierarchy or meaning.
 - [ ] **P2** Document use of brand illustration, halftone, technical stamps, and other visual motifs.
 
 ## 4. Core primitives
@@ -174,13 +174,13 @@
 
 ## 7. Application shell
 
-- [ ] **P1** RiotAppShell with composable regions rather than a monolithic page component.
-- [ ] **P1** RiotSidebar with active state, collapse behavior, groups, and mobile presentation.
-- [ ] **P1** RiotTopbar with page context and action slots.
-- [ ] **P1** RiotWorkspace for page-level layout and content sizing.
-- [ ] **P1** RiotContextPanel / inspector drawer.
-- [ ] **P1** RiotCommandPalette.
-- [ ] **P1** RiotNotificationCenter presentation.
+- [ ] **P1** MoonWitnessAppShell with composable regions rather than a monolithic page component.
+- [ ] **P1** MoonWitnessSidebar with active state, collapse behavior, groups, and mobile presentation.
+- [ ] **P1** MoonWitnessTopbar with page context and action slots.
+- [ ] **P1** MoonWitnessWorkspace for page-level layout and content sizing.
+- [ ] **P1** MoonWitnessContextPanel / inspector drawer.
+- [ ] **P1** MoonWitnessCommandPalette.
+- [ ] **P1** MoonWitnessNotificationCenter presentation.
 - [ ] **P1** Responsive navigation for desktop, tablet, and mobile.
 - [ ] **P1** Define shell slots for application-owned navigation and actions.
 - [ ] **P2** Status bar and contextual help surfaces.
@@ -253,7 +253,7 @@ A component is not complete until all applicable checks pass:
 
 - [ ] Public props and types are documented.
 - [ ] Variants and sizes are demonstrated.
-- [ ] Night Riot and Paper Riot are verified.
+- [ ] Observatory and Archive are verified.
 - [ ] Default, hover, focus, pressed, disabled, and loading states are verified where relevant.
 - [ ] Empty, error, and success states are defined where relevant.
 - [ ] Keyboard behavior is verified.
