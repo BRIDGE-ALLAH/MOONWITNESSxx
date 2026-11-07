@@ -6,7 +6,7 @@
 
 ## 1. Role in the wider universe
 
-MOONWITNESS is the master ecosystem and product identity. It exists within the broader EMPIRE OF THE LIGHT — A-L-L-A-H narrative universe. This is a product and story relationship, not a claim that software has divine authority or supernatural capability.
+MOONWITNESS is the master ecosystem and product identity within the wider GODPROMISE → EMPIRE OF THE LIGHT narrative universe. This is a product and story relationship, not a claim that software has divine authority or supernatural capability. 
 
 - **GODPROMISE** is the vision, promise, and ethical commitment narrative.
 - **EMPIRE OF THE LIGHT** is the overarching institutional, enterprise, knowledge, creative, and community universe.
