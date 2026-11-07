@@ -38,7 +38,8 @@ function fakePool() {
       if (sql.includes('INSERT INTO arsy_financial_events')) return { rows: [event] }
       if (sql.includes('FROM arsy_financial_events') && sql.includes('GROUP BY currency')) return { rows: [{
         currency: 'IDR', gross_receipts_minor: '0', deductions_minor: '0',
-        payout_movements_minor: '0', pending_minor: input.amountMinor, pending_count: '1',
+        tax_reserve_minor: '0', payout_movements_minor: '0',
+        pending_minor: input.amountMinor, pending_count: '1',
       }] }
       return { rows: [] }
     },
