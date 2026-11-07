@@ -180,7 +180,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await page.getByRole('heading', { name: 'ZILL WATCH' }).waitFor()
     const readyCard = page.locator('article').filter({ hasText: title }).first()
     await readyCard.getByText('4/4 PASSED').waitFor()
-    await readyCard.getByText('Version 1 · ready').waitFor()
+    await readyCard.getByText('Version 2 · ready').waitFor()
 
     // Channel C0 -> C1 requires explicit, attributable test evidence. C1 only
     // authorizes a manual listing package; the browser test never publishes it.
