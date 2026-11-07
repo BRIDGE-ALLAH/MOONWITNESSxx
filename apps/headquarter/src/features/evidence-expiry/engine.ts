@@ -1,4 +1,4 @@
-import type { EvidenceExpiryItem, EvidenceExpiryReport, EvidenceRecord } from './types'
+import type { EvidenceExpiryItem, EvidenceExpiryReport, EvidenceRecord, EvidenceExpiryStatus } from './types'
 
 export type EvidenceExpiryOptions = { warningDays?: number; criticalDays?: number }
 export function compileEvidenceExpiryBudget(records: EvidenceRecord[], now: Date, options: EvidenceExpiryOptions = {}): EvidenceExpiryReport {
@@ -17,10 +17,10 @@ export function compileEvidenceExpiryBudget(records: EvidenceRecord[], now: Date
     const dependentDecisionIds = [...record.linkedDecisionIds].sort()
     if (malformed) return { evidenceId: record.id, status: 'invalid', daysRemaining: null, dependentDecisionCount: dependentDecisionIds.length, dependentDecisionIds }
     const daysRemaining = Math.ceil((expiry - now.getTime()) / 86_400_000)
-    const status = expiry <= now.getTime() ? 'expired' : daysRemaining <= criticalDays ? 'critical' : daysRemaining <= warningDays ? 'warning' : 'healthy'
+    const status: EvidenceExpiryStatus = expiry <= now.getTime() ? 'expired' : daysRemaining <= criticalDays ? 'critical' : daysRemaining <= warningDays ? 'warning' : 'healthy'
     return { evidenceId: record.id, status, daysRemaining, dependentDecisionCount: dependentDecisionIds.length, dependentDecisionIds }
   }).sort((a, b) => {
-    const order = { invalid: 0, expired: 1, critical: 2, warning: 3, healthy: 4 }
+    const order: Record<EvidenceExpiryStatus, number> = { invalid: 0, expired: 1, critical: 2, warning: 3, healthy: 4 }
     return order[a.status] - order[b.status] || (a.daysRemaining ?? -Infinity) - (b.daysRemaining ?? -Infinity) || a.evidenceId.localeCompare(b.evidenceId)
   })
   for (const item of items) counts[item.status] += 1
