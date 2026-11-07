@@ -137,7 +137,18 @@ export function registerAssetRoutes(
       requestHash,
       provenance: parsed.data.provenance,
     }
-    await storage.put(storageKey, bytes)
+    try {
+      await storage.put(storageKey, bytes)
+      const storedBytes = await storage.get(storageKey)
+      const storedHash = createHash('sha256').update(storedBytes).digest('hex')
+      if (storedHash !== sha256 || storedBytes.length !== bytes.length) {
+        await storage.delete(storageKey).catch(() => undefined)
+        return reply.code(503).send({ error: { code: 'ASSET_STORAGE_CHECKSUM_MISMATCH', message: 'Stored asset bytes failed checksum verification; no asset record was created.' } })
+      }
+    } catch {
+      await storage.delete(storageKey).catch(() => undefined)
+      return reply.code(503).send({ error: { code: 'ASSET_STORAGE_UNAVAILABLE', message: 'Asset storage could not safely persist and verify the uploaded bytes.' } })
+    }
     try {
       const result = await repository.create(ownerId, actorId, input)
       if (!result) {
