@@ -65,6 +65,20 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
     return { data: record }
   })
 
+  app.patch('/api/v1/opportunities/:id', async (request, reply) => {
+    const params = z.object({ id: idSchema }).safeParse(request.params)
+    const body = opportunityInputSchema.safeParse(request.body)
+    if (!params.success || !body.success) return reply.code(400).send({
+      error: { code: 'VALIDATION_ERROR', message: 'Opportunity update input is invalid.', details: body.success ? undefined : body.error.flatten() },
+    })
+    const existing = await repository.get(ownerId, params.data.id)
+    if (!existing) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
+    const evaluation = evaluateOpportunity(body.data)
+    const updated = await repository.update(ownerId, actorId, params.data.id, body.data, evaluation)
+    if (!updated) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
+    return { data: updated }
+  })
+
   app.patch('/api/v1/opportunities/:id/decision', async (request, reply) => {
     const params = z.object({ id: idSchema }).safeParse(request.params)
     const body = decisionSchema.safeParse(request.body)
