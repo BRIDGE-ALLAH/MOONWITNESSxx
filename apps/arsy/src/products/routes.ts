@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { ProductRepository } from './repository.ts'
+import { canTransitionProductLifecycle, productLifecycleStates, type ProductLifecycleState } from './lifecycle.ts'
 
 const createSchema = z.object({
   opportunityId: z.string().uuid(),
@@ -12,6 +13,7 @@ const versionSchema = z.object({
   acceptanceCriteria: z.array(z.string().trim().min(3).max(500)).min(1).max(30),
 })
 const idSchema = z.string().uuid()
+const lifecycleSchema = z.object({ lifecycleState: z.enum(productLifecycleStates) })
 const querySchema = z.object({ limit: z.coerce.number().int().min(1).max(100).default(50) })
 
 export function registerProductRoutes(app: FastifyInstance, db: DatabasePool, env: NodeJS.ProcessEnv = process.env): void {
@@ -41,6 +43,38 @@ export function registerProductRoutes(app: FastifyInstance, db: DatabasePool, en
     const product = await repository.createVersion(ownerId, actorId, params.data.id, body.data.brief, body.data.acceptanceCriteria)
     if (!product) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Product was not found.' } })
     return reply.code(201).send({ data: product })
+  })
+
+  app.patch('/api/v1/products/:id/lifecycle', async (request, reply) => {
+    const params = z.object({ id: idSchema }).safeParse(request.params)
+    const body = lifecycleSchema.safeParse(request.body)
+    if (!params.success || !body.success) {
+      return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Product lifecycle input is invalid.' } })
+    }
+
+    const existing = await repository.get(ownerId, params.data.id)
+    if (!existing) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Product was not found.' } })
+    if (existing.lifecycleState === body.data.lifecycleState) return { data: existing }
+    if (!canTransitionProductLifecycle(existing.lifecycleState, body.data.lifecycleState)) {
+      return reply.code(409).send({
+        error: {
+          code: 'INVALID_LIFECYCLE_TRANSITION',
+          message: `Product cannot move from ${existing.lifecycleState} to ${body.data.lifecycleState}.`,
+        },
+      })
+    }
+
+    const updated = await repository.transitionLifecycle(
+      ownerId,
+      actorId,
+      params.data.id,
+      existing.lifecycleState as ProductLifecycleState,
+      body.data.lifecycleState,
+    )
+    if (!updated) {
+      return reply.code(409).send({ error: { code: 'LIFECYCLE_CONFLICT', message: 'Product lifecycle changed concurrently. Refresh and try again.' } })
+    }
+    return { data: updated }
   })
 
   app.get('/api/v1/products/:id', async (request, reply) => {

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { DatabasePool } from '../db.ts'
+import { canTransitionProductLifecycle, nextProductLifecycleStates, type ProductLifecycleState } from './lifecycle.ts'
 
 type QueryResult<T> = { rows: T[] }
 type ProductRow = {
@@ -21,7 +22,8 @@ export interface ProductRecord {
   opportunityId: string | null
   title: string
   productFamily: string
-  lifecycleState: string
+  lifecycleState: ProductLifecycleState
+  allowedNextLifecycleStates: ProductLifecycleState[]
   version: number
   versionId: string
   brief: Record<string, unknown>
@@ -40,7 +42,8 @@ function mapProduct(row: ProductRow): ProductRecord {
     opportunityId: row.opportunity_id,
     title: row.title,
     productFamily: row.product_family,
-    lifecycleState: row.lifecycle_state,
+    lifecycleState: row.lifecycle_state as ProductLifecycleState,
+    allowedNextLifecycleStates: nextProductLifecycleStates(row.lifecycle_state as ProductLifecycleState),
     version: row.version,
     versionId: row.version_id,
     brief: row.brief,
@@ -131,7 +134,7 @@ export class ProductRepository {
         INSERT INTO arsy_product_versions (id, product_id, version, brief, acceptance_criteria, created_by)
         SELECT $3, $2, next_version.version, $4::jsonb, $5::jsonb, $6
         FROM next_version
-        WHERE EXISTS (SELECT 1 FROM arsy_products WHERE owner_id = $1 AND id = $2 AND lifecycle_state <> 'retired')
+        WHERE EXISTS (SELECT 1 FROM arsy_products WHERE owner_id = $1 AND id = $2 AND lifecycle_state IN ('brief', 'production', 'review', 'ready'))
         RETURNING *
       ), updated AS (
         UPDATE arsy_products SET lifecycle_state = 'production', updated_at = now(), updated_by = $6
@@ -145,6 +148,42 @@ export class ProductRepository {
       )
       SELECT ${columns} FROM updated p JOIN inserted v ON v.product_id = p.id`,
       [ownerId, productId, randomUUID(), JSON.stringify(brief), JSON.stringify(acceptanceCriteria), actorId, randomUUID()],
+    )
+    const row = rows<ProductRow>(result)[0]
+    return row ? mapProduct(row) : null
+  }
+
+  async transitionLifecycle(
+    ownerId: string,
+    actorId: string,
+    id: string,
+    expectedState: ProductLifecycleState,
+    nextState: ProductLifecycleState,
+  ): Promise<ProductRecord | null> {
+    if (!canTransitionProductLifecycle(expectedState, nextState)) return null
+    const auditId = randomUUID()
+    const result = await this.db.query(
+      `WITH updated AS (
+        UPDATE arsy_products
+        SET lifecycle_state = $4, updated_at = now(), updated_by = $3
+        WHERE owner_id = $1 AND id = $2 AND lifecycle_state = $5
+        RETURNING *
+      ), audited AS (
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $6, $1, 'product', updated.id, 'lifecycle-changed', $3,
+          jsonb_build_object('from', $5, 'to', $4)
+        FROM updated
+      )
+      SELECT ${columns}
+      FROM updated p
+      JOIN arsy_product_versions v ON v.product_id = p.id
+      WHERE v.version = (
+        SELECT MAX(latest.version)
+        FROM arsy_product_versions latest
+        WHERE latest.product_id = p.id
+      )`,
+      [ownerId, id, actorId, nextState, expectedState, auditId],
     )
     const row = rows<ProductRow>(result)[0]
     return row ? mapProduct(row) : null

@@ -74,7 +74,6 @@ export function ZillWatchBoard() {
       const current = inspections.filter((item) => item.productVersionId === product.versionId)
       const latest = new Map<string, Inspection>()
       for (const item of current) if (!latest.has(item.inspectionType)) latest.set(item.inspectionType, item)
-      const draft = drafts[product.id]
       return <article key={product.id} className="space-y-4 border border-acid-lime/20 bg-panel-charcoal p-5">
         <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-display text-xl uppercase">{product.title}</h2><p className="text-xs text-muted-ink">Version {product.version} · {product.lifecycleState}</p></div><span className="font-mono text-xs text-acid-lime">{types.filter(([type]) => latest.get(type)?.status === 'pass').length}/4 PASSED</span></div>
         <div className="grid gap-2 md:grid-cols-4">{types.map(([type, label]) => { const record = latest.get(type); return <div key={type} className="border border-acid-lime/15 p-3"><p className="text-xs font-mono uppercase">{label}</p><p className="mt-2 text-sm">{record?.status ?? 'not reviewed'}</p>{record?.findings?.[0] && <p className="mt-1 text-[10px] text-muted-ink">{record.findings[0].description}</p>}</div> })}</div>

@@ -93,3 +93,46 @@ test('authenticated product list is owner-scoped and reaches the repository', as
     await app.close()
   }
 })
+
+test('product lifecycle transition rejects an invalid state without writing', async () => {
+  const productId = '11111111-1111-4111-8111-111111111111'
+  const productRow = {
+    id: productId,
+    opportunity_id: null,
+    title: 'Lifecycle test product',
+    product_family: 'digital-utility',
+    lifecycle_state: 'brief',
+    version_id: '33333333-3333-4333-8333-333333333333',
+    version: 1,
+    brief: {},
+    acceptance_criteria: ['A test criterion'],
+    created_at: '2026-11-08T00:00:00.000Z',
+    updated_at: '2026-11-08T00:00:00.000Z',
+  }
+  const calls = []
+  const pool = {
+    query: async (sql, values) => {
+      calls.push({ sql, values })
+      return { rows: [productRow] }
+    },
+    end: async () => undefined,
+  }
+  const app = await createApp({
+    databasePool: pool,
+    logger: false,
+    env: { ARSY_OPERATOR_ID: 'owner-a', ARSY_OPERATOR_TOKEN: token },
+  })
+  try {
+    const response = await app.inject({
+      method: 'PATCH',
+      url: `/api/v1/products/${productId}/lifecycle`,
+      headers: { 'x-arsy-operator-token': token },
+      payload: { lifecycleState: 'ready' },
+    })
+    assert.equal(response.statusCode, 409)
+    assert.equal(response.json().error.code, 'INVALID_LIFECYCLE_TRANSITION')
+    assert.equal(calls.length, 1, 'invalid transitions must not reach the update query')
+  } finally {
+    await app.close()
+  }
+})
