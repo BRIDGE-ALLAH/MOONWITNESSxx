@@ -1,5 +1,5 @@
 {
-  "name": "riotworks",
+  "name": "moonwitness",
   "version": "1.0.11",
   "private": true,
   "scripts": {
@@ -7,19 +7,20 @@
     "dev": "pnpm --filter @riotworks/headquarter run dev",
     "dev:headquarter": "pnpm --filter @riotworks/headquarter run dev",
     "dev:arsy": "pnpm --filter @riotworks/arsy run dev",
-    "dev:all": "pnpm dev:headquarter & pnpm dev:arsy",
-    "lint:all": "pnpm --filter @riotworks/ui run lint & pnpm --filter @riotworks/arsy run lint & pnpm --filter @riotworks/types run lint & pnpm --filter @riotworks/arsy-core run lint & pnpm --filter @riotworks/headquarter run lint",
+    "dev:all": "pnpm --parallel --filter @riotworks/headquarter --filter @riotworks/arsy run dev",
     "lint": "turbo run lint",
-    "typecheck:all": "pnpm --filter @riotworks/ui run type-check & pnpm --filter @riotworks/arsy run type-check & pnpm --filter @riotworks/arsy-core run type-check & pnpm --filter @riotworks/contract run type-check & pnpm --filter @riotworks/types run type-check & pnpm --filter @riotworks/lint run type-check & pnpm --filter @riotworks/headquarter run type-check",
+    "lint:all": "pnpm run lint",
     "typecheck": "turbo run type-check",
+    "typecheck:all": "pnpm run typecheck",
+    "test": "node --test",
     "clean": "turbo run clean",
-    "check:repo": "pnpm run lockfile:check && pnpm run validate:repo",
-    "audit:repo": "pnpm run lockfile:check && pnpm run validate:repo",
-    "format:check": "pnpm run format && pnpm run format:check",
-    "validate:repo": "pnpm run lockfile:check && pnpm run type-check && pnpm run lint",
+    "check:repo": "node scripts/repo-audit.mjs",
+    "audit:repo": "node scripts/repo-audit.mjs --write-report",
+    "format:check": "pnpm exec prettier --check package.json pnpm-workspace.yaml turbo.json",
+    "validate:repo": "pnpm run check:repo && pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test",
     "validate": "pnpm run validate:repo && pnpm run build",
-    "lockfile:check": "pnpm scripts/check-lockfile.mjs",
-    "lockfile:refresh": "pnpm scripts/check-lockfile.mjs --lockfile-only"
+    "lockfile:check": "node scripts/check-lockfile.mjs",
+    "lockfile:refresh": "node scripts/check-lockfile.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
