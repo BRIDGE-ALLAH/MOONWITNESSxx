@@ -857,3 +857,56 @@ Use these labels consistently when updating this file:
 
 **Exit gate:** Poisoned evidence fixtures are quarantined before belief promotion; contamination can be traced and rolled back; false-positive rates are measured; safety gates fail closed without blocking unrelated trusted evidence.
 
+
+
+## Phase 18 — Provenance-Bound Capability Delegation & Runtime Contract
+
+**Status:** [~] Initial capability-chain evaluator and escalation tests authored in `packages/arsy-core/src/runtime-contract/capability.ts`; trusted issuer registry, canonical signature format, enforcement middleware integration, and production key rotation remain.
+
+**Goal:** Ensure every tool action is authorized for the original principal, current tenant, purpose, resource and action—not merely because an agent or intermediary possesses ambient credentials.
+
+- [~] Add root-to-leaf capability grants with subject, issuer, tenant, purpose, action/resource scopes, validity window and signature envelope.
+- [~] Enforce attenuation-only delegation: child grants cannot widen parent action/resource scope, tenant, purpose or lifetime.
+- [~] Verify each grant through an injected trusted verifier; do not let the model provide or override the trust anchor.
+- [ ] Add issuer trust registry, key rotation/revocation, canonical serialization and signature verification backed by the deployment key-management system.
+- [ ] Bind capability evaluation to actual MCP/tool gateway and deny before credentials or side effects are exposed.
+- [ ] Add TOCTOU protection: bind the authorization decision to immutable normalized tool arguments and a short-lived one-time nonce.
+- [ ] Add explicit delegation chain to audit/evidence events, including the initiating human principal and every intermediate agent.
+- [ ] Add cross-tenant, replayed-grant, expired-grant, privilege-escalation and confused-deputy adversarial tests.
+
+**Exit gate:** No agent or sub-agent can exceed the original principal's grant; every effectful tool invocation is denied at the enforcement boundary when capability verification or context binding fails.
+
+## Phase 19 — Proof-Carrying Execution & Attestable Outcomes
+
+**Status:** [~] Trace invariant validator and digest-bound attestation prototype authored in `packages/arsy-core/src/attestation/proof.ts`; signature anchoring, durable storage, trusted effect receipts and runtime issuance remain.
+
+**Goal:** An action is considered completed only when the system can present a verifiable contract, policy decision, observed effect and terminal outcome—not merely a successful model response.
+
+- [~] Define typed execution events for policy allow/deny, approval and effect lifecycle.
+- [~] Validate sequence continuity, tenant consistency, prior authorization, approval timing, actor consistency and terminal effect records.
+- [~] Generate a SHA-256 trace digest and trace-consistent attestation only when the validator reports no invariant violation.
+- [ ] Bind the attestation to a signed execution contract and append-only Evidence Ledger event.
+- [ ] Require effectors to emit receipts with idempotency key, normalized request hash, provider reference and observed result hash.
+- [ ] Add external trust anchoring (KMS/HSM-backed signature or equivalent) and verifier CLI/API.
+- [ ] Define partial-commit and compensation states; an effect marked failed is not equivalent to an effect that never happened.
+- [ ] Test forged receipts, trace truncation, reordered events, tenant switching, denied-but-executed actions and approval-after-effect.
+
+**Exit gate:** An independent verifier can reject forged, incomplete, reordered or unauthorized execution traces; no success status is issued without an effect receipt and valid terminal state.
+
+## Phase 20 — Continuous Agent Safety Lab & Counterfactual Policy Testing
+
+**Status:** [~] Deterministic trace diagnosis and confusion-matrix evaluator authored in `packages/arsy-core/src/evaluation/safety-suite.ts`; benchmark corpus, CI thresholds, mutation runner and regression dashboard remain.
+
+**Goal:** Turn every incident, policy change and new agent capability into a reproducible adversarial regression test.
+
+- [~] Add deterministic trace findings for denied effects, missing authorization, actor mismatch, missing approval, incomplete effect and cross-tenant execution.
+- [~] Add scenario suite evaluation with true/false positive and negative counts, precision and recall.
+- [ ] Import a curated subset of public AgentDojo/TraceProbe-style scenarios after checking dataset and code licenses.
+- [ ] Add mutation testing for policy rules: remove, weaken or reorder one rule and prove that known attack traces become detectable.
+- [ ] Add metamorphic tests: duplicate tool calls, reorder independent events, alter tenant IDs, expire grants, replace source provenance, and truncate traces.
+- [ ] Add CI release gates for unsafe-action escape rate, false-block rate, trace coverage and replay determinism; thresholds must be calibrated to a declared corpus.
+- [ ] Persist minimized failing traces as regression fixtures with privacy-safe redaction and provenance.
+- [ ] Add incident-to-test workflow: an operator-approved incident report generates a reproducible test proposal, never an automatically trusted policy update.
+
+**Exit gate:** Each release runs a versioned adversarial suite; policy regressions are detected before deployment; metrics and false positives are reported with the exact corpus version.
+
