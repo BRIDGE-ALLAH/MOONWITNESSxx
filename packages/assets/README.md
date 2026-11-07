@@ -59,7 +59,7 @@ Functional UI icons remain the responsibility of the existing functional icon li
 
 ## Typography
 
-The brand kit recommends Space Grotesk for display/interface and IBM Plex Mono for technical data. Font binaries are intentionally not bundled until font licenses and hosting/redistribution rights are verified. See `brand-tokens.css` for fallback stacks.
+The current product runtime uses Space Grotesk for display/interface and IBM Plex Mono for technical data, with documented system fallbacks. The shared UI stylesheet does not load the experimental MOONWITNESS Signal WOFF2. That prototype is retained under `fonts/` for internal design work only; it is not approved for runtime use or redistribution until owner approval, complete glyph coverage, and browser/platform QA.
 
 ## Ownership and licensing
 
