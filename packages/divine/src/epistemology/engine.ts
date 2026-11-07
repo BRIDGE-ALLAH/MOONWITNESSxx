@@ -1,4 +1,5 @@
-import {DivineError} from "../errors.ts";import type {AbstentionReason,EpistemicDecision,EpistemicInput,EpistemicPolicy,EpistemicExplanation,OntologyScope} from "./types.ts";
+import {DivineError} from "../errors.ts";import type {AbstentionReason,EpistemicDecision,EpistemicInput,EpistemicPolicy,EpistemicExplanation} from "./types.ts";
+import type {OntologyScope} from "../ontology/types.ts";
 const dims=["tradition","community","school","period","method","project"] as const;
 function scopeValid(s:OntologyScope):boolean{return Object.entries(s).every(([k,v])=>(dims as readonly string[]).includes(k)&&typeof v==="string"&&/^mw:[a-z][a-z0-9-]*:[^\s]+$/.test(v))}
 export function compareScope(claim:OntologyScope,requested:OntologyScope,allowNarrowing:boolean):"exact"|"narrower"|"mismatch"{if(!scopeValid(claim)||!scopeValid(requested))return "mismatch";const a=Object.entries(claim),b=new Map(Object.entries(requested));if(a.length===Object.keys(requested).length&&a.every(([k,v])=>b.get(k)===v))return "exact";if(allowNarrowing&&a.length>0&&a.length<b.size&&a.every(([k,v])=>b.get(k)===v))return "narrower";return "mismatch"}
