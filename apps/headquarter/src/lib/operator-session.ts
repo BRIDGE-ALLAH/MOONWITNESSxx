@@ -1,4 +1,4 @@
-import { createHmac, scryptSync, timingSafeEqual } from 'node:crypto'
+import { createHmac, scrypt, timingSafeEqual } from 'node:crypto'
 
 export const OPERATOR_SESSION_COOKIE = 'mw_operator_session'
 const SESSION_TTL_SECONDS = 8 * 60 * 60
@@ -92,13 +92,21 @@ export function requestHasTrustedOrigin(request: Request, publicOrigin: string):
   }
 }
 
-export function operatorPasswordMatches(supplied: string, expected: string, salt: string): boolean {
+function derivePasswordDigest(password: string, salt: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, 64, { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }, (error, key) => {
+      if (error) reject(error)
+      else resolve(key)
+    })
+  })
+}
+
+export async function operatorPasswordMatches(supplied: string, expected: string, salt: string): Promise<boolean> {
   if (!supplied || supplied.length > 1024 || !salt || Buffer.byteLength(salt, 'utf8') < 32) return false
 
   // The configured high-entropy session secret provides a stable per-deployment salt.
-  // scrypt deliberately makes each password check expensive; compare fixed-size outputs in constant time.
-  const options = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }
-  const actualDigest = scryptSync(supplied, salt, 64, options)
-  const expectedDigest = scryptSync(expected, salt, 64, options)
+  // Async scrypt avoids blocking the Headquarter request event loop during password verification.
+  const actualDigest = await derivePasswordDigest(supplied, salt)
+  const expectedDigest = await derivePasswordDigest(expected, salt)
   return timingSafeEqual(actualDigest, expectedDigest)
 }
