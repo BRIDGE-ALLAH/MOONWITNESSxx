@@ -281,7 +281,7 @@ export class PayoutRepository {
       ), changed AS (
         UPDATE arsy_payouts p SET
           status = $3,
-          paid_at = CASE WHEN $3 = 'paid' THEN now() ELSE p.paid_at END,
+          paid_at = CASE WHEN $3 = 'paid' THEN COALESCE(p.paid_at, now()) ELSE p.paid_at END,
           reconciliation_evidence = $4::jsonb,
           updated_at = now(),
           updated_by = $5
