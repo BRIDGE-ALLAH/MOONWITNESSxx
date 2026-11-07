@@ -23,7 +23,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.register(async (instance) => {
     // Register the onRoute hook before declaring routes in this encapsulated scope.
-    await instance.register(rateLimit, { global: false })
+    await instance.register(rateLimit, { global: true, max: 120, timeWindow: '1 minute' })
     instance.setValidatorCompiler(validatorCompiler)
     instance.setSerializerCompiler(serializerCompiler)
 
