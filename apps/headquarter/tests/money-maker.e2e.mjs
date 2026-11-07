@@ -108,8 +108,29 @@ try {
   const idr = summaryPayload.data.find((row) => row.currency === 'IDR')
   assert.ok(idr)
   assert.equal(idr.gross_receipts_minor, '5000')
+  assert.equal(idr.deductions_minor, '0')
+  assert.equal(idr.tax_reserve_minor, '300')
   assert.equal(idr.net_contribution_minor, '5000')
   assert.equal(idr.pending_minor, '0')
+
+  // Tax reserves are a separate set-aside, not an operating deduction.
+  const taxSource = `Isolated CI tax reserve ${runId}`
+  await page.getByLabel('Event type').selectOption('tax-reserve')
+  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v1` })
+  await page.getByLabel('Amount · minor units').fill('300')
+  await page.getByLabel('ISO currency').fill('IDR')
+  await page.getByLabel('Occurred at').fill(new Date(Date.now() - 30_000).toISOString().slice(0, 16))
+  await page.getByLabel('Source', { exact: true }).fill(taxSource)
+  await page.getByLabel('Provider reference (optional)').fill(`${runId}-tax`)
+  await page.getByTestId('record-financial-event').click()
+  await page.getByRole('status').filter({ hasText: 'Financial event recorded as pending reconciliation' }).waitFor({ state: 'visible', timeout: 30_000 })
+
+  const taxEventCard = page.getByTestId('financial-event-card').filter({ hasText: taxSource })
+  await taxEventCard.waitFor({ state: 'visible' })
+  await taxEventCard.getByLabel('Evidence URL').fill(`https://example.com/isolated-tax-reserve/${runId}`)
+  await taxEventCard.getByLabel('Reconciliation rationale').fill('Matched to the isolated CI tax-reserve statement fixture.')
+  await taxEventCard.getByTestId('save-reconciliation').click()
+  await taxEventCard.getByText('verified', { exact: true }).waitFor({ state: 'visible', timeout: 30_000 })
 
   // Refresh proves that all three layers are reading persisted data.
   await page.reload({ waitUntil: 'domcontentloaded' })
