@@ -87,7 +87,7 @@
 - [x] Define one owner per contract and rule hierarchy.
 - [x] Define exception approver, reason, scope, expiry, compensating control.
 - [x] Define advisory/local/CI/repository/operational enforcement levels.
-- [ ] Map every MUST/MUST NOT rule to a test, workflow, GitHub setting, or manual approval.
+- [x] Map every normative contract rule to an enforcement route and honest maturity state in [enforcement.md](./enforcement.md); distinguish active, partial, human-review, administrator-pending, and planned controls.
 - [ ] Create decision records for unresolved architecture, automation, and deployment conflicts.
 
 ### P1.4 Documentation reconciliation
@@ -100,11 +100,11 @@
 ### P1.5 Acceptance
 
 - [ ] Review contracts with owners.
-- [ ] Confirm every hard rule has one source + enforcement route.
+- [x] Confirm every hard rule has one canonical contract source + a rule-level enforcement route in [enforcement.md](./enforcement.md).
 - [ ] Verify no schema/manifest duplication.
 - [ ] Run audit, format, and automation tests; record exceptions and owners.
 
-**Status:** canonical index, nine separate contracts, enforcement map, agent/Codex instruction reconciliation, and initial CI checks are implemented. Owner review, rule-by-rule enforcement mapping, decision records, and final acceptance remain open. Repository integrity passes; the separate Headquarter Asset integrity job remains blocked by missing local modules.
+**Status:** canonical index, nine separate contracts, detailed rule-ID enforcement register, agent/Codex instruction reconciliation, and initial CI checks are implemented. Owner review, rule-by-rule enforcement mapping, decision records, and final acceptance remain open. Repository integrity passes; the separate Headquarter Asset integrity job remains blocked by missing local modules.
 
 ## Phase 2 — Programmatic Governance Engine
 
