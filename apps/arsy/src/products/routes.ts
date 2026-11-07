@@ -2,7 +2,6 @@ import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { ProductRepository } from './repository.ts'
-import { hasValidOperatorToken } from '../auth/operator-token.ts'
 
 const createSchema = z.object({
   opportunityId: z.string().uuid(),
@@ -15,20 +14,6 @@ export function registerProductRoutes(app: FastifyInstance, db: DatabasePool, en
   const repository = new ProductRepository(db)
   const ownerId = env.ARSY_OPERATOR_ID?.trim() || 'primary-owner'
   const actorId = ownerId
-  const token = env.ARSY_OPERATOR_TOKEN?.trim()
-
-  app.addHook('preHandler', async (request, reply) => {
-    if (!request.url.startsWith('/api/v1/products')) return
-    if (!hasValidOperatorToken(request, token)) {
-      return reply.code(token ? 401 : 503).send({
-        error: {
-          code: token ? 'UNAUTHORIZED' : 'OPERATOR_AUTH_NOT_CONFIGURED',
-          message: token ? 'Valid operator credentials are required.' : 'Operator authentication is not configured.',
-        },
-      })
-    }
-  })
-
   app.get('/api/v1/products', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) return reply.code(400).send({ error: { code: 'INVALID_QUERY', message: 'Invalid product list query.' } })
