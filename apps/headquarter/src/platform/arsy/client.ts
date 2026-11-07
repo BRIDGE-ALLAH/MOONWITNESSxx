@@ -31,10 +31,19 @@ function createRequestId(): string {
 }
 
 function makeUrl(path: string): string {
+  if (
+    !path ||
+    /^[a-z][a-z0-9+.-]*:/i.test(path) ||
+    path.startsWith('//') ||
+    path.includes('\\') ||
+    path.split(/[/?#]/).includes('..')
+  ) {
+    throw new TypeError('ARSY request path must be a relative API path')
+  }
   const normalizedPath = path.replace(/^\/+/, '')
   const base = getBaseUrl()
-  if (/^https?:\/\//i.test(base)) return new URL(normalizedPath, `${base}/`).toString()
-  return `${base}/${normalizedPath}`
+  if (/^https?:\/\//i.test(base)) return new URL(normalizedPath, \`\${base}/\`).toString()
+  return \`\${base}/\${normalizedPath}\`
 }
 
 async function wait(ms: number, signal?: AbortSignal | null): Promise<void> {
