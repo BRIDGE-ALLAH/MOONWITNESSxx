@@ -114,6 +114,28 @@ jobs:
       - name: Test asset registry
         run: node --experimental-strip-types --test packages/assets/tests/*.test.mjs
 
+  arsy-integrity:
+    name: ARSY typecheck and runtime source integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Install ARSY dependency graph
+        run: pnpm install --filter @riotworks/arsy... --frozen-lockfile --ignore-scripts
+      - name: Type-check ARSY API
+        run: pnpm --filter @riotworks/arsy type-check
+      - name: Type-check ARSY core
+        run: pnpm --filter @riotworks/arsy-core type-check
+
   full-workspace-quality:
     name: Full workspace typecheck and build
     if: ${{ vars.FULL_QUALITY_CI == 'true' }}
