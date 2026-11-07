@@ -1,0 +1,52 @@
+name: Docker connector PostgreSQL integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/arsy/**'
+      - '.github/workflows/docker-connector-postgres.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-connector-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: moonwitness_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d moonwitness_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify runner Docker Engine is available
+        run: docker info
+      - name: Map isolated mutual TLS fixture hostname
+        run: echo '127.0.0.1 docker.example.com' | sudo tee -a /etc/hosts
+      - name: Run ARSY Docker connector tests against disposable PostgreSQL and real Docker Engine
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/moonwitness_test
+          DOCKER_SMOKE_SOCKET: '1'
+          DOCKER_MTLS_SMOKE: '1'
+          DOCKER_LOCAL_SOCKET_PATH: /var/run/docker.sock
+        run: pnpm --filter @riotworks/arsy test
