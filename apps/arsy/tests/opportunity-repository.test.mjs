@@ -99,7 +99,7 @@ test('updates opportunity data with owner scope and an audit event', async () =>
   const result = await repository.update('owner-a', 'actor-a', row.id, input, evaluation)
 
   assert.equal(result.title, row.title)
-  assert.match(fake.calls[0].sql, /UPDATE arsy_opportunities[\\s\\S]*owner_id = \\$1 AND id = \\$2/)
+  assert.match(fake.calls[0].sql, /UPDATE arsy_opportunities[\s\S]*owner_id = \$1 AND id = \$2/)
   assert.match(fake.calls[0].sql, /'updated'/)
   assert.deepEqual(fake.calls[0].values.slice(0, 4), ['owner-a', row.id, 'actor-a', input.title])
 })
