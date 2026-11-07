@@ -156,6 +156,27 @@ test('missing score dimensions remain unknown rather than becoming zero', () => 
   assert.deepEqual(result.missingScoreDimensions, ['distributionReadiness'])
 })
 
+test('requires supporting evidence for passed and blocked hard gates', () => {
+  const passedWithoutEvidence = opportunityInputSchema.safeParse({
+    ...validOpportunity,
+    hardGateDetails: {
+      ...validOpportunity.hardGateDetails,
+      rights: { ...validOpportunity.hardGateDetails.rights, evidenceIds: [] },
+    },
+  })
+  const blockedWithoutEvidence = opportunityInputSchema.safeParse({
+    ...validOpportunity,
+    hardGates: { ...passingGates, rights: 'blocked' },
+    hardGateDetails: {
+      ...validOpportunity.hardGateDetails,
+      rights: { ...validOpportunity.hardGateDetails.rights, status: 'blocked', evidenceIds: [] },
+    },
+  })
+
+  assert.equal(passedWithoutEvidence.success, false)
+  assert.equal(blockedWithoutEvidence.success, false)
+})
+
 test('applies the documented research-more and park score bands', () => {
   const researchMore = evaluateOpportunity({
     scores: {
