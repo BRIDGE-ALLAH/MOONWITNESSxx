@@ -4,7 +4,7 @@ import type { DatabasePool } from '../db.ts'
 import { ChannelRepository, type ChannelInput } from './repository.ts'
 
 const evidenceSchema = z.object({
-  evidenceType: z.enum(['official-policy', 'account-eligibility', 'payout-requirements', 'api-capability', 'other']),
+  evidenceType: z.enum(['official-policy', 'account-eligibility', 'payout-requirements', 'format-requirements', 'api-capability', 'other']),
   sourceName: z.string().trim().min(2).max(160),
   sourceUrl: z.string().url().max(2048),
   capturedAt: z.string().datetime({ offset: true }),
@@ -22,6 +22,7 @@ const channelObjectSchema = z.object({
   policyReviewedAt: z.string().datetime({ offset: true }).nullable().optional(),
   policyRecheckAt: z.string().datetime({ offset: true }).nullable().optional(),
   payoutRequirements: z.record(z.string(), z.unknown()),
+  listingRequirements: z.record(z.string(), z.unknown()),
   payoutSetupStatus: z.enum(['configured', 'not-configured', 'unavailable', 'unknown']),
   capability: z.enum(['C0', 'C1']),
   grantedScopes: z.array(z.string().trim().min(1).max(200)).max(50),
@@ -43,6 +44,13 @@ const validateChannel = (value: z.infer<typeof channelObjectSchema>, context: z.
     }
     if (value.accountEligibility !== 'eligible' || value.payoutSetupStatus !== 'configured' || !types.has('account-eligibility') || !types.has('payout-requirements')) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ['capability'], message: 'C1 requires current account eligibility and payout setup evidence.' })
+    }
+    const acceptedMediaTypes = value.listingRequirements.acceptedMediaTypes
+    const acceptedProductFamilies = value.listingRequirements.acceptedProductFamilies
+    if (!Array.isArray(acceptedMediaTypes) || acceptedMediaTypes.length === 0 ||
+        !Array.isArray(acceptedProductFamilies) || acceptedProductFamilies.length === 0 ||
+        !types.has('format-requirements')) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['listingRequirements'], message: 'C1 requires accepted media types, product families and dated format-requirements evidence.' })
     }
   }
 }
