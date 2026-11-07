@@ -415,3 +415,105 @@ export function verifyContextLease({ lease, currentFingerprint, now = new Date()
   if (nowMs >= expiresMs) return { valid: false, reason: 'context_lease_expired' }
   return { valid: true, expiresAt: lease.expiresAt, fingerprint: lease.fingerprint }
 }
+
+
+function normalizedSet(values, field) {
+  if (!Array.isArray(values)) throw new Error(field + ' must be an array')
+  return [...new Set(values.map((value) => String(value).trim()).filter(Boolean))].sort()
+}
+
+export function fingerprintObjectiveGap({ failedTests = [], missingCriteria = [], blockers = [] } = {}) {
+  const gap = { failedTests: normalizedSet(failedTests, 'failedTests'), missingCriteria: normalizedSet(missingCriteria, 'missingCriteria'), blockers: normalizedSet(blockers, 'blockers') }
+  return { fingerprint: createHash('sha256').update(canonicalJson(gap)).digest('hex'), gap }
+}
+
+export function analyzeObjectiveProgress({ steps, repeatThreshold = 3 } = {}) {
+  if (!Array.isArray(steps) || !steps.length) throw new Error('steps must be a non-empty array')
+  if (!Number.isSafeInteger(repeatThreshold) || repeatThreshold < 2) throw new Error('repeatThreshold must be an integer >= 2')
+  const observations = steps.map((step, index) => {
+    if (!step || typeof step !== 'object') throw new Error('each step must be an object')
+    const { fingerprint, gap } = fingerprintObjectiveGap(step)
+    return { index, fingerprint, gap, activity: String(step.activity ?? '').slice(0, 160) }
+  })
+  let streak = 1
+  for (let i = observations.length - 1; i > 0 && observations[i].fingerprint === observations[i - 1].fingerprint; i -= 1) streak += 1
+  const changed = observations.length > 1 && observations.at(-1).fingerprint !== observations.at(-2).fingerprint
+  return {
+    stalled: streak >= repeatThreshold, consecutiveUnchangedGap: streak, repeatThreshold,
+    latestFingerprint: observations.at(-1).fingerprint, latestGap: observations.at(-1).gap,
+    objectiveImproved: changed, stepCount: observations.length,
+    recommendation: streak >= repeatThreshold ? 'pause_and_replan: the same unresolved objective gap persisted across consecutive observations'
+      : changed ? 'continue_with_verification: objective gap changed; verify whether it materially improved'
+        : 'continue_observing: insufficient repeated evidence to classify a loop',
+    observations,
+  }
+}
+
+export function validateInterfaceTreaty({ treaty, now = new Date().toISOString() } = {}) {
+  if (!treaty || typeof treaty !== 'object' || Array.isArray(treaty)) return { valid: false, violations: ['treaty_must_be_an_object'] }
+  const violations = [], owner = typeof treaty.owner === 'string' ? treaty.owner.trim() : '', id = typeof treaty.id === 'string' ? treaty.id.trim() : ''
+  if (!owner) violations.push('missing_owner')
+  if (!id) violations.push('missing_id')
+  for (const field of ['provides', 'consumes', 'breakingChanges']) if (treaty[field] !== undefined && !Array.isArray(treaty[field])) violations.push(field + '_must_be_an_array')
+  const values = (field) => Array.isArray(treaty[field]) ? treaty[field].map(v => String(v).trim()).filter(Boolean) : []
+  const provides=values('provides'), consumes=values('consumes'), breakingChanges=values('breakingChanges')
+  if (!provides.length && !consumes.length && !breakingChanges.length) violations.push('treaty_has_no_interface_declarations')
+  const expiry=Date.parse(treaty.expiresAt), nowMs=Date.parse(now)
+  if (!Number.isFinite(expiry) || !Number.isFinite(nowMs)) violations.push('invalid_expiry')
+  else if (expiry <= nowMs) violations.push('treaty_expired')
+  if (new Set(provides.map(v=>v.toLowerCase())).size !== provides.length) violations.push('duplicate_provided_interface')
+  if (new Set(consumes.map(v=>v.toLowerCase())).size !== consumes.length) violations.push('duplicate_consumed_interface')
+  return { valid: violations.length===0, violations, normalized:{id,owner,provides,consumes,breakingChanges,expiresAt:Number.isFinite(expiry)?new Date(expiry).toISOString():null} }
+}
+
+export function forecastInterfaceConflicts({ treaties, now = new Date().toISOString() } = {}) {
+  if (!Array.isArray(treaties)) throw new Error('treaties must be an array')
+  const checked=treaties.map(treaty=>({treaty,result:validateInterfaceTreaty({treaty,now})}))
+  const violations=checked.flatMap(({treaty,result})=>result.violations.map(code=>({code,treatyId:treaty?.id??null,owner:treaty?.owner??null})))
+  const valid=checked.filter(x=>x.result.valid).map(x=>x.result.normalized), conflicts=[], providers=new Map()
+  for (const t of valid) for (const name of t.provides) { const key=name.toLowerCase(), owners=providers.get(key)??[]; owners.push(t.owner); providers.set(key,owners) }
+  for (const [name,owners] of providers) if(new Set(owners).size>1) conflicts.push({kind:'duplicate-provider',interface:name,owners:[...new Set(owners)].sort(),severity:'critical'})
+  for (const producer of valid) for (const breaking of producer.breakingChanges) for (const consumer of valid) {
+    if (consumer.owner!==producer.owner && consumer.consumes.some(name=>name.toLowerCase()===breaking.toLowerCase()))
+      conflicts.push({kind:'breaking-change-consumed',interface:breaking.toLowerCase(),producer:producer.owner,consumer:consumer.owner,severity:'high'})
+  }
+  return {safeToIntegrate:violations.length===0&&conflicts.length===0,treatyCount:treaties.length,violations,conflicts}
+}
+
+const RESOURCE_KINDS=['ports','databases','queues','volumes','envNamespaces']
+export function createResourcePassport({agentId,resources={}}={}) {
+  if(typeof agentId!=='string'||!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$/.test(agentId)) throw new Error('agentId must be a safe 1-64 character identifier')
+  if(!resources||typeof resources!=='object'||Array.isArray(resources)) throw new Error('resources must be an object')
+  const normalized={}
+  for(const kind of RESOURCE_KINDS) {
+    const values=resources[kind]??[]
+    if(!Array.isArray(values)) throw new Error(kind+' must be an array')
+    if(kind==='ports') {
+      normalized.ports=[...new Set(values.map(Number))]
+      if(normalized.ports.some(p=>!Number.isInteger(p)||p<1||p>65535)) throw new Error('ports must be integers between 1 and 65535')
+    } else {
+      normalized[kind]=[...new Set(values.map(v=>{
+        if(typeof v!=='string'||!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$/.test(v)) throw new Error(kind+' entries must be safe identifiers')
+        return v
+      }))]
+    }
+  }
+  const namespace='mw-'+agentId.toLowerCase().replace(/[^a-z0-9-]/g,'-')
+  return {schemaVersion:1,agentId,namespace,resources:normalized,namespaced:{
+    databases:normalized.databases.map(v=>namespace+'-'+v),queues:normalized.queues.map(v=>namespace+'-'+v),
+    volumes:normalized.volumes.map(v=>namespace+'-'+v),envNamespaces:normalized.envNamespaces.map(v=>namespace+'-'+v),
+  },note:'Port values remain host-level reservations; namespaced labels require runtime-adapter enforcement.'}
+}
+
+export function forecastResourceCollisions({agents}={}) {
+  if(!Array.isArray(agents)) throw new Error('agents must be an array')
+  const owners=new Map(), add=(kind,value,id)=>{const key=kind+':'+String(value).toLowerCase(),ids=owners.get(key)??[];if(!ids.includes(id))ids.push(id);owners.set(key,ids)}
+  for(const agent of agents) {
+    if(!agent||typeof agent.id!=='string'||!agent.id.trim()) throw new Error('each agent needs an id')
+    const p=createResourcePassport({agentId:agent.id,resources:agent.resources??{}})
+    for(const port of p.resources.ports) add('port',port,agent.id)
+    for(const kind of ['databases','queues','volumes','envNamespaces']) for(const value of p.resources[kind]) add(kind,value,agent.id)
+  }
+  const collisions=[...owners.entries()].filter(([,ids])=>ids.length>1).map(([resource,ids])=>({resource,agents:ids.sort(),severity:resource.startsWith('port:')?'critical':'high'})).sort((a,b)=>a.resource.localeCompare(b.resource))
+  return {safeToLaunchTogether:collisions.length===0,agentCount:agents.length,declaredResourceCount:owners.size,collisions,note:'Advisory only: does not reserve ports, provision databases, isolate containers, or enforce namespaces.'}
+}
