@@ -93,7 +93,7 @@ The dashboard is served at http://127.0.0.1:5150/.
 - GET /api/v1/radius/sessions/active — inspect active sessions from radacct (Bearer token required).
 - GET /api/v1/radius/accounting/summary — accounting totals and octet counters (Bearer token required).
 
-Set ATLAS_CONTROL_TOKEN to a long random secret in standalone mode. Do not expose the control API directly to the public internet. In integrated deployments, place it behind ARSY's authenticated authorization gateway; the local bearer token is a bootstrap/standalone guard, not a replacement for ARSY governance.
+For PowerDNS, enable its HTTP API and restrict the webserver ACL to ATLAS. Add a PowerDNS engine through the engine registry with `secret_env_key` set to `ATLAS_ENGINE_SECRET_PDNS_PRIMARY`; the Compose stack maps this to `POWERDNS_API_KEY` from `.env`. Set ATLAS_CONTROL_TOKEN to a long random secret in standalone mode. Do not expose the control API directly to the public internet. In integrated deployments, place it behind ARSY's authenticated authorization gateway; the local bearer token is a bootstrap/standalone guard, not a replacement for ARSY governance.
 
 Loco's built-in /_ping, /_health, and /_readiness routes remain available.
 
@@ -127,7 +127,7 @@ The migrations create the engine registry, add non-secret adapter configuration 
 - Versioned health, readiness, version, and engine catalog endpoints.
 - Persistent engine registry CRUD (list, create, retrieve, update, delete) with input validation.
 - Bearer-token protection for engine and RADIUS management and health probes; control routes remain disabled until a 32+ character ATLAS_CONTROL_TOKEN is configured.
-- PowerDNS Authoritative zone listing/creation/deletion and RRset patching through its HTTP API; live PowerDNS, VictoriaMetrics, and VictoriaLogs probes; native FreeRADIUS Status-Server probe via radclient. Unbound and dnsdist are explicitly reported as unsupported until their native adapters land.
+- PowerDNS Authoritative zone listing/creation/deletion and RRset patching through its HTTP API (register the engine with secret_env_key `ATLAS_ENGINE_SECRET_PDNS_PRIMARY` and set `POWERDNS_API_KEY` in `.env`); live PowerDNS, VictoriaMetrics, and VictoriaLogs probes; native FreeRADIUS Status-Server probe via radclient. Unbound and dnsdist are explicitly reported as unsupported until their native adapters land.
 - MariaDB connectivity probe with bounded connection pool configuration.
 - Required Redis connectivity probe; readiness fails when Redis is unavailable.
 - Separate RADIUS database connection probe; readiness fails if the AAA database is unavailable.
