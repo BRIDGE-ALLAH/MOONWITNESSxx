@@ -81,11 +81,11 @@ Implemented in the current development branch (implementation presence is not eq
 - Playwright browser E2E coverage configured for login → opportunity capture/review/edit/decision → product brief/version/lifecycle → asset upload/provenance/inspection → financial event/reconciliation → Aftershock metrics → archive → logout. Exact-head workflow result is pending.
 
 Not yet implemented or verified:
-- trusted reviewer and automated-inspection authentication; the public operator API cannot create a qualifying non-owner inspection actor, so asset channel readiness remains blocked even when an operator reports a pass;
+- a separately controlled trusted reviewer/automation service is not yet provisioned. ARSY supports route-scoped principals via `ARSY_INSPECTION_PRINCIPALS`, but channel readiness remains blocked until a genuinely separate reviewer/automation service is configured and supplies qualified inspection records;
 - channel/listing integrations, publication receipts, payout lifecycle and external provider webhooks;
 - shared/distributed login-attempt throttling (the current login throttle is process-local and must be paired with an ingress limiter before scaling);
 - current-head CI, CodeQL, container build, PostgreSQL integration and Playwright E2E execution evidence;
-- production deployment, managed secrets, HTTPS ingress, backups, restore drills, rollback and live smoke tests;
+- production deployment, managed secrets (including a real trusted inspection-principal registry), HTTPS ingress, backups, restore drills, rollback and live smoke tests;
 - search/filter/cursor pagination and complete lifetime counts; current portfolio counts are explicitly bounded to the latest 100 records;
 - payout provider integrations and verified FX conversion.
 
