@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import type { DatabasePool } from '../db.ts'
 
 type QueryResult<T> = { rows: T[] }
-export type FinancialEventType = 'gross-receipt' | 'platform-fee' | 'refund' | 'chargeback' | 'variable-cost' | 'production-cost' | 'tax-reserve' | 'fx-adjustment' | 'payout' | 'payout-reversal'
+export type FinancialEventType = 'gross-receipt' | 'platform-fee' | 'refund' | 'chargeback' | 'variable-cost' | 'production-cost' | 'tax-reserve' | 'payout' | 'payout-reversal'
 export type ReconciliationState = 'pending' | 'verified' | 'disputed' | 'reversed'
 
 export interface FinancialEventInput {
