@@ -115,6 +115,13 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' })
   await eventCard.waitFor({ state: 'visible' })
 
+  // Portfolio analytics must use persisted records and explicitly label unavailable cohorts.
+  await page.goto(`${baseUrl}/aftershock`, { waitUntil: 'domcontentloaded' })
+  await page.getByText('Financial contribution by currency').waitFor({ state: 'visible' })
+  await page.getByText('Net contribution', { exact: true }).waitFor({ state: 'visible' })
+  await page.getByText('5000', { exact: true }).waitFor({ state: 'visible' })
+  await page.getByText('Unavailable. Search impression and source-exposure events are not yet captured with a defined denominator.').waitFor({ state: 'visible' })
+
   // Archive is a real soft-delete; the audit record and related product/ledger remain.
   await page.goto(`${baseUrl}/riot-radar`, { waitUntil: 'domcontentloaded' })
   const archiveCard = page.getByTestId('opportunity-card').filter({ hasText: title })
