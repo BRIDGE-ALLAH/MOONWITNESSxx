@@ -3,7 +3,7 @@ version: '3.9'
 services:
   # PostgreSQL database — local development service
   postgres:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: moonwitness-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-moonwitness}
@@ -49,11 +49,15 @@ services:
     command: ['pnpm', 'dev']
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${ARSY_PORT:-3001}
+      # Fixed in-network port; ARSY_PORT controls only the host-side published port.
+      PORT: 3001
       HOST: 0.0.0.0
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-moonwitness}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      ARSY_OPERATOR_ID: ${ARSY_OPERATOR_ID:?ARSY_OPERATOR_ID must be set}
+      ARSY_OPERATOR_TOKEN: ${ARSY_OPERATOR_TOKEN:?ARSY_OPERATOR_TOKEN must be set}
+      ARSY_ASSET_STORAGE_DIR: ${ARSY_ASSET_STORAGE_DIR:-/var/lib/arsy/assets}
     ports:
       - '127.0.0.1:${ARSY_PORT:-3001}:3001'
     depends_on:
@@ -63,7 +67,11 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/arsy:/app/apps/arsy
+      # Preserve pnpm dependency links hidden by the source bind mount.
+      - /app/apps/arsy/node_modules
       - ./packages:/app/packages
+      - /app/packages/arsy-core/node_modules
+      - arsy_assets:/var/lib/arsy/assets
       - /app/node_modules
     networks:
       - moonwitness
@@ -83,8 +91,15 @@ services:
     command: ['pnpm', 'dev']
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${HEADQUARTER_PORT:-3000}
+      # Fixed in-network port; HEADQUARTER_PORT controls only the host-side published port.
+      PORT: 3000
       NEXT_PUBLIC_ARSY_URL: ${NEXT_PUBLIC_ARSY_URL:-http://arsy:3001}
+      ARSY_API_BASE_URL: ${ARSY_API_BASE_URL:-http://arsy:3001}
+      ARSY_OPERATOR_ID: ${ARSY_OPERATOR_ID:?ARSY_OPERATOR_ID must be set}
+      ARSY_OPERATOR_TOKEN: ${ARSY_OPERATOR_TOKEN:?ARSY_OPERATOR_TOKEN must be set}
+      HEADQUARTER_OPERATOR_PASSWORD: ${HEADQUARTER_OPERATOR_PASSWORD:?HEADQUARTER_OPERATOR_PASSWORD must be set}
+      HEADQUARTER_SESSION_SECRET: ${HEADQUARTER_SESSION_SECRET:?HEADQUARTER_SESSION_SECRET must be set}
+      HEADQUARTER_PUBLIC_ORIGIN: ${HEADQUARTER_PUBLIC_ORIGIN:?HEADQUARTER_PUBLIC_ORIGIN must be set}
     ports:
       - '127.0.0.1:${HEADQUARTER_PORT:-3000}:3000'
     depends_on:
@@ -92,7 +107,11 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/headquarter:/app/apps/headquarter
+      # Preserve pnpm dependency links hidden by the source bind mount.
+      - /app/apps/headquarter/node_modules
       - ./packages:/app/packages
+      - /app/packages/ui/node_modules
+      - /app/packages/assets/node_modules
       - /app/node_modules
     networks:
       - moonwitness
@@ -107,6 +126,8 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  arsy_assets:
     driver: local
 
 networks:

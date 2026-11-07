@@ -9,13 +9,13 @@
 |---|---|---|---|---|
 | ARSY DECK | `/arsy-deck` | Headquarter / ARSY | Reference UI, demo repository | Public workspace-pulse contract, workspace permission checks, source timestamps, contract tests |
 | SIGNAL ROOM | `/signal-room` | Signal domain / ARSY | Prototype | Evidence/search contracts, provenance, pagination, source freshness |
-| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Prototype | Opportunity lifecycle, evidence provenance, decision permissions |
-| THE FORGE | `/the-forge` | Production domain / ARSY | Prototype | Brief/product/job contracts, versioning, artifact storage |
-| ZILL WATCH | `/zill-watch` | Quality & policy / ARSY | Prototype | Inspection contract, rights/policy enforcement, review audit |
-| LAUNCH BAY | `/launch-bay` | Distribution / ARSY | Prototype | Verified account/capability contract, allowed publication workflow, external receipt |
-| SIDRA ARCHIVE | `/sidra-archive` | Asset domain / ARSY | Prototype | Asset/version/provenance contract and storage authorization |
-| AFTERSHOCK | `/aftershock` | Analytics / ARSY | Prototype | Source-backed event/metric definitions, timeframe, sample size |
-| MIZAN LEDGER | `/mizan-ledger` | Finance domain / ARSY | Prototype | Financial event contract, reconciliation, export permissions and audit |
+| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Development vertical slice: signed operator session, evidence-backed capture/list/review, idempotent PostgreSQL API, score rationale and hard gates | Browser E2E, migration/backup operations in target deployment |
+| THE FORGE | `/the-forge` | Production domain / ARSY | Development vertical slice: approved opportunity → persisted versioned product brief, acceptance criteria and revision notes | Asset binary storage and provenance editor |
+| ZILL WATCH | `/zill-watch` | Quality & policy / ARSY | Development vertical slice: append-only rights/policy/technical/creative inspections; READY requires latest four passes | Asset-level inspection, broader evidence policy and browser E2E |
+| LAUNCH BAY | `/launch-bay` | Distribution / ARSY | Development vertical slice: evidence-gated C0/C1 registry, C1 manual listing package, operator-recorded publication receipt | Official API integrations, OAuth/account verification, marketplace receipt import and browser E2E |
+| SIDRA ARCHIVE | `/sidra-archive` | Asset domain / ARSY | Development vertical slice: authenticated 5 MiB local-volume upload/download/archive, SHA-256 and structured provenance | Object-storage replication, malware scanning, richer provenance editing and browser E2E |
+| AFTERSHOCK | `/aftershock` | Analytics / ARSY | Development read model: persisted opportunity/product counts and verified contribution by currency; unavailable cohort metrics are labelled | Source-exposure/conversion events, cohorts, product lifetime and metric denominators |
+| MIZAN LEDGER | `/mizan-ledger` | Finance domain / ARSY | Development vertical slice: exact minor-unit events, idempotency, pending/verified/disputed/reversed reconciliation, audit and currency-grouped net contribution | Provider import, payout reconciliation, FX conversion, export controls and production accounting review |
 | RIOT ENGINE | `/riot-engine` | Workflow / ARSY | Prototype | Workflow/run lifecycle, idempotent actions, operator permission, audit |
 
 ## Administration

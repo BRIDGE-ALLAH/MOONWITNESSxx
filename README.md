@@ -1,8 +1,8 @@
 # MOONWITNESS
 
-MOONWITNESS is an evidence-first, agent-governed workspace and product-engineering monorepo. RIOTWORKS is a product division within the ecosystem. The repository contains Headquarter (human-facing web prototype), ARSY (backend runtime and governance primitives), shared packages, WITNESS FABRIC, Divine research tooling, and repository automation.
+MOONWITNESS is an evidence-first, agent-governed workspace and product-engineering monorepo. RIOTWORKS is a product division within the ecosystem. The repository contains Headquarter (human-facing command center), ARSY (backend runtime and governance primitives), shared packages, WITNESS FABRIC, Divine research tooling, and repository automation.
 
-**Product truth:** Headquarter currently contains prototype/demo screens. Static sample metrics, placeholder accounts, financial rows, and marketplace states are not live production data. ARSY runtime and integration readiness are tracked separately from UI prototypes.
+**Product truth:** The Money Maker development workflow is being implemented as a PostgreSQL-backed operator product: evidence-backed opportunities, versioned product briefs, inspections, provenance-aware local assets, C0/C1 channel review, manual listing packages/publication receipts, and a reconciled financial ledger. Operator-entered records and manual publication receipts are not independent market research, verified marketplace API events, or confirmed bank/provider transactions. Other discovery/provider capabilities remain unavailable until real connectors exist. Do not treat static demo content as live data. Production deployment is not yet approved or verified.
 
 ## Repository map
 

@@ -116,3 +116,18 @@ Both modules are domain foundations only. Their UI, persistence, read-only ARSY 
 ## Phase 14–16 Sentinel Fabric
 
 Three additional pure domain kernels live under `features/belief-drift`, `features/blast-radius`, and `features/evidence-expiry`. They compare versioned belief snapshots, traverse explicit causal edges, and calculate evidence freshness budgets. These are deterministic review aids only: they do not infer causal truth, renew evidence, authorize actions, persist state, or connect to ARSY. See `PHASE-14-16-SENTINEL-FABRIC.md` and `PHASE-14-16-RESEARCH.md`.
+
+
+## Money Maker integration boundary
+
+The Money Maker development vertical slice lives in `src/features/money-maker`. Headquarter owns only browser interaction and presentation; all commercial records and authorization decisions remain in ARSY.
+
+- `/riot-radar` captures evidence-backed opportunities and reads persisted opportunity records.
+- `/the-forge` promotes only an opportunity with a complete score of at least 80 and all four hard gates passed into a product brief, and creates append-only revisions.
+- `/mizan-ledger` records exact integer minor-unit financial events, keeps them pending until evidence-backed reconciliation, and reads currency-grouped verified totals.
+- `/aftershock` shows persisted opportunity/product counts and reconciled contribution; conversion and lifetime metrics remain unavailable without defined cohorts and source events.
+- `/signal-room` remains a truthful disconnected state until market-source connectors exist; `/sidra-archive` provides authenticated local-volume asset upload/download/archive with SHA-256 and provenance metadata.
+
+Headquarter server-side BFF routes use `src/lib/arsy-proxy` and the signed operator session in `src/lib/operator-session`. Never expose `ARSY_OPERATOR_TOKEN` to browser code. Mutating requests require the configured same-origin check. The session is a single-owner bootstrap only; it is not a substitute for multi-user RBAC or tenant isolation.
+
+The opportunity/product/inspection/channel/listing/finance APIs are covered by ARSY unit, route-injection, and isolated PostgreSQL integration tests. Browser E2E, production operations, object-storage replication/malware scanning, official marketplace APIs, and cohort analytics remain release gates.
