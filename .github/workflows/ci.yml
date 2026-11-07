@@ -57,7 +57,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: moonwitness-repository-audit
-          path: .artifacts/
+          path: |
+            .artifacts/
+            pnpm-lock.yaml
           if-no-files-found: ignore
           retention-days: 14
 
