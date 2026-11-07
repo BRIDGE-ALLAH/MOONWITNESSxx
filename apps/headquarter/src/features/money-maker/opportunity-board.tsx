@@ -9,6 +9,18 @@ type Opportunity = {
   title: string
   buyerSegment: string
   buyerProblem: string
+  evidence: Array<{
+    evidenceId: string; sourceName: string; sourceUrl: string; sourceType: string
+    capturedAt: string; publishedAt?: string | null; evidenceClass: string
+    summary: string; reliability: string; limitations: string
+    collectionMethod: string; permissionBasis: string; recheckAt?: string | null
+  }>
+  scores: Record<string, number | undefined>
+  scoreDetails: Record<string, { rationale: string; confidence: string; evidenceIds: string[] } | undefined>
+  hardGates: Record<string, 'pass' | 'blocked' | 'unknown'>
+  hardGateDetails: Record<string, { status: string; rationale: string; evidenceIds: string[] }>
+  decisionRationale: string | null
+  updatedAt: string
   evaluation: { score: number | null; decision: string; blockedGates: string[]; unknownGates: string[]; missingScoreDimensions: string[] }
 }
 type Decision = 'blocked' | 'research-more' | 'prototype-candidate' | 'park'
@@ -168,7 +180,52 @@ export function OpportunityBoard() {
           && item.evaluation.unknownGates.length === 0
           && item.evaluation.missingScoreDimensions.length === 0
         const draft = decisionDrafts[item.id] ?? { decision: item.evaluation.decision as Decision, rationale: '' }
-        return <article data-testid="opportunity-card" key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><h3 className="font-display text-xl uppercase">{item.title}</h3><span className="font-mono text-xs text-acid-lime">{item.evaluation.score === null ? 'UNSCORED' : `${item.evaluation.score}/100`}</span></div><p className="mt-2 text-sm text-muted-ink">{item.buyerSegment}</p><p className="mt-3 text-sm">{item.buyerProblem}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase"><span className="border border-acid-lime/30 px-2 py-1">{item.evaluation.decision}</span>{item.evaluation.blockedGates.map((g) => <span key={g} className="border border-red-500/50 px-2 py-1 text-red-300">BLOCKED: {g}</span>)}{item.evaluation.unknownGates.map((g) => <span key={g} className="border border-orange-400/50 px-2 py-1 text-orange-200">UNKNOWN: {g}</span>)}</div>
+        return <article data-testid="opportunity-card" key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><h3 className="font-display text-xl uppercase">{item.title}</h3><span className="font-mono text-xs text-acid-lime">{item.evaluation.score === null ? 'UNSCORED' : `${item.evaluation.score}/100`}</span></div><p className="mt-2 text-sm text-muted-ink">{item.buyerSegment}</p><p className="mt-3 text-sm">{item.buyerProblem}</p>
+          <details className="mt-4 border-y border-acid-lime/15 py-3 text-xs">
+            <summary className="cursor-pointer font-mono uppercase text-acid-lime">Review evidence, scoring & hard gates</summary>
+            <div className="mt-4 space-y-5">
+              <section className="space-y-2">
+                <h4 className="font-mono uppercase tracking-wider">Source provenance</h4>
+                {item.evidence.map((evidence) => <article key={evidence.evidenceId} className="space-y-1 border border-acid-lime/15 p-3">
+                  <a href={evidence.sourceUrl} target="_blank" rel="noreferrer" className="font-semibold text-acid-lime underline">{evidence.sourceName}</a>
+                  <p className="text-muted-ink">{evidence.sourceType} · {evidence.evidenceClass} · reliability: {evidence.reliability}</p>
+                  <p>{evidence.summary}</p>
+                  <p><span className="text-muted-ink">Captured:</span> {new Date(evidence.capturedAt).toLocaleString()}</p>
+                  {evidence.publishedAt && <p><span className="text-muted-ink">Published:</span> {new Date(evidence.publishedAt).toLocaleString()}</p>}
+                  {evidence.recheckAt && <p><span className="text-muted-ink">Recheck:</span> {new Date(evidence.recheckAt).toLocaleString()}</p>}
+                  <p><span className="text-muted-ink">Limitations:</span> {evidence.limitations}</p>
+                  <p><span className="text-muted-ink">Collection:</span> {evidence.collectionMethod}</p>
+                  <p><span className="text-muted-ink">Permission basis:</span> {evidence.permissionBasis}</p>
+                </article>)}
+              </section>
+              <section className="space-y-2">
+                <h4 className="font-mono uppercase tracking-wider">Score breakdown</h4>
+                {dimensions.map(([key, label, weight]) => {
+                  const score = item.scores[key]
+                  const detail = item.scoreDetails[key]
+                  return <div key={key} className="grid gap-1 border-b border-acid-lime/10 pb-2 sm:grid-cols-[1fr_auto]">
+                    <p>{label}: {score === undefined ? 'Unknown' : score + ' / ' + weight}</p>
+                    <p className="text-muted-ink">Confidence: {detail?.confidence ?? 'unknown'}</p>
+                    {detail && <p className="text-muted-ink sm:col-span-2">{detail.rationale} · Evidence: {detail.evidenceIds.join(', ')}</p>}
+                  </div>
+                })}
+              </section>
+              <section className="space-y-2">
+                <h4 className="font-mono uppercase tracking-wider">Hard-gate assessment</h4>
+                {gates.map(([key, label]) => {
+                  const detail = item.hardGateDetails[key]
+                  return <div key={key} className="border-b border-acid-lime/10 pb-2">
+                    <p>{label}: <span className={item.hardGates[key] === 'pass' ? 'text-acid-lime' : item.hardGates[key] === 'blocked' ? 'text-red-300' : 'text-orange-200'}>{item.hardGates[key]}</span></p>
+                    <p className="text-muted-ink">{detail?.rationale ?? 'No rationale recorded.'}</p>
+                    {detail?.evidenceIds.length ? <p className="text-muted-ink">Evidence: {detail.evidenceIds.join(', ')}</p> : null}
+                  </div>
+                })}
+              </section>
+              <p className="text-muted-ink">Last updated: {new Date(item.updatedAt).toLocaleString()}</p>
+              {item.decisionRationale && <p><span className="text-muted-ink">Decision rationale:</span> {item.decisionRationale}</p>}
+            </div>
+          </details>
+          <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase"><span className="border border-acid-lime/30 px-2 py-1">{item.evaluation.decision}</span>{item.evaluation.blockedGates.map((g) => <span key={g} className="border border-red-500/50 px-2 py-1 text-red-300">BLOCKED: {g}</span>)}{item.evaluation.unknownGates.map((g) => <span key={g} className="border border-orange-400/50 px-2 py-1 text-orange-200">UNKNOWN: {g}</span>)}</div>
           {eligible ? <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs"><Link href="/the-forge" className="font-mono uppercase text-acid-lime underline">Ready for product brief in The Forge →</Link></p>
             : <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs text-muted-ink">Product promotion is locked until every score dimension is complete and all hard gates are passed.</p>}
           <div className="mt-4 space-y-2 border-t border-acid-lime/15 pt-4">
