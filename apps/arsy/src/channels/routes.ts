@@ -58,6 +58,9 @@ const validateChannel = (value: z.infer<typeof channelObjectSchema>, context: z.
     if (value.accountEligibility !== 'eligible' || value.payoutSetupStatus !== 'configured' || !types.has('account-eligibility') || !types.has('payout-requirements')) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ['capability'], message: 'C1 requires current account eligibility and payout setup evidence.' })
     }
+    if (Object.keys(value.payoutRequirements).length === 0) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['payoutRequirements'], message: 'C1 requires the channel payout requirements to be recorded.' })
+    }
     const acceptedMediaTypes = value.listingRequirements.acceptedMediaTypes
     const acceptedProductFamilies = value.listingRequirements.acceptedProductFamilies
     if (!Array.isArray(acceptedMediaTypes) || acceptedMediaTypes.length === 0 ||
