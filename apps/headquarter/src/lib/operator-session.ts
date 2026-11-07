@@ -27,10 +27,10 @@ export function getOperatorSessionConfig(env: NodeJS.ProcessEnv = process.env): 
     : 0
   const proxyIdentitySecret = env.HEADQUARTER_PROXY_IDENTITY_SECRET?.trim() || null
 
-  if (!operatorId || operatorId.length > 128 || !password || password.length < 16 ||
+  if (!operatorId || operatorId.length > 128 || !password || password.length < 16 || password.length > 1024 ||
       !secret || Buffer.byteLength(secret, 'utf8') < 32 || !publicOrigin ||
       !Number.isSafeInteger(trustedProxyHops) || trustedProxyHops < 0 || trustedProxyHops > 8 ||
-      (env.NODE_ENV === 'production' && (trustedProxyHops < 1 || !proxyIdentitySecret || Buffer.byteLength(proxyIdentitySecret, 'utf8') < 32))) return null
+      (env.NODE_ENV === 'production' && (trustedProxyHops < 1 || !proxyIdentitySecret || Buffer.byteLength(proxyIdentitySecret, 'utf8') < 32 || proxyIdentitySecret === secret))) return null
 
   try {
     const parsedOrigin = new URL(publicOrigin)
