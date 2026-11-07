@@ -23,5 +23,8 @@ test('retired products cannot receive a new inspection or be moved back to revie
   assert.match(statement, /p\.lifecycle_state <> 'retired'/)
   assert.match(statement, /FOR UPDATE OF p/)
   assert.match(statement, /SET lifecycle_state = CASE/)
+  assert.match(statement, /asset\.archived_at IS NULL/)
+  assert.match(statement, /asset\.rights_state <> 'pass'/)
+  assert.match(statement, /productReady/)
   assert.deepEqual(parameters.slice(1, 3), ['owner-a', 'technical'])
 })
