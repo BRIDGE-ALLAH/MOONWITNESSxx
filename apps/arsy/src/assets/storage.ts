@@ -20,7 +20,8 @@ export class LocalAssetStorage {
     }
     const root = this.root()
     const target = path.resolve(root, ownerHash, assetId)
-    if (!target.startsWith(root + path.sep)) throw new Error('INVALID_ASSET_STORAGE_KEY')
+    const relative = path.relative(root, target)
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('INVALID_ASSET_STORAGE_KEY')
     return target
   }
 
