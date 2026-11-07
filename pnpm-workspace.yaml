@@ -1,6 +1,6 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 
 # services/* is intentionally excluded from the workspace.
 # Legacy prototypes must be reviewed before they can become canonical apps/packages.
