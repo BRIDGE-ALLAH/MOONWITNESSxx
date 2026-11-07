@@ -98,3 +98,29 @@ Preserve existing URLs and shared UI tokens. Prioritize demo/data truth, accessi
 ## Audit limitations
 
 This revalidation used the GitHub repository/API surfaces and CI evidence available in this session. It did not perform a local full clone, run Docker, access production credentials/infrastructure, inspect a live deployed application, or perform manual browser/screen-reader testing. Those checks remain explicitly unverified.
+
+## 8. Current mainline revalidation — 2026-11-08
+
+This section supersedes the earlier point-in-time mainline and release snapshots above.
+
+### Mainline and verified merges
+- Default branch: `main`.
+- Verified HEAD: `515976bdd105c10e267ab0febfa8802009da2662`.
+- PR #107 merged: Signal Room no longer displays fabricated trends, categories, source-confidence values, buyer-problem prevalence, or marketplace observations. It explicitly states that live sources are not connected.
+- PR #109 merged: Mizan Ledger, The Forge, and ZILL Watch no longer display fictional financial events, product/version/provenance records, placeholder product imagery, or fabricated inspection outcomes. They show truthful disconnected/empty states.
+- PR #104 merged: `CardTitle` now forwards an `HTMLHeadingElement` ref matching its rendered `h3`.
+- The exact PR heads for #104, #107, and #109 passed their recorded quality checks before merge. The post-merge checks for HEAD `515976b` were queued when inspected; they must be re-fetched before claiming mainline CI is green.
+- Root package version is `1.0.11`. CHANGELOG.md contains an Unreleased section. The only published GitHub Release currently visible is `v1.0.0`.
+
+### Product reality and remaining gaps
+- Headquarter remains a prototype surface. Removing invented records improves data truth; it does not create the missing commerce, financial, product-asset, rights-inspection, or market-ingestion services.
+- Issue #100 remains open as the canonical first real commerce vertical slice.
+- PR #106 remains draft and blocked by review findings. Do not merge until its operator session/BFF boundary is consolidated, PostgreSQL persistence is verified by isolated integration tests across reconnect, idempotency is implemented or removed from scope, migrations are limited to implemented domains, and operator assertions are clearly distinguished from independent verification.
+- Legacy ORM PRs #15–#41 remain a stale stacked dependency chain. Re-audit each branch against current main and merge only in dependency order; do not treat historical checks or branch mergeability as current proof.
+- Other open feature and dependency PRs require current-base diff and exact-head CI review before integration.
+
+### Production release decision
+**NO-GO.** The repository does not have a verified production deployment target, managed production secret injection, TLS/ingress, backup/restore, monitoring/alerting, rollback, live health endpoint, or production smoke-test evidence. The existing Compose profile is local development only. Do not bump a release, publish a tag, or deploy production merely to satisfy a checklist.
+
+### Verification boundary
+This revalidation used GitHub repository files, branch/PR metadata, review records, and check-run metadata. It did not execute a local clone, package install, local tests/build, Docker image runtime against PostgreSQL, browser E2E, screen-reader tests, or production infrastructure operations. Those remain NOT RUN / NOT AVAILABLE, not PASS.
