@@ -13,3 +13,7 @@ test('escalates compromised sources and deterministically orders reviews', () =>
 test('rejects duplicate identifiers and invalid timestamps', () => {
   assert.throws(() => routeReviewQueue([{ id: 'x', severity: 'normal', createdAt: 'bad' }]), /Invalid createdAt/)
 })
+
+test('rejects unsupported severity values', () => {
+  assert.throws(() => routeReviewQueue([{ id: 'x', severity: 'urgent', createdAt: '2026-11-08T00:00:00Z' }]), /Invalid severity/)
+})
