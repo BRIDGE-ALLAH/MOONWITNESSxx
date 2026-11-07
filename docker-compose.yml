@@ -55,6 +55,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-moonwitness}
       ARSY_OPERATOR_ID: ${ARSY_OPERATOR_ID:?ARSY_OPERATOR_ID must be set}
       ARSY_OPERATOR_TOKEN: ${ARSY_OPERATOR_TOKEN:?ARSY_OPERATOR_TOKEN must be set}
+      ASSET_STORAGE_DRIVER: ${ASSET_STORAGE_DRIVER:-local}
+      ASSET_STORAGE_PATH: ${ASSET_STORAGE_PATH:-/var/lib/arsy/assets}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     ports:
       - '127.0.0.1:${ARSY_PORT:-3001}:3001'
@@ -67,6 +69,7 @@ services:
       - ./apps/arsy:/app/apps/arsy
       - ./packages:/app/packages
       - /app/node_modules
+      - arsy_assets_data:/var/lib/arsy/assets
     networks:
       - moonwitness
     restart: unless-stopped
@@ -115,6 +118,8 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  arsy_assets_data:
     driver: local
 
 networks:
