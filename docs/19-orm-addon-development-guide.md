@@ -1,6 +1,6 @@
 # 19 — ORM Addon Development Guide
 
-**Status:** Approved developer contract | **Version:** 1.2 | **Updated:** 2026-11-07
+**Status:** Approved developer contract | **Version:** 1.3 | **Updated:** 2026-11-07
 
 ## 1. Purpose
 Addon authors declare models/behavior in TypeScript. ORM composes BaseEntity; orm-db reconciles schema programmatically. Addons never import Kysely, raw SQL, database drivers, or provider APIs. No hand-authored schema migration files for ordinary model edits.
@@ -46,3 +46,7 @@ Owns Project domain fields/behavior only; reuses BaseEntity, mixins, central Aud
 
 ## 15. Intelligent addon
 Owns AI/agent domain fields/behavior only. Stores secret references, not raw credentials; attributes usage/cost to run/task.
+
+
+## 15. v1.3 authoritative base contract
+This document's earlier three-field BaseEntity summary is superseded: inject id, createdAt, createdById, updatedAt and updatedById exactly once. The full base platform is not a universal model; it is a suite of independently declared addon manifests. See docs/22 for addon IDs, models, dependencies, mixins and strict ownership boundaries.
