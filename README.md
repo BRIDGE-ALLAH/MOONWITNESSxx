@@ -33,3 +33,7 @@ Codex project skills are stored in `.agents/skills/<skill-name>/SKILL.md`. Skill
 ## Safety
 
 This pack does not grant access or override Codex sandbox, approval, GitHub permissions, branch protection, or repository policies. Production-destructive actions, deployment, external registry publishing and permission changes remain approval-gated.
+
+### Product integrity preflight
+
+Run `pnpm devx product-audit --json` to inspect workspace package contracts, Headquarter navigation/demo-data disclosure, and local release readiness. The command intentionally reports NOT READY until release and production deployment workflows exist; it does not verify remote tags or live production health.
