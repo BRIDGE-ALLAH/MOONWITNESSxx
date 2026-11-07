@@ -415,7 +415,7 @@ Still deferred and intentionally not claimed complete:
 
 ## Milestone 7 — maturity and visual identity delivery
 
-**Implemented on `feat-ui-package-milestone-1-2`; latest branch verification pending.**
+**Implemented and CI-verified on `feat-ui-package-milestone-1-2` at `fb070dba646ae9414a8735c999e39e112a0242ec`.**
 
 Delivered in this pass:
 - [x] Add a practical component workbench at `apps/headquarter/src/app/ui-lab/page.tsx`, rendering the real shared package in the actual host shell.
@@ -441,7 +441,7 @@ Still open (not represented as completed):
 The workbench is an in-app component inventory, not Storybook. The new Node tests are static contract tests, not browser interaction or screenshot tests. The bundle budget measures emitted JavaScript bytes only and does not represent compressed transfer size or CSS size. CI results will determine whether the implemented package gate passes.
 
 
-## Milestone 8 — Signal Constellation (implementation added; CI pending)
+## Milestone 8 — Signal Constellation (implemented; CI verified)
 
 **Purpose:** make relationships and evidence inspectable instead of reducing signal intelligence to disconnected cards.
 
@@ -454,7 +454,7 @@ The workbench is an in-app component inventory, not Storybook. The new Node test
 
 **Not claimed:** graph layout algorithms, live streaming, clustering, anomaly detection, or inferred causal links. The host supplies nodes, positions, relationships, and evidence.
 
-## Milestone 9 — Decision Memory / Decision Trail (implementation added; CI pending)
+## Milestone 9 — Decision Memory / Decision Trail (implemented; CI verified)
 
 **Purpose:** give every important change a readable “what happened / why / based on what” path.
 
@@ -472,8 +472,9 @@ The workbench is an in-app component inventory, not Storybook. The new Node test
 - [x] Correct demo status labels so static examples are not presented as live telemetry.
 - [x] Correct notification live-region rendering so children are not duplicated visually and in assistive technology.
 - [x] Ensure the UI workbench's primary CTA navigates to the signal experience.
-- [ ] Verify the latest branch head with GitHub Actions; record run URL and actual results.
-- [ ] Resolve any compile, lint, test, formatting, or package-budget failures surfaced by CI.
+- [x] Verify the latest branch head with GitHub Actions run [#783](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42398407878) — success on `fb070dba646ae9414a8735c999e39e112a0242ec`.
+- [x] Resolve TypeScript and JSX issues surfaced by CI; required type-check/build, UI lint, 8 Node tests, theme contract, consumer smoke test, JS budget, and Headquarter production build now pass.
+- [ ] Resolve the existing Headquarter ESLint 9 flat-config skip and audit the root `format:check` script; these are repository-level follow-ups, not silently counted as passed.
 - [ ] Perform human browser review in both themes at desktop and mobile widths.
 - [ ] Run WCAG 2.2 AA / axe-core and keyboard + screen-reader review before calling accessibility fully verified.
 - [ ] Decide whether Playwright visual regression is worth adding as a maintained dependency after the first browser QA pass.
@@ -481,3 +482,17 @@ The workbench is an in-app component inventory, not Storybook. The new Node test
 ### Release boundary
 
 Milestones 8 and 9 are implementation-complete but CI-pending. Browser rendering and accessibility audits remain release gates; static tests alone do not certify those properties. Keep PR #24 open until checks are green and a maintainer explicitly approves merge.
+
+
+### Latest CI evidence — run #783
+
+- [Repository CI run #783](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42398407878) — **SUCCESS**.
+- Commit: `fb070dba646ae9414a8735c999e39e112a0242ec`.
+- Workspace type-check: 7 tasks successful.
+- UI lint: successful.
+- Theme contract: 46 required tokens in each of 2 themes.
+- ESM build and consumer smoke test: 66 public exports.
+- Node tests: 8 passed, 0 failed.
+- Emitted JavaScript budget: 62,273 bytes / 614,400 bytes.
+- Headquarter production build: compiled and prerendered 16/16 pages, including `/ui-lab`.
+- Caveats: Headquarter lint still uses its existing ESLint 9 `lint-skip` fallback; optional Full workspace typecheck/build job was skipped by workflow condition. Browser visual QA, axe/WCAG 2.2 AA, and screen-reader review remain open.
