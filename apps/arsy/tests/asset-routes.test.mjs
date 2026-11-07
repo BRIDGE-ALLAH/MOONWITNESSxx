@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createHash, randomUUID } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -85,7 +85,7 @@ test('asset API stores binary, serves it only to the operator, and archives meta
   }
 })
 
-test('asset upload rejects unsupported active-content media types and oversized payloads', async () => {
+test('asset upload rejects unsupported active-content media types', async () => {
   const pool = { query: async () => ({ rows: [] }), end: async () => undefined }
   const app = await createApp({ databasePool: pool, logger: false, env })
   try {
