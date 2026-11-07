@@ -1,4 +1,4 @@
-import { proxyArsyRequest } from '../../../../../../lib/arsy-proxy'
+import { proxyArsyRequest } from '../../../../../lib/arsy-proxy'
 
 export const runtime = 'nodejs'
 
