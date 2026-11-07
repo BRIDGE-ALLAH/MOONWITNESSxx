@@ -80,8 +80,26 @@ BaseEntity contains id, createdAt, createdById, updatedAt and updatedById. packa
 
 
 ## 17. Repository topology reconciliation (authoritative with docs/23)
-The canonical workspace globs are apps/* and packages/*. Do not add services/* to pnpm workspace. apps/headquarter is the Next.js frontend; apps/arsy is the only Fastify HTTP backend. An independently deployed worker, if justified, is apps/worker. The tracked services/arsy and services/queue are legacy/stranded duplicates and must be retired only after unique behavior is reviewed. The current apps/headquarter manifest is inconsistent with its Next.js source, apps/arsy currently imports UI unnecessarily, and packages/arsy-core has no source implementation in the audited tree. Repair these before implementing ORM packages.
+The canonical workspace globs are apps/* and packages/*. Do not add services/* to pnpm workspace. apps/headquarter is the Next.js frontend; apps/arsy is the only Fastify HTTP backend. An independently deployed worker, if justified, is apps/worker. The tracked services/arsy and services/queue are legacy/stranded duplicates and must be retired only after unique behavior is reviewed.
 
-The target package list is not an implementation inventory. At the audit snapshot packages/orm, orm-db, both SQL adapters and the three ORM addons are absent. docs/23 lists actual package inventory and P0 fixes.
+The repository audit is a dated snapshot, not a timeless inventory. The follow-up inspection in docs/23 section 12 supersedes outdated package-level observations in earlier audit sections. In particular, packages/arsy-core now has a source entrypoint, while its type/build/dependency contract and its integration with apps/arsy still require verification and repair. apps/headquarter currently has Next.js/React dependencies; its lint configuration and quality scripts still require validation. Do not repeat old statements that the Headquarter manifest is a Fastify manifest or that arsy-core has no source entrypoint.
+
+The target package list is not an implementation inventory. packages/orm, orm-db, SQL adapters and ORM addons remain planned until source, tests, typecheck/build evidence exist. docs/23 lists the current inventory and remaining P0 work.
 
 Queue ownership: packages/jobs defines queue-neutral job contracts and idempotency; a future jobs adapter owns BullMQ/Redis specifics. Do not keep a second services/queue service. Do not make Redis/BullMQ mandatory for the first product slice unless asynchronous execution is actually required. The outbox/business record is the source of truth, not the queue transport.
+
+## 18. Programmatic declarations and execution modes
+The canonical model definition is a TypeScript declaration inside addon/module source code. The v1 preferred form is a class with static model identity and a static fields descriptor map. This is programmatic declaration, not a separate manually maintained schema file. The ORM normalizes the declarations into immutable metadata and composes them into a deterministic registry.
+
+The detailed declaration, field, relation, Environment, Recordset, System Mode, Runtime Mode, reconciliation and security contract is maintained in docs/22. docs/08 is the architecture overview; docs/22 is the capability blueprint. No document may introduce a second schema/model source of truth.
+
+System Mode discovers trusted packages, resolves modules, composes/validates the registry, produces a deterministic persistence plan, applies authorized changes under a serialized lock, verifies the result, and records a receipt. Runtime Mode serves requests against a verified immutable registry and never performs schema DDL. A normal request must not trigger System Mode.
+
+`env` carries trusted principal, workspace/tenant, company scope, transaction, permissions, locale/timezone, trace context and approved services. `recordset` is the typed collection API bound to one Environment, with consistent empty/single/multiple semantics and batch operations. Prefer explicit `env.models` access as the foundation; convenience class APIs must not hide context or transaction boundaries.
+
+## 19. Database ownership clarification
+SQLite is the ARSY System Database for control-plane state: installed plugin/module state, settings, registry fingerprints/snapshots, synchronization receipts and system audit. Its single-writer constraint requires serialized writes and a persistent local volume. PostgreSQL is the primary Business Database for durable business records and concurrent application transactions.
+
+Redis is runtime infrastructure, not authoritative business storage. Disk/S3-compatible storage owns file bytes; business records own attachment metadata. Telegram is a connector, not a database provider. libSQL may be evaluated as an optional lightweight business-data profile, but it does not replace the SQLite System Database role or PostgreSQL production business role.
+
+These provider roles supersede older shorthand in this document that grouped PostgreSQL/libSQL as interchangeable database profiles.
