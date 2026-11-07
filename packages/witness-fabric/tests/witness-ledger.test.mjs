@@ -48,3 +48,21 @@ test("observation and decision events survive deterministic replay", async () =>
   assert.equal(snapshot.observations["obs:1"].content.source, "paper");
   assert.equal(snapshot.decisions["decision:1"].rationale, "Evidence insufficient for release.");
 });
+
+test("agent action cannot complete until a policy decision explicitly allows it", async () => {
+  const ledger = new WitnessLedger();
+  await ledger.append(base({ type: "action.proposed", subject: "action:publish-1", payload: { tool: "publisher.publish" } }));
+  await ledger.append(base({ id: "evt-2", type: "action.completed", subject: "action:publish-1", payload: { receipt: { remoteId: "post-1" } } }));
+  assert.throws(() => ledger.replay(), /without an allowed policy decision/);
+});
+
+test("action lifecycle records policy and execution receipt", async () => {
+  const ledger = new WitnessLedger();
+  await ledger.append(base({ type: "action.proposed", subject: "action:publish-1", payload: { tool: "publisher.publish" } }));
+  await ledger.append(base({ id: "evt-2", type: "policy.evaluated", subject: "action:publish-1", payload: { decision: "allowed", policyRef: "policy:publish-v2" } }));
+  await ledger.append(base({ id: "evt-3", type: "action.completed", subject: "action:publish-1", payload: { receipt: { remoteId: "post-1" } } }));
+  const action = ledger.replay().actions["action:publish-1"];
+  assert.equal(action.status, "completed");
+  assert.equal(action.policyRef, "policy:publish-v2");
+  assert.equal(action.receipt.remoteId, "post-1");
+});

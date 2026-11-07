@@ -3,7 +3,7 @@ export type WitnessEventType =
   | "claim.proposed"
   | "claim.assessed"
   | "relation.asserted"
-  | "decision.recorded";
+  | "decision.recorded"\n  | "action.proposed"\n  | "policy.evaluated"\n  | "action.completed"\n  | "action.failed";
 
 export interface WitnessEventInput {
   id: string;
@@ -35,7 +35,7 @@ export interface WitnessSnapshot {
   headHash: string;
   claims: Record<string, ClaimState>;
   observations: Record<string, { observationId: string; content: unknown; actor: string; occurredAt: string }>;
-  decisions: Record<string, { decisionId: string; rationale: unknown; actor: string; occurredAt: string }>;
+  decisions: Record<string, { decisionId: string; rationale: unknown; actor: string; occurredAt: string }>;\n  actions: Record<string, { actionId: string; tool: string; status: "proposed" | "allowed" | "denied" | "completed" | "failed"; actor: string; policyRef?: string; receipt?: unknown; occurredAt: string }>;
 }
 
 const GENESIS = "0".repeat(64);
@@ -59,7 +59,7 @@ function validateInput(input: WitnessEventInput): void {
   if (!input.payload || typeof input.payload !== "object" || Array.isArray(input.payload)) throw new Error("payload must be an object");
   if (input.evidenceRefs?.some((ref) => !ref.trim())) throw new Error("evidenceRefs must not contain empty references");
   if (input.type === "claim.proposed" && typeof input.payload.statement !== "string") throw new Error("claim.proposed requires payload.statement");
-  if (input.type === "claim.assessed") {
+  if (input.type === "action.proposed" && typeof input.payload.tool !== "string") throw new Error("action.proposed requires payload.tool");\n  if (input.type === "policy.evaluated" && !["allowed", "denied"].includes(String(input.payload.decision))) throw new Error("policy.evaluated requires allowed or denied decision");\n  if (input.type === "claim.assessed") {
     const confidence = input.payload.confidence;
     if (typeof confidence !== "number" || confidence < 0 || confidence > 1) throw new Error("confidence must be between 0 and 1");
     if (!["supported", "contested", "rejected"].includes(String(input.payload.status))) throw new Error("invalid claim assessment status");
@@ -99,7 +99,7 @@ export class WitnessLedger {
   }
 
   replay(): WitnessSnapshot {
-    const snapshot: WitnessSnapshot = { eventCount: 0, headHash: GENESIS, claims: {}, observations: {}, decisions: {} };
+    const snapshot: WitnessSnapshot = { eventCount: 0, headHash: GENESIS, claims: {}, observations: {}, decisions: {}, actions: {} };
     for (const event of this.#events) {
       snapshot.eventCount += 1;
       snapshot.headHash = event.hash;
