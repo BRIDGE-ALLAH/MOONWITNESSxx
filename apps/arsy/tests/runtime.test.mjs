@@ -25,7 +25,7 @@ function createFakePool({ fail = false } = {}) {
 
 test('application factory is side-effect free and serves liveness', async () => {
   const fake = createFakePool()
-  const app = createApp({ databasePool: fake.pool, logger: false })
+  const app = await createApp({ databasePool: fake.pool, logger: false })
 
   try {
     const root = await app.inject({ method: 'GET', url: '/' })
