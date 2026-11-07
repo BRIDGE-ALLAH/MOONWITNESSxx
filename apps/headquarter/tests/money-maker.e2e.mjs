@@ -174,15 +174,9 @@ try {
   const assetCard = productCard.locator('article').filter({ hasText: 'integration-source.txt' })
   await assetCard.waitFor({ state: 'visible' })
   await assetCard.getByRole('link', { name: 'Download original' }).waitFor({ state: 'visible' })
-  const inspections = [
-    ['rights', 'Independent review (reported)'],
-    ['policy', 'Independent review (reported)'],
-    ['technical-qa', 'Automated check'],
-    ['creative-qa', 'Independent review (reported)'],
-  ]
-  for (const [type, sourceType] of inspections) {
+  const inspections = ['rights', 'policy', 'technical-qa', 'creative-qa']
+  for (const type of inspections) {
     await assetCard.locator('details').first().locator('summary').click()
-    await assetCard.getByLabel('Inspection source').selectOption({ label: sourceType })
     await assetCard.getByLabel('Inspection type').selectOption(type)
     await assetCard.getByLabel('Status').selectOption('pass')
     await assetCard.getByLabel('Rationale').fill(`Isolated CI fixture records the ${type} inspection workflow.`)
