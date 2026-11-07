@@ -910,7 +910,7 @@ A first dependency-free vertical slice has been implemented on branch `feat-divi
 
 - [x] Phase 9: deterministic SHA-256 preservation manifest, integrity verifier, hash-chained decision history and explicit rights-action gate.
 - [x] Phase 10: provider-neutral extraction port, exact source-span and release validation, model/prompt/pipeline provenance, untrusted candidate state, human review and non-writing promotion envelope.
-- [x] Phase 11: bounded exporters for PROV-O, SKOS, TEI P5, IIIF Presentation 3 and Web Annotation, with explicit fidelity/loss reports.
+- [x] Phase 11: bounded exporters for PROV-O, SKOS, TEI P5, IIIF Presentation 3 and Web Annotation, with explicit fidelity/loss reports and an enforceable Semantic Loss Budget policy.
 - [x] Added focused tests for preservation, candidate governance and all five interchange exporters.
 - [x] Added `docs/preservation-ai-interop.md` with limitations, research references and follow-on prototypes.
 - [ ] Run full package type-check and tests on the new branch; resolve any CI failures before requesting review.
