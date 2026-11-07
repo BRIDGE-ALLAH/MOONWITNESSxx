@@ -31,7 +31,7 @@ This plugin provides clickable automation commands for common repository mainten
 ### 4. Check Staged Changes
 - **Name:** check-staged
 - **Description:** Validate staged changes follow project conventions
-- **Command:** git diff --staged
+- **Command:** pnpm run check:staged
 - **Category:** Validation
 
 ## How to Use
