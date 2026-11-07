@@ -73,4 +73,21 @@ test('production asset storage requires HTTPS S3 and forbids local filesystem st
     ARSY_ASSET_STORAGE_ACCESS_KEY_ID: 'key',
     ARSY_ASSET_STORAGE_SECRET_ACCESS_KEY: 'secret',
   }), /S3_ASSET_STORAGE_REQUIRES_HTTPS/)
+
+  assert.throws(() => createAssetStorage({
+    NODE_ENV: 'production',
+    ARSY_ASSET_STORAGE_DRIVER: 's3',
+    ARSY_ASSET_STORAGE_ENDPOINT: 'https://user:password@objects.example.test',
+    ARSY_ASSET_STORAGE_BUCKET: 'assets',
+    ARSY_ASSET_STORAGE_ACCESS_KEY_ID: 'key',
+    ARSY_ASSET_STORAGE_SECRET_ACCESS_KEY: 'secret',
+  }), /S3_ASSET_STORAGE_ENDPOINT_MUST_NOT_EMBED_CREDENTIALS/)
+  assert.throws(() => createAssetStorage({
+    NODE_ENV: 'production',
+    ARSY_ASSET_STORAGE_DRIVER: 's3',
+    ARSY_ASSET_STORAGE_ENDPOINT: 'https://objects.example.test',
+    ARSY_ASSET_STORAGE_BUCKET: 'bad_bucket',
+    ARSY_ASSET_STORAGE_ACCESS_KEY_ID: 'key',
+    ARSY_ASSET_STORAGE_SECRET_ACCESS_KEY: 'secret',
+  }), /S3_ASSET_STORAGE_BUCKET_INVALID/)
 })
