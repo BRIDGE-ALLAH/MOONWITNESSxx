@@ -32,16 +32,18 @@ const requiredSemanticTokens = [
 ];
 
 function readVariable(rule, name) {
-  const escapedName = name.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&");
-  const match = rule.match(new RegExp("--" + escapedName + "\\\\s*:\\\\s*([^;]+);"));
-  assert.ok(match, "Missing semantic token --" + name);
-  return match[1].trim();
+  const declaration = rule
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith("--" + name + ":"));
+  assert.ok(declaration, "Missing semantic token --" + name);
+  return declaration.slice(declaration.indexOf(":") + 1).trim();
 }
 
 test("default light root matches the canonical Archive semantic tokens", () => {
   const root = readRule(":root");
   const archive = readRule(".theme-archive");
-  assert.match(root, /color-scheme:\\s*light/);
+  assert.ok(root.includes("color-scheme: light;"));
   for (const token of requiredSemanticTokens) {
     assert.equal(
       readVariable(root, token),
