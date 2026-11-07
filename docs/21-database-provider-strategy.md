@@ -1,6 +1,6 @@
 # 21 — Database Provider Strategy & Portability Contract
 
-**Status:** Approved architecture decision | **Version:** 1.0 | **Updated:** 2026-11-07
+**Status:** Approved architecture decision | **Version:** 1.3 | **Updated:** 2026-11-07
 
 ## 1. Executive decision
 RIOTWORKS will not use PocketBase as its primary persistence backend in v1. Use one SQL-first architecture:
@@ -68,3 +68,7 @@ PocketBase BaseModel includes id, created, updated. If a future PB adapter is ap
 - Kysely: https://kysely.dev/docs/getting-started
 - Kysely libSQL dialect: https://github.com/tursodatabase/kysely-libsql
 - libSQL: https://github.com/tursodatabase/libsql
+
+
+## 11. v1.3 BaseEntity clarification
+The logical BaseEntity now contains id, createdAt, createdById, updatedAt and updatedById. createdById/updatedById reference the canonical principal abstraction and map to TEXT on libSQL and UUID on PostgreSQL. The ORM composes them once; adapters do not create duplicate fields. The full Odoo-inspired base addon suite is documented in docs/22.
