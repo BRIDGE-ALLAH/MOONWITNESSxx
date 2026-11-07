@@ -69,12 +69,17 @@ function classifyAddress(address: string): AddressClass {
   }
   if (family === 6) {
     const normalized = address.toLowerCase().split('%')[0]
+    const firstSegment = Number.parseInt(normalized.split(':')[0] || '0', 16)
+    const secondSegment = Number.parseInt(normalized.split(':')[1] || '0', 16)
+    // IANA registers 2001::/23 as special-purpose IETF protocol space,
+    // not globally reachable by default. Deny the parent block rather than
+    // treating every address inside 2000::/3 as public.
     if (normalized === '::' || normalized === '::1' || normalized.startsWith('fe8') ||
         normalized.startsWith('fe9') || normalized.startsWith('fea') || normalized.startsWith('feb') ||
         normalized.startsWith('ff') || normalized.startsWith('2001:db8:') ||
-        normalized.startsWith('2002:') || normalized.startsWith('3fff:')) return 'blocked'
+        normalized.startsWith('2002:') || normalized.startsWith('3fff:') ||
+        (firstSegment === 0x2001 && secondSegment <= 0x01ff)) return 'blocked'
     if (normalized.startsWith('fc') || normalized.startsWith('fd')) return 'private'
-    const firstSegment = Number.parseInt(normalized.split(':')[0] || '0', 16)
     return firstSegment >= 0x2000 && firstSegment <= 0x3fff ? 'public' : 'blocked'
   }
   return 'blocked'
