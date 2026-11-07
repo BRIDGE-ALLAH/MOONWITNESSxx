@@ -1,0 +1,1 @@
+export {CorpusAdapter} from "./adapter.ts";export {CORPUS_SPEC_VERSION} from "./types.ts";export type {CanonicalRecordEnvelope,CorpusAdapterOptions,CorpusProjection,CorpusReadResult,CorpusReader,CorpusRecordKind,CorpusRelease} from "./types.ts";

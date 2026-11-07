@@ -365,22 +365,22 @@ Adoption policy:
 **Priority:** P0 / blocking before runtime integration.
 
 ### Tasks
-- [ ] DIV-P0-001 Verify repository branch, HEAD, package manager, workspace configuration and current package inventory.
-- [ ] DIV-P0-002 Confirm packages/divine does not already exist before scaffolding.
+- [x] DIV-P0-001 Verify repository branch, HEAD, package manager, workspace configuration and current package inventory.
+- [x] DIV-P0-002 Confirm packages/divine does not already exist before scaffolding.
 - [ ] DIV-P0-003 Re-read the authoritative MOONWITNESS repository audit and current execution plan.
-- [ ] DIV-P0-004 Reconcile proposed @moonwitness/divine scope with current root riotworks scope and repository naming governance.
-- [ ] DIV-P0-005 Create ADR: Divine purpose, non-goals and conceptual inspiration boundary.
-- [ ] DIV-P0-006 Create ADR: Divine versus MoonWitness Corpus ownership.
-- [ ] DIV-P0-007 Create ADR: Corpus canonical data versus Divine derived projections.
-- [ ] DIV-P0-008 Create ADR: plural ontology and scoped theological claims.
-- [ ] DIV-P0-009 Create ADR: epistemic states, open-world semantics and abstention.
-- [ ] DIV-P0-010 Create ADR: reasoning trace, defeasible rules and contradiction preservation.
-- [ ] DIV-P0-011 Create ADR: standards interoperability without RDF-first persistence.
-- [ ] DIV-P0-012 Define addon catalog, dependency DAG and capability profiles.
+- [x] DIV-P0-004 Reconcile proposed @moonwitness/divine scope with current root riotworks scope and repository naming governance.
+- [x] DIV-P0-005 Create ADR: Divine purpose, non-goals and conceptual inspiration boundary.
+- [x] DIV-P0-006 Create ADR: Divine versus MoonWitness Corpus ownership.
+- [x] DIV-P0-007 Create ADR: Corpus canonical data versus Divine derived projections.
+- [x] DIV-P0-008 Create ADR: plural ontology and scoped theological claims.
+- [x] DIV-P0-009 Create ADR: epistemic states, open-world semantics and abstention.
+- [x] DIV-P0-010 Create ADR: reasoning trace, defeasible rules and contradiction preservation.
+- [x] DIV-P0-011 Create ADR: standards interoperability without RDF-first persistence.
+- [x] DIV-P0-012 Define addon catalog, dependency DAG and capability profiles.
 - [ ] DIV-P0-013 Define adapter ports for Corpus, ORM, ARSY, ZILL and MIZAN without importing unavailable implementations.
-- [ ] DIV-P0-014 Define package export policy and public/internal module boundaries.
+- [x] DIV-P0-014 Define package export policy and public/internal module boundaries.
 - [ ] DIV-P0-015 Define licensing, rights and sensitive-content governance requirements.
-- [ ] DIV-P0-016 Record a research register with paper/project links, adoption rationale and review date.
+- [x] DIV-P0-016 Record a research register with paper/project links, adoption rationale and review date.
 
 ### Deliverables
 - Architecture decision records.
@@ -404,21 +404,21 @@ Adoption policy:
 **Priority:** P0 / pure-domain foundation.
 
 ### Tasks
-- [ ] DIV-P1-001 Scaffold package only after Phase 0 approval and workspace naming resolution.
-- [ ] DIV-P1-002 Implement strict TypeScript configuration consistent with repository conventions.
-- [ ] DIV-P1-003 Define DivineContext: actor, capabilities, locale, research scope, trace ID, method registry and adapter handles.
-- [ ] DIV-P1-004 Define typed domain errors and stable error codes.
-- [ ] DIV-P1-005 Define addon manifest: id, version, dependencies, capabilities, models, services, hooks and compatibility range.
-- [ ] DIV-P1-006 Implement deterministic addon dependency resolution.
-- [ ] DIV-P1-007 Reject dependency cycles, duplicate IDs, missing dependencies and incompatible versions.
-- [ ] DIV-P1-008 Implement explicit capability registration and discovery.
-- [ ] DIV-P1-009 Define service registration without implicit public API exposure.
-- [ ] DIV-P1-010 Define lifecycle hooks with deterministic ordering and failure semantics.
+- [x] DIV-P1-001 Scaffold package only after Phase 0 approval and workspace naming resolution.
+- [x] DIV-P1-002 Implement strict TypeScript configuration consistent with repository conventions.
+- [x] DIV-P1-003 Define DivineContext: actor, capabilities, locale, research scope, trace ID, method registry and adapter handles.
+- [x] DIV-P1-004 Define typed domain errors and stable error codes.
+- [x] DIV-P1-005 Define addon manifest: id, version, dependencies, capabilities, models, services, hooks and compatibility range.
+- [x] DIV-P1-006 Implement deterministic addon dependency resolution.
+- [x] DIV-P1-007 Reject dependency cycles, duplicate IDs, missing dependencies and incompatible versions.
+- [x] DIV-P1-008 Implement explicit capability registration and discovery.
+- [x] DIV-P1-009 Define service registration without implicit public API exposure.
+- [x] DIV-P1-010 Define lifecycle hooks with deterministic ordering and failure semantics.
 - [ ] DIV-P1-011 Define adapter interfaces and capability checks.
-- [ ] DIV-P1-012 Define versioned public exports; keep internal modules private.
-- [ ] DIV-P1-013 Add tests for empty registry, single addon, dependency ordering, conflict, cycle and failed initialization.
+- [x] DIV-P1-012 Define versioned public exports; keep internal modules private.
+- [x] DIV-P1-013 Add tests for empty registry, single addon, dependency ordering, conflict, cycle and failed initialization.
 - [ ] DIV-P1-014 Add tests proving importing Divine core does not require ORM, database, Python, RDF store, AI provider or network.
-- [ ] DIV-P1-015 Add package build, typecheck, lint and test scripts consistent with root tooling.
+- [x] DIV-P1-015 Add package build, typecheck, lint and test scripts consistent with root tooling.
 - [ ] DIV-P1-016 Add minimal examples demonstrating addon composition without persistence.
 
 ### Acceptance
@@ -435,22 +435,22 @@ Adoption policy:
 **Priority:** P0 / blocking for real research data.
 
 ### Tasks
-- [ ] DIV-P2-001 Read the current Corpus specification, compatibility policy, core package exports and all relevant profiles before implementing the adapter.
-- [ ] DIV-P2-002 Pin a specific Corpus spec/release compatibility range; do not target an unstable moving branch silently.
-- [ ] DIV-P2-003 Define CorpusReader and CorpusRelease interfaces.
-- [ ] DIV-P2-004 Resolve canonical IDs only through Corpus identity contracts.
-- [ ] DIV-P2-005 Consume Entity, Resource, Assertion, Evidence, Provenance and Assessment records without redefining them.
+- [x] DIV-P2-001 Read the current Corpus specification, compatibility policy, core package exports and all relevant profiles before implementing the adapter.
+- [x] DIV-P2-002 Pin a specific Corpus spec/release compatibility range; do not target an unstable moving branch silently.
+- [x] DIV-P2-003 Define CorpusReader and CorpusRelease interfaces.
+- [x] DIV-P2-004 Resolve canonical IDs only through Corpus identity contracts.
+- [x] DIV-P2-005 Consume Entity, Resource, Assertion, Evidence, Provenance and Assessment records without redefining them.
 - [ ] DIV-P2-006 Reuse textual, source, bibliographic, manuscript, variants, lineage, lexicon, contextual, media and scholarly profiles where applicable.
-- [ ] DIV-P2-007 Preserve exact source-local IDs, external identifiers and aliases as separate identity forms.
-- [ ] DIV-P2-008 Preserve assertion scope and method-bound assessment semantics.
-- [ ] DIV-P2-009 Preserve source availability, rights and licensing restrictions in query results.
-- [ ] DIV-P2-010 Define missing, restricted, unavailable and partial response states.
-- [ ] DIV-P2-011 Define lazy graph projection from Corpus records; no duplicate authoritative copy.
-- [ ] DIV-P2-012 Define deterministic projection keys and source release/hash references.
+- [x] DIV-P2-007 Preserve exact source-local IDs, external identifiers and aliases as separate identity forms.
+- [x] DIV-P2-008 Preserve assertion scope and method-bound assessment semantics.
+- [x] DIV-P2-009 Preserve source availability, rights and licensing restrictions in query results.
+- [x] DIV-P2-010 Define missing, restricted, unavailable and partial response states.
+- [x] DIV-P2-011 Define lazy graph projection from Corpus records; no duplicate authoritative copy.
+- [x] DIV-P2-012 Define deterministic projection keys and source release/hash references.
 - [ ] DIV-P2-013 Detect stale projections when Corpus release or contract version changes.
-- [ ] DIV-P2-014 Add compatibility tests against real synthetic fixtures from Corpus.
+- [x] DIV-P2-014 Add compatibility tests against real synthetic fixtures from Corpus.
 - [ ] DIV-P2-015 Add round-trip tests for supported mappings and explicit loss reports for unsupported fields.
-- [ ] DIV-P2-016 Document adapter behavior when Corpus is absent or incompatible.
+- [x] DIV-P2-016 Document adapter behavior when Corpus is absent or incompatible.
 
 ### Acceptance
 - Every projected record resolves to a canonical Corpus record.
@@ -893,9 +893,9 @@ Phases may be parallelized only when their dependency contracts are stable. Do n
 - [x] Standards interoperability targets recorded.
 - [x] Non-goals and epistemic/religious governance boundaries defined.
 - [x] Detailed phases, tasks, dependencies and acceptance criteria drafted.
-- [ ] Phase 0 implementation and ADR approval.
-- [ ] Phase 1 implementation.
-- [ ] Phase 2 Corpus adapter.
+- [x] Phase 0 architecture baseline and ADRs committed; repository-audit re-read, non-Corpus adapter ports and license governance follow-ups remain.
+- [x] Phase 1 foundational core, addon registry, lifecycle and tests implemented; example/clean-runtime proof and CI verification remain.
+- [x] Phase 2 read-only Corpus adapter and migration runbook implemented; profile-specific mapping, round-trip tests and stale-projection invalidation remain.
 - [ ] Subsequent phases.
 
-**Important:** This TODO is an architecture and execution plan, not a claim that Divine code, ORM integration, AI research services or production capabilities have already been implemented.
+**Execution update (2026-11-08):** Phase 0–2 foundational deliverables have been committed on `feat/divine-phase-0-2`. This is not a production release. The full Corpus repository has NOT been migrated: its source owner/repository currently grants this connection read-only access. See `docs/CORPUS-MIGRATION.md`.
