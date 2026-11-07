@@ -65,6 +65,13 @@ try {
   const opportunityCard = page.getByTestId('opportunity-card').filter({ hasText: title })
   await opportunityCard.waitFor({ state: 'visible', timeout: 30_000 })
 
+  // Review provenance and operator assessments through the persisted UI response.
+  await opportunityCard.getByText('Review evidence, scoring & hard gates').click()
+  await opportunityCard.getByText('Playwright isolated evidence fixture', { exact: true }).waitFor({ state: 'visible' })
+  await opportunityCard.getByText('This fixture validates persistence and workflow wiring only; it is not market research.').waitFor({ state: 'visible' })
+  await opportunityCard.getByText('Deterministic test rationale; not a real market claim.', { exact: true }).first().waitFor({ state: 'visible' })
+  await opportunityCard.getByText('Operator-assessed test fixture only; no external verification is implied.', { exact: true }).first().waitFor({ state: 'visible' })
+
   // Exercise the actual decision endpoint and its audit-producing workflow.
   await opportunityCard.getByLabel(`Decision for ${title}`).selectOption('research-more')
   await opportunityCard.getByLabel(`Decision rationale for ${title}`).fill('Wait for an independent source before product promotion.')
