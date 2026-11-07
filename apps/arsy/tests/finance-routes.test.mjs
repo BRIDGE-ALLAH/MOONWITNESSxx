@@ -96,3 +96,24 @@ test('financial event API rejects malformed amount, currency and idempotency key
     assert.equal(pool.calls.length, 0)
   } finally { await app.close() }
 })
+
+test('financial reconciliation rejects executable evidence URLs before database writes', async () => {
+  const pool = fakePool()
+  const app = await createApp({ databasePool: pool, logger: false, env })
+  try {
+    const response = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/financial-events/11111111-1111-4111-8111-111111111111/reconciliation',
+      headers: { 'x-arsy-operator-token': token },
+      payload: {
+        state: 'verified',
+        rationale: 'The statement line was reviewed against the source.',
+        evidenceUrl: 'javascript:alert(1)',
+      },
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(pool.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
