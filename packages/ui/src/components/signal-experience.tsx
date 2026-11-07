@@ -21,7 +21,7 @@ export interface RiotSignalLink {
   label?: string
 }
 
-export interface RiotSignalConstellationProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
+export interface RiotSignalConstellationProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title' | 'onSelect'> {
   nodes: RiotSignalNode[]
   links?: RiotSignalLink[]
   selectedId?: string
@@ -148,7 +148,7 @@ export interface RiotDecisionEvent {
   evidence?: string[]
 }
 
-export interface RiotDecisionTrailProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface RiotDecisionTrailProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   events: RiotDecisionEvent[]
   selectedId?: string
   onSelect?: (event: RiotDecisionEvent) => void
