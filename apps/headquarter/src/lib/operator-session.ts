@@ -21,11 +21,12 @@ export function getOperatorSessionConfig(env: NodeJS.ProcessEnv = process.env): 
   const secret = env.HEADQUARTER_SESSION_SECRET?.trim()
   const publicOrigin = env.HEADQUARTER_PUBLIC_ORIGIN?.trim()
 
-  if (!password || !secret || secret.length < 32 || !publicOrigin) return null
+  if (!password || password.length < 16 || !secret || Buffer.byteLength(secret, 'utf8') < 32 || !publicOrigin) return null
 
   try {
     const parsedOrigin = new URL(publicOrigin)
     if (parsedOrigin.origin !== publicOrigin || !['http:', 'https:'].includes(parsedOrigin.protocol)) return null
+    if (env.NODE_ENV === 'production' && parsedOrigin.protocol !== 'https:') return null
   } catch {
     return null
   }
