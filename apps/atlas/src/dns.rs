@@ -1,7 +1,7 @@
 use std::env;
 
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use crate::engine::EngineInstance;
 
@@ -11,7 +11,7 @@ pub struct PowerDnsClient {
     api_key: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ZoneCreateRequest {
     pub name: String,
     #[serde(default = "default_zone_kind")]
@@ -52,6 +52,9 @@ impl PowerDnsClient {
     pub fn new(engine: &EngineInstance) -> Result<Self, &'static str> {
         if engine.engine_type != "powerdns-authoritative" {
             return Err("engine instance is not PowerDNS Authoritative");
+        }
+        if !engine.enabled {
+            return Err("PowerDNS engine instance is disabled");
         }
         let Some(secret_key) = engine.secret_env_key.as_ref() else {
             return Err("PowerDNS API secret reference is not configured");
@@ -105,7 +108,7 @@ impl PowerDnsClient {
 
     pub async fn create_zone(&self, input: &ZoneCreateRequest) -> Result<Value, reqwest::Error> {
         self.client
-            .post(self.zones_url().split('?').next().unwrap_or_default())
+            .post(format!("{}/api/v1/servers/localhost/zones", self.base_url))
             .header("X-API-Key", &self.api_key)
             .json(input)
             .send()
@@ -181,6 +184,23 @@ pub fn validate_zone(input: &ZoneCreateRequest) -> Result<(), &'static str> {
     Ok(())
 }
 
+fn validate_rrset_name(name: &str) -> Result<(), &'static str> {
+    if name.len() < 3 || name.len() > 254 || !name.ends_with('.') {
+        return Err("RRset name must be a fully-qualified DNS name ending with a dot");
+    }
+    for label in name.trim_end_matches('.').split('.') {
+        if label.is_empty()
+            || label.len() > 63
+            || !label
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+        {
+            return Err("RRset name contains an invalid DNS label");
+        }
+    }
+    Ok(())
+}
+
 pub fn validate_rrsets(zone: &str, input: &RrsetPatchRequest) -> Result<(), &'static str> {
     validate_zone_name(zone)?;
     if input.rrsets.is_empty() || input.rrsets.len() > 100 {
@@ -191,7 +211,7 @@ pub fn validate_rrsets(zone: &str, input: &RrsetPatchRequest) -> Result<(), &'st
         "NS", "PTR", "SRV", "SSHFP", "SVCB", "TLSA", "TXT",
     ];
     for rrset in &input.rrsets {
-        validate_zone_name(&rrset.name)?;
+        validate_rrset_name(&rrset.name)?;
         if rrset.name != zone && !rrset.name.ends_with(&format!(".{zone}")) {
             return Err("RRset name must be inside the target zone");
         }
@@ -222,13 +242,4 @@ pub fn validate_rrsets(zone: &str, input: &RrsetPatchRequest) -> Result<(), &'st
         }
     }
     Ok(())
-}
-
-pub fn zone_create_payload(input: &ZoneCreateRequest) -> Value {
-    json!({
-        "name": input.name,
-        "kind": input.kind,
-        "nameservers": input.nameservers,
-        "masters": input.masters
-    })
 }
