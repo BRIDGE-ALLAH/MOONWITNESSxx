@@ -36,7 +36,19 @@ test('asset API stores binary, serves it only to the operator, and archives meta
   const storageDir = await mkdtemp(path.join(tmpdir(), 'arsy-asset-route-'))
   const pool = {
     query: async (sql) => {
-      if (sql.includes('INSERT INTO arsy_assets')) return { rows: [assetRow] }
+      if (sql.includes('INSERT INTO arsy_assets')) {
+        return { rows: [{
+          ...assetRow,
+          id: values[0],
+          product_version_id: values[2],
+          filename: values[3],
+          media_type: values[4],
+          storage_key: values[5],
+          checksum_sha256: values[6],
+          provenance: JSON.parse(values[7]),
+          rights_state: values[8],
+        }] }
+      }
       if (sql.includes('UPDATE arsy_assets')) return { rows: [{ id: assetId }] }
       if (sql.includes('FROM arsy_assets')) return { rows: [assetRow] }
       return { rows: [] }
@@ -66,7 +78,7 @@ test('asset API stores binary, serves it only to the operator, and archives meta
 
     const downloaded = await app.inject({
       method: 'GET',
-      url: `/api/v1/assets/${assetId}/content`,
+      url: `/api/v1/assets/${uploaded.json().data.id}/content`,
       headers: { 'x-arsy-operator-token': token },
     })
     assert.equal(downloaded.statusCode, 200)
@@ -75,7 +87,7 @@ test('asset API stores binary, serves it only to the operator, and archives meta
 
     const archived = await app.inject({
       method: 'DELETE',
-      url: `/api/v1/assets/${assetId}`,
+      url: `/api/v1/assets/${uploaded.json().data.id}`,
       headers: { 'x-arsy-operator-token': token },
     })
     assert.equal(archived.statusCode, 204)
