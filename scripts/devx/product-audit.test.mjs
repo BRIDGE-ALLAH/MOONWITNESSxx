@@ -110,7 +110,7 @@ test('release preflight accepts local scaffolding but states its remote verifica
   try {
     await mkdir(join(root, '.github/workflows'), { recursive: true })
     await writeFile(join(root, 'package.json'), JSON.stringify({ version: '1.1.0' }))
-    await writeFile(join(root, 'CHANGELOG.md'), '# Changelog\n\n## [Unreleased]\n\n### Added\n- Feature.\n')
+    await writeFile(join(root, 'CHANGELOG.md'), '# Changelog\n\n## [Unreleased]\n\n### Added\n- Feature.\n\n## [1.1.0] - 2026-01-01\n')
     await writeFile(join(root, '.github/workflows/release.yml'), 'name: Release')
     await writeFile(join(root, '.github/workflows/deploy-production.yml'), 'name: Deploy')
     await writeFile(join(root, 'Dockerfile.arsy'), 'CMD ["pnpm", "start"]')
