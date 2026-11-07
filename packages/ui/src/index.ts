@@ -31,3 +31,6 @@ export type { MaybePromise,ActionContext,ActionDefinition,CommandDefinition,Plug
 
 export { RiotSignalHeader, RiotLiveIndicator, RiotAtmosphere } from './components/brand-language'
 export type { RiotSignalHeaderProps, RiotLiveIndicatorProps, RiotAtmosphereProps, RiotSignalState } from './components/brand-language'
+
+export { RiotSignalConstellation, RiotDecisionTrail } from './components/signal-experience'
+export type { RiotSignalConstellationProps, RiotSignalNode, RiotSignalLink, RiotDecisionTrailProps, RiotDecisionEvent, RiotDecisionKind } from './components/signal-experience'
