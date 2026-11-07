@@ -415,7 +415,7 @@ Still deferred and intentionally not claimed complete:
 
 ## Milestone 7 — maturity and visual identity delivery
 
-**Implemented on `feat-ui-package-milestone-1-2`; CI verification pending.**
+**Implemented on `feat-ui-package-milestone-1-2`; latest branch verification pending.**
 
 Delivered in this pass:
 - [x] Add a practical component workbench at `apps/headquarter/src/app/ui-lab/page.tsx`, rendering the real shared package in the actual host shell.
@@ -439,3 +439,45 @@ Still open (not represented as completed):
 ### Quality gate boundary
 
 The workbench is an in-app component inventory, not Storybook. The new Node tests are static contract tests, not browser interaction or screenshot tests. The bundle budget measures emitted JavaScript bytes only and does not represent compressed transfer size or CSS size. CI results will determine whether the implemented package gate passes.
+
+
+## Milestone 8 — Signal Constellation (implementation added; CI pending)
+
+**Purpose:** make relationships and evidence inspectable instead of reducing signal intelligence to disconnected cards.
+
+- [x] Add typed `RiotSignalConstellation` and `RiotSignalNode` / `RiotSignalLink` contracts.
+- [x] Render host-supplied relationships as a navigable constellation with keyboard-operable node buttons.
+- [x] Add selected-node inspector with description, source, observed time, evidence, and optional confidence.
+- [x] Add empty state, responsive field, focus-visible states, and reduced-motion-safe interaction styling.
+- [x] Add explicit trust boundary: component does not infer edges, confidence, or telemetry.
+- [x] Add the experience to the Headquarter UI workbench and public package exports.
+
+**Not claimed:** graph layout algorithms, live streaming, clustering, anomaly detection, or inferred causal links. The host supplies nodes, positions, relationships, and evidence.
+
+## Milestone 9 — Decision Memory / Decision Trail (implementation added; CI pending)
+
+**Purpose:** give every important change a readable “what happened / why / based on what” path.
+
+- [x] Add typed `RiotDecisionTrail` and event contracts for observed, interpreted, decided, actioned, and changed events.
+- [x] Add selectable chronological event rail and rationale/evidence inspector.
+- [x] Add keyboard-operable event selection, responsive inspector layout, and empty state.
+- [x] Clearly distinguish the presentation trail from immutable audit logs or backend event sourcing.
+- [x] Add illustrative scenario to UI workbench and document the pattern.
+
+**Not claimed:** event persistence, replay execution, tamper-proof audit, actor authentication, or policy evaluation. Those remain host/backend guarantees.
+
+## Consolidated finish gates — Milestones 7–9
+
+- [x] Add registry lifecycle tests for duplicate/blank IDs, safe unregister behavior, deterministic lookup, and plugin priority filtering.
+- [x] Correct demo status labels so static examples are not presented as live telemetry.
+- [x] Correct notification live-region rendering so children are not duplicated visually and in assistive technology.
+- [x] Ensure the UI workbench's primary CTA navigates to the signal experience.
+- [ ] Verify the latest branch head with GitHub Actions; record run URL and actual results.
+- [ ] Resolve any compile, lint, test, formatting, or package-budget failures surfaced by CI.
+- [ ] Perform human browser review in both themes at desktop and mobile widths.
+- [ ] Run WCAG 2.2 AA / axe-core and keyboard + screen-reader review before calling accessibility fully verified.
+- [ ] Decide whether Playwright visual regression is worth adding as a maintained dependency after the first browser QA pass.
+
+### Release boundary
+
+Milestones 8 and 9 are implementation-complete but CI-pending. Browser rendering and accessibility audits remain release gates; static tests alone do not certify those properties. Keep PR #24 open until checks are green and a maintainer explicitly approves merge.
