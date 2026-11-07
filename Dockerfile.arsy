@@ -1,27 +1,17 @@
-# ARSY Backend Dockerfile
+# Production-capable ARSY runtime image. Compose overrides the command for local hot reload.
 FROM node:24-alpine
 
 WORKDIR /app
-
-# Install pnpm
 RUN npm install -g pnpm@12.16.1
 
-# Copy workspace manifests
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-
-# Copy packages and apps
 COPY packages ./packages
 COPY apps/arsy ./apps/arsy
 
-# Install dependencies
 RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm --filter @riotworks/arsy run build
 
-# Build packages and ARSY
-RUN pnpm run build --filter="@riotworks/arsy..."
-
-# Expose port
-EXPOSE 3001
-
-# Start ARSY
+ENV NODE_ENV=production
 WORKDIR /app/apps/arsy
-CMD ["pnpm", "dev"]
+EXPOSE 3001
+CMD ["pnpm", "start"]
