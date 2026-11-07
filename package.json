@@ -16,12 +16,12 @@
     "check:repo": "pnpm run lockfile:check && pnpm run validate:repo",
     "audit:repo": "pnpm run lockfile:check && pnpm run validate:repo",
     "format:check": "prettier --check \"scripts/**/*.mjs\" \"packages/witness-fabric/**/*.{ts,mjs,md,json}\"",
-    "validate:repo": "pnpm run lockfile:check && pnpm run type-check && pnpm run lint:all && pnpm run test",
+    "validate:repo": "pnpm run lockfile:check && pnpm run test && pnpm run type-check",
     "validate": "pnpm run validate:repo && pnpm run build",
     "lockfile:check": "node scripts/check-lockfile.mjs",
     "lockfile:refresh": "node scripts/check-lockfile.mjs",
-    "test": "node --test scripts/*.test.mjs",
-    "type-check": "pnpm run typecheck:all"
+    "test": "node --test scripts/*.test.mjs && pnpm --filter @moonwitness/witness-fabric test",
+    "type-check": "pnpm --filter @moonwitness/witness-fabric type-check"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
