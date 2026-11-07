@@ -326,3 +326,51 @@ test('Docker server inventory never serializes encrypted TLS credential material
     assert.equal(response.json().data[0].encrypted_credentials, undefined)
   } finally { await app.close() }
 })
+
+test('IPv6 endpoint resolution rejects special-use and non-global addresses by default', async () => {
+  const blocked = [
+    '::',
+    '::1',
+    'fe80::1',
+    'ff02::1',
+    '2001:0::1',
+    '2001:2::1',
+    '2001:1ff::1',
+    '2001:db8::1',
+    '2002::1',
+    '3fff::1',
+  ];
+
+  for (const address of blocked) {
+    await assert.rejects(
+      resolveRemoteDockerEndpoint('https://docker.example.com:2376', env, async () => [
+        { address, family: 6 },
+      ]),
+      /blocked address/,
+      address + ' must be rejected as a non-global or special-purpose destination',
+    );
+  }
+
+  await assert.rejects(
+    resolveRemoteDockerEndpoint('https://docker.example.com:2376', env, async () => [
+      { address: 'fc00::1', family: 6 },
+    ]),
+    /private address/,
+    'IPv6 unique-local space must require explicit private-network opt-in',
+  );
+
+  const publicAddress = { address: '2606:4700:4700::1111', family: 6 };
+  const resolved = await resolveRemoteDockerEndpoint(
+    'https://docker.example.com:2376',
+    env,
+    async () => [publicAddress],
+  );
+  assert.deepEqual(resolved.addresses, [publicAddress]);
+
+  const privateAllowed = await resolveRemoteDockerEndpoint(
+    'https://docker.example.com:2376',
+    { ...env, DOCKER_REMOTE_ALLOW_PRIVATE_NETWORKS: '1' },
+    async () => [{ address: 'fc00::1', family: 6 }],
+  );
+  assert.deepEqual(privateAllowed.addresses, [{ address: 'fc00::1', family: 6 }]);
+});
