@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { OrmError, assertValidModelDeclaration } from "./index.js";
+import { OrmError } from "./errors.ts";
+import { assertValidModelDeclaration } from "./declaration.ts";
 import type {
   AddonManifest, FieldDefinition, ModelConstructor, ModelExtensionDefinition,
   ModuleManifest, RegistryBuildInput, RegistryComposer, RegistryModelEntry, RegistrySnapshot,
