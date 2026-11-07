@@ -315,7 +315,7 @@
 ### 6.4 CI/CD dan release
 - [x] CI menjalankan lint, workspace type-check, Headquarter tests, asset validation, dan Headquarter production build.
 - [x] Jadikan full-workspace validation dan production build sebagai job wajib (tidak lagi bergantung pada `FULL_QUALITY_CI`).
-- [ ] Verifikasi hasil full-workspace job pada PR penutupan ini sebelum menandai gate selesai.
+- [x] Full-workspace validation dan seluruh production builds lulus pada PR #43, workflow run `42398091453`.
 - [ ] Staging/production deployment, smoke test, environment secrets, dan rollback memerlukan target deployment serta otorisasi operator.
 
 ### 6.5 Documentation dan ownership
@@ -326,7 +326,7 @@
 
 **Gate Phase 6**
 - [x] Headquarter-scoped test, type-check, lint/repository integrity, asset checks, production build, dan CodeQL lulus pada PR #38.
-- [ ] Full-workspace validation dan build wajib lulus pada PR penutupan ini.
+- [x] Full-workspace validation dan build wajib lulus; diverifikasi hijau pada PR #43 (run `42398091453`).
 - [ ] Production readiness untuk modul yang memakai backend tetap menunggu API, identity, permission, deployment, dan browser verification; gate ini dipisahkan dalam `RELEASE-READINESS.md`.
 
 ---
@@ -449,3 +449,5 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Scenario Forge shadow kernel added under `src/features/scenario-forge`.
 - [x] Both modules have domain READMEs, tests, and phase-level product/acceptance specifications.
 - [x] Neither module claims a live API, production UI, persistent storage, or real-world execution capability.
+
+- [x] Phase 6 engineering-foundation gate closed after required full-workspace validation/build and CodeQL passed on PR #43.
