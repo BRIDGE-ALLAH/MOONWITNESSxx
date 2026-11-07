@@ -3,6 +3,7 @@ set -eu
 
 : "${RADIUS_DB_PASSWORD:?RADIUS_DB_PASSWORD is required}"
 : "${RADIUS_STATUS_SECRET:?RADIUS_STATUS_SECRET is required}"
+: "${RADIUS_STATUS_SECRET:?RADIUS_STATUS_SECRET is required}"
 case "${RADIUS_DB_PASSWORD}" in
   *[!A-Za-z0-9_-]*)
     echo "RADIUS_DB_PASSWORD may contain only letters, digits, underscores, and hyphens" >&2

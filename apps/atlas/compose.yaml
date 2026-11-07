@@ -10,7 +10,6 @@ services:
       MARIADB_PASSWORD: ${ATLAS_DB_PASSWORD:?Set ATLAS_DB_PASSWORD in the environment}
       MARIADB_ROOT_PASSWORD: ${ATLAS_DB_ROOT_PASSWORD:?Set ATLAS_DB_ROOT_PASSWORD in the environment}
       RADIUS_DB_PASSWORD: ${RADIUS_DB_PASSWORD:?Set RADIUS_DB_PASSWORD in the environment}
-      RADIUS_STATUS_SECRET: ${RADIUS_STATUS_SECRET:?Set RADIUS_STATUS_SECRET in the environment}
     volumes:
       - atlas_mariadb_data:/var/lib/mysql
       - ./docker/mariadb/init/20-radius-db.sh:/docker-entrypoint-initdb.d/20-radius-db.sh:ro
@@ -73,6 +72,7 @@ services:
       dockerfile: docker/freeradius/Dockerfile
     environment:
       RADIUS_DB_PASSWORD: ${RADIUS_DB_PASSWORD:?Set RADIUS_DB_PASSWORD in the environment}
+      RADIUS_STATUS_SECRET: ${RADIUS_STATUS_SECRET:?Set RADIUS_STATUS_SECRET in the environment}
     ports:
       - "${RADIUS_BIND_ADDRESS:-127.0.0.1}:${RADIUS_AUTH_PORT:-1812}:1812/udp"
       - "${RADIUS_BIND_ADDRESS:-127.0.0.1}:${RADIUS_ACCT_PORT:-1813}:1813/udp"

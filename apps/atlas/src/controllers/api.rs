@@ -167,7 +167,7 @@ async fn engine_catalog() -> Json<EngineCatalogResponse> {
             EngineDescriptor {
                 engine: "freeradius",
                 role: "radius_authentication_accounting",
-                adapter_status: "radius_status_probe_pending",
+                adapter_status: "native_radius_status_probe",
             },
             EngineDescriptor {
                 engine: "victoriametrics",

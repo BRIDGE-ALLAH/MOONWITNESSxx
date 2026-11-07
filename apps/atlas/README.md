@@ -40,7 +40,7 @@ No ClickHouse or DuckDB component is part of ATLAS. VictoriaMetrics stores metri
 
 FreeRADIUS is the RADIUS data-plane engine. ATLAS will own NAS inventory, subscriber profiles, authentication policies, VLAN/rate-limit policies, realms, session visibility, accounting views, and engine lifecycle operations.
 
-FreeRADIUS is launched by the development Compose stack using the upstream freeradius/freeradius-server:3.2.10 image. The upstream image's default configuration has no production NAS clients or subscriber database. It must be configured with explicit clients, secure shared secrets, certificates, and an authentication/accounting backend before being exposed to network devices. The Compose port bindings default to loopback for safety.
+FreeRADIUS runs from a derived official 3.2.10 image with SQL authentication/accounting enabled. Its management Status-Server is isolated on the internal Docker network and accepts probes only from ATLAS. The RADIUS status secret is separate from NAS shared secrets. The upstream sample EAP certificates remain development-only and must be replaced before production.
 
 On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user, then imports the upstream FreeRADIUS 3.2.10 MySQL schema. The initialization scripts run only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. NAS clients are read at FreeRADIUS startup; adding or changing a NAS row currently requires a FreeRADIUS reload/restart. Subscriber records can be inserted into `radcheck` and group/policy replies into `radreply` / `radusergroup`; ATLAS exposes NAS and subscriber CRUD endpoints. NAS changes are persisted in the `nas` table but FreeRADIUS reads clients at process startup, so a FreeRADIUS restart/reload is required before a newly created or modified NAS is accepted. Subscriber credentials are never stored in clear text. The API defaults to bcrypt (`Crypt-Password`) for PAP-compatible password verification. Set `credential_mode: "nt_hash"` only when MS-CHAPv2 compatibility is required; NT hashes are legacy and materially weaker, so prefer EAP-TLS where possible. Only one credential attribute is stored per subscriber to avoid ambiguous FreeRADIUS password selection. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
 
@@ -51,7 +51,7 @@ From apps/atlas, copy .env.example to .env, replace all placeholder passwords an
     cp .env.example .env
     docker compose up --build -d
 
-The dashboard is bound to 127.0.0.1:5150 by default. Set `ATLAS_CONTROL_TOKEN` to at least 32 random characters; engine-management endpoints require it as a Bearer token. MariaDB and Redis are internal-only. VictoriaMetrics and VictoriaLogs are exposed on loopback at ports 8428 and 9428. FreeRADIUS UDP ports 1812 and 1813 are also loopback-bound by default.
+The dashboard is bound to 127.0.0.1:5150 by default. Set `ATLAS_CONTROL_TOKEN`, `RADIUS_STATUS_SECRET`, and database/cache passwords to at least 32 random characters. Engine and RADIUS management endpoints require `ATLAS_CONTROL_TOKEN` as a Bearer token. The default internal subnet is `172.31.240.0/24`; override `ATLAS_DOCKER_SUBNET` if it conflicts with an existing route. MariaDB and Redis are internal-only. VictoriaMetrics and VictoriaLogs are exposed on loopback at ports 8428 and 9428. FreeRADIUS UDP ports 1812 and 1813 are also loopback-bound by default.
 
 Do not change RADIUS_BIND_ADDRESS to a public or LAN interface until you have installed a production clients.conf, replaced test certificates, configured real NAS clients with unique strong secrets, configured firewall rules, and set up an authentication/accounting backend.
 
@@ -131,10 +131,10 @@ The initial migration creates the engine registry table; the next migration adds
 ### Planned; not yet implemented
 
 - Unbound and dnsdist native control adapters.
-- FreeRADIUS RADIUS Status-Server probing, SQL module configuration, and secure NAS/subscriber provisioning workflows.
+- FreeRADIUS RADIUS Status-Server probing and SQL-backed NAS/subscriber management APIs.
 - Full PowerDNS zone/record management API adapter.
 - VictoriaMetrics and VictoriaLogs query/configuration APIs beyond basic health probes.
-- Dedicated RADIUS subscriber/accounting database provisioning and schema migrations.
+- Production certificate rotation, RadSec listener profile, and dynamic NAS reload without restarting FreeRADIUS.
 - Collector management, desired/actual state reconciliation, and durable operational jobs.
 - ARSY authorization/approval integration and AEGIS execution integration.
 - HA, backup/restore, secrets management, and production hardening.
