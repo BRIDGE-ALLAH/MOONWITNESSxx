@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | ARSY DECK | `/arsy-deck` | Headquarter / ARSY | Reference UI, demo repository | Public workspace-pulse contract, workspace permission checks, source timestamps, contract tests |
 | SIGNAL ROOM | `/signal-room` | Signal domain / ARSY | Prototype | Evidence/search contracts, provenance, pagination, source freshness |
-| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Prototype | Opportunity lifecycle, evidence provenance, decision permissions |
+| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Partial vertical slice: operator-authenticated capture/list UI and evidence-backed ARSY API on review branch; database migration and live persistence not yet verified | Product lifecycle/versioning, asset provenance/storage, inspection, channel listing, financial events/reconciliation, real PostgreSQL E2E and browser E2E |
 | THE FORGE | `/the-forge` | Production domain / ARSY | Prototype | Brief/product/job contracts, versioning, artifact storage |
 | ZILL WATCH | `/zill-watch` | Quality & policy / ARSY | Prototype | Inspection contract, rights/policy enforcement, review audit |
 | LAUNCH BAY | `/launch-bay` | Distribution / ARSY | Prototype | Verified account/capability contract, allowed publication workflow, external receipt |
