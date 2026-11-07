@@ -41,8 +41,13 @@ export interface ActionGateResult {
 }
 
 export class ReplaySideEffectError extends Error {
-  constructor(readonly action: string, readonly sideEffect: SideEffectClass) {
+  readonly action: string
+  readonly sideEffect: SideEffectClass
+
+  constructor(action: string, sideEffect: SideEffectClass) {
     super(`Replay blocked ${sideEffect} side effect for action "${action}"`)
+    this.action = action
+    this.sideEffect = sideEffect
     this.name = 'ReplaySideEffectError'
   }
 }
