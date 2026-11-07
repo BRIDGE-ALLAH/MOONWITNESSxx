@@ -60,5 +60,6 @@ export async function createApp(options: CreateAppOptions = {}) {
   )
 
   setupDatabase(app, databasePool)
+  registerOpportunityRoutes(app, databasePool, options.env)
   return app
 }
