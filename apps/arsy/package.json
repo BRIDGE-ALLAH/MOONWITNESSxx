@@ -2,7 +2,7 @@
   "name": "@riotworks/arsy",
   "version": "0.0.0",
   "private": true,
-  "description": "RIOTWORKS ARSY HTTP application runtime",
+  "description": "ARSY HTTP application with rate-limited database health checks",
   "main": "src/index.ts",
   "scripts": {
     "dev": "node --watch --experimental-strip-types src/index.ts",
