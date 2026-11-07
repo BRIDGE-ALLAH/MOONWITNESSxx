@@ -6,6 +6,9 @@ import { evaluateOpportunity, opportunityInputSchema } from '../src/opportunitie
 import { OpportunityRepository } from '../src/opportunities/repository.ts'
 import { ProductRepository } from '../src/products/repository.ts'
 import { FinancialRepository } from '../src/finance/repository.ts'
+import { ChannelRepository } from '../src/channels/repository.ts'
+import { InspectionRepository } from '../src/inspections/repository.ts'
+import { ListingRepository } from '../src/listings/repository.ts'
 
 test('PostgreSQL commerce lifecycle persists opportunities, products, and reconciled finance across reconnects', {
   skip: !process.env.DATABASE_URL,
@@ -139,6 +142,74 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(product.lifecycleState, 'brief')
     assert.equal(await products.createFromOpportunity(ownerId, ownerId, created.id, ['Duplicate must be blocked']), null)
 
+
+    const revisedProduct = await products.createVersion(ownerId, ownerId, product.id, {
+      revisionNotes: 'Version two adds clear reorder threshold behavior.',
+      sourceOpportunityId: created.id,
+    }, [
+      'Imports a CSV without losing source rows',
+      'Highlights low-stock items using configurable thresholds',
+      'Documents reorder threshold behavior',
+    ])
+    assert.ok(revisedProduct)
+    assert.equal(revisedProduct.version, 2)
+    assert.equal(revisedProduct.lifecycleState, 'production')
+
+    const inspections = new InspectionRepository(pool)
+    const inspectionTypes = ['rights', 'policy', 'technical', 'creative']
+    let finalInspection
+    for (const inspectionType of inspectionTypes) {
+      finalInspection = await inspections.record(ownerId, ownerId, {
+        productVersionId: revisedProduct.versionId,
+        inspectionType,
+        status: 'pass',
+        findings: [{
+          severity: 'info',
+          description: `Integration fixture confirms the ${inspectionType} inspection contract.`,
+          ...(['rights', 'policy'].includes(inspectionType) ? { evidenceUrl: `https://example.com/${inspectionType}-review` } : {}),
+        }],
+      })
+      assert.ok(finalInspection)
+    }
+    assert.equal(finalInspection.productReady, true)
+    assert.equal(finalInspection.productLifecycleState, 'ready')
+    assert.equal((await inspections.list(ownerId, revisedProduct.versionId)).length, 4)
+
+    const channels = new ChannelRepository(pool)
+    const channel = await channels.create(ownerId, `integration-${randomUUID()}`, 'Integration Manual Channel')
+    assert.equal(channel.capability, 'C0')
+    const reviewedChannel = await channels.review(channel.id, ownerId, {
+      countryEligibility: [{ country: 'ID', status: 'pass', sourceUrl: 'https://example.com/id-eligibility', checkedAt: new Date().toISOString() }],
+      payoutRequirements: { status: 'pass', sourceUrl: 'https://example.com/payout-eligibility', checkedAt: new Date().toISOString(), notes: 'Integration fixture confirms payout setup requirements.' },
+      policyStatus: 'pass',
+      policyUrl: 'https://example.com/channel-policy',
+      policyCheckedAt: new Date().toISOString(),
+      manualFallback: 'The operator uploads the package manually and records the provider listing receipt.',
+    })
+    assert.equal(reviewedChannel?.capability, 'C1')
+    assert.equal(reviewedChannel?.enabled, true)
+
+    const listings = new ListingRepository(pool)
+    const listing = await listings.create(ownerId, ownerId, {
+      productVersionId: revisedProduct.versionId,
+      channelId: channel.id,
+      title: 'Integration product listing',
+      description: 'A manual listing package used to test the channel eligibility and publication receipt workflow.',
+      tags: ['integration', 'digital-utility'],
+      priceMinor: '25000',
+      currency: 'IDR',
+      disclosures: ['Digital product; no physical shipment.'],
+      manualUploadInstructions: 'Upload manually, review the public preview and confirm the price and disclosures before publishing.',
+    })
+    assert.ok(listing)
+    assert.equal(listing.status, 'ready')
+    const published = await listings.recordPublication(
+      ownerId, ownerId, listing.id, 'provider-listing-fixture-001',
+      'https://example.com/publication-receipt', new Date().toISOString(),
+    )
+    assert.equal(published?.status, 'published')
+    assert.equal(published?.providerReference, 'provider-listing-fixture-001')
+
     const finance = new FinancialRepository(pool)
     const grossInput = {
       productId: product.id,
@@ -225,12 +296,21 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
       'reconciled',
       'decision-changed',
       'archived',
+      'channel-created-c0',
+      'reviewed',
+      'inspection-recorded',
+      'manual-listing-package-created',
+      'manual-publication-receipt-recorded',
     ]) {
       assert.ok(actions.includes(expected), `missing audit action: ${expected}`)
     }
   } finally {
     await pool.query('DELETE FROM arsy_commerce_audit_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_financial_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_listings WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_inspections WHERE product_version_id IN (SELECT pv.id FROM arsy_product_versions pv JOIN arsy_products p ON p.id = pv.product_id WHERE p.owner_id = $1)', [ownerId]).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_channels WHERE slug LIKE $1', [`integration-%`]).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_payouts WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query(
       'DELETE FROM arsy_product_versions WHERE product_id IN (SELECT id FROM arsy_products WHERE owner_id = $1)',
       [ownerId],
