@@ -92,8 +92,11 @@ test('opportunity proxy rejects cross-origin mutation with a valid operator cook
 test('authenticated same-origin operator GET forwards the server-only ARSY credential', async () => {
   const restore = configureEnvironment()
   const originalFetch = globalThis.fetch
+  process.env.ARSY_API_BASE_URL = 'https://arsy.internal///'
   let upstreamHeaders
-  globalThis.fetch = async (_url, options) => {
+  let upstreamUrl
+  globalThis.fetch = async (url, options) => {
+    upstreamUrl = String(url)
     upstreamHeaders = options.headers
     return new Response(JSON.stringify({ data: [] }), {
       status: 200,
@@ -105,6 +108,7 @@ test('authenticated same-origin operator GET forwards the server-only ARSY crede
       headers: { cookie: sessionCookie() },
     }))
     assert.equal(response.status, 200)
+    assert.equal(upstreamUrl, 'https://arsy.internal/api/v1/opportunities')
     assert.equal(upstreamHeaders['x-arsy-operator-token'], token)
   } finally {
     globalThis.fetch = originalFetch
