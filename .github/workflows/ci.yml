@@ -28,7 +28,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -41,8 +43,6 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      # Run dependency-free Node scripts before pnpm run. pnpm 12 can verify/install
-      # dependencies before any script invocation when node_modules is absent.
       - name: Generate repository audit report
         run: node scripts/repo-audit.mjs --write-report
 
@@ -53,6 +53,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate repository, formatting, and automation tests
+        env:
+          FORMAT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: pnpm run validate:repo
 
       - name: Upload repository audit
@@ -75,6 +77,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6

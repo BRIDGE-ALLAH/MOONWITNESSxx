@@ -10,7 +10,7 @@ if (staged.error || staged.status !== 0) {
   process.exit(1)
 }
 
-const supportedExtensions = /\.(?:css|html|js|json|jsx|md|mdx|mjs|scss|sh|ts|tsx|yaml|yml)$/
+const supportedExtensions = /\.(?:css|html|js|json|jsx|mjs|scss|sh|ts|tsx|yaml|yml)$/
 const files = staged.stdout.split('\0').filter((file) => file && supportedExtensions.test(file))
 
 if (files.length === 0) {

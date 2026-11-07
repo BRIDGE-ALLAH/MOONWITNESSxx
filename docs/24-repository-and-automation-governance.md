@@ -98,7 +98,8 @@ The lockfile workflow makes one narrow exception to PR governance: the current r
 | `pnpm check:repo` | Read-only workspace and automation audit |
 | `pnpm audit:repo` | Write ignored audit artifacts under `.artifacts/` |
 | `pnpm format` | Format repository files |
-| `pnpm format:check` | Verify formatting |
+| `pnpm format:check` | Verify changed source/config files in the current PR/commit or local diff |
+| `pnpm format:check:all` | Audit Prettier formatting across the full legacy repository |
 | `pnpm lint` | Repository structure and formatting gate |
 | `pnpm type-check` | Run package-level Turbo type-check tasks |
 | `pnpm test` | Run Node.js automation tests |
@@ -109,13 +110,15 @@ The lockfile workflow makes one narrow exception to PR governance: the current r
 
 A package-level task must be backed by an actual implementation and test target. Do not add scripts that only print success, delegate unrelated work, or swallow failures. Root scripts must not use uncontrolled shell backgrounding (`&`) to simulate parallel execution; Turbo owns workspace parallelism and exit-code propagation.
 
-The current `lint` command is the repository hygiene/format gate. A full source-code ESLint configuration is not yet established across the workspace; do not describe this command as comprehensive TypeScript linting until that capability is implemented and verified.
+The current `lint` command is the repository hygiene/format gate. Its incremental Prettier check covers changed source and configuration files; Markdown is excluded from the fast gate while the inherited documentation-format backlog is handled separately. Use `pnpm run format:check:all` to audit the entire tree. A full source-code ESLint configuration is not yet established across the workspace; do not describe this command as comprehensive TypeScript linting until that capability is implemented and verified.
+
+The initial repository-wide Prettier audit found a legacy formatting backlog across many untouched files. Do not reformat unrelated files in a feature PR merely to obtain a green status. A dedicated formatting-only sweep should eventually normalize the full tree, after which the all-files check can become the required gate.
 
 ## 5. Git hooks
 
 ### Pre-commit
 
-The pre-commit hook checks formatting for staged text/config files only. It must:
+The pre-commit hook checks staged source/config files only; Markdown remains part of the later full formatting sweep. It must:
 
 - run locally and quickly;
 - work without network access or external credentials;
