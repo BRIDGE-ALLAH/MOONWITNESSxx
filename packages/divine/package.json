@@ -51,6 +51,21 @@
       "types": "./src/adapters/index.ts",
       "import": "./src/adapters/index.ts",
       "default": "./src/adapters/index.ts"
+    },
+    "./integration-readiness": {
+      "types": "./src/integration-readiness/index.ts",
+      "import": "./src/integration-readiness/index.ts",
+      "default": "./src/integration-readiness/index.ts"
+    },
+    "./evaluation": {
+      "types": "./src/evaluation/index.ts",
+      "import": "./src/evaluation/index.ts",
+      "default": "./src/evaluation/index.ts"
+    },
+    "./temporal": {
+      "types": "./src/temporal/index.ts",
+      "import": "./src/temporal/index.ts",
+      "default": "./src/temporal/index.ts"
     }
   },
   "scripts": {
