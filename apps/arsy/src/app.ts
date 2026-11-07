@@ -3,10 +3,12 @@ import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
+import { registerOpportunityRoutes } from './opportunities/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
   logger?: boolean
+  env?: NodeJS.ProcessEnv
 }
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -15,7 +17,8 @@ export function createApp(options: CreateAppOptions = {}) {
   app.setSerializerCompiler(serializerCompiler)
 
   const typedApp = app.withTypeProvider<ZodTypeProvider>()
-  const databasePool = options.databasePool ?? createDatabasePool()
+  const databasePool = options.databasePool ?? createDatabasePool(options.env)
+  registerOpportunityRoutes(app, databasePool, options.env ?? process.env)
 
   typedApp.get(
     '/',
