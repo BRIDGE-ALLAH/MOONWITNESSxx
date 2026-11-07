@@ -29,10 +29,11 @@ export interface ProvenanceAssuranceCapsule {
 const sortedUnique = (values: readonly string[]) => [...new Set(values)].sort();
 const hex = (bytes: ArrayBuffer) => [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, "0")).join("");
 function canonical(value: unknown): string {
+  if (value === undefined) return "null";
   if (value === null || typeof value !== "object") return JSON.stringify(value);
   if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
   const record = value as Record<string, unknown>;
-  return "{" + Object.keys(record).sort().map((key) => JSON.stringify(key) + ":" + canonical(record[key])).join(",") + "}";
+  return "{" + Object.keys(record).filter((key) => record[key] !== undefined).sort().map((key) => JSON.stringify(key) + ":" + canonical(record[key])).join(",") + "}";
 }
 async function digest(value: unknown): Promise<string> {
   return hex(await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical(value))));
@@ -87,7 +88,7 @@ export function assessSourceLineageIndependence(input: { records: readonly Sourc
   if (missingFamilies) reasonCodes.push("witness-family-unassigned");
   if (unresolved.size) reasonCodes.push("lineage-incomplete-or-missing");
   if (cycles.length) reasonCodes.push("lineage-cycle-detected");
-  const status: LineageIndependenceStatus = shared.size > 0 || duplicateFamilies ? "dependent" : missingFamilies || unresolved.size > 0 || cycles.length > 0 ? "unknown" : "independent";
+  const status: LineageIndependenceStatus = cycles.length > 0 ? "unknown" : shared.size > 0 || duplicateFamilies ? "dependent" : missingFamilies || unresolved.size > 0 ? "unknown" : "independent";
   return { status, selectedSourceRefs: selected, familyIds: sortedUnique(familyIds.filter(Boolean)), sharedAncestorRefs: sortedUnique([...shared]), unresolvedSourceRefs: sortedUnique([...unresolved]), cyclePaths: cycles.map((path) => [...path]), reasonCodes, interpretation: "declared-lineage-only" };
 }
 /** Deterministic red-team mutations for common false-independence failure modes. */
