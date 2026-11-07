@@ -31,7 +31,7 @@ function flattenExportTargets(value, output = []) {
   return output
 }
 
-export export function getProjectLockfileDocument(lockfileContent) {
+export function getProjectLockfileDocument(lockfileContent) {
   const documents = lockfileContent
     .split(/^---\s*$/m)
     .map((document) => document.trim())
