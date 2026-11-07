@@ -98,3 +98,5 @@ export interface UpgradeHandler {
   readonly toVersion: string;
   run(context: UpgradeHandlerContext): Promise<void>;
 }
+
+export { createUnitOfWorkFactory, withUnitOfWork } from "./runtime.js";
