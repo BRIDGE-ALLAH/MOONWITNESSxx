@@ -76,7 +76,9 @@ test('rejects absolute URLs and path traversal before issuing a request', async 
   }
 
   await assert.rejects(arsyRequest('https://untrusted.example/collect'), TypeError)
+  await assert.rejects(arsyRequest('/https://untrusted.example/collect'), TypeError)
   await assert.rejects(arsyRequest('../admin'), TypeError)
+  await assert.rejects(arsyRequest('%2e%2e/admin'), TypeError)
   assert.equal(calls, 0)
 })
 
