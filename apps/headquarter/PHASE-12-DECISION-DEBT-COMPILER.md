@@ -8,8 +8,8 @@ Turn weak decision rationale into a deterministic human-review backlog, includin
 
 ## Detection rules
 - Missing supporting evidence.
-- Supporting evidence past its validity window or with invalid validity timestamp.
-- Supporting evidence with absent/invalid provenance.
+- Linked supporting or contradictory evidence past its validity window or with invalid validity timestamp.
+- Linked evidence with absent/invalid provenance.
 - Unresolved contradictory evidence.
 - Traverse outgoing causes edges to report downstream affected nodes.
 
