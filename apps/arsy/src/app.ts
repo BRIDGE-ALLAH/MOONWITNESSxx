@@ -14,6 +14,7 @@ import { registerListingRoutes } from './listings/routes.ts'
 import { registerAssetRoutes } from './assets/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { registerPayoutAndFxRoutes } from './finance/payout-routes.ts'
+import { registerPortfolioMetricsRoutes } from './analytics/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
@@ -78,6 +79,7 @@ export function createApp(options: CreateAppOptions = {}) {
     registerAssetRoutes(instance, databasePool, env)
     registerLoginAttemptRoutes(instance, databasePool, env)
     registerPayoutAndFxRoutes(instance, databasePool, env)
+    registerPortfolioMetricsRoutes(instance, databasePool, env)
   })
 
   return app
