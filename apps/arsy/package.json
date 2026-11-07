@@ -2,11 +2,12 @@
   "name": "@riotworks/arsy",
   "version": "0.0.0",
   "private": true,
-  "description": "RIOTWORKS ARSY — Command Center (wraps @riotworks/arsy-core)",
+  "type": "module",
+  "description": "RIOTWORKS ARSY application runtime",
   "main": "src/index.ts",
   "scripts": {
     "dev": "node --watch --experimental-strip-types src/index.ts",
-    "build": "pnpm --filter @riotworks/arsy-core run build",
+    "build": "pnpm run type-check",
     "start": "node --experimental-strip-types src/index.ts",
     "lint": "ESLINT_USE_FLAT_CONFIG=false pnpm --filter @riotworks/lint exec eslint --config .eslintrc.json ../../apps/arsy/src --ext .ts --max-warnings 0",
     "type-check": "tsc --noEmit",
@@ -24,6 +25,5 @@
     "@types/pg": "^8.23.1",
     "fastify-cli": "^8.0.3",
     "typescript": "^5.7.2"
-  },
-  "type": "module"
+  }
 }
