@@ -16,6 +16,9 @@ type OpportunityEvidence = {
   collectionMethod: string
   permissionBasis: string
 }
+type Decision = 'blocked' | 'research-more' | 'prototype-candidate' | 'park'
+type DecisionDraft = { decision: Decision; rationale: string }
+
 type Opportunity = {
   id: string
   version: number
@@ -52,6 +55,8 @@ export function OpportunityBoard() {
   const [items, setItems] = useState<Opportunity[]>([])
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null)
   const [archivingId, setArchivingId] = useState('')
+  const [decisionDrafts, setDecisionDrafts] = useState<Record<string, DecisionDraft>>({})
+  const [decisionSavingId, setDecisionSavingId] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [opportunityIdempotencyKey, setOpportunityIdempotencyKey] = useState('')
@@ -88,6 +93,32 @@ export function OpportunityBoard() {
     setError('')
     setMessage('Editing an existing record. Saving creates a new version and requires fresh review.')
     document.getElementById('opportunity-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  async function updateDecision(item: Opportunity) {
+    const draft = decisionDrafts[item.id] ?? { decision: item.evaluation.decision as Decision, rationale: '' }
+    if (draft.rationale.trim().length < 10) {
+      setError('Decision rationale must contain at least 10 characters.')
+      return
+    }
+    setDecisionSavingId(item.id); setError(''); setMessage('')
+    try {
+      const response = await fetch(`/api/opportunities/${item.id}/decision`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ decision: draft.decision, rationale: draft.rationale.trim() }),
+      })
+      const result = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!response.ok) throw new Error(result.error?.message || 'Unable to update opportunity decision.')
+      setDecisionDrafts((current) => ({ ...current, [item.id]: { ...draft, rationale: '' } }))
+      setMessage('Decision updated and recorded in the audit trail.')
+      await refresh()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to update opportunity decision.')
+    } finally {
+      setDecisionSavingId('')
+    }
   }
 
   async function archiveOpportunity(item: Opportunity) {
@@ -203,7 +234,22 @@ export function OpportunityBoard() {
     {error && <div role="alert" className="border border-red-500/50 bg-red-950/20 p-4 text-sm">{error}</div>}
     {message && <div role="status" className="border border-acid-lime/40 p-4 text-sm">{message}</div>}
     <section className="space-y-3"><div className="flex items-end justify-between"><div><h2 className="font-display text-2xl uppercase">Opportunity register</h2><p className="text-xs text-muted-ink">Persisted records from ARSY · no sample rows</p></div><button type="button" onClick={() => void refresh()} className="border border-acid-lime/40 px-4 py-2 font-mono text-xs uppercase">Refresh</button></div>
-      {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading persisted opportunities…</p> : items.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No opportunities recorded yet. Capture the first source-backed buyer problem below.</p> : <div className="grid gap-3 md:grid-cols-2">{items.map((item) => <article key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><div><h3 className="font-display text-xl uppercase">{item.title}</h3><p className="mt-1 font-mono text-[10px] uppercase text-muted-ink">Version {item.version}</p></div><span className="font-mono text-xs text-acid-lime">{item.evaluation.score === null ? 'UNSCORED' : `${item.evaluation.score}/100`}</span></div><p className="mt-2 text-sm text-muted-ink">{item.buyerSegment}</p><p className="mt-3 text-sm">{item.buyerProblem}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase"><span className="border border-acid-lime/30 px-2 py-1">{item.evaluation.decision}</span>{item.evaluation.blockedGates.map((g) => <span key={g} className="border border-red-500/50 px-2 py-1 text-red-300">BLOCKED: {g}</span>)}{item.evaluation.unknownGates.map((g) => <span key={g} className="border border-orange-400/50 px-2 py-1 text-orange-200">UNKNOWN: {g}</span>)}</div><p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs text-muted-ink">Product brief creation is managed in THE FORGE.</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => beginEdit(item)} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase">Edit</button><button type="button" disabled={archivingId === item.id} onClick={() => void archiveOpportunity(item)} className="border border-red-500/40 px-3 py-2 font-mono text-[10px] uppercase text-red-300 disabled:opacity-50">{archivingId === item.id ? 'Archiving…' : 'Archive'}</button></div></article>)}</div>}
+      {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading persisted opportunities…</p> : items.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No opportunities recorded yet. Capture the first source-backed buyer problem below.</p> : <div className="grid gap-3 md:grid-cols-2">{items.map((item) => <article key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><div><h3 className="font-display text-xl uppercase">{item.title}</h3><p className="mt-1 font-mono text-[10px] uppercase text-muted-ink">Version {item.version}</p></div><span className="font-mono text-xs text-acid-lime">{item.evaluation.score === null ? 'UNSCORED' : `${item.evaluation.score}/100`}</span></div><p className="mt-2 text-sm text-muted-ink">{item.buyerSegment}</p><p className="mt-3 text-sm">{item.buyerProblem}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase"><span className="border border-acid-lime/30 px-2 py-1">{item.evaluation.decision}</span>{item.evaluation.blockedGates.map((g) => <span key={g} className="border border-red-500/50 px-2 py-1 text-red-300">BLOCKED: {g}</span>)}{item.evaluation.unknownGates.map((g) => <span key={g} className="border border-orange-400/50 px-2 py-1 text-orange-200">UNKNOWN: {g}</span>)}</div><div className="mt-4 space-y-2 border-t border-acid-lime/15 pt-4">
+          {(() => {
+            const draft = decisionDrafts[item.id] ?? { decision: item.evaluation.decision as Decision, rationale: '' }
+            return <>
+              <label className="block space-y-1 text-[10px] font-mono uppercase text-muted-ink">Operator decision
+                <select aria-label={`Decision for ${item.title}`} value={draft.decision} onChange={(event) => setDecisionDrafts((current) => ({ ...current, [item.id]: { ...draft, decision: event.target.value as Decision } }))} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs text-paper-bone">
+                  <option value="blocked">Blocked</option><option value="research-more">Research more</option><option value="prototype-candidate">Prototype candidate</option><option value="park">Park</option>
+                </select>
+              </label>
+              <label className="block space-y-1 text-[10px] font-mono uppercase text-muted-ink">Decision rationale (minimum 10 characters)
+                <textarea aria-label={`Decision rationale for ${item.title}`} value={draft.rationale} onChange={(event) => setDecisionDrafts((current) => ({ ...current, [item.id]: { ...draft, rationale: event.target.value } }))} rows={2} maxLength={2000} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs text-paper-bone" placeholder="Why this decision is appropriate based on the current evidence." />
+              </label>
+              <button type="button" disabled={decisionSavingId === item.id || draft.rationale.trim().length < 10} onClick={() => void updateDecision(item)} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase disabled:opacity-40">{decisionSavingId === item.id ? 'Saving…' : 'Save decision'}</button>
+            </>
+          })()}
+        </div><p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs text-muted-ink">Product brief creation is managed in THE FORGE.</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => beginEdit(item)} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase">Edit</button><button type="button" disabled={archivingId === item.id} onClick={() => void archiveOpportunity(item)} className="border border-red-500/40 px-3 py-2 font-mono text-[10px] uppercase text-red-300 disabled:opacity-50">{archivingId === item.id ? 'Archiving…' : 'Archive'}</button></div></article>)}</div>}
     </section>
     <form id="opportunity-editor" key={editingOpportunity?.id ?? 'new-opportunity'} onSubmit={saveOpportunity} className="space-y-6 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
       <div className="flex items-start justify-between gap-4"><div><h2 className="font-display text-2xl uppercase">{editingOpportunity ? 'Edit opportunity' : 'Capture opportunity'}</h2><p className="text-xs text-muted-ink">{editingOpportunity ? `Editing version ${editingOpportunity.version}. Changes require fresh review.` : 'One source-backed opportunity per submission. No automated scraping or fabricated demand signals.'}</p></div>{editingOpportunity && <button type="button" onClick={() => { setEditingOpportunity(null); setScores({ ...emptyScores }); setScoreRationales({ ...emptyRationales }); setHardGates({ ...emptyGates }); setGateRationales({ ...emptyGateRationales }); setMessage('Edit cancelled.') }} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase">Cancel edit</button>}</div>
