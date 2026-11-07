@@ -31,13 +31,15 @@ jobs:
           node-version: 24
       - name: Format changed files on isolated branch
         if: github.event_name == 'push'
-        env:
-          FORMAT_BASE_SHA: ${{ github.event.before }}
-        run: pnpm run format
+        run: |
+          export FORMAT_BASE_SHA="$(git merge-base origin/main HEAD)"
+          export FORMAT_EXCLUDE=".github/workflows/refresh-lockfile.yml"
+          pnpm run format
       - name: Commit formatting changes to isolated branch
         if: github.event_name == 'push'
         run: |
-          git diff --name-only -z "${{ github.event.before }}...HEAD" | xargs -0 -r git add --
+          BASE_SHA="$(git merge-base origin/main HEAD)"
+          git diff --name-only -z "$BASE_SHA...HEAD" | xargs -0 -r git add --
           if git diff --cached --quiet; then
             echo "No formatting changes to commit."
             exit 0
