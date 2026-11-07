@@ -44,8 +44,8 @@ export class Customer extends Model {
 }
 ```
 
-- [ ] Confirm this static declaration map as the v1 canonical syntax because it is explicit, introspectable, and avoids relying on JavaScript instance-field initialization.
-- [ ] Keep the declaration inside the model class/module source; it is not a separate schema file or database-first workflow.
+- [x] Confirm this static declaration map as the v1 canonical syntax because it is explicit, introspectable, and avoids relying on JavaScript instance-field initialization.
+- [x] Keep the declaration inside the model class/module source; it is not a separate schema file or database-first workflow.
 - [ ] Add TypeScript inference so field declarations determine create, update, read, and relation types.
 - [ ] Consider property-decorator syntax only as optional ergonomic sugar after the canonical registry works. It must normalize into the same metadata contract and must not create a second declaration system.
 - [ ] Do not make property decorators or experimental TypeScript compiler flags a prerequisite for v1.
@@ -876,3 +876,19 @@ Use these labels consistently when updating this file:
 - [ ] Add comprehensive registry unit and System Mode integration tests.
 
 **Evidence note:** These changes were authored through GitHub repository operations. No clean checkout, package installation, TypeScript compiler, lint, test runner, database service or GitHub Actions result was executed in this work session. The new implementation is therefore an unverified code contribution, not a passing build.
+
+
+## Phase 2 execution log — initial implementation slice
+
+- [x] Add `Model` base class and static `ModelDeclaration` reader.
+- [x] Add programmatic field factories for scalar, relation, computed and related field kinds.
+- [x] Add initial declaration validator and integrate it into registry composition.
+- [x] Add field value inference helper types.
+- [x] Add unit test source for defaults, immutability, unique indexing, decimal bounds, selection uniqueness, relation target and nullability validation.
+- [ ] Run Node 24 test command, TypeScript check, ESLint and formatting in clean CI.
+- [ ] Add compile-time inference fixtures for create/update/read DTOs.
+- [ ] Implement explicit model inheritance and override rules.
+- [ ] Implement computed field dependency validation/evaluation.
+- [ ] Complete Phase 1 database adapter and ARSY Core integration gates.
+
+See `docs/27-phase-2-model-field-engine.md`. Source code has been authored through GitHub operations; no local execution or CI result is claimed.
