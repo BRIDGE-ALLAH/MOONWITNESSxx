@@ -245,6 +245,7 @@ A document stating a rule is not enforcement. A check that covers only part of a
 ## Closure criteria
 
 A row may be marked **CI active** only after:
+
 1. The named test/check exists in the canonical repository.
 2. A positive fixture passes and a negative fixture fails.
 3. The check is wired to the intended workflow/required status.
@@ -252,4 +253,3 @@ A row may be marked **CI active** only after:
 5. An owner reviews the rule and its failure message.
 
 Repository-pending rows require administrator readback. Human-review rows require an identified approving role and recorded decision. Planned rows remain open and MUST NOT be described as enforced.
-
