@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { httpEvidenceUrlSchema } from '../http-url.ts'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { InspectionRepository } from './repository.ts'
@@ -10,7 +11,7 @@ const createSchema = z.object({
   findings: z.array(z.object({
     severity: z.enum(['info', 'warning', 'blocker']),
     description: z.string().trim().min(5).max(2000),
-    evidenceUrl: z.string().url().optional(),
+    evidenceUrl: httpEvidenceUrlSchema.optional(),
   })).min(1).max(100),
 }).superRefine((input, context) => {
   if (input.status === 'pass' && input.findings.some((finding) => finding.severity === 'blocker')) {
