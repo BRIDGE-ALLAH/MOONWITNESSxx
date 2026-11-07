@@ -56,3 +56,19 @@ The current fonts are remotely loaded from Google Fonts. Before production launc
 ## Quality promise
 
 Cinematic is the entry impression; clarity is the lasting impression. A MOONWITNESS screen must remain fast, keyboard-operable, readable, and calm under real operational load.
+
+
+## Signature experiences — the observatory layer
+
+### Signal Constellation
+A relationship field turns a list of disconnected signals into an inspectable map. The visual metaphor is a star chart, but the interaction is evidence-first:
+- A node is a host-provided signal, not an automatically inferred truth.
+- A connecting line is a host-provided relationship; the component never invents edges.
+- Selecting a node reveals its description, provenance, observation time, evidence, and optional confidence.
+- Confidence is shown only when supplied. It must not be presented as probability unless the host defines and documents its calibration.
+
+### Decision Trail
+Decision Trail makes change legible. It is a human-readable sequence of events, with an inspector for rationale and evidence. It is not an audit ledger, event store, or tamper-proof record. Those guarantees belong to backend infrastructure.
+
+### The design principle
+**Make the invisible inspectable.** The interface should expose the relationship, source, uncertainty, and reason behind an important state—not merely decorate a number. If provenance is absent, omit it rather than filling the gap with plausible-looking metadata.
