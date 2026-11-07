@@ -36,13 +36,19 @@ function createPool() {
         const row = {
           id: assetId, product_id: values[2], product_version: values[3], file_name: values[4],
           media_type: values[5], byte_size: String(values[6]), storage_key: values[7], sha256: values[8],
+          idempotency_key: values[9], request_hash: values[10],
           created_at: '2026-11-08T00:00:00.000Z', created_by: values[9],
           source_asset_id: values[10], source_reference: values[11], creator: values[12],
           license: values[13], permission_basis: values[14], tool_model: values[15],
           edit_history: JSON.parse(values[16]), disclosure: values[17],
         }
+        if (assets.has(assetId)) return { rows: [] }
         assets.set(assetId, row)
         return { rows: [row] }
+      }
+      if (sql.includes('WHERE a.owner_id = $1 AND a.idempotency_key = $2')) {
+        const row = [...assets.values()].find((asset) => asset.idempotency_key === values[1])
+        return { rows: row ? [row] : [] }
       }
       if (sql.includes('FROM arsy_assets a')) {
         const row = assets.get(values[1])
@@ -102,7 +108,7 @@ test('asset upload stores bytes, checksum and provenance without exposing storag
     const response = await app.inject({
       method: 'POST',
       url: '/api/v1/assets',
-      headers: { 'x-arsy-operator-token': token },
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'asset-upload-key-0001' },
       payload: {
         productId,
         productVersion,
@@ -133,7 +139,7 @@ test('asset download is private, attachment-only and returns original bytes', as
   const bytes = Buffer.from('private asset bytes')
   try {
     const upload = await app.inject({
-      method: 'POST', url: '/api/v1/assets', headers: { 'x-arsy-operator-token': token },
+      method: 'POST', url: '/api/v1/assets', headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'asset-upload-key-0001' },
       payload: { productId, productVersion, fileName: 'private.png', mediaType: 'image/png', contentBase64: bytes.toString('base64'), provenance },
     })
     assert.equal(upload.statusCode, 201)
@@ -157,7 +163,7 @@ test('asset upload rejects unsupported media and malformed base64 before storage
   const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env })
   try {
     const response = await app.inject({
-      method: 'POST', url: '/api/v1/assets', headers: { 'x-arsy-operator-token': token },
+      method: 'POST', url: '/api/v1/assets', headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'asset-upload-key-0001' },
       payload: { productId, productVersion, fileName: 'payload.svg', mediaType: 'image/svg+xml', contentBase64: 'YWJjZA==', provenance },
     })
     assert.equal(response.statusCode, 400)
@@ -175,7 +181,7 @@ test('inspection records preserve source type and readiness fails closed until a
   const bytes = Buffer.from('asset for inspection')
   try {
     await app.inject({
-      method: 'POST', url: '/api/v1/assets', headers: { 'x-arsy-operator-token': token },
+      method: 'POST', url: '/api/v1/assets', headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'asset-upload-key-0001' },
       payload: { productId, productVersion, fileName: 'asset.txt', mediaType: 'text/plain', contentBase64: bytes.toString('base64'), provenance },
     })
     const response = await app.inject({
