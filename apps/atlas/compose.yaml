@@ -1,12 +1,16 @@
 services:
   mariadb:
     image: mariadb:11.4
+    networks:
+      - atlas_internal
+
     environment:
       MARIADB_DATABASE: atlas
       MARIADB_USER: atlas
       MARIADB_PASSWORD: ${ATLAS_DB_PASSWORD:?Set ATLAS_DB_PASSWORD in the environment}
       MARIADB_ROOT_PASSWORD: ${ATLAS_DB_ROOT_PASSWORD:?Set ATLAS_DB_ROOT_PASSWORD in the environment}
       RADIUS_DB_PASSWORD: ${RADIUS_DB_PASSWORD:?Set RADIUS_DB_PASSWORD in the environment}
+      RADIUS_STATUS_SECRET: ${RADIUS_STATUS_SECRET:?Set RADIUS_STATUS_SECRET in the environment}
     volumes:
       - atlas_mariadb_data:/var/lib/mysql
       - ./docker/mariadb/init/20-radius-db.sh:/docker-entrypoint-initdb.d/20-radius-db.sh:ro
@@ -20,6 +24,9 @@ services:
 
   redis:
     image: redis:7.4-alpine
+    networks:
+      - atlas_internal
+
     environment:
       ATLAS_REDIS_PASSWORD: ${ATLAS_REDIS_PASSWORD:?Set ATLAS_REDIS_PASSWORD in the environment}
     command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$ATLAS_REDIS_PASSWORD\""]
@@ -34,6 +41,9 @@ services:
 
   victoriametrics:
     image: victoriametrics/victoria-metrics:v1.155.0
+    networks:
+      - atlas_internal
+
     command:
       - --storageDataPath=/storage
       - --httpListenAddr=:8428
@@ -45,6 +55,9 @@ services:
 
   victorialogs:
     image: victoriametrics/victoria-logs:v1.53.0
+    networks:
+      - atlas_internal
+
     command:
       - --storageDataPath=/victoria-logs-data
       - --httpListenAddr=:9428
@@ -66,6 +79,14 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "printf 'FreeRADIUS-Statistics-Type = 1\\nMessage-Authenticator = 0x00\\n' | radclient -q -S /run/freeradius-status-secret 127.0.0.1:18121 status"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      atlas_internal:
+        ipv4_address: 172.31.240.20
     restart: unless-stopped
 
   atlas:
@@ -81,6 +102,7 @@ services:
       REDIS_URL: redis://:${ATLAS_REDIS_PASSWORD}@redis:6379/0
       RADIUS_DATABASE_URL: mysql://radius:${RADIUS_DB_PASSWORD}@mariadb:3306/radius
       ATLAS_CONTROL_TOKEN: ${ATLAS_CONTROL_TOKEN:?Set ATLAS_CONTROL_TOKEN in the environment}
+      ATLAS_ENGINE_SECRET_RADIUS_STATUS: ${RADIUS_STATUS_SECRET:?Set RADIUS_STATUS_SECRET in the environment}
       DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-10}
     ports:
       - "127.0.0.1:${ATLAS_PORT:-5150}:5150"
@@ -89,7 +111,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      freeradius:
+        condition: service_healthy
+    networks:
+      atlas_internal:
+        ipv4_address: 172.31.240.10
     restart: unless-stopped
+
+networks:
+  atlas_internal:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${ATLAS_DOCKER_SUBNET:-172.31.240.0/24}
 
 volumes:
   atlas_mariadb_data:
