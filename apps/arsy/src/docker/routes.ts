@@ -133,7 +133,7 @@ export function registerDockerRoutes(app: FastifyInstance, pool: DatabasePool, e
     const row = result.rows[0]
     if (!row) return reply.code(404).send({ error: { code: 'DOCKER_SERVER_NOT_FOUND' } })
     try {
-      const containers = await listDockerContainers(connectionFor(row, env))
+      const containers = await listDockerContainers(await connectionFor(row, env))
       return { data: { containers, truncated: containers.length === 100 } }
     } catch {
       return reply.code(502).send({ error: { code: 'DOCKER_ENGINE_UNAVAILABLE', message: 'Docker container inventory is unavailable.' } })
@@ -155,7 +155,7 @@ export function registerDockerRoutes(app: FastifyInstance, pool: DatabasePool, e
     const row = result.rows[0]
     if (!row) return reply.code(404).send({ error: { code: 'DOCKER_SERVER_NOT_FOUND' } })
     try {
-      const logs = await getDockerContainerLogs(connectionFor(row, env), containerId)
+      const logs = await getDockerContainerLogs(await connectionFor(row, env), containerId)
       return { data: { containerId, logs, tail: 200 } }
     } catch {
       return reply.code(502).send({ error: { code: 'DOCKER_LOGS_UNAVAILABLE', message: 'Container logs are unavailable.' } })
