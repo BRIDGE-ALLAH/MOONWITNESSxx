@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { AssetRepository } from './repository.ts'
-import { LocalAssetStorage } from './storage.ts'
+import { createAssetStorage } from './storage.ts'
 import { httpUrlSchema } from '../http-url.ts'
 
 const allowedMediaTypes = new Set([
@@ -41,7 +41,7 @@ const MAX_BYTES = 5 * 1024 * 1024
 
 export function registerAssetRoutes(app: FastifyInstance, db: DatabasePool, env: NodeJS.ProcessEnv = process.env): void {
   const repository = new AssetRepository(db)
-  const storage = new LocalAssetStorage(env.ARSY_ASSET_STORAGE_DIR)
+  const storage = createAssetStorage(env)
   const ownerId = env.ARSY_OPERATOR_ID?.trim() ?? ''
   const actorId = ownerId
 
@@ -108,7 +108,10 @@ export function registerAssetRoutes(app: FastifyInstance, db: DatabasePool, env:
         .header('content-disposition', `attachment; filename*=UTF-8''${encodeURIComponent(asset.filename)}`)
         .header('x-content-sha256', asset.checksumSha256 ?? '')
         .send(content)
-    } catch {
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+        return reply.code(404).send({ error: { code: 'ASSET_CONTENT_NOT_FOUND', message: 'The stored asset binary is missing.' } })
+      }
       return reply.code(503).send({ error: { code: 'ASSET_CONTENT_UNAVAILABLE', message: 'Asset metadata exists but its stored binary could not be read.' } })
     }
   })
