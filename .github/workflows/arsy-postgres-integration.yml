@@ -58,7 +58,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Apply migrations to isolated PostgreSQL
-        run: pnpm --filter @riotworks/arsy migrate:up
+        run: |
+          pnpm --filter @riotworks/arsy migrate:up
+          pnpm --filter @riotworks/arsy migrate:up
 
       - name: Verify persistence across database reconnects
         run: pnpm --filter @riotworks/arsy test:integration
