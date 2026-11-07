@@ -1,164 +1,67 @@
 # 15 — Roadmap & Acceptance Criteria
 
-**Status:** Approved execution baseline  
-**Version:** 1.1  
-**Updated:** 2026-11-07
+**Status:** Approved execution baseline | **Version:** 1.2 | **Updated:** 2026-11-07
 
 ## 1. Delivery strategy
-
-Build the business loop in small increments. The visual prototype, backend runtime, ORM, adapters, addons, and revenue operations are separate milestones. Do not claim a target package exists until code, tests, and build checks prove it.
+Build incrementally. Visual prototype, backend runtime, ORM, SQL providers, addons, and commercial workflows are separate milestones. Do not claim a package exists until code, tests, and build checks prove it.
 
 ## 2. Phases
-
 ### Phase 0 — Product and architecture baseline
-Narrative, business model, marketplace matrix, product factories, autonomy, Headquarter IA, design DNA, monorepo, Fastify, ORM/addon architecture, BaseEntity, audit, adapter boundaries.
-
-Exit: documentation is internally consistent and a coding agent can scaffold without inventing package responsibilities.
+Narrative, business model, marketplace matrix, factories, autonomy, Headquarter IA, design DNA, monorepo, Fastify, ORM/addons, minimal BaseEntity, audit, provider portability, programmatic schema API. Exit: docs are internally consistent and coding agents need not invent package/schema responsibilities.
 
 ### Phase 1 — Headquarter prototype
-- apps/headquarter.
-- RIOTWORKS design system.
-- ARSY DECK, SIGNAL ROOM, RIOT RADAR, THE FORGE, ZILL WATCH.
-- Secondary module shells.
-- Dark/light themes and local interactions.
-- Explicit demo data.
+apps/headquarter, design system, ARSY DECK, SIGNAL ROOM, RIOT RADAR, THE FORGE, ZILL WATCH, secondary module shells, dual themes, explicit demo data. Exit: responsive UI, no dead controls, no fake integrations.
 
-Exit: responsive UI, no dead controls, no fake integrations, visual acceptance met.
+### Phase 2 — Workspace and contracts
+pnpm workspace, TypeScript/lint, types, contract, minimal apps/arsy, typed Headquarter API client. Exit: build/typecheck, health route and contract tests.
 
-### Phase 2 — Workspace and shared contracts
-- pnpm monorepo.
-- Root TypeScript/lint configuration.
-- packages/types.
-- packages/contract.
-- packages/lint.
-- apps/arsy minimal Fastify bootstrap.
-- Headquarter typed API client.
-
-Exit: all workspace packages build/typecheck; health route and contract tests pass.
-
-### Phase 3 — ARSY runtime core
-- packages/arsy-core.
-- Fastify app factory.
-- Plugin/lifecycle management.
-- Config validation.
-- Health/readiness.
-- Structured logging and errors.
-- Graceful shutdown.
-
-Exit: ARSY starts and stops cleanly; Fastify injection tests pass.
+### Phase 3 — ARSY runtime
+arsy-core, Fastify factory, lifecycle, config validation, health/readiness, logs/errors, graceful shutdown. Exit: clean start/stop and Fastify injection tests.
 
 ### Phase 4 — ORM foundation
-- packages/orm.
-- Metadata/field builders.
-- Model registry.
-- Model extension and composition.
-- Query/domain AST.
-- Addon manifest and dependency resolution.
-- Typed CRUD abstractions.
+Metadata/fields, registry, extension/composition, query AST, addon manifest/dependencies, typed CRUD. Exit: deterministic composition and invalid conflict/cycle errors.
 
-Exit: registry and model composition tests pass; invalid conflicts and cycles fail explicitly.
+### Phase 5 — Database runtime and SQL adapters
+orm-db, provider-neutral contract, PostgreSQL/libSQL adapters, capability matrix, Kysely internal query execution, private schema API, schema-state ledger. Exit: shared provider tests pass, unsupported capability errors are explicit, sync is idempotent/recoverable.
 
-### Phase 5 — DB runtime and PocketBase adapter
-- packages/orm-db.
-- packages/orm-db-adaptor.
-- packages/orm-db-adaptor-pocketbase.
-- Capability matrix.
-- PocketBase contract tests.
-- Automatic schema reconciliation, generated PocketBase artifact workflow, and schema-sync/recovery runbook.
-
-Exit: supported operations pass adapter tests and unsupported capabilities fail with typed errors. No false transaction/join claims.
-
-### Phase 6 — Base addon and shared audit
-- packages/orm-addon-base.
-- Automatically composed BaseEntity.
-- active/archive/restore behavior.
-- created/updated timestamps and actor fields.
-- central AuditTrail service and lifecycle hooks.
-
-Exit: new test addon receives common fields without redeclaring them; audit is generated centrally with failure-mode tests.
+### Phase 6 — Base addon and audit
+Minimal BaseEntity: id, createdAt, updatedAt. Opt-in ownership/archive/toggle/version/soft-delete mixins. Central AuditTrail and transaction/outbox. Exit: fields composed once, optional mixins only when requested, audit consistency tested.
 
 ### Phase 7 — Domain addons
-- packages/orm-addon-project.
-- packages/orm-addon-intelligent.
-- Their models, services, migrations, and permission declarations.
+Project and Intelligent models/services/permissions; typed data-upgrade handlers only for semantic data transformations. Exit: dependency order and no duplicate base/audit fields.
 
-Exit: each addon installs in dependency order and uses base fields/audit without duplication.
+### Phase 8 — Headquarter/ARSY integration
+Auth/permissions, typed APIs, audit/approval views, asset/product workflows. Exit: frontend/backend contract and integration tests.
 
-### Phase 8 — Headquarter and ARSY business integration
-- Auth and permissions.
-- Project and Intelligent API modules.
-- Replace selected demo data with real typed endpoints.
-- Audit/approval views.
-- Asset and product workflows.
+### Phase 9 — First commercial slice
+One Digital Utility and one Stock Asset product family, evidence/provenance, inspection/listing package, manual marketplace submission first, financial reconciliation. Exit: real product QA and submitted through an allowed channel; actual financial records reconciled.
 
-Exit: Headquarter-to-ARSY contract and integration tests pass.
-
-### Phase 9 — First real commercial slice
-- One useful Digital Utility product family.
-- One original Stock Asset product family.
-- Evidence and provenance.
-- Inspection and listing package.
-- Manual marketplace submission first.
-- Actual statement/fee/payout reconciliation.
-
-Exit: at least one real product passes QA and is submitted through an allowed channel; real financial records are reconciled.
-
-### Phase 10 — Safe automation and portfolio learning
-- Job scheduler and worker execution.
-- Approval inbox and budgets.
-- Official marketplace integrations only after exact capability verification.
-- Aftershock experiments and portfolio retirement.
-
-Exit: repeatable, observable, bounded automation with safe recovery.
+### Phase 10 — Safe automation
+Job scheduler/workers, approval inbox/budgets, verified marketplace integrations, Aftershock experiments and portfolio retirement. Exit: observable, bounded automation with recovery.
 
 ## 3. First commercial pilot
-
-Start with:
-1. An original useful digital utility, e.g. a tested small-business spreadsheet/template.
-2. An original differentiated stock asset collection.
-3. One affiliate media experiment only after actual account eligibility, product truth, and disclosure requirements are checked.
-
-Do not activate every factory/channel at the same time.
+Start with one useful digital utility, one differentiated stock asset collection, optionally one affiliate experiment after eligibility, product truth, and disclosures are checked. Do not activate every factory/channel at once.
 
 ## 4. Technical acceptance
-
-- apps/headquarter is the frontend application; no generic apps/web.
-- apps/arsy starts Fastify through packages/arsy-core.
-- Package names and boundaries match docs/18.
-- TypeScript workspace builds and typechecks.
-- packages/orm supports declarative metadata, model registry, schema diff, and idempotent reconciliation.
-- Addon dependencies resolve deterministically.
-- orm-addon-base supplies common fields and central audit.
-- Project and Intelligent addons do not duplicate base fields.
-- PocketBase adapter capability declaration matches tested behavior.
-- Ordinary model additions do not require manually authored addon migration files.
-- Generated PocketBase-native schema artifacts are reproducible and version-controlled.
-- Destructive/data-semantic changes use explicit typed data-upgrade handlers.
+- apps/headquarter is the frontend; no apps/web.
+- ARSY starts Fastify through arsy-core.
+- Package boundaries match docs/18 and docs/21.
+- ORM/addon composition is deterministic.
+- BaseEntity injects only id, createdAt, updatedAt.
+- Optional mixins have distinct semantics and tests.
+- Required SQL audit writes are transactionally consistent.
+- PostgreSQL/libSQL pass shared portable adapter tests.
+- Routine model additions need no handwritten schema files.
+- Private schema API applies safe changes and records receipts.
+- Destructive/semantic changes require explicit plan, authorization, typed handling.
 - No untrusted code loading or raw secrets in client/logs.
-- Contract schemas are shared between frontend and backend.
-- Tests cover happy paths, failures, unsupported operations, and permissions.
+- Shared contracts and provider-specific tests are maintained.
 
 ## 5. Business acceptance
-
-- Opportunity scores cite dated evidence and show confidence.
-- Products have clear buyer/job/differentiation.
-- Rights, licenses, and AI disclosures are recorded.
-- Channel eligibility and fees are verified at activation.
-- Distribution mode is honestly labeled.
-- Financial data distinguishes gross, fees, pending, settled, refunds, payouts, and costs.
-- Net contribution can be reconciled to source evidence.
-- No fake traffic, orders, reviews, clicks, or sales.
+Opportunity scores cite dated evidence/confidence. Products have clear buyer/job/differentiation. Rights/licenses/AI disclosures are recorded. Channel eligibility/fees verified. Revenue, fees, pending/settled, refunds, payouts, costs are distinct. Net contribution reconciles to evidence. No fabricated traffic, orders, reviews, sales.
 
 ## 6. Design acceptance
-
-- RIOTWORKS identity is recognizable without logo.
-- Extreme Riot + MoonWitness Comic + Industrial + Game HUD DNA is coherent.
-- Night Riot and Paper Riot themes are intentional.
-- Characters are original and consistent.
-- Data, tables, finance, and forms remain accessible.
-- No generic SaaS template drift.
-- Responsive, keyboard-usable, reduced-motion aware.
+RIOTWORKS identity, Extreme Riot + MoonWitness Comic + Industrial + Game HUD DNA, Night Riot/Paper Riot themes, consistent original characters, accessible data/forms, responsive and keyboard use, reduced motion. Avoid generic SaaS drift.
 
 ## 7. Definition of done
-
-A feature is complete only when its user problem, domain state, permission rules, failure behavior, tests, logs/audit, documentation, and user-visible states are all covered. Do not mark scaffolding or placeholder folders as completed features.
+A feature is complete only when user problem, domain state, permissions, failure behavior, tests, audit/logs, docs, and visible states are covered. Scaffolding/placeholders are not done.

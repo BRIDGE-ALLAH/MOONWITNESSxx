@@ -1,247 +1,48 @@
 # 19 — ORM Addon Development Guide
 
-**Status:** Approved developer contract  
-**Version:** 1.1  
-**Updated:** 2026-11-07
+**Status:** Approved developer contract | **Version:** 1.2 | **Updated:** 2026-11-07
 
 ## 1. Purpose
+Addon authors declare models/behavior in TypeScript. ORM composes BaseEntity; orm-db reconciles schema programmatically. Addons never import Kysely, raw SQL, database drivers, or provider APIs. No hand-authored schema migration files for ordinary model edits.
 
-This guide defines how RIOTWORKS developers and coding agents create ORM addons. Addon authors declare desired models in TypeScript. The ORM composes shared base metadata and reconciles the database schema programmatically.
+## 2. Addon contract
+Each addon has unique technical name, semantic version, ORM compatibility, manifest, public exports, models, services/hooks, permissions, optional typed data-upgrade handlers, tests, docs. Persisted business addons depend on base unless documented otherwise.
 
-**Do not write a schema migration file for every new field or ordinary model edit.**
+## 3. Models
+Manifest declares dependencies, models, services, permissions, optional data-upgrade handlers; no routine migration list. Models declare only domain fields, constraints, indexes, relations. Registry injects id, createdAt, updatedAt. Duplicates are fatal registry conflicts.
 
-## 2. Addon package contract
+## 4. Optional mixins
+createdBy/updatedBy: actor attribution; archivedAt/archivedBy: recoverable archive; version: optimistic concurrency; active/enabled: independent toggle; deletedAt: soft-delete. Apply only when domain requires semantics. Do not use active=false for archive/business status/deletion.
 
-Each addon is a workspace package with:
-- unique technical name;
-- semantic version;
-- manifest;
-- public exports;
-- model/schema declarations;
-- services and hooks;
-- optional typed data-upgrade handlers;
-- tests and documentation.
+## 5. Extension
+Extend only models from declared dependencies. Registry validates dependencies, collisions, type compatibility, deterministic order. No import-time model mutation/private cross-addon imports.
 
-Example: packages/orm-addon-project  
-Package name: @riotworks/orm-addon-project.
+## 6. Schema sync
+Compose models/BaseEntity/mixins → read actual schema/capabilities → deterministic plan → classify operations → authorized setup/release applies safe changes → run typed data-upgrade handlers if needed → verify/receipt. Repeated sync is a no-op. Safe additions: table, nullable field, portable default, compatible index, optional relation. Renames/type changes/required-field backfill/enum remap/split-merge/semantic changes require handler/mapping. Drops never automatic.
 
-Every persisted business addon depends on base unless a documented framework-only exception applies.
+## 7. Data-upgrade handlers
+Trusted TypeScript, not raw SQL; only for semantic transformation. Require stable ID/version boundary, pre/postconditions, idempotency, bounded batches, checkpoints, pause/resume, progress, audit context, timeout/budget, recovery notes. Long jobs run in workers/deployment task.
 
-## 3. Manifest example
+## 8. BaseEntity/mixins
+BaseEntity has id, createdAt, updatedAt only. Optional OwnershipAttribution, Archiveable, Versioned, Toggleable, SoftDeletable; each documents query and authorization semantics.
 
-    export const projectAddon = defineAddon({
-      name: "project",
-      version: "1.0.0",
-      description: "Project and task management domain",
-      engine: { orm: "^1.0.0" },
-      depends: { base: "^1.0.0" },
-      models: [Project, ProjectTask],
-      services: [projectService]
-    });
+## 9. AuditTrail
+Base owns generic record-change audit. Addons may publish domain events but never duplicate generic audit. SQL mutation and required audit insert share a transaction. External delivery uses transactional outbox. Redact secrets.
 
-Models are the schema declaration. The addon manifest does not need a hand-authored migration list for normal field changes.
+## 10. Portability
+Use portable field/query APIs, UTC, exact money, tested common JSON/relation behavior. Do not assume row locks, concurrent SQLite writers, arrays, native enums, identical collations, vendor JSON. Same public API for portable features does not imply same performance/capabilities. Connection string change does not transfer data.
 
-## 4. Model example
+## 11. Developer workflow
+Edit model → request private schema plan → review → safe local reconcile → tests both providers → commit model/typed handler code → CI plan/compatibility → one serialized release sync. All entrypoints call one SchemaReconciliationService.
 
-    export const Project = defineModel({
-      name: "project.project",
-      label: "Project",
-      fields: {
-        name: fields.string({
-          required: true,
-          maxLength: 160
-        }),
-        description: fields.text({
-          nullable: true
-        }),
-        state: fields.selection({
-          values: ["draft", "active", "completed", "cancelled"],
-          default: "draft"
-        }),
-        startAt: fields.datetime({
-          nullable: true
-        })
-      },
-      indexes: [
-        index("project_name_idx", ["name"])
-      ]
-    });
+## 12. Disable/uninstall
+Disabling prevents services/routes/jobs loading. Uninstall never auto-drops tables or records. Export/retention/destructive removal require approved operation, impact report, verified backup.
 
-Intentionally absent:
-- id
-- active
-- createdAt
-- updatedAt
-- createdBy
-- updatedBy
-- generic audit fields/methods
+## 13. Tests
+Manifest/dependency, extension, BaseEntity once, mixins, conflict detection, query validation, plan determinism, idempotency/recovery, handler pre/postconditions, audit transactions, provider capabilities, export/typecheck.
 
-These are centrally composed from orm-addon-base by the ORM registry. Addon authors do not redeclare them.
+## 14. Project addon
+Owns Project domain fields/behavior only; reuses BaseEntity, mixins, central AuditTrail.
 
-## 5. Automatic model extension
-
-An addon can extend a model owned by a declared dependency:
-
-    export const ProjectIntelligenceExtension = extendModel(
-      "project.project",
-      {
-        fields: {
-          aiSummary: fields.text({ nullable: true }),
-          intelligenceState: fields.selection({
-            values: ["not_requested", "queued", "ready", "failed"],
-            default: "not_requested"
-          })
-        }
-      }
-    );
-
-The extending addon declares a dependency on the addon that owns the model. Registry composition validates field names, types, ordering, and conflicts.
-
-No import-time side effects or hidden global model mutations.
-
-## 6. Schema reconciliation behavior
-
-When the addon registry changes:
-1. ORM composes model metadata, including BaseEntity.
-2. Schema reconciler obtains actual schema from the active adapter.
-3. Reconciler calculates a deterministic schema diff.
-4. Changes are classified.
-5. Safe changes are synchronized according to environment policy.
-6. Any required data-upgrade handler runs.
-7. The resulting schema is verified and its fingerprint recorded.
-
-A repeated synchronization with no new change must be a no-op.
-
-Safe automatic changes:
-- New collection/model.
-- Add nullable field.
-- Add field with explicit safe default if adapter supports it.
-- Add compatible index.
-- Add optional relation when adapter supports it.
-- Non-breaking metadata edits.
-
-Explicit data-upgrade cases:
-- Rename a field with a declared mapping.
-- Convert data type/precision.
-- Backfill before making a field required.
-- Split or merge fields.
-- Change semantic meaning or relationship ownership.
-- Destructive removal.
-
-For a rename, developers should declare metadata such as:
-
-    fields: {
-      displayName: fields.string({
-        required: true,
-        renamedFrom: "name"
-      })
-    }
-
-The reconciler must verify that this mapping is unambiguous. It must not guess that a removed field and a new field are the same thing.
-
-## 7. Typed data-upgrade handlers
-
-Only when data transformation is necessary, an addon may declare a typed handler:
-
-    export const projectDataUpgrades = [
-      defineDataUpgrade({
-        id: "project-name-to-display-name",
-        from: "1.0.0",
-        to: "1.1.0",
-        async run(context) {
-          // Use the ORM's typed record APIs.
-          // Process bounded batches.
-          // Be idempotent and report checkpoints.
-        }
-      })
-    ];
-
-Handlers require:
-- version boundary;
-- precondition and postcondition;
-- idempotency;
-- bounded batch size;
-- checkpoint/resume behavior for large datasets;
-- structured progress and errors;
-- audit context;
-- explicit data-loss risk declaration.
-
-Do not make routine schema additions into data-upgrade handlers. Do not put raw SQL in addon handlers by default. Use ORM record operations and adapter-supported operations.
-
-## 8. BaseEntity and AuditTrail
-
-The ORM composes BaseEntity for every persisted model:
-- stable ID.
-- active=true by default.
-- centrally managed created/updated timestamps.
-- trusted actor fields.
-- optional version.
-- central archive metadata.
-
-On PocketBase, canonical ORM fields may map to native PocketBase system fields (for example id/created/updated) instead of creating duplicate physical columns. Adapter mapping is responsible for provider-specific names.
-
-The active flag is distinct from a domain status. Project state=completed means work is complete; Project active=false means it is archived/deactivated in normal queries.
-
-The base ORM lifecycle automatically emits generic AuditTrail events. Addons must not create duplicate generic audit tables or copy-paste audit hooks. Domain-specific events may exist only when they describe a business event beyond generic record changes.
-
-## 9. PocketBase-specific development flow
-
-- Declare models and fields in the addon package.
-- Run schema sync in development.
-- The PocketBase adapter maps desired metadata to supported collection operations.
-- When collection changes are made through PocketBase's Dashboard or Web API with automigrate enabled, PocketBase generates native pb_migrations files.
-- RIOTWORKS can also generate provider-native artifacts from the schema plan.
-- Review and commit the generated PB artifacts with the addon/model change.
-- Production applies them through the PocketBase migration engine.
-
-Ordinary addon authors do not hand-write PB migration JavaScript or raw SQL for a new field. Do not change PocketBase's internal SQLite tables directly.
-
-## 10. Addon lifecycle and uninstall
-
-- Discover approved workspace addon.
-- Validate manifest and version compatibility.
-- Resolve dependencies and cycles.
-- Compose model registry.
-- Preview schema changes.
-- Apply safe sync.
-- Run explicit data-upgrade handler if required.
-- Verify and record addon/schema fingerprint.
-- Initialize services.
-
-Uninstall or disable must not silently drop tables, collections, or user data. It deactivates the addon and marks owned resources; physical removal requires an explicit export/backup and destructive plan.
-
-## 11. Adapter capability constraints
-
-Declarative relation metadata does not imply every adapter supports SQL joins, transactions, or all operators.
-
-The ORM must check the adapter capability registry. Unsupported eager expansion, atomic bulk writes, constraints, type changes, and schema operations fail explicitly.
-
-## 12. Required tests for every addon
-
-- Manifest validation.
-- Dependency resolution.
-- Model registration and extension.
-- BaseEntity composition without duplicate declarations.
-- Schema diff and deterministic plan.
-- Safe sync idempotency.
-- Data-upgrade handler pre/postconditions.
-- Field validation and relations.
-- Permission checks.
-- Lifecycle hook order.
-- Central audit event generation.
-- Adapter compatibility behavior.
-- Package exports and typecheck.
-
-## 13. Project addon
-
-May own Project, ProjectTask, ProjectMilestone, ProjectMembership, and ProjectLabel. It owns project-specific fields, constraints, and services—not shared IDs, active flags, timestamps, or generic audit.
-
-## 14. Intelligent addon
-
-May own AIProvider, AIModel, ModelCapability, Agent, AgentRole, AgentRun, AgentTask, ToolDefinition, ToolExecution, PromptTemplate, PromptVersion, KnowledgeSource, EvaluationSuite, EvaluationRun, UsageRecord, CostRecord, and GuardrailPolicy.
-
-It stores references to protected secrets, not provider credentials. Agent/model usage must be attributable to a run/task and support cost visibility.
-
-## 15. Definition of done
-
-An addon is ready only when its manifest, models, services, permissions, schema declarations, optional data-upgrade handlers, tests, documentation, and compatibility behavior are complete. It must reuse BaseEntity, central AuditTrail, and the programmatic schema reconciler.
+## 15. Intelligent addon
+Owns AI/agent domain fields/behavior only. Stores secret references, not raw credentials; attributes usage/cost to run/task.

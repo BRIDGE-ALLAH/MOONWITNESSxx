@@ -121,4 +121,4 @@ Mobile: prioritized cards, stacked tables, critical approvals and alerts accessi
 
 ## 7. API boundary
 
-Headquarter reads/writes business state through ARSY's versioned API using packages/contract. It must never access PocketBase superuser credentials or database adapters directly. Demo mode must be visually explicit.
+Headquarter reads/writes business state through ARSY's versioned API using packages/contract. It must never access database credentials, database adapters, or private schema-administration operations directly. Demo mode must be visually explicit.

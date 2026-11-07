@@ -69,10 +69,13 @@ Channels are enabled only after current country eligibility, payout, policy, fee
 
 - **packages/arsy-core** — Fastify platform core, lifecycle, plugins, configuration, health, and shared runtime facilities.
 - **packages/orm** — custom Odoo-inspired metadata-driven ORM and addon registry.
-- **packages/orm-db** — database runtime, schema reconciliation, safe synchronization, upgrade coordination, and transactions.
-- **packages/orm-db-adaptor** — database adapter contracts, capability declarations, and registry.
-- **packages/orm-db-adaptor-pocketbase** — PocketBase adapter and generated PocketBase-native schema artifacts.
-- **packages/orm-addon-base** — shared base entities, active state, timestamps, and audit trail.
+- **packages/orm-db** — database runtime, transactions, unit-of-work, programmatic schema reconciliation, and data-upgrade coordination.
+- **packages/orm-db-adaptor** — provider-neutral contracts, capabilities, and registry.
+- **packages/orm-db-adaptor-postgres** — PostgreSQL adapter for production.
+- **packages/orm-db-adaptor-libsql** — libSQL/SQLite-compatible adapter for local/single-node deployments.
+- **packages/orm-addon-base** — minimal BaseEntity, opt-in lifecycle mixins, central audit.
+
+PostgreSQL is recommended for production; libSQL is the lightweight/single-node option. Kysely is internal to SQL adapters. PocketBase is not part of v1 persistence.
 - **packages/orm-addon-project** — project-domain models and services.
 - **packages/orm-addon-intelligent** — AI, agents, models, prompts, tools, runs, evaluations, and usage.
 - **packages/types** — shared framework-agnostic TypeScript types.
@@ -118,7 +121,8 @@ Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm
 | [docs/17-glossary.md](./docs/17-glossary.md) | Canonical terminology |
 | [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md) | Workspace, packages, ORM, adapter architecture |
 | [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md) | Addon manifests, model inheritance, base fields |
-| [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md) | Automatic schema sync, generated PocketBase artifacts, data upgrades |
+| [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md) | ARSY internal schema API and programmatic reconciliation |
+| [docs/21-database-provider-strategy.md](./docs/21-database-provider-strategy.md) | PostgreSQL/libSQL decision, portability, BaseEntity mapping |
 
 ## Current status
 
@@ -130,7 +134,7 @@ Recommended delivery sequence:
 2. Build the apps/headquarter visual prototype.
 3. Scaffold the TypeScript monorepo and package contracts.
 4. Implement packages/orm and orm-addon-base with automatic schema reconciliation.
-5. Implement the PocketBase adapter and generated native schema artifacts with explicit capability limits.
+5. Implement PostgreSQL and libSQL adapters behind one contract and prove portability with shared integration tests.
 6. Build apps/arsy and connect Headquarter through typed contracts.
 7. Add Project and Intelligent addons.
 8. Validate the first real product-to-marketplace workflow.
@@ -152,7 +156,7 @@ Cash received, pending commissions, estimated royalties, tax withholding, FX, an
 
 ## Documentation status
 
-Product definition and architecture baseline: **v1.1**, updated 2026-11-07. This is a finalized specification baseline, not a claim that software, integrations, business results, or platform approvals are already complete.
+Product definition and architecture baseline: **v1.2**, updated 2026-11-07. This is a finalized specification baseline, not a claim that software, integrations, business results, or platform approvals are already complete.
 
 ---
 

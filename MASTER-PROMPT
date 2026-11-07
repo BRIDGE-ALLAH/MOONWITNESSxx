@@ -1,7 +1,7 @@
-# MASTER PROMPT v3.1 — MOONWITNESS // RIOTWORKS
+# MASTER PROMPT v3.2 — MOONWITNESS // RIOTWORKS
 ## Full-Stack Headquarter + ARSY + Modular ORM/Addons
 
-**Specification baseline:** README.md and docs/01–19  
+**Specification baseline:** README.md and docs/01–21  
 **Primary outcome:** Build a modular monorepo with apps/headquarter, apps/arsy, and the packages defined below.  
 **Product tagline:** MAKE WORK THAT OUTLIVES THE FEED.
 
@@ -135,12 +135,19 @@ packages/
     src/registry.ts
     src/errors.ts
     src/index.ts
-  orm-db-adaptor-pocketbase/
+  orm-db-adaptor-libsql/
     src/client/
     src/adapter/
-    src/query-compiler/
+    src/query/
     src/schema/
-    src/schema-artifacts/
+    src/capabilities/
+    src/index.ts
+    tests/
+  orm-db-adaptor-postgres/
+    src/client/
+    src/adapter/
+    src/query/
+    src/schema/
     src/capabilities/
     src/index.ts
     tests/
@@ -220,7 +227,7 @@ Responsibilities:
 - Display of task status, approvals, financial summaries, and audit information.
 
 Headquarter MUST NOT:
-- Connect directly to PocketBase as superuser.
+- Connect directly to any database with privileged credentials or schema-administration rights.
 - contain database drivers or ORM persistence logic.
 - hold API keys, marketplace secrets, or provider credentials.
 - execute privileged marketplace mutations.
@@ -382,288 +389,67 @@ Do not keep mutable per-request user context in global singletons.
 
 # 6A. Programmatic schema management — mandatory architecture
 
-**Do not require addon authors to hand-write schema migration files for ordinary model changes.** Addon model declarations are the canonical desired schema. The ORM owns schema diffing, reconciliation, version tracking, and adapter-specific execution.
+Desired schema source: trusted TypeScript addon models composed by ORM registry. Execution owner: packages/orm-db. Physical operations: selected SQL adapter. Trigger: private ARSY operations API and same service exposed to CLI/CI/deployment.
 
-Required flow:
-1. Discover and validate addon manifests.
-2. Resolve dependencies and compose all model metadata, including BaseEntity.
-3. Ask the active adapter for actual schema state and capabilities.
-4. Compare desired registry schema with actual schema.
-5. Produce a deterministic, explainable SchemaChangePlan.
-6. Classify each change as SAFE_AUTO, REQUIRES_DATA_UPGRADE, DESTRUCTIVE, or UNSUPPORTED.
-7. Apply eligible safe changes through the adapter's supported programmatic mechanism.
-8. Run typed data-upgrade handlers only when semantics/data transformation require explicit logic.
-9. Verify actual schema and record addon/schema fingerprints, execution receipts, and errors.
-10. Mark addons ready only after verification succeeds.
+No hand-authored schema migration files for ordinary model changes. No routine migration directory, generator, or migration-runner workflow.
 
-The reconciler must be idempotent: repeating it against the same desired and actual schema is a no-op.
+Private ARSY API:
+- POST /internal/admin/schema/plan
+- POST /internal/admin/schema/reconcile
+- POST /internal/admin/schema/verify
+- GET /internal/admin/schema/status
 
-### Schema synchronization modes
-- `plan`: inspect and report drift; change nothing.
-- `safe`: automatically apply compatible, non-destructive changes.
-- `strict`: fail on unexpected drift; the release process must resolve it.
-- `off`: disable schema mutation; health checks still report drift.
+Private control plane only. Never accept arbitrary SQL, user schema, or executable code. CLI, CI, release job, and HTTP invoke the same SchemaReconciliationService.
 
-Use `safe` for local development. CI should run `plan` and fail when generated schema artifacts are missing or drift is unexpected. Production should run a single serialized release/schema-sync job, not let every ARSY replica mutate schema concurrently. Safe changes may be applied automatically by that controlled job according to policy. Destructive and semantic data changes require explicit authorization.
+The reconciler validates trusted addons, composes models/BaseEntity/mixins, introspects actual schema/capabilities, creates deterministic plan, classifies operations, applies permitted safe changes, verifies results, records receipts.
 
-### Changes suitable for automatic synchronization
-- Create a new collection/table for a new registered model.
-- Add a nullable field.
-- Add a field with a safe deterministic default where supported.
-- Add a compatible index.
-- Add a new optional relation where supported.
-- Update non-breaking metadata such as labels and help text.
+Adapter uses its DB connection and provider dialect/schema builder to apply physical DDL. SQLite/libSQL/PostgreSQL do not expose one universal REST schema endpoint. ARSY supplies internal API; adapter executes native schema operations. This removes handwritten files, not physical DDL.
 
-### Changes requiring explicit handling
-- Rename a field/model: require `renamedFrom` or an explicit mapping.
-- Change a type or precision: require a validated conversion function.
-- Make a nullable field required: require a backfill/default and validation plan.
-- Remove a field/model/index: destructive; never drop automatically.
-- Change relation cardinality or delete behavior: require data-impact analysis.
-- Split/merge data or change business meaning: require a typed programmatic data-upgrade handler.
+Modes: plan (read-only), safe (compatible additive changes), strict (fail on drift), off (no writes). Local may use safe; CI runs plan; production uses one serialized release job then strict verification. Never let every ARSY replica mutate schema.
 
-No raw SQL migration should be the default addon-authoring workflow. When an adapter needs a deployment artifact, generate it from the schema plan. For PocketBase, generate or capture native `pb_migrations` artifacts and apply them through PocketBase's own migration engine. Do not ask addon authors to hand-write PocketBase JavaScript migration files for ordinary field additions.
+SAFE_AUTO: create registered table; add nullable field; add deterministic portable default; add compatible index after uniqueness validation; add optional relation/constraint.
+REQUIRES_DATA_UPGRADE: rename preserving data, type/precision conversion, nullable-to-required backfill, enum remap, split/merge, semantic transformation. Use typed TS handlers with preconditions, idempotency, bounded batches, checkpoints, postconditions.
+DESTRUCTIVE: drop field/table/index, truncate/overwrite, narrowing with possible data loss, risky cascade. Never unattended; require approval, verified backup, impact report, recovery plan.
+UNSUPPORTED: typed capability error; never silently emulate.
 
-### Typed data-upgrade handlers
-Addons may declare upgrade handlers for semantic transformations. These are normal typed TypeScript functions with version boundaries, idempotency/checkpoint support, bounded batch processing, observability, explicit preconditions, and postconditions. They are not generic schema migration scripts and must not bypass ORM permissions or audit controls.
-
-### Schema history
-Keep an `orm_schema_state` / addon installation ledger with addon version, model fingerprint, adapter schema fingerprint, last plan hash, applied artifact/receipt, timestamp, and execution status. This history supports drift detection and repeatability; it does not mean developers must hand-write migration files.
-
-# 7. Database layer and PocketBase adapter
-
-## 7.1 packages/orm-db
-
-Own database runtime concerns:
-- Adapter lifecycle.
-- Connection/client lifecycle.
-- Transaction scope abstraction.
-- Unit-of-work coordination.
-- Schema diff, safe reconcile, version ledger, and upgrade orchestration.
-- Capability discovery.
-- Error normalization.
-- Health checks.
-- Resource cleanup.
-
-It must not hardcode PocketBase behavior.
-
-## 7.2 packages/orm-db-adaptor
-
-Own provider-neutral adapter contracts:
-- OrmDatabaseAdapter.
-- AdapterCapabilities.
-- Query request/result contracts.
-- Schema introspection and managed schema-operation capability contracts.
-- Transaction interface.
-- Relation and realtime capability flags.
-- Provider error mapping.
-- Adapter registry and factory.
-
-Capability declaration must include at least:
-- CRUD.
-- bulk create/update.
-- filtering.
-- pagination.
-- sorting.
-- projection.
-- relation expansion.
-- join support.
-- transactions.
-- schema introspection.
-- schema migrations.
-- unique constraints.
-- indexes.
-- realtime events.
-- soft delete.
-- optimistic concurrency.
-- JSON operators.
-
-The ORM must ask the adapter before using any non-basic operation.
-
-## 7.3 packages/orm-db-adaptor-pocketbase
-
-Create the first concrete PocketBase adapter using the official PocketBase JavaScript SDK or documented Web API from the server side.
-
-Architecture:
-- PocketBase is a separate Go-based service, not a Node database driver embedded inside ARSY.
-- ARSY communicates with PocketBase through the adapter.
-- The adapter owns SDK/client setup, server-side authentication, collection mapping, filter compiler, record mapping, and provider errors.
-- Superuser credentials/tokens remain server-side, protected by environment/secret management.
-- Headquarter never receives a superuser credential or bypasses ARSY.
-- Do not connect directly to PocketBase from browser code for privileged data.
-
-Important limitations:
-- PocketBase collections are backed by SQLite tables and expose PocketBase-specific record/collection APIs.
-- It is not a general SQL adapter and must not pretend to support arbitrary SQL joins.
-- Relation expansion and filtering must be limited to documented PocketBase capabilities.
-- Transaction support must be reported as unavailable through the ordinary remote SDK adapter unless a separately verified official mechanism is implemented.
-- PocketBase schema changes must use supported collection operations and PocketBase-native generated schema artifacts. Never mutate internal SQLite tables directly.
-- View collections are read-only; the adapter must respect that.
-- Auth collection special fields and rules must not be treated as ordinary base-model fields without explicit mapping.
-- Realtime is optional and must be explicitly capability-gated.
-- If an ORM feature cannot be implemented correctly on PocketBase, reject it with a typed UnsupportedCapabilityError; never silently emulate unsafe semantics.
-
-Create a compatibility matrix and adapter tests. Do not state that PocketBase provides full Odoo ORM capabilities.
-
-## 7.4 Future database adapters
-
-Keep adapter interfaces open for a future PostgreSQL adapter and other stores. Do not add them unless needed. The domain ORM must not import PocketBase SDK types.
+System schema ledger records desired/actual fingerprints, addon versions, plan hashes, actor, environment, operation receipts, checkpoints, and errors. It is not migration-file storage. Reconciler owns only RIOTWORKS-managed objects.
 
 # 8. Addon system — Odoo-inspired module architecture
 
-The ORM addon system is a first-class architectural capability.
+An addon is trusted versioned code declaring technical ID/name, version, platform/ORM compatibility, dependencies, model declarations/extensions, services/hooks, permissions, optional typed data-upgrade handlers, and route/integration registrations.
 
-An addon is a versioned, trusted code package that declares:
-- name and technical key.
-- version.
-- description.
-- dependencies.
-- compatible platform/ORM versions.
-- models it creates.
-- models it extends.
-- services and hooks.
-- migrations.
-- permissions/capabilities.
-- routes or application integration declarations where appropriate.
-- install, upgrade, and uninstall behavior.
+Do not declare routine schema migration lists in manifests. Desired schema derives from model metadata. Typed data-upgrade handlers exist only for semantic data transformations.
 
-Example manifest:
+Lifecycle: DISCOVER → VALIDATE → RESOLVE → COMPOSE → PLAN → SAFE RECONCILE → DATA UPGRADE IF REQUIRED → VERIFY → INITIALIZE → READY.
 
-    export default defineAddon({
-      name: "project",
-      version: "1.0.0",
-      depends: ["base"],
-      models: [Project, ProjectTask],
-      schema: projectSchema,
-      upgrades: projectDataUpgrades
-    });
-
-Required lifecycle:
-DISCOVER → VALIDATE → RESOLVE DEPENDENCIES → COMPOSE MODEL REGISTRY → PLAN SCHEMA DIFF → APPLY SAFE SCHEMA SYNC → RUN REQUIRED DATA UPGRADES → VERIFY → READY.
-
-Rules:
-- Resolve dependencies deterministically.
-- Reject missing dependencies and circular dependency graphs.
-- Reject duplicate addon IDs and model conflicts.
-- Respect semantic version compatibility.
-- Do not apply schema changes before addon dependency validation and schema planning.
-- Do not silently remove data when uninstalling.
-- Generate safe schema changes from model declarations; require typed data-upgrade handlers only for semantic transformations that cannot be inferred safely.
-- Keep an addon registry snapshot and installed version.
-- Addons must not reach into another addon's private files.
-- Public exports and extension contracts are the only supported integration boundary.
-- Only trusted installed code may execute. Never install or execute arbitrary community addon code automatically.
+Resolve deterministically. Reject missing/circular dependencies, duplicate IDs, model/field conflicts, incompatible versions, and untrusted code. Disable/uninstall never silently deletes data. Never auto-execute arbitrary community addon code.
 
 # 9. Base addon — packages/orm-addon-base
 
-This addon is foundational and must be installed automatically before all business addons.
+Install before business addons. ORM composes universal metadata exactly once.
 
-It defines the shared abstract base entity and mixins so every addon does not need to repeat common fields and audit implementation.
+## 9.1 Minimal BaseEntity
+Every persisted model receives only id (application-generated UUID string), createdAt (UTC), and updatedAt (UTC). libSQL stores ID as TEXT and timestamps as normalized UTC text; PostgreSQL stores UUID and TIMESTAMPTZ. Adapters normalize values to one TypeScript contract. Addons never redeclare these fields; collisions fail registry validation.
 
-## 9.1 BaseEntity
+## 9.2 Optional mixins
+- OwnershipAttribution: createdBy/updatedBy where useful.
+- Archiveable: archivedAt/archivedBy where recoverable archival is required.
+- Versioned: concurrency token where optimistic concurrency is required.
+- Toggleable: active/enabled only when independently meaningful.
+- SoftDeletable: deletedAt with explicit retention/restore policy.
 
-Every persisted business model should receive base metadata automatically through ORM model composition or a single inherited abstract base.
+Business status, enablement, archive, and delete are distinct. Do not inject universal active or equate active=false with archive.
 
-Required standard fields:
-- id: generated stable identifier.
-- active: boolean, default true; the canonical active/inactive lifecycle flag.
-- createdAt: creation timestamp.
-- updatedAt: last modification timestamp.
-- createdBy: actor/user reference when available.
-- updatedBy: actor/user reference when available.
-- version: optional optimistic concurrency version when supported.
-
-Optional centrally managed fields:
-- archivedAt.
-- archivedBy.
-
-Do not define these repeatedly in Project, Intelligent, or future addons.
-
-The active flag is not the same as a domain-specific workflow status. A Project may have state = completed while remaining active = true. Deactivation/archiving is a separate lifecycle concern.
-
-Default search behavior for ordinary business listings should exclude inactive records unless explicitly requested. Provide includeInactive or equivalent context/query option. Do not hard-delete a record merely because active becomes false.
-
-## 9.2 AuditTrail
-
-Implement one shared audit subsystem in the base addon and ORM lifecycle.
-
-Central audit behavior covers:
-- create.
-- update.
-- archive/deactivate.
-- restore/reactivate.
-- delete where explicitly allowed.
-- sensitive administrative changes.
-- addon/schema changes where appropriate.
-
-Audit event fields:
-- audit ID.
-- model technical name.
-- record ID.
-- action.
-- actor ID/type.
-- timestamp.
-- request/trace ID.
-- source (API, system, agent, import, migration).
-- changed field names.
-- before/after diff where safe.
-- metadata and reason where applicable.
-
-Rules:
-- Audit events are append-only through normal application flows.
-- Redact secrets and sensitive personal data.
-- Do not store raw credentials or prompt secrets in diffs.
-- Audit history must be permission-protected.
-- Audit trail is centrally generated from ORM lifecycle operations; individual addons must not reimplement it.
-- Use a transaction when the adapter supports it.
-- When an adapter cannot guarantee atomic writes, declare the limitation and use a durable outbox/reconciliation pattern or fail closed for operations that require guaranteed auditing.
-- Never claim tamper-proof storage unless a real integrity mechanism is implemented and verified.
-
-## 9.3 Other base services
-
-The base addon may provide shared abstractions for common name/description mixins, workspace ownership fields when enabled, active/archive service, actor context, audit service, timestamps, common constraints, and shared access-control metadata.
-
-Do not force every model to have irrelevant business fields. Only universally applicable system fields belong on BaseEntity.
+## 9.3 AuditTrail
+One shared append-oriented audit subsystem records model, record ID, action, actor ID/type, timestamp, source, request/trace ID, safe diff, reason, metadata. Redact secrets. Ordinary code cannot edit/delete audit events; audit reads require authorization. SQL mutation and required AuditTrail insert share one transaction; external effects use transactional outbox. Never claim tamper-proof storage without verified integrity controls.
 
 # 10. Required addons
 
 ## packages/orm-addon-project
-
-Depends on base.
-
-Owns Project, ProjectTask, ProjectMilestone where needed, project labels/tags and membership relationships when required, project service methods, constraints, migrations, and permissions.
-
-It must not redefine id, active, createdAt, updatedAt, createdBy, updatedBy, or central audit behavior.
+Depends on base. Owns Project, ProjectTask, ProjectMilestone, labels/tags, membership, project services, constraints, permissions, and typed data-upgrade handlers only when semantic transformations are needed. It must not redefine id, createdAt, updatedAt, or generic AuditTrail. Apply optional mixins only where required.
 
 ## packages/orm-addon-intelligent
-
-Canonical spelling is intelligent.
-
-Depends on base. It may optionally depend on project only if the actual domain relationship requires it; do not create an unnecessary circular dependency.
-
-Owns AI-related domain models such as:
-- AIProvider.
-- AIModel.
-- ModelCapability.
-- Agent.
-- AgentRole.
-- AgentRun.
-- AgentTask.
-- ToolDefinition.
-- ToolExecution.
-- PromptTemplate.
-- PromptVersion.
-- KnowledgeSource.
-- RetrievalRecord.
-- EvaluationSuite.
-- EvaluationRun.
-- UsageRecord.
-- CostRecord.
-- GuardrailPolicy.
-
-Do not store raw provider keys in ORM model fields or logs. Store secret references and access them through a dedicated secret service.
-
-AI model usage must be measurable by provider, model, token/unit, task, run, estimated cost, actual cost, and timestamp where available.
+Canonical spelling is intelligent. Depends on base; project dependency is optional only for a genuine domain relationship. Owns AIProvider, AIModel, ModelCapability, Agent, AgentRole, AgentRun, AgentTask, ToolDefinition, ToolExecution, PromptTemplate, PromptVersion, KnowledgeSource, RetrievalRecord, EvaluationSuite/Run, UsageRecord, CostRecord, GuardrailPolicy. Store secret references, never raw keys; attribute usage/cost to provider/model/task/run.
 
 # 11. Shared packages
 
@@ -701,29 +487,9 @@ It is tooling configuration, not a runtime dependency.
 
 # 12. Dependency direction and boundaries
 
-Allowed high-level direction:
+Allowed: Headquarter → contract/types/UI; ARSY → arsy-core, contract, types, ORM/database, trusted addons; ORM addons → ORM and declared addon dependencies; ORM → neutral types/interfaces; orm-db → adapter contract/types; libSQL/PostgreSQL adapters → adapter contract, Kysely, own driver; contract → types; lint → tooling.
 
-apps/headquarter → packages/contract, packages/types, UI packages (if added)
-apps/arsy → packages/arsy-core, packages/contract, packages/types, domain addons, ORM packages
-packages/arsy-core → packages/types, packages/contract only where necessary
-packages/orm-addon-* → packages/orm, packages/orm-addon-base where declared
-packages/orm → packages/types and neutral interfaces
-packages/orm-db → packages/orm-db-adaptor, packages/types
-packages/orm-db-adaptor-pocketbase → packages/orm-db-adaptor, packages/types
-packages/contract → packages/types
-packages/lint → no runtime imports
-
-Forbidden:
-- Headquarter → database driver / ORM adapter / PocketBase superuser SDK.
-- ORM core → Project or Intelligent addon.
-- Base addon → Project or Intelligent addon.
-- Domain addon → private internals of another addon.
-- Contract → Fastify or database packages.
-- Types → framework-specific runtime packages.
-- Cyclic workspace dependencies.
-- Apps importing another app's source directly.
-
-Enforce boundaries in lint and TypeScript project references where useful.
+Forbidden: Headquarter → DB driver/credentials/schema admin; ORM → concrete provider or business addon; Base addon → Project/Intelligent; addon → private internals of another addon; addon → Kysely/raw SQL/driver; contract → Fastify/database; types → framework runtime; app-to-app imports; cycles. Enforce with lint, exports, graph tests.
 
 # 13. Fastify API requirements
 
@@ -777,65 +543,50 @@ Do not call the frontend web. The app path and product name are apps/headquarter
 
 # 15. Testing and quality requirements
 
-- Typecheck every package.
-- Lint every package.
-- Unit test ORM metadata, registry, fields, model composition, base fields, hooks, addon dependency resolution, schema diff/planning, safe reconciliation, generated PocketBase artifacts, data-upgrade handlers, and audit behavior.
-- Adapter contract tests for PocketBase.
-- Capability tests proving unsupported operations fail explicitly.
-- Integration tests for apps/arsy using Fastify injection.
-- API contract tests for Headquarter/ARSY compatibility.
-- Test authorization and tenant/workspace isolation.
-- Test audit record creation and failure behavior.
-- Test graceful shutdown and adapter lifecycle.
-- Test that a future addon can use BaseEntity without redefining base fields.
-- Verify no circular dependencies.
-- Verify no secrets enter client bundles or logs.
-
-Do not claim full transactions, joins, or schema migration support for PocketBase unless the concrete adapter tests and official mechanism prove it.
+- Typecheck/lint every package.
+- Test ORM metadata, registry, composition, BaseEntity/mixins, addon dependencies, query validation, lifecycle.
+- Test schema plan determinism, safe reconcile, API authorization, locks, idempotency, partial-failure recovery, drift.
+- Run shared adapter contract tests against PostgreSQL and libSQL.
+- Test transaction/rollback and AuditTrail atomicity on both providers.
+- Test unsupported capabilities fail explicitly.
+- Test Fastify/API contracts, authorization, workspace isolation, shutdown, backups, export/import, restore.
+- Verify no circular dependencies or secrets in client/logs.
+- Do not claim identical transaction, locking, or concurrency behavior across PostgreSQL and libSQL.
 
 # 16. Delivery phases
 
 ### Phase A — Workspace foundation
-Root tooling, workspaces, apps/headquarter, apps/arsy, packages/types, packages/contract, packages/lint.
-
+Root tooling, workspaces, Headquarter, ARSY, types, contract, lint.
 ### Phase B — ARSY runtime
-packages/arsy-core, Fastify application factory, app lifecycle, health, error handling, typed routes.
-
+arsy-core, Fastify factory, lifecycle, health, errors, typed routes.
 ### Phase C — ORM foundation
-packages/orm, model metadata, field registry, model registry, query/domain model, addon loader.
-
-### Phase D — Database and PocketBase
-packages/orm-db, packages/orm-db-adaptor, packages/orm-db-adaptor-pocketbase, compatibility matrix, adapter contract tests.
-
+ORM metadata, fields, registry, query/domain model, trusted addon loader.
+### Phase D — Database and SQL providers
+orm-db, adapter contract, PostgreSQL/libSQL adapters, capability matrix, private schema API, schema ledger, adapter tests.
 ### Phase E — Base addon
-packages/orm-addon-base, automatic BaseEntity fields, active state, AuditTrail.
-
+Minimal BaseEntity, opt-in lifecycle mixins, AuditTrail and outbox.
 ### Phase F — Business addons
-packages/orm-addon-project and packages/orm-addon-intelligent.
-
+Project and Intelligent addons.
 ### Phase G — Headquarter integration
-Connect Headquarter to ARSY using packages/contract. Replace demo data only for features that have verified backend endpoints.
-
+Typed Headquarter-to-ARSY integration; replace demo data only when verified endpoints exist.
 ### Phase H — Operational hardening
-Auth, access control, observability, budgets, kill switch, schema-sync/recovery runbook, backup/restore, audit review, deployment docs.
-
-Do not skip ahead by creating a fake ORM facade over direct PocketBase calls. The ORM and adapter boundaries must be real and tested.
+Auth/access, observability, budgets, kill switch, schema sync/recovery, backup/restore, audit review, deployment docs.
+Do not create a fake ORM facade over direct Kysely calls. ORM and adapter boundaries must be real and tested.
 
 # 17. Definition of done
 
-The foundation is accepted only when:
-- apps/headquarter exists and is the named frontend.
-- apps/arsy starts a Fastify server through packages/arsy-core.
-- packages/orm registers declarative models.
-- Addon manifests resolve in dependency order.
-- orm-addon-base provides id, active, timestamps, actor fields, and central audit behavior without addon duplication.
-- orm-addon-project and orm-addon-intelligent depend on base and declare only business-specific fields.
-- PocketBase adapter declares and enforces its actual capabilities.
-- Unsupported adapter features fail clearly.
-- API contracts are shared between Headquarter and ARSY.
-- Typecheck, lint, unit tests, and integration tests pass.
-- No secret, false integration, simulated sale, or unsupported capability is represented as real.
-- Documentation is updated with implementation facts, not aspirational claims.
+- Headquarter exists as the named frontend.
+- ARSY starts Fastify through arsy-core.
+- ORM registers declarative models and portable query semantics.
+- Addons resolve deterministically.
+- Base addon injects id, createdAt, updatedAt and central AuditTrail; other lifecycle fields are opt-in.
+- PostgreSQL/libSQL adapters declare and enforce actual capabilities.
+- Internal schema API drives one reconciliation service; routine model changes need no hand-authored schema files.
+- Destructive/semantic changes require explicit plan, authorization, and recovery.
+- API contracts are shared.
+- Typecheck, lint, unit, and integration tests pass.
+- No secrets, fake integrations, fabricated sales, or unsupported capability claims.
+- Documentation reflects implementation evidence, not aspirations.
 
 **MOONWITNESS // RIOTWORKS**  
 **HEADQUARTER × ARSY**  
