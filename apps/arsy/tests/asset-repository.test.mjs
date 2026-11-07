@@ -52,6 +52,8 @@ test('asset create and archive invalidate all readiness inspections on the curre
 
   assert.equal(await repository.archive('owner-a', 'owner-a', asset.id), true)
   assert.match(calls[1].sql, /FOR UPDATE OF p/)
+  assert.match(calls[1].sql, /FROM arsy_listings listing/)
+  assert.match(calls[1].sql, /listing.status IN \('ready', 'submitted', 'published'\)/)
   assert.match(calls[1].sql, /INSERT INTO arsy_inspections/)
   assert.match(calls[1].sql, /'needs-review'/)
   assert.match(calls[1].sql, /SET lifecycle_state = 'production'/)
