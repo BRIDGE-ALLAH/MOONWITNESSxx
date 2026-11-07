@@ -2,7 +2,7 @@
 
 **Repository:** BRIDGE-ALLAH/MOONWITNESS  
 **Default branch:** main  
-**Verified HEAD:** ecb4faf2b85a24f07db2c2a5685ca04d627254f8  
+**Verified HEAD:** 090c6f0051df129ae81aae32a26888090b6005bb  
 **Purpose:** Replace stale repository-state assumptions with a current, evidence-based baseline. This is a point-in-time audit, not a claim that all roadmap items are complete.
 
 ## 1. Mainline and merged work
@@ -10,8 +10,9 @@
 - PR #79 merged as 3e9db048eef0698f56c14543dbf2afc83a534247: ARSY Phases 18–20 security hardening.
 - PR #81 merged as 1bfbae285c2871985487882b4c4ec42915bf422b: Developer Experience Phases 33–35.
 - PR #81 pre-merge CI: Repository Integrity, Asset Integrity, WITNESS FABRIC, Developer Experience, Full Workspace Typecheck/Build, and CodeQL all succeeded. Its three new CLI smoke tests succeeded.
+- PR #90 merged as 090c6f0051df129ae81aae32a26888090b6005bb: ARSY runtime/container contract repair. Repository Integrity, Asset Integrity, WITNESS FABRIC, Developer Experience, Full Workspace Typecheck/Build, and CodeQL all passed on its PR head.
 - PR #75 and PR #80 are closed and unmerged; PR #82 superseded #80 and is now merged.
-- PR #78 is merged. Its first CI attempt exposed a missing blockedWithoutSignal metric; the metric and regression assertion were fixed, then current-head Repository CI, full workspace typecheck/build, and CodeQL passed before merge.
+- PR #78 merged as ecb4faf2b85a24f07db2c2a5685ca04d627254f8: ARSY Core trust-boundary Phases 33–35. Its missing blockedWithoutSignal metric was fixed; current-head Repository CI, full workspace typecheck/build, and CodeQL passed before merge.
 - Phase numbers are scoped per subsystem, not globally unique; ARSY Core Phases 33–35 and DX Phases 33–35 are separate implementations.
 
 ## 2. Current open PR gate
@@ -31,25 +32,32 @@ DX Phases 33–35 are now on main:
 These tools are advisory. They do not schedule agents, enforce trusted authorization, execute integrations, or authenticate evidence.
 
 ### ARSY runtime
-The current source exposes a Fastify root response and a database health route, but the runtime/container contract is inconsistent:
-- apps/arsy/src/index.ts listens on port 3000.
-- docker-compose.yml maps host port 3001 to container port 3001 and probes port 3001.
-- Dockerfile.arsy starts pnpm dev, not the application production start command.
-- apps/arsy/package.json delegates its start script to @riotworks/arsy-core, whose own Fastify CLI command is configured for port 3000. The application composition root is apps/arsy, so this delegation requires correction.
-- apps/arsy/package.json still has "lint": "echo lint-skip"; this can make a workspace lint task appear successful without linting ARSY.
-- apps/arsy/src/db.ts exposes database health, but uses untyped Fastify decoration and process signal handlers rather than a verified application lifecycle plugin.
 
-These are concrete release blockers. Correct them with a focused runtime/contract change and regression coverage; do not merely update documentation.
+PR #90 is merged. The previous app/container contract defects were corrected:
+- ARSY resolves a validated host/port; the default port now matches the Compose mapping (3001).
+- /health/live and database-backed /health/ready endpoints are present.
+- The app-owned entrypoint is used by dev/start scripts; the production Dockerfile uses the app's start command.
+- PostgreSQL pool cleanup is registered through Fastify onClose rather than process-global signal handlers.
+- ARSY lint no longer silently skips; the shared ESLint configuration is used and a server-config test suite was added.
+- Compose readiness probes /health/ready and uses Node fetch rather than relying on curl.
+
+PR #90 checks: Repository Integrity, Asset Integrity, WITNESS FABRIC, Developer Experience, Full Workspace Typecheck/Build, and CodeQL all passed. Repository CI specifically passed the ARSY runtime tests and Docker Compose config validation.
 
 ### Configuration and containers
-- .env.docker contains POSTGRES_PASSWORD=postgres.
-- Compose also defaults POSTGRES_PASSWORD to postgres.
-- PostgreSQL and Redis host ports are published without an explicit loopback bind.
-- Compose defaults NODE_ENV to development and mounts source directories into services.
-- Dockerfile.arsy is a development-oriented runtime as currently configured.
-- No production deployment workflow, configured production environment, production URL, or verified health/readiness target was found in the inspected repository configuration.
 
-Do not deploy the current Compose setup as production. Separate local-development and production runtime profiles, remove weak defaults, restrict data-service exposure, use the correct production start command, and add verified liveness/readiness checks before release.
+- .env.docker is explicitly marked local-development-only; its placeholder password must never be used in production.
+- Compose requires POSTGRES_PASSWORD to be supplied and binds PostgreSQL, Redis, ARSY, and Headquarter host ports to loopback.
+- The local Compose stack explicitly runs dev commands and retains source mounts/hot reload. It is not a production deployment definition.
+- Dockerfile.arsy now uses the production start command and sets NODE_ENV=production after dependency installation/build.
+- The final Compose YAML parsed locally and docker compose config --quiet passed in GitHub CI.
+
+Remaining production blockers:
+- No production Compose profile or deployment workflow/environment/target is configured.
+- No Docker image build-and-run integration test was executed; the Dockerfile build and container startup against a real PostgreSQL service remain unverified.
+- TLS/ingress, managed secret injection, backup/restore, monitoring/alerting, rollback, and production smoke tests are not configured.
+- No production URL or live health endpoint was available to verify.
+
+Do not claim production-ready or deploy the local Compose profile. Complete a separate production runtime/deployment design with real secrets and target-specific validation first.
 
 ## 4. Release metadata
 
