@@ -45,6 +45,7 @@ test('repository rejects inspection and publication gate bypasses before databas
     ['brief', 'ready'],
     ['review', 'ready'],
     ['ready', 'listed'],
+    ['ready', 'production'],
     ['production', 'listed'],
     ['listed', 'production'],
     ['retired', 'production'],
