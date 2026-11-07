@@ -69,7 +69,7 @@ The dashboard is served at http://127.0.0.1:5150/.
 
 ## API
 
-- GET /api/v1/system/health — liveness plus actual ATLAS MariaDB, RADIUS database, and Redis probe results.
+- GET /api/v1/system/health — actual ATLAS MariaDB, RADIUS database, and Redis probe results.
 - GET /api/v1/system/readiness — returns 503 unless ATLAS MariaDB, RADIUS database, and Redis are reachable.
 - GET /api/v1/system/version — build/package version.
 - GET /api/v1/engines/catalog — engine integration catalog and adapter status.
@@ -101,7 +101,7 @@ Install SQLx CLI and apply versioned migrations:
     cargo install sqlx-cli --no-default-features --features mysql,rustls
     DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas' sqlx migrate run --source migrations
 
-The initial migration creates the engine registry table; the next migration adds non-secret adapter configuration and secret environment-variable references. Apply all migrations in order. Application readiness checks MariaDB with a real SELECT 1 and Redis with PING; it does not imply that every future domain is implemented.
+The migrations create the engine registry, add non-secret adapter configuration and secret environment-variable references, and seed the local Compose FreeRADIUS, VictoriaMetrics, and VictoriaLogs endpoints. Apply all migrations in order. Application readiness checks MariaDB with a real SELECT 1 and Redis with PING; it does not imply that every future domain is implemented.
 
 ## Development checks
 
@@ -131,7 +131,7 @@ The initial migration creates the engine registry table; the next migration adds
 ### Planned; not yet implemented
 
 - Unbound and dnsdist native control adapters.
-- FreeRADIUS RADIUS Status-Server probing and SQL-backed NAS/subscriber management APIs.
+- FreeRADIUS Status-Server probing from ATLAS and SQL-backed NAS/subscriber/session/accounting management APIs.
 - Full PowerDNS zone/record management API adapter.
 - VictoriaMetrics and VictoriaLogs query/configuration APIs beyond basic health probes.
 - Production certificate rotation, RadSec listener profile, and dynamic NAS reload without restarting FreeRADIUS.
