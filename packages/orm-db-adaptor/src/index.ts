@@ -5,6 +5,10 @@
 
 export type DatabaseProviderKind = "postgres" | "sqlite";
 
+export type DatabaseIdentity =
+  | Readonly<{ provider: "sqlite"; role: "system" }>
+  | Readonly<{ provider: "postgres"; role: "business" }>;
+
 export type DatabaseCapability =
   | "transactions"
   | "savepoints"
@@ -22,7 +26,7 @@ export type DatabaseCapability =
   | "upsert";
 
 export interface DatabaseCapabilities {
-  readonly provider: DatabaseProviderKind;
+  readonly identity: DatabaseIdentity;
   readonly version: string;
   readonly supported: ReadonlySet<DatabaseCapability>;
   readonly limits: Readonly<{
@@ -87,7 +91,7 @@ export interface TableSnapshot {
 }
 
 export interface DatabaseSnapshot {
-  readonly provider: DatabaseProviderKind;
+  readonly identity: DatabaseIdentity;
   readonly tables: readonly TableSnapshot[];
 }
 
@@ -116,6 +120,7 @@ export interface DatabaseTransaction {
 
 export interface DatabaseAdapter {
   readonly id: string;
+  readonly identity: DatabaseIdentity;
   readonly capabilities: DatabaseCapabilities;
   connect(options: DatabaseConnectionOptions): Promise<void>;
   close(): Promise<void>;
@@ -131,9 +136,9 @@ export class DatabaseCapabilityError extends Error {
 
   constructor(
     readonly capability: DatabaseCapability,
-    readonly provider: DatabaseProviderKind,
+    readonly identity: DatabaseIdentity,
   ) {
-    super(`Database provider "${provider}" does not support required capability "${capability}".`);
+    super(`Database provider "${identity.provider}" with role "${identity.role}" does not support required capability "${capability}".`);
     this.name = "DatabaseCapabilityError";
   }
 }
@@ -144,7 +149,7 @@ export function requireCapabilities(
 ): void {
   for (const capability of required) {
     if (!capabilities.supported.has(capability)) {
-      throw new DatabaseCapabilityError(capability, capabilities.provider);
+      throw new DatabaseCapabilityError(capability, capabilities.identity);
     }
   }
 }
