@@ -32,7 +32,7 @@ pub async fn pool() -> Result<&'static MySqlPool, sqlx::Error> {
             .map_err(|error| sqlx::Error::Configuration(Box::new(error)))?;
         if database_url.trim().is_empty() {
             return Err(sqlx::Error::Configuration(
-                "DATABASE_URL is empty".into(),
+                std::io::Error::other("DATABASE_URL is empty").into(),
             ));
         }
 
@@ -61,7 +61,7 @@ pub async fn probe() -> DatabaseStatus {
     };
 
     match sqlx::query_scalar::<_, i32>("SELECT 1")
-        .fetch_one(*pool)
+        .fetch_one(pool)
         .await
     {
         Ok(1) => DatabaseStatus::Available,

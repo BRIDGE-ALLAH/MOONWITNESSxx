@@ -140,3 +140,36 @@ pub async fn delete(id: &str) -> Result<bool, sqlx::Error> {
         .await?;
     Ok(result.rows_affected() > 0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample() -> EngineWriteRequest {
+        EngineWriteRequest {
+            name: "primary-pdns".to_string(),
+            engine_type: "powerdns-authoritative".to_string(),
+            role: "authoritative_dns".to_string(),
+            endpoint: "http://pdns:8081".to_string(),
+            enabled: true,
+            labels: None,
+            config: None,
+            secret_env_key: Some("ATLAS_ENGINE_SECRET_PDNS_PRIMARY".to_string()),
+        }
+    }
+
+    #[test]
+    fn accepts_supported_engine_with_safe_endpoint() {
+        assert!(validate(&sample()).is_ok());
+    }
+
+    #[test]
+    fn rejects_embedded_credentials_and_unknown_engine_types() {
+        let mut input = sample();
+        input.endpoint = "http://user:pass@pdns:8081".to_string();
+        assert!(validate(&input).is_err());
+        input.endpoint = "http://pdns:8081".to_string();
+        input.engine_type = "unknown".to_string();
+        assert!(validate(&input).is_err());
+    }
+}
