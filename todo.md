@@ -1051,3 +1051,16 @@ Use these labels consistently when updating this file:
 - [x] Phase 20: detect empty traces, malformed context, duplicate policy decisions and cross-tenant terminal receipts; mark undefined benchmark metrics as null rather than perfect.
 - [ ] Authenticated issuer registry, signed attestation envelope/KMS, actual tool-gateway enforcement, licensed benchmark import and calibrated CI thresholds remain open.
 See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract checks, not production security enforcement.
+
+
+## Phase 36–38 — Product Integrity, UX Truth & Release Preflight
+
+- [x] ARSY application owns HTTP lifecycle; core remains framework-neutral.
+- [x] Add injectable ARSY app construction and typed database lifecycle.
+- [x] Add persistent localized demo/prototype disclosure to Headquarter topbar.
+- [x] Add workspace, navigation, and release preflight CLI.
+- [x] Add container image build workflow for ARSY and Headquarter.
+- [ ] Add a production deployment target, release publisher, secret management, backup/restore, rollback, and live smoke tests.
+- [ ] Complete browser-level WCAG/responsive testing for all Headquarter routes.
+
+**Release status:** NO-GO until production deployment and release verification exist.
