@@ -283,11 +283,11 @@ async fn delete_engine(headers: HeaderMap, Path(id): Path<String>) -> impl IntoR
 }
 
 async fn engine_health(headers: HeaderMap, Path(id): Path<String>) -> impl IntoResponse {
-    if let Err(error) = authorized(&headers) { return error.into_response(); }
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
     match engine::get(&id).await {
-        Ok(Some(item)) => {
-            (StatusCode::OK, Json(adapters::probe(&item).await)).into_response()
-        }
+        Ok(Some(item)) => (StatusCode::OK, Json(adapters::probe(&item).await)).into_response(),
         Ok(None) => (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -301,7 +301,6 @@ async fn engine_health(headers: HeaderMap, Path(id): Path<String>) -> impl IntoR
         }
     }
 }
-
 
 async fn list_nas(headers: HeaderMap) -> impl IntoResponse {
     if let Err(error) = authorized(&headers) {
