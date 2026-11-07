@@ -10,7 +10,7 @@ This document describes the current persisted opportunity, product-brief, and fi
 - Headquarter operator login uses an eight-hour signed, HttpOnly, SameSite=Strict session cookie.
 - Operator session configuration fails closed when the password, 32+ character signing secret, or exact public origin is missing.
 - Every ARSY `/api/v1/*` business route requires both an explicit operator ID and the server-side operator token; the Fastify rate-limit plugin applies a default 120 requests/minute per route/IP, with stricter health-route limits.
-- Headquarter rejects the fifth failed operator login within a 15-minute process-local window. This is defense in depth, not a distributed limiter; production ingress must add a shared rate limit before multi-replica deployment.
+- Headquarter login uses an ARSY/PostgreSQL shared limiter: five failures in a 15-minute window block the normalized operator bucket and the trusted client-network bucket for 15 minutes. Raw IPs and operator identifiers are not stored; only keyed HMAC digests are persisted. If ARSY or PostgreSQL is unavailable, login fails closed with HTTP 503.
 - Database migrations are explicit deployment/System Mode operations. Application startup never mutates schema.
 
 ## Required server environment
@@ -33,8 +33,27 @@ This document describes the current persisted opportunity, product-brief, and fi
 | `HEADQUARTER_OPERATOR_PASSWORD` | Yes | Unique operator login password of at least 16 characters |
 | `HEADQUARTER_SESSION_SECRET` | Yes | Random secret of at least 32 bytes for signing sessions |
 | `HEADQUARTER_PUBLIC_ORIGIN` | Yes | Exact browser origin, e.g. `https://hq.example.com`, without a path |
+| `HEADQUARTER_TRUSTED_PROXY_HOPS` | Yes in production | Number of trusted ingress proxies (1–8); production login fails closed when absent |
+| `HEADQUARTER_PROXY_IDENTITY_SECRET` | Yes in production | Separate 32+ byte HMAC secret shared with trusted ingress to authenticate client-IP assertions |
 
 Generate independent random values for the operator token and session secret. Store them in the deployment secret manager. Do not commit real values to the repository, shell history, screenshots, or logs.
+
+
+## Shared login throttling and trusted ingress
+
+- ARSY owns shared limiter state in `arsy_login_attempt_buckets`; Headquarter has no authoritative process-local login counter.
+- Five invalid attempts in a 15-minute window block both the normalized operator bucket and the trusted client-network bucket for 15 minutes. A successful login clears the matching buckets. The operator bucket prevents IP rotation from bypassing the account-wide limit.
+- Bucket identifiers are HMAC-SHA256 digests keyed by `HEADQUARTER_SESSION_SECRET`; raw operator IDs and client IP addresses are not sent to ARSY or stored in PostgreSQL.
+- Every limiter API call is server-to-server and protected by `ARSY_OPERATOR_TOKEN`. If ARSY/PostgreSQL is unavailable or a limiter write fails, Headquarter returns 503 and does not issue a session.
+- Local development sets `HEADQUARTER_TRUSTED_PROXY_HOPS=0` and uses one explicit `local-development` network bucket. Arbitrary `X-Forwarded-For` headers are ignored; local requests intentionally share that bucket.
+- Production must set `HEADQUARTER_TRUSTED_PROXY_HOPS` to the trusted ingress hop count (1–8) and configure a separate 32+ byte `HEADQUARTER_PROXY_IDENTITY_SECRET`. Keep Headquarter private behind that ingress; never expose its application port directly.
+- The ingress must resolve the client IP using only the configured trusted proxy chain, strip inbound `X-Forwarded-For` and `X-MW-Client-*` headers, and set exactly four headers:
+  - `X-MW-Client-IP`: canonical client IP address;
+  - `X-MW-Client-Timestamp`: current Unix timestamp in seconds;
+  - `X-MW-Proxy-Hops`: configured trusted hop count as a decimal integer;
+  - `X-MW-Client-Signature`: lowercase hex HMAC-SHA256 of `<client-ip>.<timestamp>.<trusted-proxy-hops>` using `HEADQUARTER_PROXY_IDENTITY_SECRET`.
+- Headquarter accepts only a valid IP, a timestamp within 60 seconds, a matching hop count, and a constant-time-valid signature. Raw forwarded headers without the signed assertion are never trusted. Missing/invalid identity returns 503.
+- Apply migration `005_shared_login_attempts.sql` before enabling this route. The table contains only bucket type, keyed digest, failure count, timestamps and lockout expiry.
 
 ## Apply database migrations
 
