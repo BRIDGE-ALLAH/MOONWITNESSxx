@@ -2,13 +2,12 @@
   "name": "@riotworks/arsy",
   "version": "0.0.0",
   "private": true,
-  "description": "RIOTWORKS ARSY — Command Center (wraps @riotworks/arsy-core)",
+  "description": "RIOTWORKS ARSY — HTTP API and orchestration runtime",
   "main": "src/index.ts",
   "scripts": {
     "dev": "fastify dev",
-    "build": "pnpm --filter @riotworks/arsy-core run build",
-    "start": "pnpm --filter @riotworks/arsy-core run start",
-    "lint": "echo lint-skip",
+    "build": "tsc --noEmit false --outDir dist",
+    "start": "node dist/index.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

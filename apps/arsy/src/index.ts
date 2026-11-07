@@ -2,18 +2,17 @@ import Fastify from 'fastify'
 import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
-// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
+import { resolveArsyRuntimeConfig } from './config/runtime'
+import { setupDatabase } from './db'
 
-const app = Fastify({
-  logger: true,
-})
+// ARSY owns HTTP lifecycle; @riotworks/arsy-core remains framework-neutral.
+const app = Fastify({ logger: true })
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
 
 const typedApp = app.withTypeProvider<ZodTypeProvider>()
 
-// Example route
 typedApp.get(
   '/',
   {
@@ -26,26 +25,19 @@ typedApp.get(
       },
     },
   },
-  async () => {
-    return {
-      status: 'ok',
-      message: 'ARSY Command Center is running',
-    }
-  }
+  async () => ({
+    status: 'ok',
+    message: 'ARSY Command Center is running',
+  }),
 )
 
-// Database connector setup
-import { setupDatabase } from './db'
 setupDatabase(app)
 
-app
-  .listen({ port: 3000 })
-  .then(() => {
-    console.log('🚀 ARSY Command Center running on http://localhost:3000')
-  })
-  .catch((err) => {
-    console.error(err)
-    process.exit(1)
-  })
+const { host, port } = resolveArsyRuntimeConfig(process.env)
+
+app.listen({ host, port }).catch((error) => {
+  app.log.error(error, 'ARSY failed to start')
+  process.exitCode = 1
+})
 
 export { app }

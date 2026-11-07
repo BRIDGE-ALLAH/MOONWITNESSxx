@@ -5,7 +5,7 @@ import { Badge, Button } from '@riotworks/ui'
 type TopbarProps = {
   locale: 'en' | 'id'
   navOpen: boolean
-  labels: { search: string; workspace: string; notifications: string; locale: string; theme: string; profile: string }
+  labels: { search: string; workspace: string; notifications: string; locale: string; theme: string; profile: string; demo: string }
   onToggleNavigation: () => void
   onOpenPalette: () => void
   onNotify: () => void
@@ -20,6 +20,7 @@ export function Topbar({ locale, navOpen, labels, onToggleNavigation, onOpenPale
         <Button variant="outline" size="sm" className="md:hidden" aria-controls="headquarter-sidebar" aria-expanded={navOpen} onClick={onToggleNavigation}>NAV</Button>
         <Button variant="outline" size="sm" onClick={onOpenPalette}>{labels.search} (Ctrl+K)</Button>
         <span className="font-mono text-[11px] uppercase text-muted-foreground">{labels.workspace}</span>
+        <Badge variant="warning" aria-label={labels.demo}>{labels.demo}</Badge>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={onNotify}>{labels.notifications}</Button>
           <Button variant="secondary" size="sm" onClick={onToggleLocale} aria-label={locale === 'en' ? 'Switch prototype locale to Indonesian' : 'Switch prototype locale to English'}>{labels.locale}</Button>
