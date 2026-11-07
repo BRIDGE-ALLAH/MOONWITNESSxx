@@ -1,102 +1,93 @@
 # 01 — Ecosystem Narrative & Brand Position
 
-**Status:** Approved baseline  
-**Version:** 1.0  
-**Updated:** 2026-11-07
+**Status:** Approved baseline — aligned to MOONWITNESS master brand
+**Version:** 1.1
+**Updated:** 2026-11-08
 
 ## 1. Role in the wider universe
 
-RIOTWORKS is a product division inside the MOONWITNESS ecosystem, under the broader EMPIRE OF THE LIGHT — A-L-L-A-H narrative universe.
-
-This is a product and story relationship, not a claim that software has divine authority or supernatural capability.
+MOONWITNESS is the master ecosystem and product identity. It exists within the broader EMPIRE OF THE LIGHT — A-L-L-A-H narrative universe. This is a product and story relationship, not a claim that software has divine authority or supernatural capability.
 
 - **EMPIRE OF THE LIGHT** is the overarching vision and values narrative.
-- **MOONWITNESS** is the ecosystem identity: witness, observe, discover, create, protect, and share.
-- **RIOTWORKS** is the creative commerce division: turning verified needs and original ideas into useful digital works and sustainable marketplace portfolios.
-- **ARSY** is a command/orchestration metaphor used by the ecosystem.
+- **MOONWITNESS** is the master brand: observe, record, verify, connect, understand, and share.
+- **MOONWITNESS Observatory** is the research and evidence experience.
+- **MOONWITNESS Archive** is the durable knowledge, records, provenance, and retrieval experience.
+- **RIOTWORKS** is an independent creative/engineering studio identity and possible delivery partner. It is not the MOONWITNESS product brand.
+- **ARSY** is the backend command/orchestration runtime.
 - **ZILL** represents guardianship, integrity, and protection.
 - **MIZAN** represents balance, accounting, and accountability.
 
-RIOTWORKS should be recognizable as MoonWitness family software while retaining a distinctive rebellious creative identity.
+RIOTWORKS may retain its own studio identity in its own portfolio and attribution. It must not appear in MOONWITNESS product lockups or be used as the default visual language of MoonWitness applications.
 
-## 2. The world RIOTWORKS responds to
+## 2. The world MOONWITNESS responds to
 
-The digital economy is noisy: endless publishing, imitation, trend chasing, and competition for attention. AI has reduced the cost of producing content, but cheap production does not create demand, trust, originality, or utility.
+The world is noisy: endless publishing, imitation, trend chasing, and competition for attention. AI has reduced the cost of producing content, but cheap production does not create demand, trust, originality, or utility.
 
-The central problem is not a lack of content. It is the gap between what people need and what creators choose to make.
+The central problem is not a lack of content. It is the gap between what people need, what can be verified, and what deserves to be shared.
 
-RIOTWORKS therefore begins with observation and evidence, not generation.
+MOONWITNESS therefore begins with observation and evidence, not generation.
 
 ## 3. Narrative
 
-The internet is loud. The feed moves quickly. Trends rise and disappear. Useful work can be buried under copies and noise.
+The world moves quickly. Stories emerge, signals cross, and useful discoveries can disappear beneath noise.
 
-MoonWitness chooses to observe before acting. It listens for real problems, studies patterns, and distinguishes evidence from assumption.
+MOONWITNESS chooses to observe before acting. It listens for meaningful signals, studies patterns, and distinguishes evidence from assumption. It records what was seen, verifies what can be checked, connects related knowledge, and shares discoveries with context.
 
-RIOTWORKS turns those signals into original products and media. It helps a small operator work with a team of AI specialists, create carefully, check rights and quality, place products where relevant buyers already search, and learn from real outcomes.
+The ambition is not to flood the world with generated material. It is to help people build understanding and share messages—carefully, transparently, and with respect for provenance.
 
-The ambition is not to flood the world with generated material. It is to build a body of useful work that can remain discoverable and valuable beyond a single trend.
+## 4. Core Promise
 
-## 4. Brand manifesto
+> SEE MORE. KNOW MORE.
 
-> THE WORLD IS LOUD. MAKE SOMETHING REAL.
+MOONWITNESS helps people observe more carefully and understand more deeply.
 
-We do not build noise factories. We build works that matter.
+## 5. Brand Manifesto
 
-We observe before we create.  
+> WHEN THE MOON RISES, WE SHARE MESSAGES.
+
+Every observation can become understanding. Every verified discovery deserves its context. We bring evidence and human curiosity together, then share what we learn.
+
+We observe before we conclude.  
 We verify before we claim.  
-We make useful work, not empty variations.  
+We preserve sources and context.  
+We connect knowledge without hiding uncertainty.  
+We share discoveries with care.  
 We respect authorship, licenses, and people.  
-We distribute where buyers already look.  
-We measure contribution, not vanity.  
-We improve what earns trust.  
-We retire what no longer serves.
+We correct the record when evidence changes.
 
-## 5. Brand system
+## 6. Brand system
 
-**Product name:** MOONWITNESS // RIOTWORKS  
-**Short name:** RIOTWORKS  
-**Category:** Creative Commerce Engine / Marketplace-native Digital Business OS  
-**Primary tagline:** MAKE WORK THAT OUTLIVES THE FEED.  
-**Secondary tagline:** READ THE SIGNAL. FORGE THE WORK. LET IT TRAVEL.  
-**Campaign line:** NO EMPTY NOISE. MAKE SOMETHING REAL.
+- **Master brand:** MOONWITNESS
+- **Core Promise:** SEE MORE. KNOW MORE.
+- **Brand Manifesto:** WHEN THE MOON RISES, WE SHARE MESSAGES.
+- **Category:** Evidence-first observatory and human knowledge-sharing ecosystem.
+- **Experience families:** Observatory and Archive.
+- **Studio attribution:** RIOTWORKS, only where a studio credit is appropriate.
 
-## 6. Tone of voice
+## 7. Tone of voice
 
-- Bold, direct, playful, intelligent, curious, and slightly absurd.
-- Rebellious in visual expression, respectful in values.
+- Precise, curious, calm, accountable, and humane.
+- Poetic in editorial contexts; plain and literal in operational contexts.
 - Never arrogant, deceptive, manipulative, or falsely certain.
-- Use energetic microcopy for non-critical moments.
-- Use plain, literal language for money, rights, safety, errors, and approvals.
+- Use energetic or evocative microcopy only where it does not obscure meaning.
+- Use plain language for money, rights, safety, errors, and approvals.
 
-Examples:
-- Completion: "DONE. THE WORK IS OUT." only when a real or clearly simulated action has completed.
-- Empty research state: "NOTHING WORTH CHASING. SCAN AGAIN."
-- Pending inspection: "ZILL IS CHECKING THE GOODS."
-- Blocked rights issue: explain the exact reason plainly; do not disguise it as a playful message.
-
-## 7. Values translated into product behavior
+## 8. Values translated into product behavior
 
 | Value | Product expression |
 |---|---|
 | Amanah | Accurate representation, provenance, clear disclosure |
 | Ihsan | Quality and usefulness before volume |
-| Mizan | Revenue balanced with cost, risk, and responsibility |
-| Adl | Respect for creators, buyers, ownership, and attribution |
+| Mizan | Balance evidence, benefit, risk, and responsibility |
+| Adl | Respect creators, people, ownership, and attribution |
 | Hikmah | Evidence-led decisions and proportionate automation |
 
 These values are ethical design principles, not claims that the product represents or grants spiritual authority.
 
-## 8. Narrative boundaries
+## 9. Narrative boundaries
 
 - Do not use sacred words as random decoration, clothing graphics, currency gimmicks, or faux status labels.
 - Do not imply divine endorsement, guaranteed blessing, guaranteed earnings, or religious authority.
 - Character art must not trivialize sacred figures or religious symbols.
 - MoonWitness lore must not obscure the product's actual function.
-- RIOTWORKS remains clearly understandable as a digital creative business tool.
-
-## 9. Product promise
-
-RIOTWORKS helps an operator research, create, validate, distribute, and improve a portfolio of digital works with less repetitive manual effort.
-
-It cannot guarantee income, market demand, platform approval, ranking, or uninterrupted marketplace access.
+- RIOTWORKS studio identity remains distinct from MOONWITNESS product identity.

@@ -61,6 +61,13 @@ jobs:
       - name: Test ARSY governance primitives
         run: pnpm --filter @riotworks/arsy-core test:governance
 
+      - name: Smoke test developer experience commands
+        run: |
+          pnpm devx doctor --json
+          pnpm devx plan --base=HEAD --json
+          pnpm devx context --json --max-chars=12000 > /tmp/moonwitness-context.json
+          node -e "JSON.parse(require('node:fs').readFileSync('/tmp/moonwitness-context.json', 'utf8'))"
+
       - name: Upload repository audit
         if: always()
         uses: actions/upload-artifact@v6
@@ -69,6 +76,38 @@ jobs:
           path: .artifacts/
           if-no-files-found: ignore
           retention-days: 14
+
+  developer-experience:
+    name: Developer experience
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Run developer experience unit tests
+        run: pnpm test
+
+      - name: Smoke test developer environment doctor
+        run: pnpm devx doctor --json
+
+      - name: Smoke test change-aware planner
+        run: pnpm devx plan --base=HEAD --json
+
+      - name: Verify agent context compiler emits valid JSON
+        run: |
+          pnpm devx context --json --max-chars=12000 > /tmp/moonwitness-context.json
+          node -e "JSON.parse(require('node:fs').readFileSync('/tmp/moonwitness-context.json', 'utf8'))"
 
   asset-integrity:
     name: Asset integrity
@@ -111,6 +150,30 @@ jobs:
 
       - name: Test asset registry
         run: node --experimental-strip-types --test packages/assets/tests/*.test.mjs
+
+  witness-fabric:
+    name: WITNESS FABRIC integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Test evidence ledger, replay, and policy-gated actions
+        run: node --experimental-strip-types --test packages/witness-fabric/tests/*.test.mjs
+
+      - name: Type-check WITNESS FABRIC
+        run: pnpm --filter @moonwitness/witness-fabric type-check
 
   full-workspace-quality:
     name: Full workspace typecheck and build

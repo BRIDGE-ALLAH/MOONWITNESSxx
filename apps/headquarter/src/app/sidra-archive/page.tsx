@@ -8,7 +8,7 @@ const assets = [
 
 export default function SidraArchive() {
   return (
-    <main className="min-h-screen bg-obsidian p-8 text-paper-bone">
+    <main className="theme-archive min-h-screen bg-background p-8 text-foreground">
       <div className="mx-auto max-w-7xl space-y-8">
         <header className="border-b border-acid-lime/30 pb-6">
           <Badge variant="lime">Prototype // Demo Data Only</Badge>

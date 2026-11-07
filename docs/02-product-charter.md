@@ -1,12 +1,16 @@
-# 02 — Product Charter
+# 02 — MOONWITNESS Product Charter
 
-**Status:** Approved baseline  
-**Version:** 1.0  
-**Updated:** 2026-11-07
+**Status:** Approved baseline — aligned to MOONWITNESS master brand
+**Version:** 1.1
+**Updated:** 2026-11-08
 
 ## 1. Product definition
 
-RIOTWORKS is a marketplace-native digital business operating system for a solo operator or very small creator team. It coordinates evidence-led opportunity discovery, original digital product production, asset governance, compliant distribution preparation, revenue accounting, and portfolio learning.
+MOONWITNESS is an evidence-first knowledge and operations ecosystem. Its initial product experience helps a solo operator or small creator team discover evidence-backed opportunities, create original digital works, govern assets and provenance, prepare compliant distribution, account for revenue and costs, and learn from portfolio outcomes.
+
+These creative-commerce workflows are one applied domain of the wider MOONWITNESS promise: SEE MORE. KNOW MORE. The human purpose is expressed by the Brand Manifesto: WHEN THE MOON RISES, WE SHARE MESSAGES.
+
+RIOTWORKS remains a separately governed creative/engineering studio identity and is not the product name.
 
 The defining objective is to make repeatable operations increasingly autonomous while keeping the owner accountable for product judgment, rights, policy-sensitive actions, finance, and exceptions.
 
@@ -46,7 +50,7 @@ The system must support:
 - **Human accountability:** approval is required for material rights, policy, money, and irreversible actions.
 - **Cost awareness:** compute, storage, listing, payment, and promotion fees are part of the product economics.
 
-## 5. What RIOTWORKS is
+## 5. What the MOONWITNESS creative-commerce experience is
 
 - A market-intelligence workspace.
 - A product and asset production coordinator.
@@ -55,7 +59,7 @@ The system must support:
 - A portfolio and unit-economics ledger.
 - An agent and workflow operations console.
 
-## 6. What RIOTWORKS is not
+## 6. What it is not
 
 - A guarantee of passive income.
 - A bot that publishes unlimited AI output.
@@ -88,12 +92,13 @@ Only after each channel's official integration, policies, and failure behavior a
 
 ## 9. Success definition
 
-RIOTWORKS succeeds when it helps the operator create a repeatable, lawful, quality-controlled process where:
+MOONWITNESS succeeds when it helps people and operators build a repeatable, lawful, quality-controlled process where:
 - Product decisions are supported by evidence.
 - Production cost is measurable.
 - Listings accurately represent delivered products.
 - Distribution actions are auditable.
 - Net contribution can be reconciled.
+- Knowledge and provenance can be shared responsibly.
 - The portfolio becomes more useful and resilient over time.
 
 Income is an outcome to measure, not a feature to promise.
