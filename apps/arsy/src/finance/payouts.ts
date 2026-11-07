@@ -261,7 +261,6 @@ export class PayoutRepository {
     evidenceUrl: string,
     evidenceCapturedAt: string,
   ): Promise<PayoutRecord | null> {
-    const payoutId = randomUUID()
     const historyId = randomUUID()
     const auditId = randomUUID()
     const financeId = randomUUID()
