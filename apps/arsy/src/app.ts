@@ -32,7 +32,7 @@ export function createApp(options: CreateAppOptions = {}) {
     async () => ({
       status: 'ok',
       message: 'ARSY Command Center is running',
-    }),
+    })
   )
 
   typedApp.get('/health/live', async () => ({ status: 'alive' }))
