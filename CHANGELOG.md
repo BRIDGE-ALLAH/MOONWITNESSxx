@@ -9,6 +9,8 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 - Runtime rate limiting for ARSY database health and readiness endpoints.
 - Persistent accessible prototype/demo disclosure in Headquarter.
 - Container build verification for ARSY and Headquarter.
+- PostgreSQL-backed account/network login throttling shared across ARSY instances, with fail-closed Headquarter login behavior.
+- Asynchronous scrypt-based operator password verification.
 
 ### Fixed
 - ARSY application owns its build contract instead of delegating HTTP lifecycle to the framework-neutral core.

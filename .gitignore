@@ -17,3 +17,6 @@ scripts/ai/.ai-*.txt
 
 # Local agent receipts and freshness leases (never commit by default).
 .moonwitness/
+
+# Local ARSY asset binaries and generated development data.
+.data/

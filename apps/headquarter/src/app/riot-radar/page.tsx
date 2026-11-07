@@ -1,51 +1,37 @@
-import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@riotworks/ui'
+import { cookies } from 'next/headers'
+import { OpportunityBoard } from '../../features/money-maker/opportunity-board'
+import { OperatorLoginForm } from '../../features/money-maker/operator-login-form'
+import {
+  getOperatorSessionConfig,
+  OPERATOR_SESSION_COOKIE,
+  verifyOperatorSession,
+} from '../../lib/operator-session'
 
-export default function RIOTRadar() {
-  return (
-    <main className="min-h-screen bg-obsidian p-8 text-paper-bone">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <header className="space-y-4 border-b border-acid-lime/30 pb-8">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-display text-5xl uppercase leading-none">Opportunity Radar</h1>
-            <Badge variant="outline">Not connected to live data</Badge>
-          </div>
-          <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">
-            Evidence-led opportunity evaluation
+export const dynamic = 'force-dynamic'
+
+export default async function RIOTRadarPage() {
+  const config = getOperatorSessionConfig()
+  if (!config) {
+    return (
+      <main className="min-h-[70vh] bg-obsidian p-8 text-paper-bone">
+        <div role="alert" className="mx-auto max-w-2xl border border-red-500/50 p-6">
+          <h1 className="font-display text-2xl uppercase">Operator access unavailable</h1>
+          <p className="mt-3 text-sm text-muted-ink">
+            Headquarter operator authentication is not configured. Set the operator ID,
+            password, session secret, and public HTTPS origin before using commercial records.
           </p>
-        </header>
+        </div>
+      </main>
+    )
+  }
 
-        <Card className="border-acid-lime/30">
-          <CardHeader>
-            <CardTitle>No persisted opportunities yet</CardTitle>
-            <CardDescription>
-              This workspace does not currently have a production opportunity API or an authenticated
-              operator data boundary. No opportunity records are available to display.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5 text-sm text-muted-ink">
-            <p>
-              Earlier sample cards on this page contained unsupported market-size, growth, pricing,
-              confidence, and unit-economics claims. They have been removed rather than presented
-              as observed demand or business results.
-            </p>
-            <div className="space-y-2">
-              <h2 className="font-display text-base uppercase text-paper-bone">What a real record will require</h2>
-              <ul className="list-disc space-y-1 pl-5">
-                <li>A buyer problem and intended job-to-be-done.</li>
-                <li>Source URLs, observation dates, evidence classes, and provenance.</li>
-                <li>Explicit separation of observed facts, estimates, and hypotheses.</li>
-                <li>Confidence with a documented method, not an arbitrary percentage.</li>
-                <li>Hard-gate status and an auditable operator decision.</li>
-              </ul>
-            </div>
-            <p className="border-t border-acid-lime/20 pt-4">
-              Opportunity capture, review, promotion, and persistence are tracked as the next real
-              commerce workflow. Until those services and authorization checks exist, this page
-              intentionally offers no create, approve, or reject controls.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </main>
-  )
+  const cookieStore = await cookies()
+  const token = cookieStore.get(OPERATOR_SESSION_COOKIE)?.value
+  const session = verifyOperatorSession(token, config.secret)
+
+  if (!session || session.operatorId !== config.operatorId) {
+    return <OperatorLoginForm />
+  }
+
+  return <OpportunityBoard />
 }

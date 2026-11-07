@@ -1,204 +1,129 @@
-# Docker & Docker Compose Setup for MOONWITNESS/RIOTWORKS
+# Docker & Docker Compose — MOONWITNESS
 
-> **Local-development configuration:** the default Compose stack and .env.docker are for local development only. .env.docker contains a deliberately local placeholder credential; never use it as a production secret. The PostgreSQL and Redis host ports bind to loopback. Production deployment still requires a separately managed secret, TLS/ingress, backups, monitoring, rollback, and a configured deployment target.
+> **Development only.** The default Compose stack runs ARSY and Headquarter in development mode, mounts source directories, and enables hot reload. It is not a production deployment definition. The committed `.env.docker` contains deliberately public local-only credentials and binds published ports to loopback; never expose it to a network or reuse those values in another environment.
 
-## Quick Start
+## Prerequisites
 
-### Prerequisites
+- Docker Desktop or Docker Engine with Docker Compose v2
+- Node.js 22.9+ and pnpm 12+ for host-run development
+- Ports 3000 (Headquarter), 3001 (ARSY), 5432 (PostgreSQL), and 6379 (Redis) available
+- At least 4 GB of free disk space for images and volumes
 
-- Docker Desktop (or Docker + Docker Compose separately)
-- 4GB+ free disk space for images and volumes
-- Ports 3000 (Headquarter), 3001 (ARSY), 5432 (PostgreSQL), 6379 (Redis) available
+## Start the local stack
 
-### Start services
+Run from the repository root:
 
 ```bash
-# Start all services (Headquarter, ARSY, PostgreSQL, Redis)
-docker-compose up -d
+# Validate environment interpolation before starting containers.
+docker compose --env-file .env.docker config --quiet
 
-# View logs
-docker-compose logs -f
+# Build the images and start Headquarter, ARSY, PostgreSQL, and Redis.
+docker compose --env-file .env.docker up --build -d
 
-# Stop containers while preserving named PostgreSQL and Redis data volumes
-docker compose down
+# Inspect service status and follow logs.
+docker compose --env-file .env.docker ps
+docker compose --env-file .env.docker logs -f
 ```
 
-### Environment variables
+The committed `.env.docker` is a convenience fixture for an isolated local machine. Its operator password is `local-dev-only-change-me`; the API token, session secret, and database password are also public placeholders. Replace them before sharing the machine or exposing any service, even on a private network. Do not commit replacement values.
 
-Copy `.env.docker` to `.env` and adjust as needed:
+For your own local environment, copy `.env.example` to an untracked root `.env`, set a unique database password, operator token, operator password, and session secret, then run Compose with `--env-file .env`. Keep `HEADQUARTER_PUBLIC_ORIGIN` equal to the exact browser origin. Compose sets the container's `DATABASE_URL` from `POSTGRES_*`; for host-run ARSY or migrations, set `DATABASE_URL` to the corresponding host PostgreSQL connection string. The Compose service URL is `ARSY_API_BASE_URL=http://arsy:3001`; when Headquarter runs directly on the host, use `http://127.0.0.1:3001`.
+
+## Local endpoints
+
+| Service | Host endpoint | Details |
+|---|---|---|
+| Headquarter | http://localhost:3000 | Next.js development server |
+| ARSY | http://localhost:3001 | Fastify API |
+| PostgreSQL | 127.0.0.1:5432 | Database `moonwitness`; credentials from env file |
+| Redis | 127.0.0.1:6379 | Development support service |
+
+All published host ports bind to loopback. Container-to-container requests use the private Compose bridge network. ARSY exposes `/health/live` for liveness and `/health/ready` for PostgreSQL readiness. A healthy readiness endpoint confirms database connectivity only; it does not prove every product workflow or external integration is complete.
+
+The Compose PostgreSQL major version is 17, matching the isolated PostgreSQL integration workflow. Data is stored in the `postgres_data`, `redis_data`, and `arsy_assets` named volumes.
+
+## Apply database migrations
+
+Start the local stack first, then run the explicit migration command:
 
 ```bash
-cp .env.docker .env
+docker compose --env-file .env.docker exec arsy pnpm migrate:up
 ```
 
-Key variables:
+The application does not mutate the database schema on startup. The migration runner tracks numbered migrations and checksums. Apply migrations to an isolated development or staging database first; back up and verify restore before any production migration.
 
-- `NODE_ENV` — development or production
-- `POSTGRES_PASSWORD` — PostgreSQL password (default: postgres)
-- `ARSY_PORT` — ARSY backend port (default: 3001)
-- `HEADQUARTER_PORT` — Headquarter frontend port (default: 3000)
-- `NEXT_PUBLIC_ARSY_URL` — Frontend URL for backend API (default: http://localhost:3001)
+## Troubleshoot an unhealthy ARSY container
 
-### Access services
+The development Compose stack bind-mounts application and shared workspace source trees. A bind mount hides the image's original contents at that path, including pnpm's package-local `node_modules` links. Compose therefore mounts the installed dependency directories separately for ARSY, Headquarter, and the shared workspace packages they consume. Keep these nested dependency volumes in place when changing source mounts.
 
-- **Headquarter frontend**: http://localhost:3000
-- **ARSY backend**: http://localhost:3001
-- **PostgreSQL**: localhost:5432 (user: postgres, password: postgres)
-- **Redis**: localhost:6379
+Application ports inside the Compose network are fixed: ARSY `3001` and Headquarter `3000`. `ARSY_PORT` and `HEADQUARTER_PORT` change only host-side published ports; they must not change the ports used by container healthchecks or Headquarter-to-ARSY service communication.
 
-ARSY always listens on the fixed internal container port 3001. `ARSY_PORT` changes only the host-side published port and must not change the port used by its healthcheck or container-to-container requests. Headquarter likewise listens on fixed internal port 3000; `HEADQUARTER_PORT` changes only its host-side published port. ARSY liveness is `/health/live`; readiness at `/health/ready` checks PostgreSQL before Compose marks the service healthy.
-
-## Service descriptions
-
-### PostgreSQL
-
-- Image: `postgres:16-alpine`
-- Database: `moonwitness` (configurable)
-- Data persists in `postgres_data` volume
-- Healthcheck enabled
-
-### Redis
-
-- Image: `redis:7-alpine`
-- Used by BullMQ for job queues and caching
-- Data persists in `redis_data` volume
-- Healthcheck enabled
-
-### ARSY (Backend)
-
-- Built from `Dockerfile.arsy`
-- Fastify HTTP API running on port 3001
-- Depends on PostgreSQL and Redis
-- Mounts local source for development hot-reload
-- Healthcheck enabled
-
-### Headquarter (Frontend)
-
-- Built from `Dockerfile.headquarter`
-- Next.js application running on port 3000
-- Depends on ARSY backend
-- Mounts local source for development hot-reload
-- Configured with `NEXT_PUBLIC_ARSY_URL` for API communication
-
-## Development workflow
-
-### Local changes
-
-Edit files in `apps/headquarter`, `apps/arsy`, or `packages/`. Changes are immediately reflected in running containers (thanks to volume mounts).
-
-### Rebuild services
-
-After changing package.json or dependencies:
+Inspect the process logs and health history before restarting:
 
 ```bash
-docker-compose up --build
-```
-
-### View service logs
-
-```bash
-docker-compose logs -f arsy
-docker-compose logs -f headquarter
-docker-compose logs -f postgres
-```
-
-### Access container shell
-
-```bash
-docker-compose exec arsy sh
-docker-compose exec headquarter sh
-docker-compose exec postgres psql -U postgres -d moonwitness
-```
-
-## Production considerations
-
-For production deployments:
-
-1. **Security**:
-   - Set strong `POSTGRES_PASSWORD`
-   - Use secrets management (e.g., Docker secrets, Kubernetes)
-   - Never commit `.env` files with real secrets
-
-2. **Performance**:
-   - Use multi-stage builds (already in Dockerfiles)
-   - Disable hot-reload mounts in production
-   - Use PostgreSQL replicas and Redis Sentinel/Cluster
-
-3. **Monitoring**:
-   - Add health check endpoints to ARSY
-   - Configure centralized logging (ELK, Datadog, etc.)
-   - Set up alerts for service failures
-
-4. **Scaling**:
-   - Use Docker Swarm or Kubernetes for orchestration
-   - Implement load balancing (Nginx, HAProxy)
-   - Separate read/write database replicas
-
-## Troubleshooting
-
-### Services won't start
-
-```bash
-docker-compose logs -f
-```
-
-### Port already in use
-
-Change ports in `.env` or stop conflicting containers:
-
-```bash
-docker ps
-docker stop <container-id>
-```
-
-### Database connection errors
-
-Verify PostgreSQL is healthy:
-
-```bash
-docker-compose exec postgres pg_isready
-```
-
-### Troubleshoot an unhealthy ARSY container
-
-The development Compose stack bind-mounts `apps/arsy`, `apps/headquarter`, and `packages` over directories from the image. Those mounts hide pnpm's package-local `node_modules` links unless nested anonymous dependency volumes are retained. The Compose file keeps those nested dependency volumes for ARSY, Headquarter, and their shared packages.
-
-Inspect the actual startup failure before rebuilding:
-
-```bash
-docker compose logs --tail=200 --no-color arsy
+docker compose --env-file .env.docker logs --tail=200 arsy
 docker inspect --format '{{json .State.Health}}' moonwitness-arsy
-docker compose ps -a
+docker compose --env-file .env.docker ps -a
 ```
 
-After a dependency-volume or image change, recreate only the application services and renew their anonymous dependency volumes. The named PostgreSQL and Redis data volumes remain attached:
+After changing workspace dependency mounts, rebuild and recreate only the application containers. Renewing anonymous dependency volumes refreshes their contents from the rebuilt images; the named PostgreSQL, Redis, and asset volumes remain intact:
 
 ```bash
-docker compose config --quiet
-docker compose up --build --force-recreate --renew-anon-volumes -d arsy headquarter
-docker compose ps
-docker compose logs --tail=100 --no-color arsy
+docker compose --env-file .env.docker up --build --force-recreate --renew-anon-volumes -d arsy headquarter
+docker compose --env-file .env.docker ps
+docker compose --env-file .env.docker logs --tail=100 arsy
 ```
 
-Do not use `docker compose down -v` or `docker system prune --volumes` as a startup troubleshooting shortcut; they can delete persistent database data. If ARSY remains unhealthy, use its startup log and health history to identify the next failure rather than resetting data.
+Do **not** use `down --volumes` as a troubleshooting shortcut; that deletes database and asset data. If ARSY remains unhealthy after these changes, the ARSY log and `.State.Health.Log` output above are needed to identify the next startup or PostgreSQL error.
 
-## File structure
+## Useful commands
 
+```bash
+docker compose --env-file .env.docker logs -f arsy
+docker compose --env-file .env.docker logs -f headquarter
+docker compose --env-file .env.docker logs -f postgres
+docker compose --env-file .env.docker exec arsy sh
+docker compose --env-file .env.docker exec headquarter sh
+docker compose --env-file .env.docker exec postgres psql -U postgres -d moonwitness
+docker compose --env-file .env.docker down
 ```
-.
-├── docker-compose.yml          # Service orchestration
-├── Dockerfile.arsy             # ARSY backend image
-├── Dockerfile.headquarter      # Headquarter frontend image
-├── .env.docker                 # Docker environment template
-├── apps/
-│   ├── arsy/                   # Backend source
-│   └── headquarter/            # Frontend source
-├── packages/                   # Shared packages
-└── pnpm-workspace.yaml         # pnpm workspace config
+
+**Destructive operation:** `docker compose --env-file .env.docker down --volumes` deletes the PostgreSQL, Redis, and ARSY asset volumes, including local data. Run it only when you intentionally want to discard all local state.
+
+## Host-run ARSY development
+
+For development without the application containers, copy `.env.example` to `.env`, set `DATABASE_URL` to a reachable PostgreSQL instance and configure an operator ID/token. Then run:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm dev:arsy
 ```
+
+The ARSY development script loads the optional repository-root `.env` file. Existing process environment values take precedence. The runtime reads `HOST` and `PORT`; `ARSY_PORT` is only the Compose host-port mapping variable.
+
+## What the container CI proves
+
+The container workflow checks Compose environment interpolation and builds the ARSY and Headquarter production images. It does **not** start those images, run migrations against a live container stack, execute browser E2E, or deploy to a production target. A successful image build is not a runtime or production-readiness result.
+
+## Production deployment is not configured
+
+Do not deploy the default Compose file or `.env.docker` to production. The repository does not currently provide a verified production deployment target/profile. Production still requires, at minimum:
+
+- a target-specific runtime definition without source mounts or development commands;
+- managed secrets, unique operator credentials, HTTPS/TLS termination, trusted ingress, and private data-service networking;
+- a shared login-attempt limiter before scaling beyond one Headquarter process;
+- tested PostgreSQL and asset-volume backup/restore procedures;
+- monitoring, alerting, and operational ownership;
+- a documented rollback procedure;
+- container runtime verification against PostgreSQL; and
+- target-specific live health and critical-workflow smoke tests.
+
+The asset adapter currently uses a single-node filesystem volume. Do not run multiple ARSY replicas with independent local asset volumes. See [docs/29-money-maker-runtime-setup.md](./docs/29-money-maker-runtime-setup.md) for the current Money Maker runtime boundary.
 
 ## Related documentation
 
-- [docs/08-technical-architecture.md](../docs/08-technical-architecture.md) — Backend/ORM architecture
-- [docs/24-repository-and-automation-governance.md](../docs/24-repository-and-automation-governance.md) — Git/CI setup
-- [README.md](../README.md) — Project overview
+- [README.md](./README.md) — repository overview and engineering commands
+- [docs/08-technical-architecture.md](./docs/08-technical-architecture.md) — technical architecture
+- [docs/24-repository-and-automation-governance.md](./docs/24-repository-and-automation-governance.md) — repository and automation governance
+- [docs/29-money-maker-runtime-setup.md](./docs/29-money-maker-runtime-setup.md) — ARSY and Money Maker runtime setup
+- [SECURITY.md](./SECURITY.md) — vulnerability reporting and security policy

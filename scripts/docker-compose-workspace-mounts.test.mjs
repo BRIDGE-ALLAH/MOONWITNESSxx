@@ -41,15 +41,16 @@ test('Headquarter source mount preserves app and shared UI dependencies on its i
   assert.doesNotMatch(headquarter, /PORT: \$\{HEADQUARTER_PORT/)
 })
 
-test('application dependency mounts leave the named database and Redis data volumes intact', () => {
+test('application dependency mounts preserve named PostgreSQL, Redis, and asset volumes', () => {
   assert.match(compose, /postgres_data:\n\s+driver: local/)
   assert.match(compose, /redis_data:\n\s+driver: local/)
-  assert.doesNotMatch(compose, /postgres_data:.*arsy_assets/s)
+  assert.match(compose, /arsy_assets:\n\s+driver: local/)
+  assert.ok(serviceBlock('postgres', 'redis').includes('postgres_data:/var/lib/postgresql/data'))
+  assert.ok(serviceBlock('redis', 'arsy').includes('redis_data:/data'))
+  assert.ok(serviceBlock('arsy', 'headquarter').includes('arsy_assets:/var/lib/arsy/assets'))
 })
 
 test('database and cache are not coupled to application-only dependency volumes', () => {
-  const postgres = serviceBlock('postgres', 'redis')
-  const redis = serviceBlock('redis', 'arsy')
-  assert.ok(postgres.includes('postgres_data:/var/lib/postgresql/data'))
-  assert.ok(redis.includes('redis_data:/data'))
+  assert.doesNotMatch(serviceBlock('postgres', 'redis'), /node_modules|arsy_assets/)
+  assert.doesNotMatch(serviceBlock('redis', 'arsy'), /node_modules|arsy_assets/)
 })
