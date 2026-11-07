@@ -21,7 +21,7 @@ export function OperatorLogoutButton() {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button type="button" onClick={() => void logout()} disabled={loading}
+      <button type="button" aria-label="Sign out" data-testid="operator-sign-out" onClick={() => void logout()} disabled={loading}
         className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase disabled:opacity-50">
         {loading ? 'Signing out…' : 'Sign out'}
       </button>
