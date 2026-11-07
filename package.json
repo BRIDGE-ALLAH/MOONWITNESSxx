@@ -18,8 +18,8 @@
     "format:check": "pnpm run format && pnpm run format:check",
     "validate:repo": "pnpm run lockfile:check && pnpm run type-check && pnpm run lint",
     "validate": "pnpm run validate:repo && pnpm run build",
-    "lockfile:check": "pnpm scripts/check-lockfile.mjs",
-    "lockfile:refresh": "pnpm scripts/check-lockfile.mjs --lockfile-only"
+    "lockfile:check": "node scripts/check-lockfile.mjs",
+    "lockfile:refresh": "node scripts/check-lockfile.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
