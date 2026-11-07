@@ -58,6 +58,16 @@ const nextConfig = {
 
 These snippets describe the current Headquarter setup; use the actual application configuration as the source of truth when integrating another consumer.
 
+## Peer compatibility
+
+The consuming application must provide:
+
+- React `^18` or `^19`.
+- React DOM `^18` or `^19`.
+- Tailwind CSS `^3.4.0`.
+
+The package declares Radix UI primitives, class utilities, and Tailwind animation support as its own workspace dependencies. Keep React, React DOM, and Tailwind owned by the consuming application to avoid duplicate framework runtimes.
+
 ## Basic usage
 
 ```tsx
