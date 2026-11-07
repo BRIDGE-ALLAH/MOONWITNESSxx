@@ -50,10 +50,11 @@ export function validateExecutionTrace(
   events: readonly ExecutionEvent[],
 ): string[] {
   const violations: string[] = []
+  if (events.length === 0) violations.push('execution_trace_empty')
   const ids = new Set<string>()
   const decisions = new Map<string, ExecutionEvent>()
   const approvals = new Set<string>()
-  const started = new Set<string>()
+  const started = new Map<string, ExecutionEvent>()
   const terminal = new Set<string>()
   const approvalSequence = new Map<string, number>()
   let previousTimestamp = Number.NEGATIVE_INFINITY
@@ -85,10 +86,14 @@ export function validateExecutionTrace(
         violations.push('approval_missing_before_effect')
       }
       if (started.has(event.actionId)) violations.push('duplicate_effect_start')
-      started.add(event.actionId)
+      if (!event.payloadHash) violations.push('effect_start_receipt_hash_missing')
+      started.set(event.actionId, event)
     }
     if (event.kind === 'effect.completed' || event.kind === 'effect.failed') {
-      if (!started.has(event.actionId)) violations.push('effect_terminal_without_start')
+      const start = started.get(event.actionId)
+      if (!start) violations.push('effect_terminal_without_start')
+      else if (start.actorId !== event.actorId) violations.push('effect_terminal_actor_mismatch')
+      if (!event.payloadHash) violations.push('effect_terminal_receipt_hash_missing')
       if (terminal.has(event.actionId)) violations.push('multiple_effect_terminals')
       terminal.add(event.actionId)
     }
@@ -101,7 +106,7 @@ export function validateExecutionTrace(
       violations.push('approval_missing_before_or_during_execution')
     }
   }
-  for (const actionId of started) if (!terminal.has(actionId)) violations.push('effect_missing_terminal_event')
+  for (const actionId of started.keys()) if (!terminal.has(actionId)) violations.push('effect_missing_terminal_event')
   return [...new Set(violations)]
 }
 
