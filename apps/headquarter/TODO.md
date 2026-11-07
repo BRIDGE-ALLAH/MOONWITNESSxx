@@ -263,14 +263,14 @@
 - [ ] Pastikan deep link dan breadcrumb konsisten.
 
 ### 5.2 Administration
-- [ ] Rancang Policy Center untuk policy/configuration governance.
-- [ ] Rancang Security & Audit untuk event, access history, dan aktivitas sensitif.
-- [ ] Rancang Marketplace Accounts untuk koneksi dan lifecycle akun/integrasi.
-- [ ] Rancang AI Providers untuk konfigurasi provider, health, dan capability.
-- [ ] Rancang Addon Manager untuk lifecycle addon/plugin dan permission.
-- [ ] Rancang ORM/Infrastructure Health sebagai observability/diagnostic surface, bukan tempat mengelola internal backend secara langsung.
-- [ ] Rancang Workspace Settings untuk konfigurasi workspace dan preference.
-- [ ] Pastikan setiap halaman administration memiliki role/permission model, auditability, dan confirmation untuk perubahan sensitif.
+- [x] Rancang Policy Center untuk policy/configuration governance di `ADMINISTRATION-IA.md`.
+- [x] Rancang Security & Audit untuk event, access history, dan aktivitas sensitif di `ADMINISTRATION-IA.md`.
+- [x] Rancang Marketplace Accounts untuk koneksi dan lifecycle akun/integrasi di `ADMINISTRATION-IA.md`.
+- [x] Rancang AI Providers untuk konfigurasi provider, health, dan capability di `ADMINISTRATION-IA.md`.
+- [x] Rancang Addon Manager untuk lifecycle addon/plugin dan permission di `ADMINISTRATION-IA.md`.
+- [x] Rancang ORM/Infrastructure Health sebagai observability/diagnostic surface, bukan tempat mengelola internal backend secara langsung di `ADMINISTRATION-IA.md`.
+- [x] Rancang Workspace Settings untuk konfigurasi workspace dan preference di `ADMINISTRATION-IA.md`.
+- [ ] Tetapkan role/permission model, auditability, dan confirmation per halaman saat kontrak capability ARSY tersedia; desain requirement dicatat di `ADMINISTRATION-IA.md`.
 
 ### 5.3 Feature rollout
 - [x] Buat register readiness dan production gate di `FEATURE-ROLLOUT.md`.
@@ -282,7 +282,7 @@
 
 **Gate Phase 5**
 - [ ] Navigation mencerminkan kemampuan produk yang benar-benar tersedia.
-- [ ] Area administration terpisah secara konseptual dan permission dari operasional harian.
+- [x] Area administration terpisah secara konseptual; enforcement permission menunggu kontrak ARSY.
 - [ ] Feature rollout tidak mengorbankan konsistensi UX atau boundary arsitektur.
 
 ---
@@ -402,3 +402,4 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Phase 4 ARSY Deck reference-feature structure established without inventing unavailable backend contracts.
 - [x] Phase 5 navigation aligned with approved IA; unimplemented administration routes are disabled and marked planned.
 - [x] Feature rollout and production promotion gates documented in `FEATURE-ROLLOUT.md`.
+- [x] Administration information architecture, data boundaries, intended audiences, and backend gates documented in `ADMINISTRATION-IA.md`.
