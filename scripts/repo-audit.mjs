@@ -46,6 +46,9 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   if (rootPackage.name !== 'moonwitness') {
     errors.push(`Root package name must be "moonwitness"; found "${rootPackage.name}".`)
   }
+  if (rootPackage.engines?.node !== '>=22') {
+    errors.push('Node.js engine must remain >=22 to match the supported local baseline.')
+  }
   if (rootPackage.packageManager !== 'pnpm@12.16.1') {
     errors.push('packageManager must remain pinned to pnpm@12.16.1 until the lockfile is deliberately upgraded.')
   }
@@ -58,7 +61,10 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     'validate:repo',
     'validate',
     'lockfile:check',
-    'lockfile:refresh'
+    'lockfile:refresh',
+    'format',
+    'lint',
+    'type-check'
   ]
   for (const name of requiredScripts) {
     if (!rootPackage.scripts?.[name]) errors.push(`Missing required root script: ${name}`)

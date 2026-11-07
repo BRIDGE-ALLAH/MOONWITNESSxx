@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
-      - "feat-*"
-      - "fix-*"
-      - "chore-*"
+      - "feat/**"
+      - "fix/**"
+      - "chore/**"
+      - "docs/**"
+      - "refactor/**"
   pull_request:
     branches:
       - main
@@ -27,30 +29,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Install pnpm
         uses: pnpm/action-setup@v6
         with:
           version: 12.16.1
-
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
-
       - name: Generate repository audit report
         run: pnpm run audit:repo
-
       - name: Check pnpm lockfile
         run: pnpm run lockfile:check
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Validate repository, formatting, and automation tests
         run: pnpm run validate:repo
-
       - name: Upload repository audit
         if: always()
         uses: actions/upload-artifact@v6
@@ -69,20 +64,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Install pnpm
         uses: pnpm/action-setup@v6
         with:
           version: 12.16.1
-
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Run full validation
         run: pnpm run validate
