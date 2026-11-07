@@ -58,3 +58,7 @@ The **Headquarter foundation workstream** can close when required workspace CI a
 - Decision Graph: graph schema, provenance/traceability assessor, invalid/expired evidence checks, and tests are implemented. UI and server-owned contracts remain future work.
 - Scenario Forge: deterministic, immutable, shadow-only calculation engine and tests are implemented. Snapshot sourcing, scenario comparison UI, uncertainty model, and persistence remain future work.
 - Both are deliberately read-only/pure at this stage and are not exposed as production-ready routes.
+
+## Required full-workspace CI result
+
+PR #43 head `44d5cb62413e2e03de89b46961439ea8953001b0`: Repository Integrity, Asset Integrity, full-workspace validation/build, and CodeQL all passed. The former optional `FULL_QUALITY_CI` gate has been removed.
