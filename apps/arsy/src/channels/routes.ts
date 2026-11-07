@@ -20,6 +20,7 @@ const reviewSchema = z.object({
     checkedAt: z.string().datetime({ offset: true }).optional(),
     notes: z.string().trim().min(5).max(1000),
   }),
+  policyStatus: z.enum(['pass', 'blocked', 'unknown']),
   policyUrl: z.string().url().optional(),
   policyCheckedAt: z.string().datetime({ offset: true }).optional(),
   manualFallback: z.string().trim().min(10).max(2000),
@@ -31,6 +32,9 @@ const reviewSchema = z.object({
   }
   if (input.payoutRequirements.status !== 'unknown' && (!input.payoutRequirements.sourceUrl || !input.payoutRequirements.checkedAt)) {
     context.addIssue({ code: 'custom', path: ['payoutRequirements'], message: 'A non-unknown payout decision requires a source URL and review time.' })
+  }
+  if (input.policyStatus !== 'unknown' && (!input.policyUrl || !input.policyCheckedAt)) {
+    context.addIssue({ code: 'custom', path: ['policyUrl'], message: 'A non-unknown policy decision requires a source URL and review time.' })
   }
   if (Boolean(input.policyUrl) !== Boolean(input.policyCheckedAt)) {
     context.addIssue({ code: 'custom', path: ['policyUrl'], message: 'Policy URL and review time must be supplied together.' })
@@ -48,7 +52,7 @@ export function registerChannelRoutes(app: FastifyInstance, db: DatabasePool, en
     const body = createSchema.safeParse(request.body)
     if (!body.success) return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Channel registry input is invalid.', details: body.error.flatten() } })
     try {
-      const channel = await repository.create(body.data.slug, body.data.displayName)
+      const channel = await repository.create(reviewerId, body.data.slug, body.data.displayName)
       return reply.code(201).send({ data: channel })
     } catch (error) {
       if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
