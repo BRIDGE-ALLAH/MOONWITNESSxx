@@ -1,4 +1,4 @@
-import ui from '@riotworks/ui'
+import * as ui from '@riotworks/ui'
 
 const requiredExports = ['Button', 'buttonVariants', 'Card', 'CardHeader', 'CardTitle', 'CardDescription', 'CardContent', 'CardFooter', 'Badge', 'Separator', 'cn']
 const missingExports = requiredExports.filter((name) => !(name in ui))
