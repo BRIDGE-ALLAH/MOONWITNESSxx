@@ -9,7 +9,7 @@ import {
 export async function proxyArsyRequest(
   request: Request,
   apiPath: string,
-  method: 'GET' | 'POST' | 'PATCH',
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
 ): Promise<NextResponse> {
   const sessionConfig = getOperatorSessionConfig()
   if (!sessionConfig) {
@@ -31,16 +31,18 @@ export async function proxyArsyRequest(
     return NextResponse.json({ error: { code: 'ARSY_NOT_CONFIGURED', message: 'The server-side ARSY connection is not configured.' } }, { status: 503 })
   }
 
+  const hasBody = method === 'POST' || method === 'PATCH'
+
   try {
     const response = await fetch(`${baseUrl.replace(/\/+$/, '')}${apiPath}`, {
       method,
       headers: {
         accept: 'application/json',
         'x-arsy-operator-token': operatorToken,
-        ...(method !== 'GET' ? { 'content-type': 'application/json' } : {}),
+        ...(hasBody ? { 'content-type': 'application/json' } : {}),
         ...(request.headers.get('idempotency-key') ? { 'idempotency-key': request.headers.get('idempotency-key') as string } : {}),
       },
-      ...(method !== 'GET' ? { body: await request.text() } : {}),
+      ...(hasBody ? { body: await request.text() } : {}),
       cache: 'no-store',
       signal: AbortSignal.timeout(12_000),
     })
