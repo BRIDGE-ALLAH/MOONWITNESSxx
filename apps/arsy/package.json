@@ -5,7 +5,7 @@
   "description": "ARSY HTTP application with rate-limited database health checks",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "node --watch --experimental-strip-types src/index.ts",
+    "dev": "node --env-file-if-exists=../../.env --watch --experimental-strip-types src/index.ts",
     "build": "pnpm run type-check",
     "start": "node --experimental-strip-types src/index.ts",
     "lint": "ESLINT_USE_FLAT_CONFIG=false pnpm --filter @riotworks/lint exec eslint --config .eslintrc.json ../../apps/arsy/src --ext .ts --max-warnings 0",
