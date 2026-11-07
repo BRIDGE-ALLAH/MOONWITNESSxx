@@ -50,7 +50,7 @@ export class RevocationPropagationGraph {
     const queue = [request.sourceId], visited = new Set(queue)
     while (queue.length) {
       const current = queue.shift()!
-      for (const next of this.outgoing.get(current) ?? []) {
+      for (const next of [...(this.outgoing.get(current) ?? [])].sort()) {
         if (visited.has(next)) continue
         if (this.nodes.get(next)!.tenantId !== tenantId) throw new Error('cross-tenant propagation blocked')
         visited.add(next); paths[next] = [...paths[current], next]; queue.push(next)
