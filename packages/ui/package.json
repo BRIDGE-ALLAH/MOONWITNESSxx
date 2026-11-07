@@ -11,7 +11,7 @@
     "./tailwind.config": "./tailwind.config.js"
   },
   "scripts": {
-    "lint": "pnpm --filter @riotworks/lint exec eslint ../ui/src --config eslint.config.mjs --max-warnings 0",
+    "lint": "../lint/node_modules/.bin/eslint src --config ../lint/eslint.config.mjs --max-warnings 0",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
