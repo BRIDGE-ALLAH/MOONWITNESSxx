@@ -58,3 +58,14 @@ These are foundations, not production features. Scenario results must never be p
 | Scenario Arena | `/scenario-forge` | Interactive synthetic scenario comparison; deterministic shadow-only calculations | Versioned ARSY snapshot contract, units/freshness, uncertainty semantics, replay capsule, persistence and authorization |
 
 The interfaces are operator-facing prototypes. No scenario can be promoted to a live mutation; no fixture represents real workspace state.
+
+
+## Emerging governance modules (Phase 11–13)
+
+| Module | Route | Current maturity | Production gate |
+|---|---|---|---|
+| Replay Capsule | `/governance-lab` | SHA-256 content-addressed capsule with deterministic replay verification; synthetic only | ARSY signed attestations, trusted timestamp authority, schema/version registry, immutable storage, workspace access control |
+| Decision Debt Compiler | `/governance-lab` | Pure compiler for stale/missing/contradictory rationale and downstream impact | Authorized graph snapshot API, append-only review workflow, reviewer identity, event/audit persistence, false-positive evaluation |
+| Uncertainty & Governance Gate | `/governance-lab` | Pure low/base/high uncertainty assessment and fail-closed human-review gate | Domain-calibrated thresholds, metric contracts/units, evidence coverage semantics, policy enforcement and approval audit |
+
+The Governance Lab is a read-only prototype. `eligible_for_human_review` is not approval; all states require human approval and ARSY enforcement. SHA-256 is an integrity checksum, not a digital signature or proof of authorship/time.
