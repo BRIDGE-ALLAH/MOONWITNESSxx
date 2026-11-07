@@ -1,5 +1,6 @@
 'use client'
 
+import { OperatorLogoutButton } from './operator-logout-button'
 import { useCallback, useEffect, useState } from 'react'
 
 type Opportunity = {
@@ -137,7 +138,7 @@ export function ProductBoard() {
   )
 
   return <main className="min-h-screen bg-obsidian p-6 text-paper-bone md:p-8"><div className="mx-auto max-w-7xl space-y-8">
-    <header className="border-b border-acid-lime/30 pb-6"><p className="font-mono text-xs uppercase tracking-[0.25em] text-acid-lime">RIOTWORKS / Product Workshop</p><h1 className="mt-3 font-display text-5xl uppercase">THE FORGE</h1><p className="mt-3 max-w-3xl text-sm text-muted-ink">Turn only approved, evidence-backed opportunities into versioned product briefs. A brief is not a published product and does not imply a sale.</p></header>
+    <header className="border-b border-acid-lime/30 pb-6"><div className="mb-3 flex justify-end"><OperatorLogoutButton /></div><p className="font-mono text-xs uppercase tracking-[0.25em] text-acid-lime">RIOTWORKS / Product Workshop</p><h1 className="mt-3 font-display text-5xl uppercase">THE FORGE</h1><p className="mt-3 max-w-3xl text-sm text-muted-ink">Turn only approved, evidence-backed opportunities into versioned product briefs. A brief is not a published product and does not imply a sale.</p></header>
     {error && <div role="alert" className="border border-red-500/50 p-4 text-sm">{error}</div>}
     {message && <div role="status" className="border border-acid-lime/40 p-4 text-sm">{message}</div>}
     <section className="space-y-3"><div className="flex items-end justify-between"><div><h2 className="font-display text-2xl uppercase">Product portfolio</h2><p className="text-xs text-muted-ink">Persisted products and version records</p></div><button type="button" onClick={() => void refresh()} className="border border-acid-lime/40 px-4 py-2 font-mono text-xs uppercase">Refresh</button></div>
