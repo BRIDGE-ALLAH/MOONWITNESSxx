@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { DatabasePool } from '../db.ts'
 import type { OpportunityInput, OpportunityEvaluation } from './domain.ts'
 
@@ -79,17 +80,26 @@ export class OpportunityRepository {
 
   async create(ownerId: string, actorId: string, input: OpportunityInput, evaluation: OpportunityEvaluation): Promise<OpportunityRecord> {
     const result = await this.db.query(
-      `INSERT INTO arsy_opportunities
+      `WITH created AS (
+       INSERT INTO arsy_opportunities
         (id, owner_id, title, buyer_problem, buyer_segment, job_to_be_done, product_hypothesis,
          product_family, candidate_channels, evidence, scores, hard_gates, score, decision,
          created_by, updated_by)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb,
-         $11::jsonb, $12, $13, $14, $14)
-       RETURNING ${SELECT_COLUMNS}`,
-      [ownerId, input.title, input.buyerProblem, input.buyerSegment, input.jobToBeDone,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb,
+         $12::jsonb, $13, $14, $15, $15)
+       RETURNING *
+     ), audited AS (
+       INSERT INTO arsy_commerce_audit_events
+         (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+       SELECT $16, owner_id, 'opportunity', id, 'created', $15,
+         jsonb_build_object('decision', decision, 'score', score)
+       FROM created
+     )
+     SELECT ${SELECT_COLUMNS} FROM created`,
+      [randomUUID(), ownerId, input.title, input.buyerProblem, input.buyerSegment, input.jobToBeDone,
         input.productHypothesis, input.productFamily, JSON.stringify(input.candidateChannels),
         JSON.stringify(input.evidence), JSON.stringify(input.scores), JSON.stringify(input.hardGates),
-        evaluation.score, evaluation.decision, actorId],
+        evaluation.score, evaluation.decision, actorId, randomUUID()],
     )
     return mapOpportunity(rows<OpportunityRow>(result)[0])
   }
