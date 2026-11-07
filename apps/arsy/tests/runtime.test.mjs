@@ -109,7 +109,7 @@ test('all versioned commerce APIs fail closed without the operator service token
 test('financial event API is registered behind the shared operator authorization boundary', async () => {
   const fake = createFakePool()
   const token = 'runtime-test-operator-token'
-  const app = createApp({ databasePool: fake.pool, logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
+  const app = createApp({ databasePool: fake.pool, logger: false, env: { ARSY_OPERATOR_ID: 'operator-test', ARSY_OPERATOR_TOKEN: token } })
 
   try {
     const response = await app.inject({
