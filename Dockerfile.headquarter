@@ -1,27 +1,16 @@
-# Headquarter Frontend Dockerfile
 FROM node:24-alpine
-
 WORKDIR /app
 
-# Install pnpm
 RUN npm install -g pnpm@12.16.1
 
-# Copy workspace manifests
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-
-# Copy packages and apps
 COPY packages ./packages
-COPY apps/headquarter ./apps/headquarter
+COPY apps ./apps
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile --ignore-scripts
-
-# Build packages and Headquarter
+RUN pnpm install --frozen-lockfile --ignore-scripts --prod=false
 RUN pnpm run build --filter="@riotworks/headquarter..."
 
-# Expose port
+ENV NODE_ENV=production
 EXPOSE 3000
-
-# Start Headquarter
 WORKDIR /app/apps/headquarter
 CMD ["pnpm", "start"]
