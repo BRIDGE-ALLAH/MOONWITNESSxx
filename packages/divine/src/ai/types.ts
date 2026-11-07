@@ -1,0 +1,11 @@
+export type CandidateKind="entity"|"claim"|"evidence-selector"|"relation"|"ontology-mapping";
+export type CandidateReviewState="candidate"|"accepted"|"rejected"|"needs-revision";
+export interface SourceSpan {readonly sourceRef:string;readonly start:number;readonly end:number;readonly quote:string;readonly language?:string}
+export interface AIContribution {readonly providerId:string;readonly modelId:string;readonly modelVersion:string;readonly taskVersion:string;readonly promptVersion:string;readonly inputReleaseId:string;readonly pipelineVersion:string;readonly generatedAt:string}
+export interface ExtractionCandidate {readonly id:string;readonly kind:CandidateKind;readonly value:Readonly<Record<string,unknown>>;readonly spans:readonly SourceSpan[];readonly sourceRefs:readonly string[];readonly provenanceRefs:readonly string[];readonly contribution:AIContribution;readonly rightsProfileRefs:readonly string[];readonly reviewState:CandidateReviewState;readonly untrustedInput:true}
+export interface ExtractionRequest {readonly taskId:string;readonly kind:CandidateKind;readonly sourceRef:string;readonly sourceText:string;readonly inputReleaseId:string;readonly language:string;readonly rights:{readonly aiProcessingAllowed:boolean;readonly rightsProfileRefs:readonly string[]}}
+export interface CandidateExtractor {extract(request:ExtractionRequest):Promise<readonly Omit<ExtractionCandidate,"reviewState"|"untrustedInput">[]>}
+export interface HumanReview {readonly reviewerRef:string;readonly reviewerRole:string;readonly decision:"accept"|"reject"|"revise";readonly rationale:string;readonly reviewedAt:string}
+export interface ReviewedCandidate {readonly candidate:ExtractionCandidate;readonly review:HumanReview;readonly state:CandidateReviewState}
+export interface PromotionEnvelope {readonly candidateRef:string;readonly reviewerRef:string;readonly reviewerRole:string;readonly sourceRefs:readonly string[];readonly provenanceRefs:readonly string[];readonly spans:readonly SourceSpan[];readonly createdAt:string;readonly status:"approved-for-external-promotion";readonly writesCanonicalCorpus:false}
+export interface CitationGroundingResult {readonly valid:boolean;readonly errors:readonly string[]}
