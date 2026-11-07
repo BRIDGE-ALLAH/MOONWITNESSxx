@@ -7,8 +7,9 @@ type Opportunity = {
   title: string
   buyerSegment: string
   buyerProblem: string
-  evaluation: { score: number | null; decision: string; blockedGates: string[]; unknownGates: string[] }
+  evaluation: { score: number | null; decision: string; blockedGates: string[]; unknownGates: string[]; missingScoreDimensions: string[] }
 }
+type Product = { id: string; opportunityId: string | null; title: string; productFamily: string; lifecycleState: string; version: number }
 const dimensions = [
   ['demandEvidence', 'Demand evidence', 25],
   ['competitionGap', 'Competition / quality gap', 20],
@@ -26,6 +27,9 @@ const emptyGateRationales = Object.fromEntries(gates.map(([key]) => [key, 'Not v
 
 export function OpportunityBoard() {
   const [items, setItems] = useState<Opportunity[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [productCriteria, setProductCriteria] = useState<Record<string, string>>({})
+  const [promotingId, setPromotingId] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -39,11 +43,19 @@ export function OpportunityBoard() {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/api/opportunities', { cache: 'no-store' })
-      const payload = await response.json()
-      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
-      if (!response.ok) throw new Error(payload.error?.message || 'Unable to load opportunities.')
-      setItems(payload.data ?? [])
+      const [opportunityResponse, productResponse] = await Promise.all([
+        fetch('/api/opportunities', { cache: 'no-store' }),
+        fetch('/api/products', { cache: 'no-store' }),
+      ])
+      const [opportunityPayload, productPayload] = await Promise.all([
+        opportunityResponse.json(),
+        productResponse.json(),
+      ])
+      if (opportunityResponse.status === 401 || productResponse.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!opportunityResponse.ok) throw new Error(opportunityPayload.error?.message || 'Unable to load opportunities.')
+      if (!productResponse.ok) throw new Error(productPayload.error?.message || 'Unable to load product briefs.')
+      setItems(opportunityPayload.data ?? [])
+      setProducts(productPayload.data ?? [])
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to load opportunities.')
     } finally {
@@ -97,12 +109,53 @@ export function OpportunityBoard() {
     } finally { setSaving(false) }
   }
 
+  async function promoteOpportunity(item: Opportunity) {
+    const criterion = productCriteria[item.id]?.trim()
+    if (!criterion) {
+      setError('Add at least one measurable acceptance criterion before creating a product brief.')
+      return
+    }
+    setPromotingId(item.id)
+    setError('')
+    setMessage('')
+    try {
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ opportunityId: item.id, acceptanceCriteria: [criterion] }),
+      })
+      const payload = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!response.ok) throw new Error(payload.error?.message || 'Unable to create product brief.')
+      setMessage(`Product brief created: ${payload.data.title} · version ${payload.data.version}.`)
+      setProductCriteria((values) => ({ ...values, [item.id]: '' }))
+      await refresh()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to create product brief.')
+    } finally {
+      setPromotingId('')
+    }
+  }
+
   return <main className="min-h-screen bg-obsidian p-6 text-paper-bone md:p-8"><div className="mx-auto max-w-7xl space-y-8">
     <header className="border-b border-acid-lime/30 pb-6"><p className="font-mono text-xs uppercase tracking-[0.25em] text-acid-lime">RIOTWORKS / Market Intelligence</p><h1 className="mt-3 font-display text-5xl uppercase">RIOT RADAR</h1><p className="mt-3 max-w-3xl text-sm text-muted-ink">Capture a real buyer problem, preserve source evidence, and evaluate the opportunity. Scores, confidence, and gate states are operator assessments—not independent source verification. Missing evidence stays unknown.</p></header>
     {error && <div role="alert" className="border border-red-500/50 bg-red-950/20 p-4 text-sm">{error}</div>}
     {message && <div role="status" className="border border-acid-lime/40 p-4 text-sm">{message}</div>}
     <section className="space-y-3"><div className="flex items-end justify-between"><div><h2 className="font-display text-2xl uppercase">Opportunity register</h2><p className="text-xs text-muted-ink">Persisted records from ARSY · no sample rows</p></div><button type="button" onClick={() => void refresh()} className="border border-acid-lime/40 px-4 py-2 font-mono text-xs uppercase">Refresh</button></div>
-      {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading persisted opportunities…</p> : items.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No opportunities recorded yet. Capture the first source-backed buyer problem below.</p> : <div className="grid gap-3 md:grid-cols-2">{items.map((item) => <article key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><h3 className="font-display text-xl uppercase">{item.title}</h3><span className="font-mono text-xs text-acid-lime">{item.evaluation.score === null ? 'UNSCORED' : `${item.evaluation.score}/100`}</span></div><p className="mt-2 text-sm text-muted-ink">{item.buyerSegment}</p><p className="mt-3 text-sm">{item.buyerProblem}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase"><span className="border border-acid-lime/30 px-2 py-1">{item.evaluation.decision}</span>{item.evaluation.blockedGates.map((g) => <span key={g} className="border border-red-500/50 px-2 py-1 text-red-300">BLOCKED: {g}</span>)}{item.evaluation.unknownGates.map((g) => <span key={g} className="border border-orange-400/50 px-2 py-1 text-orange-200">UNKNOWN: {g}</span>)}</div></article>)}</div>}
+      {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading persisted opportunities…</p> : items.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No opportunities recorded yet. Capture the first source-backed buyer problem below.</p> : <div className="grid gap-3 md:grid-cols-2">{items.map((item) => {
+        const product = products.find((candidate) => candidate.opportunityId === item.id)
+        const eligible = item.evaluation.decision === 'prototype-candidate'
+          && item.evaluation.score !== null
+          && item.evaluation.score >= 80
+          && item.evaluation.blockedGates.length === 0
+          && item.evaluation.unknownGates.length === 0
+          && item.evaluation.missingScoreDimensions.length === 0
+        return <article key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><h3 className="font-display text-xl uppercase">{item.title}</h3><span className="font-mono text-xs text-acid-lime">{item.evaluation.score === null ? 'UNSCORED' : `${item.evaluation.score}/100`}</span></div><p className="mt-2 text-sm text-muted-ink">{item.buyerSegment}</p><p className="mt-3 text-sm">{item.buyerProblem}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase"><span className="border border-acid-lime/30 px-2 py-1">{item.evaluation.decision}</span>{item.evaluation.blockedGates.map((g) => <span key={g} className="border border-red-500/50 px-2 py-1 text-red-300">BLOCKED: {g}</span>)}{item.evaluation.unknownGates.map((g) => <span key={g} className="border border-orange-400/50 px-2 py-1 text-orange-200">UNKNOWN: {g}</span>)}</div>
+          {product ? <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs font-mono uppercase text-acid-lime">Product brief created · v{product.version} · {product.lifecycleState}</p>
+            : eligible ? <div className="mt-4 space-y-2 border-t border-acid-lime/20 pt-3"><label className="block text-xs font-mono uppercase">Acceptance criterion<textarea value={productCriteria[item.id] ?? ''} onChange={(event) => setProductCriteria((values) => ({ ...values, [item.id]: event.target.value }))} rows={2} maxLength={500} placeholder="Define a measurable condition for accepting the first product brief." className="mt-2 w-full border border-acid-lime/20 bg-obsidian p-2 text-sm normal-case" /></label><button type="button" disabled={!productCriteria[item.id]?.trim() || promotingId === item.id} onClick={() => void promoteOpportunity(item)} className="border border-acid-lime px-3 py-2 font-mono text-[10px] uppercase disabled:opacity-50">{promotingId === item.id ? 'Creating brief…' : 'Create product brief'}</button></div>
+            : <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs text-muted-ink">Product promotion is locked until every score dimension is complete and all hard gates are passed.</p>}
+        </article>
+      })}</div>}
     </section>
     <form onSubmit={createOpportunity} className="space-y-6 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
       <div><h2 className="font-display text-2xl uppercase">Capture opportunity</h2><p className="text-xs text-muted-ink">One source-backed opportunity per submission. No automated scraping or fabricated demand signals.</p></div>
