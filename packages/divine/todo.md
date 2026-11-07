@@ -902,3 +902,18 @@ Phases may be parallelized only when their dependency contracts are stable. Do n
 - [ ] Remaining profile-specific and external interoperability tasks.
 
 **Execution update (2026-11-08):** Phase 0–2 merged to `main`; Phases 0–5 are merged to `main` (Phase 0–2 via PR #39; Phase 3–5 via PR #52). Divine unit tests passed 37/37 on the integration branch; repository CI, CodeQL, asset integrity and full workspace typecheck/build passed on PR #52. PR #54 makes the Divine test suite a permanent default-branch CI step. External SHACL conformance and broader standards round-trip tests remain open. This is a domain-foundation release, not a production integration. The Corpus repository has NOT been imported because its README states there is no repository-wide license; third-party dataset redistribution must be rights-reviewed first. Read-only access is sufficient to fetch source history. A guarded, pinned subtree importer is available at `scripts/migrate-corpus-subtree.sh` with manual workflow `.github/workflows/corpus-subtree-migration.yml`; see `docs/CORPUS-MIGRATION.md`.
+
+
+## Phase 9–11 execution update (2026-11-08)
+
+A first dependency-free vertical slice has been implemented on branch `feat-divine-preservation-ai-interop` (separate from PR #58):
+
+- [x] Phase 9: deterministic SHA-256 preservation manifest, integrity verifier, hash-chained decision history and explicit rights-action gate.
+- [x] Phase 10: provider-neutral extraction port, exact source-span and release validation, model/prompt/pipeline provenance, untrusted candidate state, human review and non-writing promotion envelope.
+- [x] Phase 11: bounded exporters for PROV-O, SKOS, TEI P5, IIIF Presentation 3 and Web Annotation, with explicit fidelity/loss reports.
+- [x] Added focused tests for preservation, candidate governance and all five interchange exporters.
+- [x] Added `docs/preservation-ai-interop.md` with limitations, research references and follow-on prototypes.
+- [ ] Run full package type-check and tests on the new branch; resolve any CI failures before requesting review.
+- [ ] Cross-runtime canonicalization test vectors, digital signatures/key custody, ZILL rights authorization, SHACL validation, TEI/IIIF schema validation, round-trip tests, real IIIF dimensions and production Corpus promotion adapter remain open.
+
+**Important:** these are initial domain slices, not completion of production acceptance for Phases 9–11. No AI provider, network call, Corpus canonical write, database or storage backend has been added. SHA-256 hashes are tamper-evidence only, not signatures or proof of truth. The IIIF exporter deliberately marks its dimensions as placeholders.
