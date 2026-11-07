@@ -509,9 +509,9 @@ test('shared PostgreSQL login throttling is consistent across two ARSY instances
   const ownerId = `login-limit-${randomUUID()}`
   const token = 'integration-shared-login-token'
   const networkHash = createHash('sha256').update(ownerId).digest('hex')
-  const poolA = createDatabasePool()
+  let poolA = createDatabasePool()
   const poolB = createDatabasePool()
-  const appA = createApp({ databasePool: poolA, logger: false, env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token } })
+  let appA = createApp({ databasePool: poolA, logger: false, env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token } })
   const appB = createApp({ databasePool: poolB, logger: false, env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token } })
   const send = (app, action) => app.inject({
     method: 'POST',
@@ -533,6 +533,16 @@ test('shared PostgreSQL login throttling is consistent across two ARSY instances
 
     const blockedFromOtherInstance = await send(appA, 'check')
     assert.equal(blockedFromOtherInstance.json().data.allowed, false)
+
+    // Restart one ARSY instance with a new database pool. PostgreSQL retains
+    // the shared lockout; process restart must not reset the failed attempts.
+    await appA.close()
+    poolA = createDatabasePool()
+    appA = createApp({ databasePool: poolA, logger: false, env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token } })
+    await appA.ready()
+    const blockedAfterRestart = await send(appA, 'check')
+    assert.equal(blockedAfterRestart.json().data.allowed, false)
+    assert.ok(blockedAfterRestart.json().data.retryAfterSeconds > 0)
 
     // Expire both the block and the rolling failure window, then prove the next
     // attempt starts a fresh window rather than inheriting the old failure count.
