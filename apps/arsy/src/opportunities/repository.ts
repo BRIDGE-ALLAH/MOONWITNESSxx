@@ -141,6 +141,34 @@ export class OpportunityRepository {
     return row ? mapOpportunity(row) : null
   }
 
+  async update(ownerId: string, actorId: string, id: string, input: OpportunityInput, evaluation: OpportunityEvaluation): Promise<OpportunityRecord | null> {
+    const result = await this.db.query(
+      `WITH changed AS (
+       UPDATE arsy_opportunities SET
+         title = $4, buyer_problem = $5, buyer_segment = $6, job_to_be_done = $7,
+         product_hypothesis = $8, product_family = $9, candidate_channels = $10::jsonb,
+         evidence = $11::jsonb, scores = $12::jsonb, score_details = $13::jsonb,
+         hard_gates = $14::jsonb, hard_gate_details = $15::jsonb, score = $16,
+         decision = $17, decision_rationale = NULL, updated_at = now(), updated_by = $3
+       WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
+       RETURNING *
+     ), audited AS (
+       INSERT INTO arsy_commerce_audit_events (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+       SELECT $18, owner_id, 'opportunity', id, 'updated', $3,
+         jsonb_build_object('decision', decision, 'score', score)
+       FROM changed
+     )
+     SELECT ${SELECT_COLUMNS} FROM changed`,
+      [ownerId, id, actorId, input.title, input.buyerProblem, input.buyerSegment, input.jobToBeDone,
+        input.productHypothesis, input.productFamily, JSON.stringify(input.candidateChannels),
+        JSON.stringify(input.evidence), JSON.stringify(input.scores), JSON.stringify(input.scoreDetails),
+        JSON.stringify(input.hardGates), JSON.stringify(input.hardGateDetails), evaluation.score,
+        evaluation.decision, randomUUID()],
+    )
+    const row = rows<OpportunityRow>(result)[0]
+    return row ? mapOpportunity(row) : null
+  }
+
   async decide(ownerId: string, actorId: string, id: string, decision: OpportunityEvaluation['decision'], rationale: string): Promise<OpportunityRecord | null> {
     const result = await this.db.query(
       `WITH changed AS (
