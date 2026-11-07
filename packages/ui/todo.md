@@ -253,7 +253,7 @@ A component is not complete until all applicable checks pass:
 
 - [ ] Public props and types are documented.
 - [ ] Variants and sizes are demonstrated.
-- [ ] Night Riot and Paper Riot are verified.
+- [ ] Observatory and Archive are verified.
 - [ ] Default, hover, focus, pressed, disabled, and loading states are verified where relevant.
 - [ ] Empty, error, and success states are defined where relevant.
 - [ ] Keyboard behavior is verified.
