@@ -11,7 +11,7 @@
 | Experience | Observatory | Research, observation, evidence workflows | Uses master identity with instrument UI patterns |
 | Experience | Archive | Records, memory, retrieval, provenance | Uses master identity with editorial/archive patterns |
 | Program | MOONWITNESS XV | Program/release designation | Typographic descriptor only; never a competing logo |
-| Studio | RIOTWORKS | Independent creative/engineering studio | Separate identity; attribution only where relevant |
+| Division | RIOTWORKS | Product and operating division within MOONWITNESS | Division-level products may use a distinct sub-brand expression; MOONWITNESS remains the master identity |
 
 ## Message architecture
 
@@ -48,7 +48,7 @@ Use confident but measured language. Distinguish facts, interpretations, hypothe
 - Monochrome: one-color symbol/wordmark for stamps, print, and low-color contexts.
 - Manifesto signature: Core Promise lockup with the Manifesto placed as a separate supporting line in editorial/campaign contexts, not forced into the compact master logo.
 
-Do not append RIOTWORKS to the product lockup by default. Do not create independent marks for every feature or module.
+Do not append RIOTWORKS to the master MOONWITNESS lockup by default. When identifying the division, use a restrained MOONWITNESS / RIOTWORKS descriptor rather than a competing master logo. Do not create independent marks for every feature or module.
 
 ## Asset governance
 
