@@ -4,20 +4,20 @@ import { authorizeCapability } from '../src/runtime-contract/capability.ts'
 
 const verifier = { verify: async (grant) => grant.signature === 'valid' }
 const parent = {
-  id: 'root', issuerId: 'system', subjectId: 'service-a', tenantId: 'tenant-a', purpose: 'invoice-review',
-  actions: ['invoice:read', 'invoice:approve'], resources: ['invoice/*'],
+  id: 'root', issuerId: 'system', subjectId: 'service-a', tenantId: 'tenant-a', purpose: 'invoice-review', sessionId: 'session-1',
+  actions: ['invoice:read', 'invoice:approve'], resources: ['invoice/*'], argumentHashes: ['*'],
   issuedAt: '2026-11-01T00:00:00Z', expiresAt: '2026-12-01T00:00:00Z', signature: 'valid',
 }
 const child = {
   ...parent, id: 'child', issuerId: 'service-a', subjectId: 'agent-1',
-  actions: ['invoice:read'], resources: ['invoice/123'],
+  actions: ['invoice:read'], resources: ['invoice/123'], argumentHashes: ['sha256:invoice-123-read'],
   expiresAt: '2026-11-20T00:00:00Z',
 }
 
 test('allows only attenuated delegated capabilities', async () => {
   const result = await authorizeCapability({
     actorId: 'agent-1', tenantId: 'tenant-a', action: 'invoice:read',
-    resource: 'invoice/123', purpose: 'invoice-review', now: '2026-11-08T00:00:00Z',
+    resource: 'invoice/123', purpose: 'invoice-review', sessionId: 'session-1', argumentHash: 'sha256:invoice-123-read', now: '2026-11-08T00:00:00Z',
   }, [parent, child], verifier)
   assert.equal(result.allowed, true)
 })
@@ -49,4 +49,19 @@ test('rejects a child grant that outlives its parent or changes tenant', async (
     resource: 'invoice/123', purpose: 'invoice-review', now: '2026-11-08T00:00:00Z',
   }, [parent, tenantEscalation], verifier)
   assert.equal(tenantResult.reasonCodes[0], 'delegation_context_escalation')
+})
+
+test('binds a capability to its task session and normalized argument hash', async () => {
+  const wrongSession = await authorizeCapability({
+    actorId: 'agent-1', tenantId: 'tenant-a', action: 'invoice:read',
+    resource: 'invoice/123', purpose: 'invoice-review', sessionId: 'another-session',
+    argumentHash: 'sha256:invoice-123-read', now: '2026-11-08T00:00:00Z',
+  }, [parent, child], verifier)
+  assert.equal(wrongSession.reasonCodes[0], 'capability_context_mismatch')
+  const wrongArgs = await authorizeCapability({
+    actorId: 'agent-1', tenantId: 'tenant-a', action: 'invoice:read',
+    resource: 'invoice/123', purpose: 'invoice-review', sessionId: 'session-1',
+    argumentHash: 'sha256:invoice-999-read', now: '2026-11-08T00:00:00Z',
+  }, [parent, child], verifier)
+  assert.equal(wrongArgs.reasonCodes[0], 'arguments_outside_capability')
 })
