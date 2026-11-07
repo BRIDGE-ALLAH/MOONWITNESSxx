@@ -156,6 +156,42 @@ try {
   assert.deepEqual(versionHistory.data.map((item) => item.version), [2, 1])
   assert.equal(versionHistory.data[0].brief.summary, 'Version two: adds a documented reconciliation export.')
 
+  // Store a real asset binary with provenance and append source-qualified inspections.
+  const productCard = page.locator('article').filter({ hasText: title }).first()
+  await productCard.getByLabel('Asset file').setInputFiles({
+    name: 'integration-source.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Isolated CI asset bytes; never a customer deliverable.'),
+  })
+  await productCard.getByLabel('Creator / owner').fill('Playwright isolated fixture author')
+  await productCard.getByLabel('License').fill('Original test fixture')
+  await productCard.getByLabel('Source reference (optional)').fill(`https://example.com/original-source/${runId}`)
+  await productCard.getByLabel('Edit history (optional)').fill('Created as an isolated fixture and exported as UTF-8 text.')
+  await productCard.getByLabel('Permission basis').fill('Generated inside the isolated CI workflow and not distributed.')
+  await productCard.getByLabel('Disclosure').fill('Synthetic CI fixture; not a production asset.')
+  await productCard.getByRole('button', { name: 'Store bytes & provenance' }).click()
+  await page.getByRole('status').filter({ hasText: 'Asset bytes and provenance stored' }).waitFor({ state: 'visible', timeout: 30_000 })
+  const assetCard = productCard.locator('article').filter({ hasText: 'integration-source.txt' })
+  await assetCard.waitFor({ state: 'visible' })
+  await assetCard.getByRole('link', { name: 'Download original' }).waitFor({ state: 'visible' })
+  const inspections = [
+    ['rights', 'Independent review (reported)'],
+    ['policy', 'Independent review (reported)'],
+    ['technical-qa', 'Automated check'],
+    ['creative-qa', 'Independent review (reported)'],
+  ]
+  for (const [type, sourceType] of inspections) {
+    await assetCard.locator('details').first().locator('summary').click()
+    await assetCard.getByLabel('Inspection source').selectOption({ label: sourceType })
+    await assetCard.getByLabel('Inspection type').selectOption(type)
+    await assetCard.getByLabel('Status').selectOption('pass')
+    await assetCard.getByLabel('Rationale').fill(`Isolated CI fixture records the ${type} inspection workflow.`)
+    await assetCard.getByLabel('Evidence URL or reference').fill(`https://example.com/asset-inspection/${type}/${runId}`)
+    await assetCard.getByRole('button', { name: 'Append inspection record' }).click()
+    await page.getByRole('status').filter({ hasText: 'Inspection record appended' }).waitFor({ state: 'visible', timeout: 30_000 })
+  }
+  await assetCard.getByText('Not channel-ready: missing/blocked checks, self-attested records, or untrusted inspection actors.').waitFor({ state: 'visible', timeout: 30_000 })
+
   // Record a real pending ledger event and reconcile it with a source URL.
   await page.goto(`${baseUrl}/mizan-ledger`, { waitUntil: 'domcontentloaded' })
   await page.getByLabel('Event type').selectOption('gross-receipt')
