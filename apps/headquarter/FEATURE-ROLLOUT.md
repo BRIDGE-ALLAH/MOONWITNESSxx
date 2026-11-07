@@ -9,13 +9,13 @@
 |---|---|---|---|---|
 | ARSY DECK | `/arsy-deck` | Headquarter / ARSY | Reference UI, demo repository | Public workspace-pulse contract, workspace permission checks, source timestamps, contract tests |
 | SIGNAL ROOM | `/signal-room` | Signal domain / ARSY | Prototype | Evidence/search contracts, provenance, pagination, source freshness |
-| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Prototype | Opportunity lifecycle, evidence provenance, decision permissions |
-| THE FORGE | `/the-forge` | Production domain / ARSY | Prototype | Brief/product/job contracts, versioning, artifact storage |
-| ZILL WATCH | `/zill-watch` | Quality & policy / ARSY | Prototype | Inspection contract, rights/policy enforcement, review audit |
-| LAUNCH BAY | `/launch-bay` | Distribution / ARSY | Prototype | Verified account/capability contract, allowed publication workflow, external receipt |
-| SIDRA ARCHIVE | `/sidra-archive` | Asset domain / ARSY | Prototype | Asset/version/provenance contract and storage authorization |
-| AFTERSHOCK | `/aftershock` | Analytics / ARSY | Prototype | Source-backed event/metric definitions, timeframe, sample size |
-| MIZAN LEDGER | `/mizan-ledger` | Finance domain / ARSY | Prototype | Financial event contract, reconciliation, export permissions and audit |
+| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Development vertical slice: signed operator session, evidence-backed capture/list/review, persisted PostgreSQL API, score rationale and hard gates | Browser E2E, operator idempotency for opportunity creation, migration/backup operations in target deployment |
+| THE FORGE | `/the-forge` | Production domain / ARSY | Development vertical slice: approved opportunity → persisted product brief v1 and acceptance criteria | Product version revisions, asset binary storage, provenance editor, inspection workflow |
+| ZILL WATCH | `/zill-watch` | Quality & policy / ARSY | Honest empty state; inspection schema exists but no inspections are claimed | Inspection API, evidence-backed rights/policy/technical/creative review, audit UX |
+| LAUNCH BAY | `/launch-bay` | Distribution / ARSY | Honest disconnected state; no marketplace account or publication receipt is claimed | Channel registry API, eligibility evidence, manual listing package, official provider receipt |
+| SIDRA ARCHIVE | `/sidra-archive` | Asset domain / ARSY | Honest empty state; asset metadata schema exists but no binary storage is configured | Storage provider, upload/download authorization, checksum and provenance lifecycle |
+| AFTERSHOCK | `/aftershock` | Analytics / ARSY | Development read model: persisted opportunity/product counts and verified contribution by currency; unavailable cohort metrics are labelled | Source-exposure/conversion events, cohorts, product lifetime and metric denominators |
+| MIZAN LEDGER | `/mizan-ledger` | Finance domain / ARSY | Development vertical slice: exact minor-unit events, idempotency, pending/verified/disputed/reversed reconciliation, audit and currency-grouped net contribution | Provider import, payout reconciliation, FX conversion, export controls and production accounting review |
 | RIOT ENGINE | `/riot-engine` | Workflow / ARSY | Prototype | Workflow/run lifecycle, idempotent actions, operator permission, audit |
 
 ## Administration
