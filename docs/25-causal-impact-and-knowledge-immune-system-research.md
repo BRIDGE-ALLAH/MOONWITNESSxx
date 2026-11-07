@@ -141,3 +141,50 @@ The in-memory hash chain detects modifications within the stored event stream; i
 5. **No-Op Confidence Gate:** if predicted impact is high but edge provenance is weak, the engine recommends no-op or human review instead of inventing a precise risk estimate.
 
 These ideas are differentiated integration hypotheses. A prior-art and patent search is still required before claiming novelty.
+
+
+## Research dossier 3 — Runtime Contracts, Execution Attestation & Continuous Safety (2026-11-08)
+
+### Phase 18 — Provenance-bound capability delegation
+
+**Research basis**
+- [Beyond Guardrails: Runtime Enforcement for Secure AI Agents](https://doi.org/10.62762/JRSC.2026.526903) reviews 58 studies and identifies action-boundary enforcement as the dominant placement, while durable authorization, multi-agent delegation and recovery from partial effects remain open problems.
+- [SoK: Security Vulnerabilities in Agentic AI Systems](https://research.google/pubs/sok-security-vulnerabilities-in-agentic-ai-systems/) surveys 71 papers and production CVEs; its key structural concern is untrusted content acquiring authority and delegation laundering across agents.
+- [Runtime Policy Enforcement for MCP-Based LLM Agents](https://www.mdpi.com/2079-9292/15/13/2829) evaluates a tool-boundary policy enforcement point with cross-step information-flow labels and a hash-chained audit log.
+- [Towards Verifiably Safe Tool Use for LLM Agents](https://doi.org/10.1145/3786582.3786839) combines hazard analysis, capability-enhanced MCP and enforceable data-flow/tool-sequence specifications.
+
+**Implementation hypothesis:** capabilities should be attenuable and purpose-bound across delegation. The root user grant is the ceiling; each sub-agent receives a narrower child grant. The policy decision must bind to normalized arguments and a one-time nonce to reduce TOCTOU and confused-deputy risks.
+
+### Phase 19 — Proof-carrying execution
+
+**Research basis**
+- [Agent Safety Should Be a Runtime Contract](https://arxiv.org/abs/2608.11274) argues for preventive and evidential safety: block dangerous actions and require verifiable proof that intended actions actually occurred.
+- [Proof of Execution: Runtime Verification for Governed AI Agent Actions](https://arxiv.org/abs/2607.05397) formalizes contract, causal event stream and replay context as a runtime-checkable execution proof.
+- [Auditable LLM Autonomy for Operational Decision-Making](https://doi.org/10.32604/cmc.2026.082270) separates evidence, decision traces and outcomes into independently auditable planes.
+
+**Implementation hypothesis:** an execution attestation should be issued only after an independent verifier checks authorization, actor/tenant consistency, approval timing, effect receipts and terminal outcomes. A trace hash alone is not a signature or proof that the external world actually changed as recorded.
+
+### Phase 20 — Continuous agent safety lab
+
+**Research basis**
+- [TraceProbe: An Execution-Based Benchmark for Diagnosing Safety Failures in LLM Agents](https://aclanthology.org/2026.emnlp-main.1233/) provides 155 executable scenarios, trace-level diagnosis and replay-oriented localization; it reports unsafe intermediate actions even when final outcomes appear safe.
+- [Formal Runtime Verification for Tool-Using LLM Agents](https://doi.org/10.1145/3847353.3847499) studies temporal-logic monitors on recorded traces and highlights the trade-off between attack detection and benign false positives.
+- [The Balkanization of Execution-Security Research for AI Coding Agents](https://arxiv.org/abs/2607.05743) surveys execution isolation, access control, TOCTOU, MCP, identity delegation and provenance as fragmented but connected security concerns.
+
+**Implementation hypothesis:** each policy update should be tested against a fixed, versioned corpus plus generated mutations of known traces. Report false-block and escape rates; never optimize one metric in isolation.
+
+### Ecosystem and practitioner signals
+
+- [FailproofAI](https://github.com/FailproofAI/failproofai) is a fast-growing TypeScript enforcement/observability project with hooks across agent harnesses. Its custom license includes Commons Clause restrictions; do not embed it or copy code without license review. Use it as a functional benchmark only.
+- [GitHub agent-observability topic](https://github.com/topics/agent-observability) shows a crowded observability category. MOONWITNESS should differentiate through enforceable capability lineage and independently verifiable execution evidence rather than another trace dashboard.
+- Practitioner discussions in [r/AI_Agents](https://www.reddit.com/r/AI_Agents/) and [r/LangChain](https://www.reddit.com/r/LangChain/) repeatedly surface prompt-injection through tool outputs, memory poisoning, identity handoff and replay gaps. These are useful threat hypotheses, not peer-reviewed measurements; include them in red-team fixtures and verify independently.
+
+### Differentiated experiments (not novelty claims)
+
+1. **Delegation Attenuation Proof:** generate a machine-checkable proof that every child capability is a strict subset of its parent, including purpose, tenant, resource and expiry.
+2. **Effect Receipt Quorum:** for high-impact operations, require both the policy gateway receipt and provider-observed effect receipt before issuing a completion attestation.
+3. **Causal Policy Mutation:** mutate a policy or provenance edge, then use trace dependency to identify the smallest historical scenario set that should fail. This prioritizes regression coverage by causal blast radius.
+4. **Authority-Budget Ledger:** every agent delegation spends from a finite action/resource/time budget; delegation cannot mint new authority. Revoke downstream grants when the root grant expires or is revoked.
+5. **Negative-Space Audit:** periodically sample operations that *did not* execute—denied calls, abandoned plans, missing receipts—to detect silent bypasses and gaps in telemetry.
+
+These are integration hypotheses. A formal novelty/patent search and implementation benchmarking remain necessary.
