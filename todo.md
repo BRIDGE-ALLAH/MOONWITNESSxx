@@ -26,7 +26,7 @@ These rules govern every task below. A task must not silently change them.
 The first implementation should standardize one TypeScript-native declaration style. Preferred initial shape:
 
 ```ts
-import { Model, fields } from "@moonwitness/orm";
+import { Model, fields } from "@riotworks/orm";
 
 export class Customer extends Model {
   static modelName = "crm.customer";
@@ -101,14 +101,14 @@ export class Customer extends Model {
 
 ### 1.1 Resolve conflicting architecture statements
 
-- [ ] Review `docs/08-technical-architecture.md`, `docs/18-monorepo-and-orm-addon-architecture.md`, `docs/22-base-platform-and-orm-capability-blueprint.md`, and `docs/23-repository-audit-and-current-execution-plan.md`.
-- [ ] Update docs/08 so its ORM description explicitly says programmatic TypeScript model declarations + composed registry + System Mode; avoid wording that implies a separate schema-first workflow.
-- [ ] Update docs/08 provider roles to distinguish SQLite System Database from PostgreSQL Business Database.
-- [ ] Keep docs/22 as the detailed ORM capability contract; link to it from the architecture overview.
-- [ ] Keep docs/23 as the authoritative repository implementation inventory; do not mark planned packages as implemented.
-- [ ] Record approved decisions as ADRs: declaration-based ORM, registry composition, System/Runtime Mode, environment/recordset, safe reconciliation, system/business DB split, and external plugin execution boundary.
-- [ ] Add a glossary for Model, Field, Module, Addon, Plugin, Provider, Registry, Environment, Recordset, System Mode, Runtime Mode, Schema Plan, and Upgrade Handler.
-- [ ] Document which Odoo concepts are adopted and which are intentionally redesigned for TypeScript; do not promise Odoo API compatibility.
+- [x] Review `docs/08-technical-architecture.md`, `docs/18-monorepo-and-orm-addon-architecture.md`, `docs/22-base-platform-and-orm-capability-blueprint.md`, and `docs/23-repository-audit-and-current-execution-plan.md`.
+- [x] Update docs/08 so its ORM description explicitly says programmatic TypeScript model declarations + composed registry + System Mode; avoid wording that implies a separate schema-first workflow.
+- [x] Update docs/08 provider roles to distinguish SQLite System Database from PostgreSQL Business Database.
+- [x] Keep docs/22 as the detailed ORM capability contract; link to it from the architecture overview.
+- [x] Keep docs/23 as the authoritative repository implementation inventory; do not mark planned packages as implemented.
+- [x] Record approved decisions as ADRs: declaration-based ORM, registry composition, System/Runtime Mode, environment/recordset, safe reconciliation, system/business DB split, and external plugin execution boundary.
+- [x] Add a glossary for Model, Field, Module, Addon, Plugin, Provider, Registry, Environment, Recordset, System Mode, Runtime Mode, Schema Plan, and Upgrade Handler.
+- [x] Document which Odoo concepts are adopted and which are intentionally redesigned for TypeScript; do not promise Odoo API compatibility.
 
 **Acceptance criteria**
 - [ ] No canonical document describes a separate manually maintained schema file as the model source of truth.
@@ -118,15 +118,15 @@ export class Customer extends Model {
 
 ### 1.2 Repair the monorepo before ORM feature work
 
-- [ ] Fix the Headquarter package identity/scripts/dependencies so its Next.js source and package manifest agree.
-- [ ] Implement or temporarily remove the unresolved `@riotworks/arsy-core` dependency from `apps/arsy`; do not leave a false package dependency.
-- [ ] Remove the UI package from the ARSY backend dependency graph.
-- [ ] Confirm `apps/arsy` as the only canonical HTTP backend application.
+- [x] Fix the Headquarter package identity/scripts/dependencies so its Next.js source and package manifest agree.
+- [~] `packages/arsy-core` now has a source entrypoint, but `apps/arsy` still does not compose through it; define and verify that integration before marking complete.
+- [x] Remove the UI package from the ARSY backend dependency graph.
+- [x] Confirm `apps/arsy` as the only canonical HTTP backend application.
 - [ ] Review the duplicate `services/arsy` and `services/queue` code; extract useful behavior, then retire duplicates deliberately.
-- [ ] Repair root pnpm/Turbo scripts and package task dependencies; remove success-masking `|| true` from required checks.
-- [ ] Ensure lint, typecheck, test, and build commands are deterministic and fail-fast.
+- [~] Repair root pnpm/Turbo scripts and package task dependencies; root scripts are corrected, but full task graph verification remains.
+- [~] Ensure lint, typecheck, test, and build commands are deterministic and fail-fast; initial lint/root test wiring is prepared, but the full matrix is not yet verified.
 - [ ] Establish package naming convention consistently, including the existing `adaptor` spelling if retained.
-- [ ] Add/verify root `.gitignore`, `.dockerignore`, environment examples, and package export conventions.
+- [~] Add/verify root `.gitignore`, `.dockerignore`, environment examples, and package export conventions; `.dockerignore` is added, remaining paths/exports still need verification.
 - [ ] Add CI checks for install, lint, typecheck, unit tests, and build on the canonical workspace.
 - [ ] Capture a clean baseline report before creating ORM packages.
 
@@ -770,3 +770,36 @@ Use these labels consistently when updating this file:
 - `[!]` Blocked (state the blocker and next action).
 
 **Current state:** All tasks in this file are initially unchecked. This backlog does not claim that the ORM, System Mode, adapters, or base addons already exist.
+
+
+## 19. Phase 0 execution log
+
+**Working branch:** `chore/phase-0-repository-alignment`  
+**Execution date:** 2026-11-07
+
+### Completed in this pass
+- [x] Rewrote docs/08 as the current architecture overview for declaration-based ORM, registry, Environment/Recordset, System Mode/Runtime Mode and provider ownership.
+- [x] Reconciled docs/18 and docs/22 with the updated declaration and provider contracts.
+- [x] Added docs/24 with ADR-001 through ADR-012.
+- [x] Added a dated follow-up reinspection to docs/23 so the old audit snapshot no longer misstates the current Headquarter and ARSY Core file inventory.
+- [x] Aligned root package identity and replaced recursive/missing root script references.
+- [x] Replaced pnpm-workspace allowBuilds placeholders with explicit booleans.
+- [x] Removed Headquarter lint success masking and added its Next lint config.
+- [x] Removed the ARSY app's placeholder lint-success script.
+- [x] Routed UI, types and ARSY Core lint through the shared flat ESLint config; removed the no-source lint task from the config-only package.
+- [x] Added root .dockerignore.
+- [x] Added a Node test for the repository governance audit.
+- [x] Normalized the ORM import example to the existing `@riotworks/*` package namespace.
+
+### Still open
+- [ ] Execute `pnpm install --frozen-lockfile` and resolve any lockfile drift (do not claim success before running it).
+- [ ] Run `pnpm run lockfile:check`, `pnpm run check:repo`, `pnpm run format:check`, `pnpm run lint`, `pnpm run typecheck`, `pnpm run test`, and `pnpm run build` in a clean checkout.
+- [ ] Verify Headquarter Next lint/build and ARSY typecheck/startup.
+- [ ] Repair ARSY Core's undeclared imports/type/build contract and integrate it into apps/arsy or remove the unused dependency.
+- [ ] Move PostgreSQL pool cleanup into Fastify lifecycle hooks; remove process signal handlers from database setup.
+- [ ] Review/retire duplicate services/arsy and services/queue only after unique behavior is accounted for.
+- [ ] Validate all GitHub workflow YAML and automation scripts; update the weekly workflow's indentation defect.
+- [ ] Verify package exports, lockfile importers, Docker builds and runtime port/config behavior.
+- [ ] Update docs/23 with the exact verification results and commit SHA after CI/clean-checkout execution.
+
+**Verification status:** documentation and manifest edits are committed on the working branch; no local commands or CI jobs have been executed in this environment. The Phase 0 exit gate is therefore not yet satisfied.
