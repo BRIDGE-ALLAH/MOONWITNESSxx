@@ -54,7 +54,6 @@ export function AssetManager({ productId, productVersion }: Props) {
   const [disclosure, setDisclosure] = useState('')
   const [inspectionType, setInspectionType] = useState<(typeof inspectionTypes)[number][0]>('rights')
   const [inspectionStatus, setInspectionStatus] = useState<'pass' | 'blocked' | 'unknown'>('unknown')
-  const [inspectionSource, setInspectionSource] = useState<'operator-attestation' | 'automated-check' | 'independent-review'>('operator-attestation')
   const [inspectionRationale, setInspectionRationale] = useState('')
   const [inspectionEvidence, setInspectionEvidence] = useState('')
   const [activeInspection, setActiveInspection] = useState('')
@@ -143,7 +142,7 @@ export function AssetManager({ productId, productVersion }: Props) {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          inspectionType, status: inspectionStatus, inspectionSource,
+          inspectionType, status: inspectionStatus, inspectionSource: 'operator-attestation',
           rationale: inspectionRationale.trim(), findings: [], evidence,
         }),
       })
@@ -151,7 +150,7 @@ export function AssetManager({ productId, productVersion }: Props) {
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to record inspection.')
       setInspectionRationale(''); setInspectionEvidence('')
-      setMessage('Inspection record appended. Operator-created records remain attestations; a trusted reviewer or automated service actor is required to satisfy channel readiness.')
+      setMessage('Operator attestation appended. It cannot satisfy independent rights/policy/creative review or automated technical QA readiness.')
       await refresh()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to record inspection.')
@@ -175,7 +174,7 @@ export function AssetManager({ productId, productVersion }: Props) {
         <details className="border-t border-acid-lime/10 pt-2">
           <summary className="cursor-pointer font-mono text-[10px] uppercase text-muted-ink">Append operator inspection attestation</summary>
           <div className="mt-3 grid gap-2 md:grid-cols-2">
-            <label className="text-[10px] font-mono uppercase">Inspection source<select value={inspectionSource} onChange={(event) => setInspectionSource(event.target.value as typeof inspectionSource)} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="operator-attestation">Operator attestation</option><option value="automated-check">Automated check</option><option value="independent-review">Independent review (reported)</option></select></label>
+            <p className="text-[10px] text-muted-ink md:col-span-2">This browser form records operator attestations only. Trusted reviewers and automated QA services must use a separately provisioned ARSY inspection principal; the operator cannot self-assert those source types.</p>
             <label className="text-[10px] font-mono uppercase">Inspection type<select value={inspectionType} onChange={(event) => setInspectionType(event.target.value as typeof inspectionType)} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case">{inspectionTypes.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
             <label className="text-[10px] font-mono uppercase">Status<select value={inspectionStatus} onChange={(event) => setInspectionStatus(event.target.value as typeof inspectionStatus)} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="unknown">Unknown</option><option value="pass">Pass · operator attestation</option><option value="blocked">Blocked</option></select></label>
             <label className="text-[10px] font-mono uppercase md:col-span-2">Rationale<textarea value={inspectionRationale} onChange={(event) => setInspectionRationale(event.target.value)} rows={2} maxLength={2000} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
