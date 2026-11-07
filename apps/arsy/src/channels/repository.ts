@@ -153,7 +153,7 @@ export class ChannelRepository {
         SELECT (e.item->>'id')::uuid, $2, created.id, e.item->>'evidenceType', e.item->>'sourceName',
           e.item->>'sourceUrl', (e.item->>'capturedAt')::timestamptz,
           NULLIF(e.item->>'reviewedAt', '')::timestamptz, e.item->>'evidenceClass',
-          e.item->>'summary', e.item->>'limitations', $16
+          e.item->>'summary', e.item->>'limitations', $17
         FROM created CROSS JOIN LATERAL jsonb_array_elements($18::jsonb) AS e(item)
         RETURNING *
       ), audited AS (
@@ -223,7 +223,7 @@ export class ChannelRepository {
         SELECT (e.item->>'id')::uuid, $1, changed.id, e.item->>'evidenceType', e.item->>'sourceName',
           e.item->>'sourceUrl', (e.item->>'capturedAt')::timestamptz,
           NULLIF(e.item->>'reviewedAt', '')::timestamptz, e.item->>'evidenceClass',
-          e.item->>'summary', e.item->>'limitations', $16
+          e.item->>'summary', e.item->>'limitations', $17
         FROM changed CROSS JOIN LATERAL jsonb_array_elements($19::jsonb) AS e(item)
         RETURNING *
       ), audited AS (
