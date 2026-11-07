@@ -30,3 +30,18 @@ test('makes identical retries idempotent and rejects id collisions', async () =>
     /Event id collision/,
   )
 })
+
+test('in-memory store rejects a stale writer that would fork the chain', async () => {
+  const store = new InMemoryEvidenceStore()
+  const ledger = new EvidenceLedger(store)
+  const first = await ledger.append({
+    id: 'event-1', kind: 'observation.recorded', aggregateId: 'case-1',
+    occurredAt: '2026-11-08T00:00:00Z', actorId: 'system', payload: {},
+  })
+  await assert.rejects(
+    () => store.append({
+      ...first, id: 'stale-event', previousHash: null, hash: 'f'.repeat(64),
+    }),
+    /stream head changed/,
+  )
+})
