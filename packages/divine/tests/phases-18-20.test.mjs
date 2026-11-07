@@ -44,3 +44,17 @@ test("assurance capsule binds scope, method, release, lineage and assessment", a
   assert.equal(verification.valid, false);
   assert.ok(verification.errors.includes("Source lineage graph digest mismatch"));
 });
+
+test("deep lineage exceeds the bounded traversal budget and fails closed", () => {
+  const chain = Array.from({ length: 520 }, (_, index) => ({
+    sourceRef: "deep:" + index,
+    familyId: "family:deep:" + index,
+    parentSourceRefs: index === 519 ? [] : ["deep:" + (index + 1)],
+    lineageComplete: true,
+  }));
+  const graph = [...chain, { sourceRef: "independent:other", familyId: "family:other", parentSourceRefs: [], lineageComplete: true }];
+  const result = assessSourceLineageIndependence({ records: graph, selectedSourceRefs: ["deep:0", "independent:other"] });
+  assert.equal(result.status, "unknown");
+  assert.equal(result.traversalLimitExceeded, true);
+  assert.ok(result.reasonCodes.includes("lineage-traversal-limit-exceeded"));
+});
