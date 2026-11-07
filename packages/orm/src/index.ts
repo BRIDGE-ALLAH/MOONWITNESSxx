@@ -59,6 +59,8 @@ export interface RelationDefinition<TTarget extends string = string>
 }
 
 export type FieldMap = Readonly<Record<string, FieldDefinition>>;
+export type InferFieldValue<TField> = TField extends FieldDefinition<infer TValue> ? TValue : never;
+export type InferModelValues<TFields extends FieldMap> = { readonly [K in keyof TFields]: InferFieldValue<TFields[K]> };
 
 export interface MixinDefinition {
   readonly id: string;
@@ -240,3 +242,11 @@ export interface Recordset<TRecord = unknown> extends AsyncIterable<TRecord> {
   first(): Promise<TRecord | null>;
   toArray(): Promise<readonly TRecord[]>;
 }
+
+
+export { fields } from "./fields.js";
+export type { FieldFactory, CommonFieldOptions, CharOptions, DecimalOptions, IntegerOptions, FloatOptions, SelectionOption, SelectionOptions } from "./fields.js";
+export { Model, readModelDeclaration } from "./model.js";
+export type { ModelDeclaration } from "./model.js";
+export { assertValidModelDeclaration, validateModelDeclaration } from "./declaration.js";
+export type { DeclarationIssue } from "./declaration.js";
