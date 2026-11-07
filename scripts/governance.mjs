@@ -492,7 +492,10 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
         path
       )
     }
-    if (/pull_request_target:/m.test(yaml) && /\b(?:npm|pnpm|yarn)\s+(?:install|run)|\bnode\s+.*scripts\//i.test(yaml)) {
+    if (
+      /pull_request_target:/m.test(yaml) &&
+      /\\b(?:npm|pnpm|yarn)\\s+(?:install|run)|\\bnode\\s+.*scripts\\//i.test(yaml)
+    ) {
       add(
         findings,
         'warning',
