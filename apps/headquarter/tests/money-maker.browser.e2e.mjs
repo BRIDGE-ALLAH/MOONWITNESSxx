@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 const playwrightPath = process.env.PLAYWRIGHT_PACKAGE_PATH
 const baseUrl = process.env.HEADQUARTER_E2E_URL ?? 'http://127.0.0.1:3000'
-const operatorPassword = process.env.HEADQUARTER_OPERATOR_PASSWORD
+const operatorPassword = process.env.HEADQUARTER_OPERATOR_PASSWORD?.trim()
 
 if (!playwrightPath) throw new Error('PLAYWRIGHT_PACKAGE_PATH must point to the isolated Playwright installation.')
 if (!operatorPassword) throw new Error('HEADQUARTER_OPERATOR_PASSWORD must be configured for the isolated E2E runtime.')
