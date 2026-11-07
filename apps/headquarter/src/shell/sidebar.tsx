@@ -19,30 +19,46 @@ export function Sidebar({ isOpen, demoLabel, onNavigate }: SidebarProps) {
     <aside
       id="headquarter-sidebar"
       aria-label="Headquarter sidebar"
-      className={cn('w-72 shrink-0 border-r border-acid-lime/20 bg-panel-charcoal/40 p-4', !isOpen && 'hidden md:block')}
+      className={cn('w-72 shrink-0 border-r border-border bg-card/70 p-4', !isOpen && 'hidden md:block')}
     >
-      <Link href="/" onClick={onNavigate} className="block border-2 border-acid-lime/40 p-3">
+      <Link href="/" onClick={onNavigate} className="block border-2 border-primary/40 p-3">
         <div className="font-display text-xl uppercase leading-none">MOONWITNESS</div>
-        <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">// RIOTWORKS</div>
+        <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{'// RIOTWORKS'}</div>
       </Link>
-      <div className="mt-4"><Badge variant="lime">{demoLabel}</Badge></div>
-      <nav aria-label="Main navigation" className="mt-6 space-y-5">
+      <div className="mt-4"><Badge variant="warning">{demoLabel}</Badge></div>
+      <nav aria-label="Headquarter navigation" className="mt-6 space-y-5">
         {groups.map((group) => (
           <section key={group} aria-labelledby={`nav-group-${group.toLowerCase()}`}>
             <h2 id={`nav-group-${group.toLowerCase()}`} className="mb-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{group}</h2>
             <ul className="space-y-1">
               {NAVIGATION_ITEMS.filter((item) => item.group === group).map((item) => {
-                const active = isActivePath(pathname, item.href)
+                const active = item.href ? isActivePath(pathname, item.href) : false
                 return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onNavigate}
-                      aria-current={active ? 'page' : undefined}
-                      className={cn('block border px-3 py-2 font-mono text-xs uppercase tracking-wide', active ? 'border-acid-lime bg-acid-lime/10 text-acid-lime' : 'border-transparent hover:border-acid-lime/30')}
-                    >
-                      {item.label}
-                    </Link>
+                  <li key={item.href ?? item.label}>
+                    {item.href ? (
+                      <Link
+                        href={item.href}
+                        onClick={onNavigate}
+                        aria-current={active ? 'page' : undefined}
+                        title={item.description}
+                        className={cn(
+                          'flex items-center justify-between gap-2 border px-3 py-2 font-mono text-xs uppercase tracking-wide',
+                          active ? 'border-primary bg-primary/10 text-foreground' : 'border-transparent hover:border-border',
+                        )}
+                      >
+                        <span>{item.label}</span>
+                        {item.status === 'prototype' ? <span className="text-[9px] text-muted-foreground">DEMO</span> : null}
+                      </Link>
+                    ) : (
+                      <div
+                        aria-disabled="true"
+                        title={item.description}
+                        className="flex cursor-not-allowed items-center justify-between gap-2 border border-dashed border-border/70 px-3 py-2 font-mono text-xs uppercase tracking-wide text-muted-foreground"
+                      >
+                        <span>{item.label}</span>
+                        <span className="text-[9px]">PLANNED</span>
+                      </div>
+                    )}
                   </li>
                 )
               })}

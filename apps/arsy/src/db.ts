@@ -17,7 +17,7 @@ import { Pool } from 'pg'
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   max: 20, // maximum number of connections in the pool
-  idleTimeout: 30000, // close connections after 30 seconds of idle
+  idleTimeoutMillis: 30000, // close connections after 30 seconds of idle
 })
 
 /**

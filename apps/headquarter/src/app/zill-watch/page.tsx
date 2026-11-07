@@ -1,4 +1,4 @@
-import { Badge, Card, CardContent, CardHeader, CardTitle } from '@riotworks/ui'
+import { Badge, Card, CardContent, CardHeader } from '@riotworks/ui'
 
 const policyChecks = [
   { id: 1, category: 'IP & Licensing', status: 'PASS', details: 'Source provenance verified; licensing disclosures present.' },
@@ -18,12 +18,6 @@ const metadata = {
   license: 'CC0 (public domain)',
   platformDisclosures: 'Not connected to any marketplace',
   similarityScore: 85,
-}
-
-const policyStateMap = {
-  PASS: { label: 'PASS', color: 'success' },
-  WARNING: { label: 'WARNING', color: 'warning' },
-  BLOCKED: { label: 'BLOCKED', color: 'error' },
 }
 
 export default function ZILLWatch() {
