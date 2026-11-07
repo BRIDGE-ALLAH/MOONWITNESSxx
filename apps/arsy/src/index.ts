@@ -13,14 +13,32 @@ export function getListenConfig(
   }
 
   return {
-    host: env.HOST?.trim() || '0.0.0.0',
+    host: env.HOST?.trim() || '127.0.0.1',
     port,
   }
 }
 
 export async function startServer() {
   const app = createApp()
-  await app.listen(getListenConfig())
+
+  try {
+    await app.listen(getListenConfig())
+  } catch (error) {
+    await app.close().catch(() => undefined)
+    throw error
+  }
+
+  const shutdown = async () => {
+    try {
+      await app.close()
+    } catch (error) {
+      console.error('ARSY graceful shutdown failed:', error)
+      process.exitCode = 1
+    }
+  }
+
+  process.once('SIGTERM', shutdown)
+  process.once('SIGINT', shutdown)
   return app
 }
 

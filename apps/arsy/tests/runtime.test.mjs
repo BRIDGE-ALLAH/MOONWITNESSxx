@@ -66,10 +66,10 @@ test('database failures return 503 and Fastify closes the pool exactly once', as
   assert.equal(fake.closeCount, 1)
 })
 
-test('listen configuration uses the Compose port and rejects invalid ports', () => {
-  assert.deepEqual(getListenConfig({}), { host: '0.0.0.0', port: 3001 })
-  assert.deepEqual(getListenConfig({ HOST: '127.0.0.1', PORT: '3210' }), {
-    host: '127.0.0.1',
+test('listen configuration defaults to loopback and rejects invalid ports', () => {
+  assert.deepEqual(getListenConfig({}), { host: '127.0.0.1', port: 3001 })
+  assert.deepEqual(getListenConfig({ HOST: '0.0.0.0', PORT: '3210' }), {
+    host: '0.0.0.0',
     port: 3210,
   })
   assert.throws(() => getListenConfig({ PORT: 'not-a-port' }), /PORT must be/)

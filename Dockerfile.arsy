@@ -12,6 +12,7 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @riotworks/arsy run build
 
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
 WORKDIR /app/apps/arsy
 EXPOSE 3001
 CMD ["pnpm", "start"]
