@@ -31,6 +31,7 @@ test('creates a product version only from an owner-scoped approved opportunity',
   assert.match(call.sql, /decision = 'prototype-candidate'/)
   assert.match(call.sql, /hard_gates @>/)
   assert.match(call.sql, /ON CONFLICT \(opportunity_id\)/)
+  assert.match(call.sql, /FOR UPDATE/, 'promotion locks the opportunity against concurrent edits')
   assert.equal(call.values[0], 'owner-a')
   assert.equal(call.values[1], productRow.opportunity_id)
 })
