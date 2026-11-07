@@ -803,3 +803,9 @@ Use these labels consistently when updating this file:
 - [ ] Update docs/23 with the exact verification results and commit SHA after CI/clean-checkout execution.
 
 **Verification status:** documentation and manifest edits are committed on the working branch; no local commands or CI jobs have been executed in this environment. The Phase 0 exit gate is therefore not yet satisfied.
+
+
+### Phase 0 follow-up — ARSY script ownership
+- [x] Move Fastify CLI build/start ownership to `apps/arsy`.
+- [x] Remove server lifecycle scripts from `packages/arsy-core`; it is a library, not a second server.
+- [ ] Implement and test the actual ARSY Core factory/dependency contract, then integrate it into the app without duplicate Fastify lifecycle.
