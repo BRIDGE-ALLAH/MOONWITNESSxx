@@ -87,3 +87,38 @@ test('benchmark rejects duplicate trial IDs and inconsistent control labels', ()
     { caseId: 'bad-control', attackId: 'control_pristine', attacked: true, served: false, detectedAt: 'read' }
   ]), /disagree/)
 })
+
+
+test('lineage composition keeps the most restrictive classification for duplicate source fields', () => {
+  const publicParent = { artifactId: 'p1', tenantId: 'tenant:a', lineageComplete: true, sourceFields: [
+    { sourceId: 'db', fieldPath: 'customer.secret', tenantId: 'tenant:a', classification: 'public' }
+  ] }
+  const restrictedParent = { artifactId: 'p2', tenantId: 'tenant:a', lineageComplete: true, sourceFields: [
+    { sourceId: 'db', fieldPath: 'customer.secret', tenantId: 'tenant:a', classification: 'restricted' }
+  ] }
+  const composed = composeDerivedLineage('joined', 'tenant:a', [restrictedParent, publicParent])
+  assert.equal(composed.sourceFields.length, 1)
+  assert.equal(composed.sourceFields[0].classification, 'restricted')
+  assert.equal(evaluateLineageAccess(composed, { requesterId: 'reader', tenantId: 'tenant:a', allowedClassifications: ['public', 'internal'] }).allowed, false)
+  assert.throws(() => composeDerivedLineage('cross', 'tenant:a', [{ ...restrictedParent, sourceFields: [{ ...restrictedParent.sourceFields[0], tenantId: 'tenant:b' }] }]), /cross-tenant source lineage/)
+})
+
+test('revocation propagation paths are deterministic regardless of edge insertion order', () => {
+  const graph = new RevocationPropagationGraph()
+  for (const [id, kind] of [['root','source'],['a','claim'],['b','claim'],['leaf','memory']]) graph.registerNode({ id, kind, tenantId: 't' })
+  graph.addDependency({ upstreamId: 'root', downstreamId: 'b' })
+  graph.addDependency({ upstreamId: 'root', downstreamId: 'a' })
+  graph.addDependency({ upstreamId: 'a', downstreamId: 'leaf' })
+  graph.addDependency({ upstreamId: 'b', downstreamId: 'leaf' })
+  const impact = graph.revoke({ revocationId: 'r', sourceId: 'root', actorId: 'reviewer', reason: 'withdrawn', occurredAt: '2026-11-08T00:00:00Z' })
+  assert.deepEqual(impact.propagationPaths.leaf, ['root', 'a', 'leaf'])
+})
+
+test('memory integrity report counts blocked attacks with no detection signal separately', () => {
+  const report = scoreMemoryIntegrityBenchmark([
+    { caseId: 'blocked-unattributed', attackId: 'content_mutation', attacked: true, served: false, detectedAt: 'none' },
+    { caseId: 'served-undetected', attackId: 'record_deletion', attacked: true, served: true, detectedAt: 'none' },
+  ])
+  assert.equal(report.blockedWithoutSignal, 1)
+  assert.equal(report.undetectedAttacks, 1)
+})
