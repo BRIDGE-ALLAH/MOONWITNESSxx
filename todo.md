@@ -980,3 +980,10 @@ See docs/33-phase-8-database-adapters.md. Adapter code is authored but must not 
 - [x] Add separate system/business database health routes.
 - [x] Close Business Database and System Database through Fastify onClose in reverse dependency order.
 - [~] Repository CI now provisions PostgreSQL and runs provider/ARSY lifecycle tests; latest code revision still requires its final CI run.
+
+
+### CI environment propagation hardening
+
+- [x] Pass TEST_POSTGRES_URL through Turbo test tasks so PostgreSQL and ARSY lifecycle integration tests actually execute in the repository CI job.
+- [x] Declare apps/arsy as an ESM package to avoid Node test-runner module ambiguity.
+- [ ] Confirm the latest CI run reports the live PostgreSQL and ARSY integration tests as passed (not skipped).
