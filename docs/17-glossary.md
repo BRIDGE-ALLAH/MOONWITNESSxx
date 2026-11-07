@@ -15,7 +15,7 @@
 | Observatory | Research, observation, evidence workflows, and command experience |
 | Archive | Durable records, knowledge, retrieval, and provenance experience |
 | MOONWITNESS XV | Program/release designation within the master brand |
-| RIOTWORKS | Independent creative/engineering studio identity; not the product master brand |
+| RIOTWORKS | Product and operating division within the MOONWITNESS master brand |
 | ARSY | Backend command/orchestration runtime |
 | ARSY DECK | Human-facing Observatory command center |
 | SIGNAL ROOM | Signal and research intelligence experience |
