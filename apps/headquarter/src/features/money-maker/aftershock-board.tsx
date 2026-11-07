@@ -1,5 +1,6 @@
 'use client'
 
+import { OperatorLogoutButton } from './operator-logout-button'
 import { useCallback, useEffect, useState } from 'react'
 
 type Opportunity = { id: string; evaluation: { decision: string } }
@@ -46,7 +47,7 @@ export function AftershockBoard() {
   const briefs = products.filter((item) => item.lifecycleState === 'brief').length
 
   return <main className="min-h-screen bg-obsidian p-6 text-paper-bone md:p-8"><div className="mx-auto max-w-7xl space-y-8">
-    <header className="border-b border-acid-lime/30 pb-6"><p className="font-mono text-xs uppercase tracking-[0.25em] text-acid-lime">RIOTWORKS / Portfolio Learning</p><h1 className="mt-3 font-display text-5xl uppercase">AFTERSHOCK</h1><p className="mt-3 max-w-3xl text-sm text-muted-ink">Only persisted opportunities, product briefs and reconciled financial events are counted. Conversion rates and product lifetime remain unavailable until real cohorts and dated lifecycle events exist. Counts below reflect at most the latest 100 records, not lifetime totals.</p></header>
+    <header className="border-b border-acid-lime/30 pb-6"><div className="mb-3 flex justify-end"><OperatorLogoutButton /></div><p className="font-mono text-xs uppercase tracking-[0.25em] text-acid-lime">RIOTWORKS / Portfolio Learning</p><h1 className="mt-3 font-display text-5xl uppercase">AFTERSHOCK</h1><p className="mt-3 max-w-3xl text-sm text-muted-ink">Only persisted opportunities, product briefs and reconciled financial events are counted. Conversion rates and product lifetime remain unavailable until real cohorts and dated lifecycle events exist. Counts below reflect at most the latest 100 records, not lifetime totals.</p></header>
     {error && <div role="alert" className="border border-red-500/50 p-4 text-sm">{error}</div>}
     <div className="flex justify-end"><button type="button" onClick={() => void refresh()} className="border border-acid-lime/40 px-4 py-2 font-mono text-xs uppercase">Refresh metrics</button></div>
     {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading persisted portfolio records…</p> : <>
