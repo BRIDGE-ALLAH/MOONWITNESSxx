@@ -25,7 +25,11 @@
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `ARSY_OPERATOR_ID` | Yes for business APIs | Stable owner/actor ID |
-| `ARSY_OPERATOR_TOKEN` | Yes for business APIs | Private service-to-service credential |\n| `ARSY_ASSET_STORAGE_DRIVER` | Optional | `local` for development; leave blank to default to `s3` in production |\n| `ARSY_ASSET_STORAGE_ENDPOINT` / `BUCKET` / `REGION` | Required for S3 | Private path-style S3-compatible endpoint and bucket |\n| `ARSY_ASSET_STORAGE_ACCESS_KEY_ID` / `SECRET_ACCESS_KEY` | Required for S3 | Server-only object storage credentials |\n| `ARSY_ASSET_STORAGE_SESSION_TOKEN` | Optional | Temporary credential session token |
+| `ARSY_OPERATOR_TOKEN` | Yes for business APIs | Private service-to-service credential |
+| `ARSY_ASSET_STORAGE_DRIVER` | Optional | `local` for development; leave blank to default to `s3` in production |
+| `ARSY_ASSET_STORAGE_ENDPOINT` / `BUCKET` / `REGION` | Required for S3 | Private path-style S3-compatible endpoint and bucket |
+| `ARSY_ASSET_STORAGE_ACCESS_KEY_ID` / `SECRET_ACCESS_KEY` | Required for S3 | Server-only object storage credentials |
+| `ARSY_ASSET_STORAGE_SESSION_TOKEN` | Optional | Temporary credential session token |
 
 ### Headquarter
 
@@ -36,7 +40,8 @@
 | `ARSY_OPERATOR_TOKEN` | Yes | Same server-only credential configured in ARSY |
 | `HEADQUARTER_OPERATOR_PASSWORD` | Yes | Strong operator password |
 | `HEADQUARTER_SESSION_SECRET` | Yes | Random signing secret of at least 32 characters |
-| `HEADQUARTER_PUBLIC_ORIGIN` | Yes | Exact browser-facing origin, without a path |\n| `HEADQUARTER_TRUSTED_PROXY_HOPS` | Production: `1` | One trusted ingress overwrites `X-Forwarded-For`; direct app access must be blocked. |\n| `HEADQUARTER_TRUSTED_PROXY_HOPS` | Production: `1` | Trust one ingress that overwrites `X-Forwarded-For`; direct app access must be blocked. Leave unset/`0` for local development. |
+| `HEADQUARTER_PUBLIC_ORIGIN` | Yes | Exact browser-facing origin, without a path |
+| `HEADQUARTER_TRUSTED_PROXY_HOPS` | Production: `1` | One trusted ingress overwrites `X-Forwarded-For`; direct app access must be blocked. Use `0` for local development. |
 
 Generate independent random values for the operator token and session secret. Store them in the deployment secret manager. Never commit actual credentials or use `NEXT_PUBLIC_` for server secrets. The Compose default `ARSY_API_BASE_URL=http://arsy:3001` is for container-to-container traffic; override it to `http://127.0.0.1:3001` when running Headquarter directly on the host.
 
@@ -88,7 +93,8 @@ Run against an isolated development or staging database first. Verify backup and
 - Automated market-source connectors, freshness/recheck jobs, and measured discovery/conversion cohorts. Signal Room intentionally remains an honest no-source empty state.
 - Payout import and provider reconciliation; current financial events are manually recorded by the operator. Operator-supplied evidence/reconciliation is not a bank or payment-provider verification.
 - Multi-user identities, roles, tenant isolation and customer-facing checkout.
-- Trusted-ingress enforcement and production login-throttle monitoring have not been verified outside isolated CI; configure one ingress that overwrites the client IP header and block direct access.\n- Browser E2E, screen-reader/visual regression review, production deployment, managed secret provisioning, backup/restore drill, rollback and live smoke tests.
+- Trusted-ingress enforcement and production login-throttle monitoring have not been verified outside isolated CI; configure one ingress that overwrites the client IP header and block direct access.
+- Browser E2E, screen-reader/visual regression review, production deployment, managed secret provisioning, backup/restore drill, rollback and live smoke tests.
 
 Local development uses the `arsy_assets` Docker volume. Production can use the S3-compatible adapter; object versioning, replication, encryption-at-rest policy and restore drills remain provider/deployment responsibilities. Asset rights/provenance fields are operator-entered and do not independently establish legal permission.
 
