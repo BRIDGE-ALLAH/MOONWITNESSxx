@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { DatabasePool } from '../db.ts'
-import type { ProductLifecycleState } from './lifecycle.ts'
+import { nextProductLifecycleStates, type ProductLifecycleState } from './lifecycle.ts'
 
 type QueryResult<T> = { rows: T[] }
 type ProductRow = {
@@ -22,7 +22,8 @@ export interface ProductRecord {
   opportunityId: string | null
   title: string
   productFamily: string
-  lifecycleState: string
+  lifecycleState: ProductLifecycleState
+  allowedNextLifecycleStates: ProductLifecycleState[]
   version: number
   brief: Record<string, unknown>
   acceptanceCriteria: string[]
@@ -40,7 +41,8 @@ function mapProduct(row: ProductRow): ProductRecord {
     opportunityId: row.opportunity_id,
     title: row.title,
     productFamily: row.product_family,
-    lifecycleState: row.lifecycle_state,
+    lifecycleState: row.lifecycle_state as ProductLifecycleState,
+    allowedNextLifecycleStates: nextProductLifecycleStates(row.lifecycle_state as ProductLifecycleState),
     version: row.version,
     brief: row.brief,
     acceptanceCriteria: row.acceptance_criteria,
