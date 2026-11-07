@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+      - "feat-*"
+      - "fix-*"
+      - "chore-*"
     paths:
       - ".github/**"
       - "apps/**"
@@ -26,12 +29,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: format-changed-files
+  group: format-changed-files-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   format:
-    name: Format only files changed by this push
+    name: Format changed supported files
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -56,7 +59,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Format changed files only
-        run: pnpm run format -- --all
+        run: pnpm run format
 
       - name: Validate formatter output
         run: git diff --check
@@ -64,6 +67,8 @@ jobs:
       - name: Commit formatting-only changes when needed
         id: commit
         shell: bash
+        env:
+          TARGET_BRANCH: ${{ github.ref_name }}
         run: |
           if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -74,12 +79,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -u
-          git commit -m "style: format repository"
+          git commit -m "style: format changed files"
 
-          # Rebase the formatting-only commit onto the latest main without force-pushing.
-          git fetch origin main
-          git rebase origin/main
-          git push origin HEAD:main
+          # Rebase formatting-only changes onto the latest target branch without force-pushing.
+          git fetch origin "$TARGET_BRANCH"
+          git rebase "origin/$TARGET_BRANCH"
+          git push origin "HEAD:$TARGET_BRANCH"
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -90,22 +95,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        run: gh workflow run ci.yml --ref main
+          TARGET_BRANCH: ${{ github.ref_name }}
+        run: gh workflow run ci.yml --ref "$TARGET_BRANCH"
 
       - name: Summarize formatting result
         if: always()
         env:
           CHANGED: ${{ steps.commit.outputs.changed }}
           COMMIT_SHA: ${{ steps.commit.outputs.commit_sha }}
+          TARGET_BRANCH: ${{ github.ref_name }}
         run: |
           {
             echo "## Changed-file formatting"
             echo
             if [ "$CHANGED" = "true" ]; then
-              echo "- Result: formatting-only commit pushed to main."
+              echo "- Result: formatting-only commit pushed to $TARGET_BRANCH."
               echo "- Commit: $COMMIT_SHA"
-              echo "- CI: dispatched on main."
+              echo "- CI: dispatched on $TARGET_BRANCH."
             else
-              echo "- Result: no formatting changes were needed."
+              echo "- Result: no formatting changes were needed on $TARGET_BRANCH."
             fi
           } >> "$GITHUB_STEP_SUMMARY"

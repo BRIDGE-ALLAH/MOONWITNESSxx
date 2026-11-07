@@ -62,8 +62,8 @@ Channels are enabled only after current country eligibility, payout, policy, fee
 
 ### Applications
 
-- **apps/headquarter** — intended Next.js frontend and operator experience. Current files are a prototype; its package manifest still needs correction.
-- **apps/arsy** — canonical Fastify backend application. Current implementation is only a minimal health/status route.
+- **apps/headquarter** — Next.js App Router frontend and operator experience. Its package manifest and runtime dependencies are aligned; the UI still uses prototype/demo data and needs full production build verification.
+- **apps/arsy** — canonical Fastify backend application with a minimal status route and TypeScript development runner. Production lifecycle, authentication, persistence, and stable public API contracts remain future implementation work.
 
 ### Existing package inventory (prototype stage)
 
