@@ -63,6 +63,27 @@ test('opportunity proxy rejects anonymous GET and POST before contacting ARSY', 
   }
 })
 
+test('opportunity proxy rejects a signed session for a different operator identity', async () => {
+  const restore = configureEnvironment()
+  const originalFetch = globalThis.fetch
+  let fetchCalled = false
+  globalThis.fetch = async () => {
+    fetchCalled = true
+    throw new Error('fetch must not be called')
+  }
+  try {
+    const otherOperatorCookie = `${OPERATOR_SESSION_COOKIE}=${createOperatorSession('different-operator', secret)}`
+    const response = await GET(new Request(`${origin}/api/opportunities`, {
+      headers: { cookie: otherOperatorCookie },
+    }))
+    assert.equal(response.status, 401)
+    assert.equal(fetchCalled, false)
+  } finally {
+    globalThis.fetch = originalFetch
+    restore()
+  }
+})
+
 test('opportunity proxy rejects cross-origin mutation with a valid operator cookie', async () => {
   const restore = configureEnvironment()
   const originalFetch = globalThis.fetch
