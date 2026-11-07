@@ -92,6 +92,37 @@ Tailwind aliases: `duration-fast`, `duration-standard`, `duration-slow`, and `ea
 
 The stylesheet applies a reduced-motion fallback. Components with meaningful motion must still use semantic end states and avoid motion-dependent information.
 
+## Initial foreground contrast measurements
+
+The following ratios are calculated from the current HSL token definitions using WCAG relative luminance. They validate the defined text/foreground pair only; they are not a substitute for checking rendered states, transparency, images, disabled controls, or component boundaries.
+
+| Theme | Pair | Contrast ratio | Text AA (4.5:1) |
+|---|---|---:|---|
+| Paper Riot | Canvas / foreground | 13.59:1 | Pass |
+| Paper Riot | Card / foreground | 14.45:1 | Pass |
+| Paper Riot | Secondary / foreground | 11.59:1 | Pass |
+| Paper Riot | Muted / muted-foreground | 5.18:1 | Pass |
+| Paper Riot | Primary / primary-foreground | 7.58:1 | Pass |
+| Paper Riot | Accent / accent-foreground | 4.72:1 | Pass |
+| Paper Riot | Success / success-foreground | 5.52:1 | Pass |
+| Paper Riot | Warning / warning-foreground | 5.40:1 | Pass |
+| Paper Riot | Danger / danger-foreground | 6.47:1 | Pass |
+| Paper Riot | Info / info-foreground | 5.28:1 | Pass |
+| Paper Riot | Neutral / neutral-foreground | 6.29:1 | Pass |
+| Night Riot | Canvas / foreground | 16.00:1 | Pass |
+| Night Riot | Card / foreground | 14.85:1 | Pass |
+| Night Riot | Secondary / foreground | 12.73:1 | Pass |
+| Night Riot | Muted / muted-foreground | 5.13:1 | Pass |
+| Night Riot | Primary / primary-foreground | 16.17:1 | Pass |
+| Night Riot | Accent / accent-foreground | 6.29:1 | Pass |
+| Night Riot | Success / success-foreground | 8.09:1 | Pass |
+| Night Riot | Warning / warning-foreground | 11.38:1 | Pass |
+| Night Riot | Danger / danger-foreground | 5.39:1 | Pass |
+| Night Riot | Info / info-foreground | 9.80:1 | Pass |
+| Night Riot | Neutral / neutral-foreground | 8.36:1 | Pass |
+
+Focus ring measurements against the base canvas are 3.27:1 (Paper Riot) and 15.85:1 (Night Riot), meeting the 3:1 non-text contrast threshold for those two surfaces. Panel, inset, overlay, hover, disabled, and selected states still require rendered verification.
+
 ## Tailwind examples
 
 ```tsx
