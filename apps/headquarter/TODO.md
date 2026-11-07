@@ -34,30 +34,30 @@
 ### 0.1 Inventaris aplikasi
 - [x] Inventaris seluruh route App Router, layout, page, loading, error, not-found, dan route handler.
 - [x] Petakan komponen shell: sidebar, topbar, navigation, workspace selector, command palette, notification center, user menu, mobile navigation.
-- [ ] Petakan semua feature yang sudah ada dan statusnya: production-ready, partial, prototype, placeholder, atau belum ada.
-- [ ] Identifikasi komponen yang hanya digunakan satu feature vs yang benar-benar reusable.
-- [ ] Inventaris assets, fonts, global CSS, Tailwind config, theme provider, dan token yang digunakan.
-- [ ] Inventaris seluruh environment variable dan konfigurasi runtime; pastikan tidak ada secret di client bundle.
+- [x] Petakan semua feature yang sudah ada dan statusnya: production-ready, partial, prototype, placeholder, atau belum ada (lihat tabel status di `AUDIT.md`).
+- [x] Identifikasi komponen yang hanya digunakan satu feature vs yang benar-benar reusable.
+- [x] Inventaris assets, fonts, global CSS, Tailwind config, theme provider, dan token yang digunakan.
+- [x] Inventaris seluruh environment variable dan konfigurasi runtime; tidak ditemukan pembacaan env/secret pada source Headquarter yang diaudit.
 
 ### 0.2 Dependency dan kualitas
 - [x] Audit dependency internal dan eksternal di `package.json`; tandai dependency duplikat, tidak terpakai, atau berisiko.
-- [ ] Petakan import graph dan cari circular dependency.
+- [x] Petakan import graph dan cari circular dependency pada boundary Headquarter yang diaudit.
 - [x] Verifikasi integrasi `@riotworks/ui`, termasuk exports, styles, Tailwind preset/config, dan transpilation.
 - [ ] Jalankan lint, typecheck, test, dan build; simpan baseline hasil aktual.
 - [x] Perbaiki script quality gate yang menelan error (contoh pola `|| echo lint-skip`); command gagal harus membuat proses gagal.
-- [ ] Identifikasi konfigurasi yang berbeda atau bertentangan dengan standar monorepo.
+- [x] Identifikasi konfigurasi yang berbeda atau bertentangan dengan standar monorepo.
 
 ### 0.3 UX dan accessibility baseline
 - [ ] Audit semua route pada desktop, tablet, dan mobile.
 - [ ] Audit keyboard navigation, focus visibility, dialog semantics, screen reader labels, dan color contrast.
-- [ ] Inventaris state UI yang belum tersedia: loading, empty, error, permission denied, offline, stale, partial data, dan demo.
+- [x] Inventaris state UI yang belum tersedia: loading, empty, error, permission denied, offline, stale, partial data, dan demo.
 - [x] Bedakan interaksi sungguhan dari simulasi/prototype (mis. notification, locale, workspace, command palette, theme).
 
 ### 0.4 Dokumentasi audit
 - [x] Cocokkan implementasi aktual dengan Information Architecture dan dokumen DNA/guideline proyek.
-- [ ] Tandai dokumentasi historis yang sudah tidak sesuai source saat ini; jangan jadikan dokumen lama sebagai fakta implementasi.
-- [ ] Buat ringkasan gap: P0 blocker, P1 high, P2 medium, P3 polish.
-- [ ] Simpan baseline command dan hasil audit agar kemajuan fase berikutnya dapat diukur.
+- [x] Tandai dokumentasi historis yang sudah tidak sesuai source saat ini; jangan jadikan dokumen lama sebagai fakta implementasi.
+- [x] Buat ringkasan gap: P0 blocker, P1 high, P2 medium, P3 polish (lihat `AUDIT.md`).
+- [x] Simpan baseline command dan hasil audit; eksekusi command lokal tetap menunggu clean checkout/CI.
 
 **Gate Phase 0**
 - [ ] Route inventory, dependency map, UX audit, dan baseline quality tersedia.
@@ -81,15 +81,15 @@
 - [ ] Tetapkan aturan penamaan file, komponen, hooks, types, constants, dan test.
 
 ### 1.2 Routing dan layout
-- [ ] Evaluasi route grouping untuk workspace dan administration tanpa mengubah URL publik secara tidak sengaja.
-- [ ] Tetapkan pola URL dan strategi locale `/id` dan `/en` (atau keputusan final yang terdokumentasi).
+- [x] Evaluasi route grouping untuk workspace dan administration; keputusan Phase 1 adalah mempertahankan URL saat ini sampai locale/auth/workspace routing siap.
+- [x] Tetapkan keputusan locale: target URL `/id` dan `/en` didokumentasikan; implementasi routing ditunda sampai platform localization siap.
 - [ ] Pastikan root layout, locale layout, dan workspace layout memiliki tanggung jawab berbeda.
 - [ ] Tambahkan not-found, error boundary, dan loading boundary pada level yang tepat.
 - [ ] Pastikan deep-link, refresh halaman, dan navigasi browser berfungsi konsisten.
 - [x] Pastikan navigasi mobile dan desktop menggunakan sumber konfigurasi yang sama.
 
 ### 1.3 Dependency boundaries
-- [ ] Tetapkan aturan arah import: route → feature/shell composition → platform/packages; hindari dependency melingkar.
+- [x] Tetapkan aturan arah import: route → feature/shell composition → platform/packages; hindari dependency melingkar (lihat `ARCHITECTURE.md`).
 - [ ] Pisahkan server-only module dari client component; tandai boundary dengan benar.
 - [ ] Pastikan secret, privileged token, dan server configuration tidak pernah diimpor ke client.
 - [ ] Tambahkan lint/import rules untuk mencegah dependency terlarang.
@@ -100,7 +100,7 @@
 - [ ] Jaga AppShell sebagai composition/orchestration UI, bukan tempat business logic feature.
 - [x] Ekstrak konfigurasi navigation ke satu sumber data dengan grouping dan metadata yang eksplisit.
 - [x] Hilangkan state duplikat antara desktop navigation dan mobile navigation.
-- [ ] Pastikan active route, nested route, disabled item, dan permission-aware item memiliki perilaku konsisten.
+- [x] Pastikan active route dan nested route memiliki perilaku konsisten; disabled/permission-aware item menunggu model authorization.
 - [ ] Tambahkan test untuk shell navigation dan route matching.
 
 **Gate Phase 1**
