@@ -949,3 +949,41 @@ Use these labels consistently when updating this file:
 - [ ] Measure time-to-first-successful-PR, context token cost, correction rate and unrelated-file edit rate.
 
 **Exit gate:** a coding agent can reconstruct the repository's current ownership and valid verification commands from a small, fingerprinted artifact; every task receipt reports observed facts, not inferred success.
+
+## Phase 24 — Repository Flight Recorder
+
+**Status:** [~] Local append-only JSONL receipts with same-process append serialization, canonical SHA-256 hash chain and verifier implemented.
+
+- [x] Append sequenced records with previous-hash linkage.
+- [x] Verify ordering, malformed lines and content tampering.
+- [x] Test concurrent same-process appends and tamper detection.
+- [ ] Add cross-process file locking and crash-safe checkpoint recovery.
+- [ ] Add receipt schema for repository fingerprint, command, toolchain, changed paths, exit code and test evidence.
+- [ ] Add signed checkpoints and external anchoring before treating receipts as attestations.
+
+**Exit gate:** receipts are reproducible and verifiable; no security claims beyond the implemented local hash chain.
+
+## Phase 25 — Parallel Workset Collision Forecast
+
+**Status:** [~] Static write-path collision forecast implemented; runtime resource and semantic conflict detection remain.
+
+- [x] Detect same-path and ancestor/descendant path overlaps.
+- [x] Reject absolute paths and parent traversal.
+- [x] Emit machine-readable severity and safe-to-parallelize status.
+- [ ] Add declared interface/API/schema ownership leases.
+- [ ] Add runtime resource passport for ports, DB/schema, queues, volumes and environment namespaces.
+- [ ] Integrate with worktree orchestration only after resource isolation is validated.
+
+**Exit gate:** static collisions are detected before launch; disjoint paths are not misrepresented as proof of runtime isolation.
+
+## Phase 26 — Context Freshness Lease
+
+**Status:** [~] Explicit TTL- and fingerprint-bound context lease implemented.
+
+- [x] Bind lease to repository context SHA-256 fingerprint.
+- [x] Reject changed fingerprints, expired leases and invalid timestamps.
+- [x] Refuse implicit overwrite when writing lease files.
+- [ ] Add automatic regeneration in supported agent adapters.
+- [ ] Add signed lease and policy integration only if a real trust boundary requires it.
+
+**Exit gate:** stale or expired context fails verification before an agent proceeds; a lease is never treated as an authorization credential.
