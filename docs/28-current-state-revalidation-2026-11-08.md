@@ -98,3 +98,53 @@ Preserve existing URLs and shared UI tokens. Prioritize demo/data truth, accessi
 ## Audit limitations
 
 This revalidation used the GitHub repository/API surfaces and CI evidence available in this session. It did not perform a local full clone, run Docker, access production credentials/infrastructure, inspect a live deployed application, or perform manual browser/screen-reader testing. Those checks remain explicitly unverified.
+
+
+## 8. Remote mainline revalidation — 2026-11-08 02:42 WIB
+
+This addendum supersedes the earlier HEAD and open-PR snapshots above. It is based on a fresh GitHub API read of `main`, the repository tree, selected source files, PR metadata and issue records.
+
+### 8.1 Current mainline
+
+- Default branch remains `main`.
+- Verified current HEAD: `8621f861e5e544d8059e5216cc44b550e7077d90`.
+- HEAD merges PR #99, the Counterfactual Repository Lab (read-only workspace graph, dependency impact, cycle detection and scenario replay).
+- The repository tree contains 429 entries, including 429? [Correction: the API tree reports 429 total entries; this is not a count of source files alone.]
+- Root package version remains `1.0.11`.
+- CHANGELOG.md still documents only `1.0.0`; the available published GitHub Release is `v1.0.0`.
+- The prior audit's HEAD `090c6f0` is historical, not current.
+
+### 8.2 Data-truth changes and remaining gaps
+
+- PR #103 is merged. It removes fabricated opportunity cards, unsupported market/economic claims and non-functional opportunity actions. It explicitly does not implement persistence, authentication or the commerce domain.
+- The ARSY Deck fixture at `apps/headquarter/src/features/arsy-deck/demo-data.ts` is explicitly marked synthetic and includes a disclosure. Its repository implementation returns the demo snapshot because ARSY does not yet publish the required workspace-pulse endpoint. This is an isolated demo source, not live application data.
+- Signal Room still has hardcoded market trends, confidence scores, category counts, buyer-problem prevalence and marketplace observations on main. Draft PR #105 removes these claims and replaces them with an honest disconnected/empty state. It remains unmerged and its lint/typecheck/build/CI and browser verification are pending.
+- Headquarter's audit and TODO continue to identify incomplete authentication/authorization, persisted workspace selection, lifecycle states and browser accessibility/responsive verification.
+- Issue #100 remains open for the real commerce vertical slice. Its acceptance criteria explicitly require authorization, migrations, durable CRUD, provenance, exact-money handling, API-backed UI and an isolated-database E2E journey.
+
+### 8.3 Current integration queue
+
+- PR #102 is open, non-draft and mergeable against the current main SHA. It contains the consolidated ARSY runtime/product-integrity changes (19 files, 653 additions, 84 deletions), including app-owned build/type-check, health endpoint rate limits, safe workspace audit, demo disclosure, product audit, and production image CI. Its own description requires Repository CI, CodeQL and both image builds before merge. No current check-run evidence was returned by the available status action in this audit; do not treat mergeability as a green CI result.
+- PR #98 remains open and overlaps the product-integrity/UX-truth area. Review its current diff against #102 before choosing one canonical integration path; do not merge both blindly.
+- PR #105 remains a draft and is limited to the Signal Room fabricated-data removal.
+- PR #103 is merged; do not recreate its opportunity-data correction.
+- PR #100 remains the canonical backlog item for the real commerce vertical slice.
+- Legacy ORM/database PRs #15–#41 remain a stacked historical chain and must not be merged out of dependency order.
+
+### 8.4 Verification boundary and release decision
+
+- GitHub metadata, the current recursive tree, selected source files, PR patches, issue #100 and issue #73 were inspected.
+- A local clone was attempted but could not be completed because this execution environment could not resolve github.com. Therefore no local `git status`, local branch/worktree inspection, package installation, test command, build, Docker build/run, database migration test or browser E2E was executed here.
+- The available commit-status query returned no status entries for the current main SHA or inspected PR heads. This is not evidence that all required GitHub Actions checks passed.
+- Production secrets, deployment target, TLS/ingress, backup/restore, monitoring, rollback and live smoke tests remain unverified.
+- Release remains **NO-GO**. Do not bump the version, publish a tag/release or deploy until the real release range, production runtime, credentials, recovery controls and smoke-test path are verified.
+
+### 8.5 Next execution order
+
+1. Reconcile PR #102 and #98 into one current-main product-integrity path; verify the exact head's CI, CodeQL and both production image builds before integration.
+2. Complete the Signal Room data-truth correction in PR #105 and verify its current-head quality gates.
+3. Implement Issue #100 as a minimal complete commerce vertical slice, beginning with the authenticated operator/ownership boundary and additive migrations.
+4. Replace ARSY Deck's fixture with a real API only after the workspace-pulse contract, authorization and persistence are implemented; retain the clearly disclosed demo fixture as a non-production option.
+5. Complete a real container build/run against PostgreSQL, then production secrets, TLS, backup/restore, monitoring, rollback and live smoke tests.
+6. Reconcile SemVer/tag/release history and publish only after production verification.
+
