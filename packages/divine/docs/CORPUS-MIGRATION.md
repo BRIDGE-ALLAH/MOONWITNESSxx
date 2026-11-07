@@ -24,6 +24,8 @@ MOONWITNESS is public. Do not blindly subtree-import and republish every dataset
 A full unfiltered subtree is allowed only after every included artifact is rights-cleared for this destination.
 
 ## Preferred import: full-history subtree (after rights approval)
+
+A guarded importer is included at `scripts/migrate-corpus-subtree.sh`. The manual workflow `.github/workflows/corpus-subtree-migration.yml` asks for an exact source SHA and a separate `rights_approved=true` attestation, then pushes an import branch for review; it never merges directly to `main`. The script verifies that the imported subtree root tree SHA exactly matches the pinned source tree before recording the migration manifest.
 Run from a clean MOONWITNESS checkout. Read access to the public source is sufficient:
 
 ```bash
