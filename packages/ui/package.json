@@ -27,7 +27,9 @@
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "smoke-test": "pnpm run build && node ./scripts/smoke-test.mjs",
+    "test": "pnpm run smoke-test"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.2",
