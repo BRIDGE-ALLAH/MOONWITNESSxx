@@ -78,3 +78,8 @@ These are proposals. They require threat modelling, privacy/retention review, be
 ## Runtime security follow-up
 
 The database readiness and database health routes use Fastify rate limiting (60 requests per minute per client). The implementation is covered by runtime tests for HTTP 429 responses. This is per-process in-memory limiting; production deployments behind a proxy must configure trusted proxy addresses deliberately, and multi-replica global limits remain a separate deployment concern.
+
+
+## Release metadata gate
+
+The product preflight now compares the root package SemVer with the latest numeric release heading in CHANGELOG.md. A mismatch is a release blocker; do not guess or bump versions until the authoritative previous tag/release and monorepo version policy have been verified.
