@@ -42,3 +42,20 @@ DataTable accepts rows, columns, and a stable row-key function. Sorting and pagi
 - `pnpm --filter @riotworks/headquarter run build`
 
 React/React DOM are peer dependencies. Components use Radix primitives for focus management, keyboard navigation, and accessible interaction semantics where appropriate.
+
+## Application shell
+
+Compose the shell with application-owned navigation, header actions, contextual content, and status content:
+
+```tsx
+<RiotAppShell sidebar={<RiotSidebar brand={<Brand />}>{navigation}</RiotSidebar>} topbar={<RiotTopbar>{headerActions}</RiotTopbar>} contextPanel={<RiotContextPanel title="Inspector">{inspector}</RiotContextPanel>}>
+  <RiotWorkspace>{children}</RiotWorkspace>
+  <RiotCommandPalette commands={commands} />
+</RiotAppShell>
+```
+
+The shell does not own routing, identity, workspace selection, or authorization. The host application supplies those via slots and callbacks.
+
+## Platform integration
+
+See PLATFORM.md for action/command registry contracts, plugin slot lifecycle, approval callbacks, job status presentation, and record inspection. Registry factories are in-memory helpers only: they do not persist definitions, grant capabilities, authorize users, or invoke backend services.
