@@ -67,28 +67,27 @@ Run against an isolated development or staging database first. Verify backup and
 ## Implemented development capabilities
 
 - Opportunity domain validation, weighted scoring, evidence references, rationales and confidence.
-- Owner-scoped ARSY opportunity create/list/read/decision/archive API and audit events.
+- Owner-scoped ARSY opportunity create/list/read/update/decision/archive API and audit events. Updates use `expectedVersion` optimistic concurrency; edits, decisions, archives and product promotion advance the opportunity version. A stale edit receives `VERSION_CONFLICT`; an opportunity with a product brief cannot be edited.
 - Product brief creation from an approved opportunity, append-only version revisions and owner-scoped product reads.
-- Append-only rights, policy, technical and creative inspections; a product becomes READY only when the latest inspection of all four types passes.
+- Append-only rights, policy, technical and creative inspections; a product becomes READY only when the latest inspection of all four types passes. A passing inspection cannot contain a blocker finding, and readiness includes the inspection written by the same transaction.
 - Asset upload/download/archive on a persistent local Docker volume, 5 MiB file cap, safe media-type allowlist, SHA-256 checksum and structured provenance metadata.
-- C0/C1 channel registry with Indonesia eligibility, payout and policy evidence. C1 enables manual listing packages only.
-- Manual listing package generation from the latest READY product version and an enabled C1 channel; publication receipts are recorded only after the owner publishes externally.
+- C0/C1 channel registry with Indonesia eligibility, payout and policy evidence. A country can appear once per review; C1 enables manual listing packages only.
+- Persisted manual listing package generation from the latest READY product version and an enabled C1 channel; publication receipts are entered by the owner after external publication and are not independently verified by a marketplace API.
 - Financial event ingestion using integer minor units, ISO currency, request hashes and idempotency keys.
 - Pending/verified/disputed/reversed reconciliation with evidence URL and audit event.
 - Currency-grouped gross receipts, deductions, payout movements, pending totals and exact net-contribution calculation from verified events.
-- Headquarter signed operator session, same-origin server-side BFF proxies, opportunity board, product workshop, financial ledger and portfolio analytics.
-- PostgreSQL integration workflow that applies migrations and verifies persistence across reconnects.
+- Headquarter signed operator session, same-origin server-side BFF proxies, opportunity edit/archive board, product workshop, financial ledger, channel/listing workspace, inspection records and portfolio analytics.
+- PostgreSQL integration workflow that applies migrations twice and verifies persistence across reconnects, optimistic update conflicts, product promotion/version locking, latest-inspection readiness, financial idempotency/reconciliation and audit events.
 
 ## Not yet implemented or not production-verified
 
-- Revisions beyond product version 1; binary asset storage, upload/download authorization and checksum verification.
-- Asset binary storage/upload/download and a complete asset provenance editor.
-- Channel registry administration, listing package generation, marketplace account OAuth, publication receipts and official marketplace APIs.
-- Automated market-source connectors, freshness/recheck jobs and measured discovery/conversion cohorts.
-- Payout import and provider reconciliation; current financial events are manually recorded by the operator.
+- Binary asset storage, upload/download authorization, checksum verification, and a complete asset provenance editor. The current `arsy_assets` schema is not yet backed by an asset API/storage implementation.
+- Marketplace account OAuth, official marketplace APIs, automated publishing, and independent verification of publication receipts. Current channel capability C1 means manual listing package only.
+- Automated market-source connectors, freshness/recheck jobs, and measured discovery/conversion cohorts. Signal Room intentionally remains an honest no-source empty state.
+- Payout import and provider reconciliation; current financial events are manually recorded by the operator. Operator-supplied evidence/reconciliation is not a bank or payment-provider verification.
 - Multi-user identities, roles, tenant isolation and customer-facing checkout.
-- Browser E2E, production deployment, managed secret provisioning, backup/restore drill, rollback and live smoke tests.
+- Browser E2E, screen-reader/visual regression review, production deployment, managed secret provisioning, backup/restore drill, rollback and live smoke tests.
 
 The current asset adapter is single-node filesystem storage. Back up the `arsy_assets` Docker volume with the database and test restore before production. Do not run multiple ARSY replicas against independent local volumes.
 
-No sample transactions, sales, marketplace listings, payout states, market trend values, or revenue claims are generated by this workflow.
+No sample transactions, sales, marketplace listings, payout states, market trend values, or revenue claims are generated by this workflow. The current login throttle is process-local (5 failures per 15-minute window); production ingress must add a shared rate limit before scaling Headquarter beyond one process.
