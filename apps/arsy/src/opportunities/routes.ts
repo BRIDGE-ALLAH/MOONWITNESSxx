@@ -52,6 +52,50 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
     return { data: record }
   })
 
+  app.patch('/api/v1/opportunities/:id', async (request, reply) => {
+    const params = z.object({ id: idSchema }).safeParse(request.params)
+    const body = z.object({
+      expectedVersion: z.number().int().positive(),
+      input: opportunityInputSchema,
+    }).safeParse(request.body)
+    if (!params.success || !body.success) {
+      return reply.code(400).send({
+        error: { code: 'VALIDATION_ERROR', message: 'Opportunity update input is invalid.' },
+      })
+    }
+
+    const evaluation = evaluateOpportunity(body.data.input)
+    const record = await repository.update(
+      ownerId,
+      actorId,
+      params.data.id,
+      body.data.input,
+      evaluation,
+      body.data.expectedVersion,
+    )
+    if (record) return { data: record }
+
+    const existing = await repository.get(ownerId, params.data.id)
+    if (!existing) {
+      return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
+    }
+    if (await repository.hasProduct(ownerId, params.data.id)) {
+      return reply.code(409).send({
+        error: {
+          code: 'OPPORTUNITY_ALREADY_PROMOTED',
+          message: 'An opportunity with a product brief is locked to preserve the brief snapshot. Create a new opportunity revision instead.',
+        },
+      })
+    }
+    return reply.code(409).send({
+      error: {
+        code: 'VERSION_CONFLICT',
+        message: 'The opportunity changed after it was loaded. Refresh the record before editing again.',
+      },
+      data: { currentVersion: existing.version },
+    })
+  })
+
   app.patch('/api/v1/opportunities/:id/decision', async (request, reply) => {
     const params = z.object({ id: idSchema }).safeParse(request.params)
     const body = decisionSchema.safeParse(request.body)
