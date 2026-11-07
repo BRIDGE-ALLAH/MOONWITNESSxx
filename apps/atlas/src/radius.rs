@@ -39,6 +39,8 @@ pub struct SubscriberWriteRequest {
     pub username: String,
     pub password: String,
     pub groupname: Option<String>,
+    #[serde(default = "default_credential_mode")]
+    pub credential_mode: String,
 }
 
 #[derive(Debug, Serialize, FromRow)]
@@ -88,6 +90,10 @@ pub fn validate_nas(input: &NasWriteRequest) -> Result<(), &'static str> {
     Ok(())
 }
 
+fn default_credential_mode() -> String {
+    "bcrypt".to_string()
+}
+
 pub fn validate_subscriber(input: &SubscriberWriteRequest) -> Result<(), &'static str> {
     if input.username.trim().is_empty()
         || input.username.len() > 64
@@ -107,6 +113,9 @@ pub fn validate_subscriber(input: &SubscriberWriteRequest) -> Result<(), &'stati
         .is_some_and(|value| value.trim().is_empty() || value.len() > 64)
     {
         return Err("groupname must contain 1 to 64 characters");
+    }
+    if !matches!(input.credential_mode.as_str(), "bcrypt" | "nt_hash") {
+        return Err("credential_mode must be bcrypt or nt_hash");
     }
     Ok(())
 }
@@ -131,7 +140,7 @@ pub async fn create_nas(input: &NasWriteRequest) -> Result<Nas, sqlx::Error> {
         .bind(input.description.as_deref())
         .execute(&mut *tx)
         .await?;
-    let id: i64 = sqlx::query_scalar("SELECT LAST_INSERT_ID()")
+    let id: i64 = sqlx::query_scalar("SELECT CAST(LAST_INSERT_ID() AS SIGNED)")
         .fetch_one(&mut *tx)
         .await?;
     tx.commit().await?;
@@ -161,18 +170,51 @@ pub async fn list_subscribers() -> Result<Vec<Subscriber>, sqlx::Error> {
         .await
 }
 
+fn derive_credential(
+    password: &str,
+    mode: &str,
+) -> Result<(String, String), sqlx::Error> {
+    match mode {
+        "bcrypt" => {
+            let hash = bcrypt::hash(password, 12)
+                .map_err(|_| sqlx::Error::Protocol("bcrypt hashing failed".to_string()))?;
+            Ok(("Crypt-Password".to_string(), hash))
+        }
+        "nt_hash" => {
+            use md4::{Digest, Md4};
+
+            let mut hasher = Md4::new();
+            for unit in password.encode_utf16() {
+                hasher.update(unit.to_le_bytes());
+            }
+            let hash = format!("0x{}", hex::encode(hasher.finalize()));
+            Ok(("NT-Password".to_string(), hash))
+        }
+        _ => Err(sqlx::Error::Protocol("unsupported credential mode".to_string())),
+    }
+}
+
 pub async fn create_or_update_subscriber(
     input: &SubscriberWriteRequest,
 ) -> Result<(), sqlx::Error> {
+    let password = input.password.clone();
+    let mode = input.credential_mode.clone();
+    let (attribute, value) = tokio::task::spawn_blocking(move || {
+        derive_credential(&password, &mode)
+    })
+    .await
+    .map_err(|_| sqlx::Error::Protocol("password hashing task failed".to_string()))??;
+
     let pool = radius_db::pool().await?;
     let mut tx = pool.begin().await?;
-    sqlx::query("DELETE FROM radcheck WHERE username = ? AND attribute = 'Cleartext-Password'")
+    sqlx::query("DELETE FROM radcheck WHERE username = ? AND attribute IN ('Cleartext-Password', 'Crypt-Password', 'NT-Password')")
         .bind(input.username.trim())
         .execute(&mut *tx)
         .await?;
-    sqlx::query("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, 'Cleartext-Password', ':=', ?)")
+    sqlx::query("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, ?, ':=', ?)")
         .bind(input.username.trim())
-        .bind(&input.password)
+        .bind(attribute)
+        .bind(value)
         .execute(&mut *tx)
         .await?;
     sqlx::query("DELETE FROM radusergroup WHERE username = ?")
@@ -217,7 +259,7 @@ pub async fn accounting_summary() -> Result<AccountingSummary, sqlx::Error> {
     let pool = radius_db::pool().await?;
     let (total_sessions, active_sessions, input_octets, output_octets) =
         sqlx::query_as::<_, (i64, i64, i64, i64)>(
-            "SELECT COUNT(*), SUM(CASE WHEN acctstoptime IS NULL THEN 1 ELSE 0 END), CAST(COALESCE(SUM(acctinputoctets), 0) AS SIGNED), CAST(COALESCE(SUM(acctoutputoctets), 0) AS SIGNED) FROM radacct",
+            "SELECT CAST(COUNT(*) AS SIGNED), CAST(SUM(CASE WHEN acctstoptime IS NULL THEN 1 ELSE 0 END) AS SIGNED), CAST(COALESCE(SUM(acctinputoctets), 0) AS SIGNED), CAST(COALESCE(SUM(acctoutputoctets), 0) AS SIGNED) FROM radacct",
         )
         .fetch_one(pool)
         .await?;

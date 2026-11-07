@@ -42,7 +42,7 @@ FreeRADIUS is the RADIUS data-plane engine. ATLAS will own NAS inventory, subscr
 
 FreeRADIUS is launched by the development Compose stack using the upstream freeradius/freeradius-server:3.2.10 image. The upstream image's default configuration has no production NAS clients or subscriber database. It must be configured with explicit clients, secure shared secrets, certificates, and an authentication/accounting backend before being exposed to network devices. The Compose port bindings default to loopback for safety.
 
-On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user, then imports the upstream FreeRADIUS 3.2.10 MySQL schema. The initialization scripts run only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. NAS clients are read at FreeRADIUS startup; adding or changing a NAS row currently requires a FreeRADIUS reload/restart. Subscriber records can be inserted into `radcheck` and group/policy replies into `radreply` / `radusergroup`; ATLAS exposes NAS and subscriber CRUD endpoints. NAS changes are persisted in the `nas` table but FreeRADIUS reads clients at process startup, so a FreeRADIUS restart/reload is required before a newly created or modified NAS is accepted. Subscriber credentials are stored as bcrypt `Crypt-Password` plus the legacy NT hash required by MS-CHAPv2; raw passwords are not stored. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
+On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user, then imports the upstream FreeRADIUS 3.2.10 MySQL schema. The initialization scripts run only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. NAS clients are read at FreeRADIUS startup; adding or changing a NAS row currently requires a FreeRADIUS reload/restart. Subscriber records can be inserted into `radcheck` and group/policy replies into `radreply` / `radusergroup`; ATLAS exposes NAS and subscriber CRUD endpoints. NAS changes are persisted in the `nas` table but FreeRADIUS reads clients at process startup, so a FreeRADIUS restart/reload is required before a newly created or modified NAS is accepted. Subscriber credentials are never stored in clear text. The API defaults to bcrypt (`Crypt-Password`) for PAP-compatible password verification. Set `credential_mode: "nt_hash"` only when MS-CHAPv2 compatibility is required; NT hashes are legacy and materially weaker, so prefer EAP-TLS where possible. Only one credential attribute is stored per subscriber to avoid ambiguous FreeRADIUS password selection. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
 
 ## Run with Docker Compose
 
@@ -69,8 +69,8 @@ The dashboard is served at http://127.0.0.1:5150/.
 
 ## API
 
-- GET /api/v1/system/health — liveness plus actual MariaDB and Redis probe results.
-- GET /api/v1/system/readiness — returns 503 unless both MariaDB and Redis are reachable.
+- GET /api/v1/system/health — liveness plus actual ATLAS MariaDB, RADIUS database, and Redis probe results.
+- GET /api/v1/system/readiness — returns 503 unless ATLAS MariaDB, RADIUS database, and Redis are reachable.
 - GET /api/v1/system/version — build/package version.
 - GET /api/v1/engines/catalog — engine integration catalog and adapter status.
 - GET /api/v1/engines — list registered engines (Bearer token required).
@@ -81,7 +81,7 @@ The dashboard is served at http://127.0.0.1:5150/.
 - GET /api/v1/engines/{id}/health — run a live backend probe (Bearer token required).
 - GET/POST /api/v1/radius/nas — list or create NAS clients (Bearer token required).
 - DELETE /api/v1/radius/nas/{id} — remove a NAS client (Bearer token required).
-- GET/POST /api/v1/radius/subscribers — list or create/update subscriber credentials and optional group (Bearer token required).
+- GET/POST /api/v1/radius/subscribers — list or create/update subscriber credentials and optional group (Bearer token required). The POST body accepts `username`, `password`, optional `groupname`, and optional `credential_mode` (`bcrypt` default or `nt_hash`).
 - DELETE /api/v1/radius/subscribers/{username} — remove subscriber authentication/policy rows (accounting history is retained).
 - GET /api/v1/radius/sessions/active — inspect active sessions from radacct (Bearer token required).
 - GET /api/v1/radius/accounting/summary — accounting totals and octet counters (Bearer token required).
