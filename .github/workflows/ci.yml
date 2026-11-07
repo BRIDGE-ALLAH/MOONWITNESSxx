@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-      - 'feat/**'"
-      - 'fix/**'"
-      - 'chore/**'"
-      - 'docs/**'"
-      - 'refactor/**'"
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+      - 'docs/**'
+      - 'refactor/**'
   pull_request:
     branches:
       - main
