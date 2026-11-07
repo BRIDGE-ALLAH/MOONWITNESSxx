@@ -29,18 +29,20 @@ function makePorts(events: string[], failHandoff = false): SystemModePorts {
       async incomplete() { return []; },
     },
     composer: { compose() { events.push("compose"); return registry; } },
-    businessAdapter: {} as DatabaseAdapter,
+    businessAdapter: { identity: { provider: "postgres", role: "business" } } as DatabaseAdapter,
     planner: { plan() { events.push("plan"); return plan; } },
     reconciler: {
       async reconcile() { events.push("reconcile"); return receipt; },
       async verify() { events.push("verify"); return true; },
     },
     policy,
+    async bootstrapControlPlane() { events.push("bootstrap"); },
     async discover() { events.push("discover"); return { addons: [], modules: [], models: [] } satisfies RegistryBuildInput; },
     async verifyTrust(input) { events.push("trust"); return input; },
     async recover() { events.push("recover"); },
     async inspectBusiness() { return {} as DatabaseSnapshot; },
     async approve() { events.push("approve"); return policy; },
+    async prepareRuntime() { events.push("prepare-runtime"); },
     async handoff() { events.push("handoff"); if (failHandoff) throw new Error("canary failed"); },
     async setReadiness(ready) { events.push(ready ? "ready" : "not-ready"); },
     now: () => new Date("2026-01-01T00:00:00.000Z"),
@@ -52,6 +54,7 @@ test("orders discovery, approval, reconciliation, verification, activation and r
   const result = await new SystemModeOrchestrator(makePorts(events)).run("operator");
   assert.equal(result.registry.fingerprint, "fp");
   assert.ok(events.indexOf("verify") < events.indexOf("activate"));
+  assert.ok(events.indexOf("prepare-runtime") < events.indexOf("activate"));
   assert.ok(events.indexOf("activate") < events.indexOf("handoff"));
   assert.ok(events.includes("ready"));
   assert.ok(events.includes("completed"));
