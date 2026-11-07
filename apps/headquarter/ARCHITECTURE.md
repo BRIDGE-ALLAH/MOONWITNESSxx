@@ -60,6 +60,12 @@ The frontend-safe adapter lives in `src/platform/arsy`. It targets the versioned
 
 The adapter is transport infrastructure, not proof that a backend capability exists. Login, session renewal, permission evaluation, workspace selection, health, and feature endpoints must be wired only after ARSY publishes the corresponding contract. ARSY remains the authorization enforcement point.
 
+## Operator session boundary
+
+The Money Maker opportunity proxy is protected by a Headquarter-owned operator session. The login endpoint verifies `HEADQUARTER_OPERATOR_PASSWORD`, issues an eight-hour HMAC-signed `HttpOnly`, `SameSite=Strict` cookie, and requires a configured `HEADQUARTER_SESSION_SECRET` (at least 32 bytes) plus exact `HEADQUARTER_PUBLIC_ORIGIN`. Production configuration requires HTTPS. State-changing session and opportunity requests validate the browser `Origin`; the opportunity proxy rejects missing, expired, tampered, or mismatched operator sessions before forwarding to ARSY.
+
+The browser session identity must match the configured `ARSY_OPERATOR_ID`; the privileged `ARSY_OPERATOR_TOKEN` remains server-only and is never a browser credential. This is a single-operator boundary, not a general multi-user identity, role, tenant, or SSO system. New proxy routes must reuse this authorization boundary rather than forwarding service credentials directly.
+
 ## Design-system contract
 
 `packages/ui/src/styles/globals.css` owns semantic CSS variables for surfaces, content, focus, borders, and success/warning/info/destructive states. Night Riot and Paper Riot theme values map to the same semantic names. `packages/ui/tailwind.config.js` exposes those semantic tokens and the stable brand palette. Feature pages should prefer semantic tokens for state and layout; brand colors remain intentional accents.
@@ -82,8 +88,8 @@ See `FEATURE-ROLLOUT.md` for ownership, production gates, and administration rea
 
 ## Current known limitations
 
-- Feature pages still contain local/static demo data. ARSY DECK now has a domain-owned repository boundary and explicit fixture; no production feature endpoint is connected.
-- Authentication, authorization, workspace persistence, and locale routing are not implemented because their authoritative ARSY contracts are not yet verified.
+- Most feature pages still contain local/static demo data. ARSY DECK retains an explicit fixture. The Money Maker opportunity API is a separate persisted ARSY capability; its complete browser-to-PostgreSQL production journey and broader product lifecycle are still gated.
+- The Money Maker opportunity proxy now has a dedicated single-operator Headquarter session boundary. General multi-user authentication, role/tenant authorization, workspace persistence, and locale routing remain unimplemented; do not treat the single-operator gate as a platform-wide identity system.
 - Administration is aligned with the approved IA at the navigation/roadmap level only; planned entries remain disabled until routes, contracts, and authorization exist.
 - Browser-level responsive, keyboard, screen-reader, contrast, and theme verification remains a release task.
 - PR #35 was merged to `main` as `51bfe984cde513f5190ab192491681fe41f96aab`. Repository integrity CI passed (lockfile sync, dependency install, workspace type-check, lint/validation); Asset Integrity passed (asset/UI/Headquarter type-check, Headquarter production build, SVG checks, and asset registry tests). CodeQL passed. Browser-level accessibility and visual regression remain unverified.
