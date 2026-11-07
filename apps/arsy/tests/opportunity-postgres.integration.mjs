@@ -151,8 +151,9 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(transitionedProduct?.lifecycleState, 'production')
     assert.deepEqual(transitionedProduct?.allowedNextLifecycleStates, ['review'])
     const promotedOpportunity = await new OpportunityRepository(pool).get(ownerId, created.id)
-    assert.equal(promotedOpportunity?.version, 4, 'creating a product brief must lock the opportunity version')
+    assert.equal(promotedOpportunity?.version, 4, 'creating a product brief must advance the opportunity version')
     assert.equal(await products.createFromOpportunity(ownerId, ownerId, created.id, ['Duplicate must be blocked']), null)
+    assert.equal(await new OpportunityRepository(pool).update(ownerId, ownerId, created.id, revisedInput, revisedEvaluation, promotedOpportunity.version), null, 'promoted opportunities must reject edits')
 
 
     const revisedProduct = await products.createVersion(ownerId, ownerId, product.id, {
@@ -429,7 +430,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
       'research-more',
       'Recheck the evidence before any product promotion.',
     )
-    assert.equal(decided?.evaluation.decision, 'research-more')
+    assert.equal(decided, null, 'promoted opportunities must reject decision changes')
     assert.equal(await new OpportunityRepository(pool).archive(ownerId, ownerId, created.id), true)
     assert.equal(await new OpportunityRepository(pool).get(ownerId, created.id), null)
 
