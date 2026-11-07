@@ -132,7 +132,7 @@ try {
     await assetCard.getByRole('button', { name: 'Append inspection record' }).click()
     await page.getByRole('status').filter({ hasText: 'Inspection record appended' }).waitFor({ state: 'visible', timeout: 30_000 })
   }
-  await assetCard.getByText('All required inspection statuses and source qualifications are satisfied.').waitFor({ state: 'visible', timeout: 30_000 })
+  await assetCard.getByText('Not channel-ready: missing/blocked checks, self-attested records, or untrusted inspection actors.').waitFor({ state: 'visible', timeout: 30_000 })
 
   // Record a real pending ledger event and reconcile it with a source URL.
   await page.goto(`${baseUrl}/mizan-ledger`, { waitUntil: 'domcontentloaded' })
