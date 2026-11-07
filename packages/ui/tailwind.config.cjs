@@ -71,6 +71,16 @@ module.exports = {
           foreground: 'hsl(var(--card-foreground))',
         },
       },
+      zIndex: {
+        base: 'var(--z-base)',
+        sticky: 'var(--z-sticky)',
+        dropdown: 'var(--z-dropdown)',
+        overlay: 'var(--z-overlay)',
+        modal: 'var(--z-modal)',
+        toast: 'var(--z-toast)',
+        tooltip: 'var(--z-tooltip)',
+        command: 'var(--z-command)',
+      },
       transitionDuration: {
         fast: 'var(--motion-duration-fast)',
         standard: 'var(--motion-duration-standard)',
