@@ -2,7 +2,7 @@
 
 ## Phase 0 — Brand governance
 - [x] Establish MOONWITNESS as the master brand.
-- [x] Define Observatory and Archive as experience families, XV as a program descriptor, and RIOTWORKS as a separate studio identity.
+- [x] Define Observatory and Archive as experience families, XV as a program descriptor, and RIOTWORKS as the MOONWITNESS product division.
 - [x] Define Core Promise: SEE MORE. KNOW MORE.
 - [x] Define Brand Manifesto: WHEN THE MOON RISES, WE SHARE MESSAGES. (WMR-WSM)
 - [x] Define operational verbs and messaging hierarchy.
