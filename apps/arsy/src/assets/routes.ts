@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { z } from 'zod'
+import { httpEvidenceUrlSchema } from '../http-url.ts'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { AssetRepository } from './repository.ts'
@@ -12,7 +13,7 @@ const allowedMediaTypes = new Set([
 const provenanceSchema = z.object({
   creator: z.string().trim().min(2).max(200),
   license: z.string().trim().min(2).max(300),
-  sourceUrl: z.string().url().optional(),
+  sourceUrl: httpEvidenceUrlSchema.optional(),
   originalDeclaration: z.string().trim().min(10).max(1000).optional(),
   toolModel: z.string().trim().max(300).optional(),
   editHistory: z.array(z.string().trim().min(3).max(500)).max(50),
