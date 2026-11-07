@@ -57,10 +57,11 @@ test("orders discovery, approval, reconciliation, verification, activation and r
   assert.ok(events.includes("completed"));
   assert.ok(events.includes("release"));
 });
-test("keeps readiness false and journals failure when runtime handoff fails", async () => {
+test("keeps readiness false and journals failure when runtime handoff fails after activation", async () => {
   const events: string[] = [];
   await assert.rejects(() => new SystemModeOrchestrator(makePorts(events, true)).run("operator"), /canary failed/);
   assert.ok(events.includes("failed"));
   assert.ok(events.includes("not-ready"));
+  assert.ok(events.includes("activate"));
   assert.ok(events.includes("release"));
 });
