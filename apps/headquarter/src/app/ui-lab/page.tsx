@@ -109,7 +109,7 @@ export default function UiLabPage() {
       </section>
 
 
-      <section className="space-y-4">
+      <section id="signal-constellation" className="space-y-4">
         <RiotSignalHeader
           level={2}
           eyebrow="03 // Signal intelligence"
