@@ -33,6 +33,7 @@ test("persists plans, receipts and atomically activates a verified registry unde
   const lease = await store.acquireLease("registry-activation", 5_000);
   assert.ok(lease);
   assert.equal(await store.acquireLease("registry-activation", 5_000), null);
+  now += 1_000;
   const renewed = await store.renewLease(lease, 5_000);
   assert.ok(renewed.expiresAt > lease.expiresAt);
 
