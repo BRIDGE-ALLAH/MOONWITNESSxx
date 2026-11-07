@@ -325,4 +325,4 @@ A component is not complete until all applicable checks pass:
 - `smoke-test.mjs` checks the public component/function exports using the package name.
 - The CardTitle ref and prop types now both describe an HTML heading element.
 - The Google Fonts import was moved ahead of Tailwind directives so it remains a valid leading CSS import.
-- Build and consumer commands have been added but have **not yet been executed in a repository checkout**. Do not treat the milestone as complete until the unchecked verification tasks pass.
+- Build and consumer commands have been added, but package build/type-check/smoke and Headquarter production build have **not executed**. Repository CI run #80 failed in its preflight before dependency installation: `apps/arsy` declares `pg@^8.0.0` missing from the lockfile, and `scripts/check-lockfile.mjs` is missing. The package validation steps were skipped; this is not evidence of a UI build failure or success. Do not treat the milestone as complete until the unchecked verification tasks pass.
