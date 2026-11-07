@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { httpEvidenceUrlSchema } from '../http-url.ts'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { FinancialRepository, type FinancialEventType } from './repository.ts'
@@ -18,7 +19,7 @@ const createSchema = z.object({
 const reconcileSchema = z.object({
   state: z.enum(['verified', 'disputed', 'reversed']),
   rationale: z.string().trim().min(10).max(2000),
-  evidenceUrl: z.string().url().max(2048),
+  evidenceUrl: httpEvidenceUrlSchema,
 })
 const idSchema = z.string().uuid()
 const listSchema = z.object({ limit: z.coerce.number().int().min(1).max(200).default(100) })
