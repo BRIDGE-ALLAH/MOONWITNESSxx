@@ -46,6 +46,15 @@ export async function proxyArsyRequest(
       cache: 'no-store',
       signal: AbortSignal.timeout(12_000),
     })
+    const contentType = response.headers.get('content-type') ?? ''
+    if (response.status !== 204 && !contentType.includes('application/json')) {
+      const headers = new Headers({ 'content-type': contentType || 'application/octet-stream' })
+      for (const name of ['content-disposition', 'x-content-sha256']) {
+        const value = response.headers.get(name)
+        if (value) headers.set(name, value)
+      }
+      return new NextResponse(await response.arrayBuffer(), { status: response.status, headers })
+    }
     const payload = response.status === 204 ? null : await response.json().catch(() => ({
       error: { code: 'INVALID_ARSY_RESPONSE', message: 'ARSY returned an unreadable response.' },
     }))
