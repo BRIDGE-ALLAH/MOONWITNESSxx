@@ -335,3 +335,40 @@ These are documentation/governance corrections only. No application runtime, pac
 ## 11. Audit limitations
 
 This audit uses the tracked GitHub tree and file contents at the stated commit. It does not have the user's local uncommitted files, secrets, runtime environment, or CI execution results. If the local machine has additional unpushed changes, push them before asking for a new audit. Never infer a successful build from the presence of package manifests or lockfiles.
+
+
+## 12. Follow-up repository reinspection — Phase 0
+
+**Reinspection date:** 2026-11-07  
+**Purpose:** Correct stale observations in the original audit snapshot before Phase 0 implementation work. This section supersedes conflicting current-state statements in §§2–4 and §10 above. The original audit remains useful as a historical snapshot.
+
+### 12.1 Current observations
+
+| Area | Reinspection finding | Action |
+|---|---|---|
+| Headquarter manifest | `apps/headquarter/package.json` currently declares Next.js, React and Next scripts; it is no longer the Fastify manifest described in the original snapshot. | Keep Next.js identity; remove lint error suppression and provide an explicit lint config. |
+| Headquarter page | The current home page labels the app as `apps/headquarter + packages/ui`; the old `apps/web` observation is stale. | Retain demo-only labeling; update copy only if product UX work requires it. |
+| ARSY Core | `packages/arsy-core/src/index.ts` now exists. It is a minimal prototype, not production core. | Audit its Fastify/Zod dependency declarations, type signature, scripts, lifecycle and actual app integration. |
+| ARSY app | `apps/arsy/src/index.ts` creates its own Fastify instance and does not import the ARSY Core factory. `apps/arsy/src/db.ts` owns a direct pg Pool and installs process signal handlers from setup code. | Decide and implement one explicit app/core composition contract; move DB shutdown to Fastify lifecycle hooks. |
+| ORM | No `packages/orm`, `packages/orm-db`, provider adapter or Base Platform addon implementation was found in this inspection. | Keep them marked planned. |
+| Workspace | `pnpm-workspace.yaml` correctly includes only `apps/*` and `packages/*`; legacy `services/*` stays excluded. | Preserve this boundary. |
+| pnpm build policy | `allowBuilds` contains placeholder strings for `esbuild` and `msgpackr-extract`, not explicit booleans. | Replace placeholders with reviewed boolean policy and verify with pinned pnpm. |
+| Root identity/scripts | Root package is named `riotworks`, while `scripts/repo-audit.mjs` requires `moonwitness`. Root `format:check` recursively calls itself; `validate:repo` calls a missing `type-check` script; `audit:repo` does not invoke the report generator; and `test` is missing. | Align root identity/scripts with the canonical repository and audit script. |
+| Lockfile checker | `scripts/check-lockfile.mjs` invokes pnpm to regenerate the lockfile and fails when the resulting lockfile differs. | Keep its write-on-drift behavior explicit; run it after manifest changes and commit the resulting lockfile. |
+| Package scripts | Some scripts still echo success without linting or delegate to unrelated packages. Some manifests contain duplicate `private` keys. | Remove success-masking commands and ensure every enabled task runs a real command. |
+| Docker ignore | No root `.dockerignore` was found. | Add a conservative root ignore file and verify build contexts. |
+| Pre-commit | Current `.husky/pre-commit` runs a local staged-file Prettier check only; it no longer performs network AI, version or changelog mutations. | Preserve local-only behavior. |
+
+### 12.2 Verification limits
+
+This follow-up is based on tracked file contents retrieved from the default branch. It is not a local checkout and does not execute pnpm install, typecheck, lint, tests, Next build, Fastify startup, Docker build, or GitHub Actions. No clean-build claim is made. After Phase 0 changes, run the exact root commands in CI or a clean checkout and record their results here.
+
+### 12.3 Current Phase 0 priority
+
+1. Align docs/08, docs/18 and docs/22 on programmatic TypeScript declarations, immutable registry composition, System Mode/Runtime Mode, Environment and Recordset.
+2. Make SQLite System Database and PostgreSQL Business Database responsibilities unambiguous.
+3. Fix root repository identity, scripts, pnpm workspace build policy and package task false positives.
+4. Fix Headquarter lint configuration and remove lint success masking.
+5. Repair ARSY Core/app integration and DB lifecycle without introducing ORM implementation prematurely.
+6. Add root .dockerignore and run clean install, lockfile check, lint, typecheck, tests and builds.
+7. Update this audit with exact commit SHA and CI evidence after verification.
