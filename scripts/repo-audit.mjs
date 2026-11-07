@@ -52,7 +52,7 @@ export function findMissingWorkspaceImporters(lockfileContent, workspacePaths) {
   return workspacePaths.filter((path) => !importerPaths.has(path))
 }
 
-function containsBackgroundShelling(command) {
+export function containsBackgroundShelling(command) {
   return /(?:^|\s)&(?:\s|$)/.test(String(command))
 }
 

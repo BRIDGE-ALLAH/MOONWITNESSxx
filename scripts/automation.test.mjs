@@ -122,7 +122,7 @@ snapshots: {}
 
 test('parses pnpm workspace globs independent of YAML quoting', () => {
   const workspace = ['packages:', '  - apps/*', "  - 'packages/*'"].join('\n')
-  const services = ['packages:', '  - services/*'].join('\\n')
+  const services = ['packages:', '  - services/*'].join('\n')
 
   assert.deepEqual(parseWorkspaceGlobs(workspace), new Set(['apps/*', 'packages/*']))
   assert.equal(parseWorkspaceGlobs(services).has('services/*'), true)
