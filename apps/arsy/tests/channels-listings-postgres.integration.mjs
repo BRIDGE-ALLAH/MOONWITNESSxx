@@ -37,7 +37,7 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
     )
 
     const channels = new ChannelRepository(pool)
-    const channel = await channels.create(ownerId, ownerId, {
+    let channel = await channels.create(ownerId, ownerId, {
       channelKey,
       displayName: 'Isolated CI Channel',
       countryCode: 'ID',
@@ -59,6 +59,39 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
         { evidenceType: 'format-requirements', sourceName: 'Format page', sourceUrl: 'https://example.com/formats', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test accepted format requirements evidence.', limitations: 'CI fixture only.' },
       ],
     })
+
+    const channelUpdate = await channels.update(ownerId, ownerId, channel.id, 1, {
+      channelKey: channel.channelKey,
+      displayName: 'Isolated CI Channel · revised',
+      countryCode: channel.countryCode,
+      accountEligibility: channel.accountEligibility,
+      officialPolicyUrl: channel.officialPolicyUrl,
+      policyReviewedAt: channel.policyReviewedAt,
+      policyRecheckAt: channel.policyRecheckAt,
+      payoutRequirements: channel.payoutRequirements,
+      listingRequirements: channel.listingRequirements,
+      payoutSetupStatus: channel.payoutSetupStatus,
+      capability: channel.capability,
+      grantedScopes: channel.grantedScopes,
+      quotaNotes: channel.quotaNotes,
+      channelStatus: channel.channelStatus,
+      evidence: [],
+    })
+    assert.ok(channelUpdate.channel)
+    assert.equal(channelUpdate.conflict, false)
+    assert.equal(channelUpdate.channel.revision, 2)
+    channel = channelUpdate.channel
+    const appendedEvidence = await channels.appendEvidence(ownerId, ownerId, channel.id, {
+      evidenceType: 'other',
+      sourceName: 'Channel operational note',
+      sourceUrl: 'https://example.com/channel-note',
+      capturedAt: '2026-11-08T00:00:00Z',
+      evidenceClass: 'operator-attestation',
+      summary: 'An operator note was appended without overwriting previous evidence.',
+      limitations: 'Operator attestation only.',
+    })
+    assert.ok(appendedEvidence)
+    assert.equal((await channels.evidence(ownerId, channel.id))?.length, 5)
 
     const strictChannel = await channels.create(ownerId, ownerId, {
       channelKey: strictChannelKey,
