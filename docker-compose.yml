@@ -48,7 +48,7 @@ services:
     container_name: moonwitness-arsy
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${ARSY_PORT:-3001}
+      PORT: 3001
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-moonwitness}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
