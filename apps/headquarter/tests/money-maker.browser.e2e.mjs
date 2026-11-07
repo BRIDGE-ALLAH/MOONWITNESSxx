@@ -147,6 +147,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     // authorizes a manual listing package; the browser test never publishes it.
     await page.goto(`${baseUrl}/launch-bay`, { waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'LAUNCH BAY' }).waitFor()
+    await page.getByText('No channels registered.').waitFor()
     await page.getByLabel('Channel slug').fill(channelSlug)
     await page.getByLabel('Display name').fill(channelName)
     await page.getByRole('button', { name: 'Add C0 channel' }).click()
