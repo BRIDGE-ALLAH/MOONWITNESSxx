@@ -669,8 +669,8 @@ Adoption policy:
 - [x] DIV-P10-005 Store AI outputs in candidate/review queues, not canonical Corpus records.
 - [x] DIV-P10-006 Require human review and explicit promotion authority.
 - [x] DIV-P10-007 Record edits, rejection reasons and reviewer decisions.
-- [x] DIV-P10-008 Prevent AI-generated scripture, quotation or source text from being treated as source content.
-- [x] DIV-P10-009 Define hallucination, citation integrity and unsupported-answer evaluations.
+- [ ] DIV-P10-008 Prevent AI-generated scripture, quotation or source text from being treated as source content.
+- [ ] DIV-P10-009 Define hallucination, citation integrity and unsupported-answer evaluations.
 - [x] DIV-P10-010 Define abstention and safe response for metaphysical/unobservable questions.
 - [ ] DIV-P10-011 Define language-specific evaluation, especially Arabic and other source languages.
 - [ ] DIV-P10-012 Evaluate model performance separately by task, language, tradition, source type and scope.
@@ -925,3 +925,6 @@ Initial pure-domain implementation slices added on branch feat/divine-phases-9-1
 - Added synthetic tests and PHASE-9-11-EXECUTION.md plus docs/PHASE-9-11-RESEARCH.md.
 
 Remaining: legal retention/deletion implementation, key-backed signing and trusted timestamps, ZILL/Corpus rights contracts, real AI provider execution, multilingual/adversarial benchmarks, full RDF canonicalization/import, SHACL/TEI/IIIF/CIDOC CRM/LRMoo conformance, and independent rights-cleared evaluation. These phases are not production complete. See execution record for exact boundaries.
+
+
+Implementation accuracy note: Phase 10 source-span provenance and abstention are implemented, but prevention of generated sacred/source text from canonical source treatment and task/language-specific hallucination/citation evaluation remain open. Candidate state is an in-memory contract, not a persistent review queue. Phase 9 rights gates are reusable policy guards; enforcement in every live ingestion/display/export/AI adapter remains blocked on platform contracts.

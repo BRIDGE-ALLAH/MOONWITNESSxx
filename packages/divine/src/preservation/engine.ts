@@ -15,7 +15,7 @@ export function assertRights(policy:RightsPolicy,action:RightsAction,mode:"conte
 export async function appendDecision(entries:readonly DecisionLedgerEntry[],decision:ResearchDecision):Promise<DecisionLedgerEntry[]>{
  if(!decision.id||!decision.actorRef||!decision.role||!decision.method||!decision.rationale||!decision.occurredAt)throw new Error("Decision must include actor, role, method, rationale and timestamp");
  if(entries.some(x=>x.decision.id===decision.id))throw new Error("Decision IDs are append-only and unique");
- if((decision.kind==="correct"||decision.kind==="supersede")&&!decision.supersedes)throw new Error("Corrections and supersessions must reference the prior decision");
+ if(decision.kind==="correct"||decision.kind==="supersede"){if(!decision.supersedes)throw new Error("Corrections and supersessions must reference the prior decision");if(!entries.some(x=>x.decision.id===decision.supersedes))throw new Error("Correction target must exist in the append-only history");}
  const previousDigest=entries.at(-1)?.entryDigest??null;const entryDigest=await digest(JSON.stringify({decision,previousDigest}));
  return [...entries,{decision,previousDigest,entryDigest}];
 }
