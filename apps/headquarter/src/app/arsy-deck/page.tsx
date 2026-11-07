@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@riotworks/ui'
+import { Badge, Card, CardHeader, CardTitle, CardContent } from '@riotworks/ui'
 
 const metrics = [
   { label: 'Active Products', value: 12, subtitle: 'Live now', icon: '📦' },
@@ -33,7 +33,7 @@ const channelHealth = [
 
 const activityFeed = [
   { id: 1, title: 'New product uploaded', description: 'Product #123 added to marketplace', time: '2 hours ago', avatar: '📦' },
-  { id: 2, title: 'Experiment launched', description: 'New A/B test started', time: ' yesterday', avatar: '🧪' },
+  { id: 2, title: 'Experiment launched', description: 'New A/B test started', time: 'yesterday', avatar: '🧪' },
   { id: 3, title: 'Agent task completed', description: 'AI workforce task finished', time: '2 days ago', avatar: '👥' },
 ]
 
@@ -45,50 +45,49 @@ const aftershockInsights = [
 
 export default function ARSYDeck() {
   return (
-    <main className="min-h-screen bg-obsidian text-paper-bone p-8">
+    <main className="min-h-screen bg-obsidian p-8 text-paper-bone">
       <div className="mx-auto max-w-7xl">
-        <header className="border-b border-acid-lime/30 pb-8 mb-8">
-          <h1 className="text-5xl font-display uppercase leading-none mb-4">
-            THE WORK NEVER STOPS
+        <header className="mb-8 border-b border-signal-gold/30 pb-8">
+          <Badge variant="outline">MOONWITNESS OBSERVATORY · DEMO DATA</Badge>
+          <h1 className="mb-4 mt-4 text-5xl font-display uppercase leading-none">
+            OBSERVE THE WORK.<br />UNDERSTAND THE SIGNAL.
           </h1>
           <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">
-            RIOTWORKS Creative Commerce Engine
+            SEE MORE. KNOW MORE.
           </p>
         </header>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           {metrics.map((metric) => (
-            <Card key={metric.label} className="border-acid-lime/30">
+            <Card key={metric.label} className="border-signal-gold/30">
               <CardHeader>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-mono uppercase tracking-widest text-muted-ink">{metric.label}</span>
+                  <span className="font-mono text-sm uppercase tracking-widest text-muted-ink">{metric.label}</span>
                   <Badge variant={metric.value > 90 ? 'lime' : 'default'}>{metric.value}%</Badge>
                 </div>
                 <CardTitle className="hidden">{metric.label}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-display font-bold {metric.value > 90 ? 'text-acid-lime' : 'text-paper-bone'}">
+                <div className={`text-4xl font-display font-bold ${metric.value > 90 ? 'text-signal-gold' : 'text-paper-bone'}`}>
                   {metric.value}
                 </div>
-                <p className="text-sm text-muted-icon">{metric.subtitle}</p>
+                <p className="text-sm text-muted-foreground">{metric.subtitle}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
         <section className="space-y-6">
-          <h2 className="text-xl font-display uppercase tracking-wider mb-4">Opportunity Radar</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <h2 className="mb-4 text-xl font-display uppercase tracking-wider">Opportunity Radar</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {opportunities.map((opp) => (
-              <Card key={opp.id} className="border-2 border-opacity-50 hover:border-acid-lime/50">
-                <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider">{opp.title}</CardTitle>
-                </CardHeader>
+              <Card key={opp.id} className="border-2 border-opacity-50 hover:border-signal-gold/50">
+                <CardHeader><CardTitle className="text-sm uppercase tracking-wider">{opp.title}</CardTitle></CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{opp.description}</p>
                   <div className="mt-2 flex items-center gap-2">
-                    <span className="text-xs font-mono">{opp.confidence}%</span>
-                    <Badge variant="outline">{String(opp.status)}</Badge>
+                    <span className="font-mono text-xs">{opp.confidence}%</span>
+                    <Badge variant="outline">{opp.status}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -96,19 +95,17 @@ export default function ARSYDeck() {
           </div>
         </section>
 
-        <section className="space-y-6">
-          <h2 className="text-xl font-display uppercase tracking-wider mb-4">Production Pipeline</h2>
-          <div className="grid grid-cols-3 gap-4">
+        <section className="mt-8 space-y-6">
+          <h2 className="mb-4 text-xl font-display uppercase tracking-wider">Production Pipeline</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {aiWorkforce.map((agent) => (
-              <Card key={agent.name} className="border-2 border-opacity-50 hover:border-acid-lime/50">
-                <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider">{agent.name}</CardTitle>
-                </CardHeader>
+              <Card key={agent.name} className="border-2 border-opacity-50 hover:border-signal-gold/50">
+                <CardHeader><CardTitle className="text-sm uppercase tracking-wider">{agent.name}</CardTitle></CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{agent.role}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <span>{agent.status}</span>
-                    <Badge variant="electric">{agent.status}</Badge>
+                    <Badge variant="secondary">{agent.status}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -116,14 +113,12 @@ export default function ARSYDeck() {
           </div>
         </section>
 
-        <section className="space-y-6">
-          <h2 className="text-xl font-display uppercase tracking-wider mb-4">Channel Health</h2>
-          <div className="grid grid-cols-2 gap-4">
+        <section className="mt-8 space-y-6">
+          <h2 className="mb-4 text-xl font-display uppercase tracking-wider">Channel Health</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {channelHealth.map((channel) => (
-              <Card key={channel.platform} className="border-2 border-opacity-50 hover:border-acid-lime/50">
-                <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider">{channel.platform}</CardTitle>
-                </CardHeader>
+              <Card key={channel.platform} className="border-2 border-opacity-50 hover:border-signal-gold/50">
+                <CardHeader><CardTitle className="text-sm uppercase tracking-wider">{channel.platform}</CardTitle></CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{channel.status}</p>
                   <Badge variant={channel.status === 'not connected' ? 'destructive' : 'outline'}>{channel.status}</Badge>
@@ -133,11 +128,11 @@ export default function ARSYDeck() {
           </div>
         </section>
 
-        <section className="space-y-6">
-          <h2 className="text-xl font-display uppercase tracking-wider mb-4">Activity Feed</h2>
+        <section className="mt-8 space-y-6">
+          <h2 className="mb-4 text-xl font-display uppercase tracking-wider">Activity Feed</h2>
           <div className="space-y-3">
             {activityFeed.map((item) => (
-              <div key={item.id} className="flex items-start gap-3 p-3 border-b border-acid-lime/20 last:border-0">
+              <div key={item.id} className="flex items-start gap-3 border-b border-signal-gold/20 p-3 last:border-0">
                 <span className="text-xl">{item.avatar}</span>
                 <div className="flex-1">
                   <p className="font-medium">{item.title}</p>
@@ -149,16 +144,14 @@ export default function ARSYDeck() {
           </div>
         </section>
 
-        <section className="space-y-6">
-          <h2 className="text-xl font-display uppercase tracking-wider mb-4">AFTERSHOCK Insights</h2>
-          <div className="grid grid-cols-3 gap-4">
+        <section className="mt-8 space-y-6">
+          <h2 className="mb-4 text-xl font-display uppercase tracking-wider">AFTERSHOCK Insights</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {aftershockInsights.map((insight) => (
-              <Card key={insight.id} className="border-2 border-opacity-50 hover:border-acid-lime/50">
-                <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider">{insight.metric}</CardTitle>
-                </CardHeader>
+              <Card key={insight.id} className="border-2 border-opacity-50 hover:border-signal-gold/50">
+                <CardHeader><CardTitle className="text-sm uppercase tracking-wider">{insight.metric}</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-display font-bold {insight.change.includes('-') ? 'text-acid-lime' : 'text-paper-bone'}">
+                  <div className={`text-3xl font-display font-bold ${insight.change.includes('-') ? 'text-signal-red' : 'text-signal-gold'}`}>
                     {insight.change}
                   </div>
                   <p className="text-sm text-muted-foreground">{insight.trend} trend</p>
