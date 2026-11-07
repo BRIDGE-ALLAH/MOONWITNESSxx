@@ -66,7 +66,7 @@ Do not silently upgrade the package manager or lockfile format. A package-manage
 
 ### Lockfile integrity
 
-The current audit found that `pnpm-lock.yaml` does not contain importer entries for the workspace package manifests. This is a concrete lockfile drift defect, not a harmless warning.
+The prior audit found that `pnpm-lock.yaml` lacked importer entries for the workspace package manifests, including `apps/arsy`'s `pg` dependency. The governance Phase 0 branch has regenerated the lockfile with pinned pnpm 12.16.1; frozen-check and clean-install CI evidence are still required before merge.
 
 The supported workflow is:
 
