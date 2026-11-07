@@ -132,6 +132,46 @@ test('asset upload stores bytes, checksum and provenance without exposing storag
   }
 })
 
+test('asset upload idempotency replays identical content without retaining duplicate bytes', async () => {
+  const database = createPool()
+  const storage = createMemoryStorage()
+  const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env })
+  const bytes = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), Buffer.from('repeatable asset')])
+  const payload = { productId, productVersion, fileName: 'repeat.png', mediaType: 'image/png', contentBase64: bytes.toString('base64'), provenance }
+  const headers = { 'x-arsy-operator-token': token, 'idempotency-key': 'same-asset-request-0001' }
+  try {
+    const first = await app.inject({ method: 'POST', url: '/api/v1/assets', headers, payload })
+    const replay = await app.inject({ method: 'POST', url: '/api/v1/assets', headers, payload })
+    assert.equal(first.statusCode, 201)
+    assert.equal(replay.statusCode, 200)
+    assert.equal(replay.json().replayed, true)
+    assert.equal(replay.json().data.id, first.json().data.id)
+    assert.equal(storage.files.size, 1)
+    assert.equal(database.assets.size, 1)
+  } finally {
+    await app.close()
+  }
+})
+
+test('asset upload rejects bytes whose signature does not match the declared media type', async () => {
+  const database = createPool()
+  const storage = createMemoryStorage()
+  const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env })
+  try {
+    const response = await app.inject({
+      method: 'POST', url: '/api/v1/assets',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'bad-signature-request-01' },
+      payload: { productId, productVersion, fileName: 'spoofed.png', mediaType: 'image/png', contentBase64: Buffer.from('not a png').toString('base64'), provenance },
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(response.json().error.code, 'ASSET_CONTENT_TYPE_MISMATCH')
+    assert.equal(storage.files.size, 0)
+    assert.equal(database.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
+
 test('asset download is private, attachment-only and returns original bytes', async () => {
   const database = createPool()
   const storage = createMemoryStorage()
