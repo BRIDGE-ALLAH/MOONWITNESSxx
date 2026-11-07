@@ -3,7 +3,11 @@ export type WitnessEventType =
   | "claim.proposed"
   | "claim.assessed"
   | "relation.asserted"
-  | "decision.recorded"\n  | "action.proposed"\n  | "policy.evaluated"\n  | "action.completed"\n  | "action.failed";
+  | "decision.recorded"
+  | "action.proposed"
+  | "policy.evaluated"
+  | "action.completed"
+  | "action.failed";
 
 export interface WitnessEventInput {
   id: string;
@@ -35,7 +39,8 @@ export interface WitnessSnapshot {
   headHash: string;
   claims: Record<string, ClaimState>;
   observations: Record<string, { observationId: string; content: unknown; actor: string; occurredAt: string }>;
-  decisions: Record<string, { decisionId: string; rationale: unknown; actor: string; occurredAt: string }>;\n  actions: Record<string, { actionId: string; tool: string; status: "proposed" | "allowed" | "denied" | "completed" | "failed"; actor: string; policyRef?: string; receipt?: unknown; occurredAt: string }>;
+  decisions: Record<string, { decisionId: string; rationale: unknown; actor: string; occurredAt: string }>;
+  actions: Record<string, { actionId: string; tool: string; status: "proposed" | "allowed" | "denied" | "completed" | "failed"; actor: string; policyRef?: string; receipt?: unknown; occurredAt: string }>;
 }
 
 const GENESIS = "0".repeat(64);
@@ -51,15 +56,26 @@ const digest = async (value: unknown): Promise<string> => {
   return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
-function deepFreeze<T>(value: T): T {\n  if (value && typeof value === "object" && !Object.isFrozen(value)) {\n    Object.freeze(value);\n    for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child);\n  }\n  return value;\n}\n\nfunction validateInput(input: WitnessEventInput): void {
+function deepFreeze<T>(value: T): T {
+  if (value && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child);
+  }
+  return value;
+}
+
+function validateInput(input: WitnessEventInput): void {
   for (const [name, value] of Object.entries({ id: input.id, actor: input.actor, subject: input.subject })) {
     if (!value.trim()) throw new Error(name + " must not be empty");
   }
   if (!Number.isFinite(Date.parse(input.occurredAt))) throw new Error("occurredAt must be a valid ISO date");
-  if (!input.payload || typeof input.payload !== "object" || Array.isArray(input.payload)) throw new Error("payload must be an object");\n  try { canonical(input.payload); } catch { throw new Error("payload must contain JSON-compatible data"); }
+  if (!input.payload || typeof input.payload !== "object" || Array.isArray(input.payload)) throw new Error("payload must be an object");
+  try { canonical(input.payload); } catch { throw new Error("payload must contain JSON-compatible data"); }
   if (input.evidenceRefs?.some((ref) => !ref.trim())) throw new Error("evidenceRefs must not contain empty references");
   if (input.type === "claim.proposed" && typeof input.payload.statement !== "string") throw new Error("claim.proposed requires payload.statement");
-  if (input.type === "action.proposed" && typeof input.payload.tool !== "string") throw new Error("action.proposed requires payload.tool");\n  if (input.type === "policy.evaluated" && !["allowed", "denied"].includes(String(input.payload.decision))) throw new Error("policy.evaluated requires allowed or denied decision");\n  if (input.type === "claim.assessed") {
+  if (input.type === "action.proposed" && typeof input.payload.tool !== "string") throw new Error("action.proposed requires payload.tool");
+  if (input.type === "policy.evaluated" && !["allowed", "denied"].includes(String(input.payload.decision))) throw new Error("policy.evaluated requires allowed or denied decision");
+  if (input.type === "claim.assessed") {
     const confidence = input.payload.confidence;
     if (typeof confidence !== "number" || confidence < 0 || confidence > 1) throw new Error("confidence must be between 0 and 1");
     if (!["supported", "contested", "rejected"].includes(String(input.payload.status))) throw new Error("invalid claim assessment status");
@@ -67,7 +83,24 @@ function deepFreeze<T>(value: T): T {\n  if (value && typeof value === "object" 
 }
 
 export class WitnessLedger {
-  readonly #events: WitnessEvent[] = [];\n  readonly #ids = new Set<string>();\n  #appendQueue: Promise<void> = Promise.resolve();\n\n  append(input: WitnessEventInput): Promise<WitnessEvent> {\n    const operation = this.#appendQueue.then(async () => {\n      validateInput(input);\n      if (this.#ids.has(input.id)) throw new Error("duplicate event id: " + input.id);\n      const safePayload = deepFreeze(structuredClone(input.payload));\n      const body = { ...input, payload: safePayload, evidenceRefs: [...(input.evidenceRefs ?? [])], sequence: this.#events.length + 1, previousHash: this.#events.at(-1)?.hash ?? GENESIS };\n      const event: WitnessEvent = Object.freeze({ ...body, hash: await digest(body) });\n      this.#events.push(event);\n      this.#ids.add(input.id);\n      return event;\n    });\n    this.#appendQueue = operation.then(() => undefined, () => undefined);\n    return operation;\n  }
+  readonly #events: WitnessEvent[] = [];
+  readonly #ids = new Set<string>();
+  #appendQueue: Promise<void> = Promise.resolve();
+
+  append(input: WitnessEventInput): Promise<WitnessEvent> {
+    const operation = this.#appendQueue.then(async () => {
+      validateInput(input);
+      if (this.#ids.has(input.id)) throw new Error("duplicate event id: " + input.id);
+      const safePayload = deepFreeze(structuredClone(input.payload));
+      const body = { ...input, payload: safePayload, evidenceRefs: [...(input.evidenceRefs ?? [])], sequence: this.#events.length + 1, previousHash: this.#events.at(-1)?.hash ?? GENESIS };
+      const event: WitnessEvent = Object.freeze({ ...body, hash: await digest(body) });
+      this.#events.push(event);
+      this.#ids.add(input.id);
+      return event;
+    });
+    this.#appendQueue = operation.then(() => undefined, () => undefined);
+    return operation;
+  }
 
   events(): readonly WitnessEvent[] {
     return this.#events.map((event) => Object.freeze({ ...event, payload: deepFreeze(structuredClone(event.payload)), evidenceRefs: Object.freeze([...event.evidenceRefs]) })) as readonly WitnessEvent[];
@@ -111,15 +144,24 @@ export class WitnessLedger {
         claim.lastUpdatedAt = event.occurredAt;
       } else if (event.type === "decision.recorded") {
         snapshot.decisions[event.subject] = { decisionId: event.id, rationale: event.payload.rationale, actor: event.actor, occurredAt: event.occurredAt };
+      } else if (event.type === "action.proposed") {
+        snapshot.actions[event.subject] = { actionId: event.subject, tool: String(event.payload.tool), status: "proposed", actor: event.actor, occurredAt: event.occurredAt };
+      } else if (event.type === "policy.evaluated") {
+        const action = snapshot.actions[event.subject];
+        if (!action) throw new Error("policy evaluation references unknown action: " + event.subject);
+        action.status = event.payload.decision as "allowed" | "denied";
+        action.policyRef = typeof event.payload.policyRef === "string" ? event.payload.policyRef : undefined;
+        action.occurredAt = event.occurredAt;
+      } else if (event.type === "action.completed" || event.type === "action.failed") {
+        const action = snapshot.actions[event.subject];
+        if (!action) throw new Error("action result references unknown action: " + event.subject);
+        if (event.type === "action.completed" && action.status !== "allowed") throw new Error("action cannot complete without an allowed policy decision: " + event.subject);
+        action.status = event.type === "action.completed" ? "completed" : "failed";
+        action.receipt = event.payload.receipt;
+        action.occurredAt = event.occurredAt;
       }
     }
     return snapshot;
   }
 }
 
-export function createWitnessLedger(events: readonly WitnessEventInput[] = []): WitnessLedger {
-  const ledger = new WitnessLedger();
-  // Use append sequentially at the call site when constructing from persisted events.
-  void events;
-  return ledger;
-}
