@@ -13,6 +13,17 @@ export interface LoginLimitResult {
  * The ingress must overwrite X-Forwarded-For and direct app access must be blocked.
  * In local/test mode, forwarded headers are ignored unless explicitly configured.
  */
+function canonicalIp(address: string): string | null {
+  const version = isIP(address)
+  if (version === 4) return address
+  if (version !== 6) return null
+  try {
+    return new URL(`http://[${address}]/`).hostname.slice(1, -1).toLowerCase()
+  } catch {
+    return null
+  }
+}
+
 export function resolveLoginNetworkHash(request: Request, env: NodeJS.ProcessEnv = process.env): string | null {
   const secret = env.HEADQUARTER_SESSION_SECRET?.trim()
   if (!secret || Buffer.byteLength(secret, 'utf8') < 32) return null
@@ -21,12 +32,15 @@ export function resolveLoginNetworkHash(request: Request, env: NodeJS.ProcessEnv
   if (env.NODE_ENV === 'production') {
     if (env.HEADQUARTER_TRUSTED_PROXY_HOPS !== '1') return null
     const forwarded = request.headers.get('x-forwarded-for')?.trim()
-    if (!forwarded || forwarded.includes(',') || isIP(forwarded) === 0) return null
-    networkIdentity = forwarded
+    if (!forwarded || forwarded.includes(',')) return null
+    const address = canonicalIp(forwarded)
+    if (!address) return null
+    networkIdentity = address
   } else if (env.HEADQUARTER_TRUSTED_PROXY_HOPS === '1') {
     const forwarded = request.headers.get('x-forwarded-for')?.trim()
-    if (forwarded && !forwarded.includes(',') && isIP(forwarded) !== 0) {
-      networkIdentity = forwarded
+    if (forwarded && !forwarded.includes(',')) {
+      const address = canonicalIp(forwarded)
+      if (address) networkIdentity = address
     }
   }
 
