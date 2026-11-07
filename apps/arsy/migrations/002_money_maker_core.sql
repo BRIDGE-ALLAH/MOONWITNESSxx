@@ -84,11 +84,10 @@ CREATE TABLE IF NOT EXISTS arsy_inspections (
   status text NOT NULL CHECK (status IN ('pass', 'warning', 'blocked', 'needs-review')),
   findings jsonb NOT NULL DEFAULT '[]'::jsonb,
   inspected_at timestamptz NOT NULL DEFAULT now(),
-  inspected_by text NOT NULL,
-  UNIQUE (product_version_id, inspection_type)
+  inspected_by text NOT NULL
 );
 CREATE INDEX IF NOT EXISTS arsy_inspections_version_status_idx
-  ON arsy_inspections (product_version_id, status);
+  ON arsy_inspections (product_version_id, inspection_type, inspected_at DESC);
 
 CREATE TABLE IF NOT EXISTS arsy_channels (
   id uuid PRIMARY KEY,
