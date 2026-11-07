@@ -120,8 +120,10 @@ test('authenticated same-origin operator POST forwards mutation after CSRF valid
   const restore = configureEnvironment()
   const originalFetch = globalThis.fetch
   let forwardedBody
+  let forwardedHeaders
   globalThis.fetch = async (_url, options) => {
     forwardedBody = options.body
+    forwardedHeaders = options.headers
     return new Response(JSON.stringify({ data: { id: 'created-record' } }), {
       status: 201,
       headers: { 'content-type': 'application/json' },
@@ -135,11 +137,13 @@ test('authenticated same-origin operator POST forwards mutation after CSRF valid
         origin,
         cookie: sessionCookie(),
         'content-type': 'application/json',
+        'idempotency-key': 'opportunity-proxy-test-0001',
       },
       body,
     }))
     assert.equal(response.status, 201)
     assert.equal(forwardedBody, body)
+    assert.equal(forwardedHeaders['idempotency-key'], 'opportunity-proxy-test-0001')
   } finally {
     globalThis.fetch = originalFetch
     restore()
