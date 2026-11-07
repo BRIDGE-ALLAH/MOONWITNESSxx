@@ -51,7 +51,7 @@
 - [x] Keep audit, lockfile check, frozen install, validation observable.
 - [x] Verify CI triggers on `chore/governance-phase-0-1` (push run observed).
 - [x] Verify repository integrity job reaches all steps and passes. **Evidence:** run `42395802586`.
-- [x] Verify CodeQL succeeds on the branch (`42395874677`).
+- [x] Verify CodeQL succeeds on the branch (`42395737398`).
 - [ ] Verify Dependabot alerts/update automation remain enabled and healthy.
 - [ ] Administrator applies main ruleset/required checks. **Evidence:** ruleset readback + test PR.
 
