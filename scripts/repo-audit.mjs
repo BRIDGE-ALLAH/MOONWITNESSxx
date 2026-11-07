@@ -65,7 +65,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   }
 
   const workspaceConfig = await readText('pnpm-workspace.yaml')
-  if (!workspaceConfig.includes('"apps/*"') || !workspaceConfig.includes('"packages/*"')) {
+  if (!/-\\s*["']apps\\/\\*["']/.test(workspaceConfig) || !/-\\s*["']packages\\/\\*["']/.test(workspaceConfig)) {
     errors.push('pnpm-workspace.yaml must include apps/* and packages/*.')
   }
   if (workspaceConfig.includes('"services/*"')) {
@@ -133,7 +133,142 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   const importerSection = activeLockfile.split(/\npackages:\s*\n/, 1)[0]
   const missingImporters = workspacePackages
     .map((item) => item.path.split(sep).join('/'))
-    .filter((path) => !new RegExp(`^  ${escapeRegExp(path)}:\\s*$`, 'm').test(importerSection))
+    .filter((path) => !new RegExp(`^  ${escapeRegExp(path)}:\\s*(?:\\{\\})?import { appendFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import { access } from 'node:fs/promises'
+import { resolve, relative, sep } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
+
+async function readText(path) {
+  return readFile(resolve(root, path), 'utf8')
+}
+
+async function readJson(path) {
+  return JSON.parse(await readText(path))
+}
+
+async function exists(path) {
+  try {
+    await access(resolve(root, path))
+    return true
+  } catch {
+    return false
+  }
+}
+
+function flattenExportTargets(value, output = []) {
+  if (typeof value === 'string') output.push(value)
+  else if (Array.isArray(value)) value.forEach((item) => flattenExportTargets(item, output))
+  else if (value && typeof value === 'object') {
+    Object.values(value).forEach((item) => flattenExportTargets(item, output))
+  }
+  return output
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+export async function runAudit({ writeReport = process.argv.includes('--write-report') } = {}) {
+  const errors = []
+  const warnings = []
+  const notes = []
+  const packageNames = new Map()
+  const workspacePackages = []
+
+  const rootPackage = await readJson('package.json')
+  if (rootPackage.name !== 'moonwitness') {
+    errors.push(`Root package name must be "moonwitness"; found "${rootPackage.name}".`)
+  }
+  if (rootPackage.packageManager !== 'pnpm@12.16.1') {
+    errors.push('packageManager must remain pinned to pnpm@12.16.1 until the lockfile is deliberately upgraded.')
+  }
+
+  const requiredScripts = [
+    'check:repo',
+    'audit:repo',
+    'format:check',
+    'test',
+    'validate:repo',
+    'validate',
+    'lockfile:check',
+    'lockfile:refresh'
+  ]
+  for (const name of requiredScripts) {
+    if (!rootPackage.scripts?.[name]) errors.push(`Missing required root script: ${name}`)
+  }
+
+  const workspaceConfig = await readText('pnpm-workspace.yaml')
+  if (!/-\\s*["']apps\\/\\*["']/.test(workspaceConfig) || !/-\\s*["']packages\\/\\*["']/.test(workspaceConfig)) {
+    errors.push('pnpm-workspace.yaml must include apps/* and packages/*.')
+  }
+  if (workspaceConfig.includes('"services/*"')) {
+    errors.push('services/* must not be a workspace until its ownership and runtime boundaries are reconciled.')
+  }
+
+  for (const workspaceRoot of ['apps', 'packages']) {
+    const entries = await readdir(resolve(root, workspaceRoot), { withFileTypes: true })
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      const relativePath = [workspaceRoot, entry.name].join('/')
+      const manifestPath = `${relativePath}/package.json`
+      if (!(await exists(manifestPath))) {
+        errors.push(`Workspace directory has no package.json: ${relativePath}`)
+        continue
+      }
+
+      const manifest = await readJson(manifestPath)
+      if (!manifest.name) {
+        errors.push(`Package manifest is missing a name: ${manifestPath}`)
+        continue
+      }
+      if (packageNames.has(manifest.name)) {
+        errors.push(
+          `Duplicate workspace package name "${manifest.name}" in ${packageNames.get(manifest.name)} and ${manifestPath}.`
+        )
+      } else {
+        packageNames.set(manifest.name, manifestPath)
+      }
+      if (manifest.private !== true) {
+        warnings.push(`Workspace package should remain private until publishing is explicitly designed: ${manifestPath}`)
+      }
+      workspacePackages.push({ path: relativePath, manifest })
+
+      const targets = [
+        manifest.main,
+        manifest.module,
+        manifest.types,
+        ...flattenExportTargets(manifest.exports)
+      ].filter((target) => typeof target === 'string' && target.startsWith('./'))
+
+      for (const target of new Set(targets)) {
+        const targetPath = `${relativePath}/${target.slice(2)}`
+        if (!(await exists(targetPath))) {
+          warnings.push(`Declared package entrypoint does not exist: ${targetPath} (${manifest.name})`)
+        }
+      }
+    }
+  }
+
+  for (const { manifest } of workspacePackages) {
+    for (const [scriptName, command] of Object.entries(manifest.scripts ?? {})) {
+      const matches = String(command).matchAll(/--filter\s+(@[a-zA-Z0-9._/-]+)/g)
+      for (const match of matches) {
+        if (!packageNames.has(match[1])) {
+          warnings.push(`${manifest.name} script "${scriptName}" targets unknown workspace package ${match[1]}.`)
+        }
+      }
+    }
+  }
+
+  const lockfile = await readText('pnpm-lock.yaml')
+  const lockfileDocuments = lockfile.split(/^---\s*$/m).filter((document) => document.trim().length > 0)
+  const activeLockfile = lockfileDocuments.at(-1) ?? lockfile
+  const importerSection = activeLockfile.split(/\npackages:\s*\n/, 1)[0]
+  const missingImporters = workspacePackages
+    .map((item) => item.path.split(sep).join('/'))
+    .filter((path) => !, 'm').test(importerSection))
 
   if (missingImporters.length > 0) {
     warnings.push(
