@@ -29,12 +29,23 @@ Install Rust 1.94+ and the Loco CLI:
 
 ```sh
 cargo install loco --version 1.3.1
-cp .env.example .env
-# Set DATABASE_URL to a dedicated MariaDB database.
+export DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas'
 cargo loco start
 ```
 
 The dashboard is served at `http://127.0.0.1:5150/`.
+
+## Run with Docker Compose
+
+From `apps/atlas`, provide dedicated database credentials (use URL-safe characters for the database password because it is embedded in `DATABASE_URL`):
+
+```sh
+export ATLAS_DB_PASSWORD='replace-with-a-strong-url-safe-password'
+export ATLAS_DB_ROOT_PASSWORD='replace-with-a-strong-root-password'
+docker compose up --build
+```
+
+The dashboard is bound to `127.0.0.1:5150` by default. Override the host port with `ATLAS_PORT`.
 
 ## API
 
@@ -78,7 +89,8 @@ cargo build --release
 - Versioned health, readiness, version, and engine catalog endpoints.
 - MariaDB connectivity probe with bounded connection pool configuration.
 - Initial engine registry schema migration.
-- Rust CI and container build definition.
+- Standalone Compose and container build definition.
+- Dedicated Rust CI workflow.
 
 ### Planned; not yet implemented
 
