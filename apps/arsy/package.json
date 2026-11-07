@@ -8,7 +8,8 @@
     "dev": "fastify dev",
     "build": "pnpm --filter @riotworks/arsy-core run build",
     "start": "pnpm --filter @riotworks/arsy-core run start",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "pnpm --filter @riotworks/lint exec eslint ../../apps/arsy/src --config eslint.config.mjs --max-warnings 0"
   },
   "dependencies": {
     "@riotworks/arsy-core": "workspace:*",
