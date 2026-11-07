@@ -150,7 +150,8 @@ export class FinancialRepository {
     const result = await this.db.query(
       `SELECT currency,
         COALESCE(SUM(amount_minor) FILTER (WHERE reconciliation_state = 'verified' AND event_type = 'gross-receipt'), 0)::text AS gross_receipts_minor,
-        COALESCE(SUM(amount_minor) FILTER (WHERE reconciliation_state = 'verified' AND event_type IN ('platform-fee','refund','chargeback','variable-cost','production-cost','tax-reserve')), 0)::text AS deductions_minor,
+        COALESCE(SUM(amount_minor) FILTER (WHERE reconciliation_state = 'verified' AND event_type IN ('platform-fee','refund','chargeback','variable-cost','production-cost')), 0)::text AS deductions_minor,
+        COALESCE(SUM(amount_minor) FILTER (WHERE reconciliation_state = 'verified' AND event_type = 'tax-reserve'), 0)::text AS tax_reserve_minor,
         (COALESCE(SUM(amount_minor) FILTER (WHERE reconciliation_state = 'verified' AND event_type = 'payout'), 0) - COALESCE(SUM(amount_minor) FILTER (WHERE reconciliation_state = 'verified' AND event_type = 'payout-reversal'), 0))::text AS payout_movements_minor,
         COALESCE(SUM(amount_minor) FILTER (WHERE reconciliation_state = 'pending'), 0)::text AS pending_minor,
         COUNT(*) FILTER (WHERE reconciliation_state = 'pending')::text AS pending_count
@@ -159,7 +160,10 @@ export class FinancialRepository {
     )
     return rows<Record<string, string>>(result).map((row) => ({
       ...row,
+      // Net contribution is before tax reserves and cash payouts. Keep currencies
+      // separate and include only verified operating costs/refunds in deductions.
       net_contribution_minor: (BigInt(row.gross_receipts_minor) - BigInt(row.deductions_minor)).toString(),
     }))
   }
+
 }
