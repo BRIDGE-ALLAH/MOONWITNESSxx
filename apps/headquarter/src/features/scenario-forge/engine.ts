@@ -20,6 +20,10 @@ export function runScenario(
   baseline: readonly ScenarioMetric[],
   scenario: ScenarioDefinition,
 ): ScenarioResult {
+  if (!scenario.id.trim() || !scenario.basedOnSnapshotId.trim()) {
+    throw new ScenarioValidationError('Scenario ID and baseline snapshot ID are required')
+  }
+
   const values = new Map<string, number>()
   const original = new Map<string, number>()
   for (const metric of baseline) {
@@ -41,6 +45,9 @@ export function runScenario(
     }
     if (!operation.rationale.trim()) {
       throw new ScenarioValidationError(`Operation "${operation.id}" needs an explicit rationale`)
+    }
+    if (!['set', 'add', 'multiply'].includes(operation.operation)) {
+      throw new ScenarioValidationError(`Operation "${operation.id}" uses an unsupported operation`)
     }
     const current = values.get(operation.metricId)
     if (current === undefined) {
