@@ -1,12 +1,6 @@
 import { Pool } from "pg";
 import type { FastifyInstance } from "fastify";
 
-declare module "fastify" {
-  interface FastifyInstance {
-    db: Pool;
-  }
-}
-
 /** Attach one PostgreSQL pool to the API lifecycle. */
 export function setupDatabase(app: FastifyInstance): Pool {
   const pool = new Pool({
