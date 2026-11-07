@@ -126,6 +126,8 @@ export function ProductBoard() {
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to create product version.')
       setMessage(`Product version created: ${payload.data.title} · v${payload.data.version}`)
+      setBriefDrafts((current) => { const next = { ...current }; delete next[product.id]; return next })
+      setCriteriaDrafts((current) => { const next = { ...current }; delete next[product.id]; return next })
       await refresh()
       await loadVersionHistory(product.id)
     } catch (cause) {

@@ -27,7 +27,7 @@ function fakePool() {
       if (sql.includes('INSERT INTO arsy_product_versions')) {
         return { rows: [{ ...productRow, version_id: '44444444-4444-4444-8444-444444444444', version: 2, brief: JSON.parse(values[4]), acceptance_criteria: JSON.parse(values[5]), updated_at: '2026-11-08T01:00:00.000Z' }] }
       }
-      if (sql.includes('FROM arsy_products p')) return { rows: [productRow] }
+      if (sql.includes('SELECT v.id, v.version')) return { rows: [{ id: '33333333-3333-4333-8333-333333333333', version: 1, brief: productRow.brief, acceptance_criteria: productRow.acceptance_criteria, created_at: productRow.created_at, created_by: 'owner-a' }] }\n      if (sql.includes('FROM arsy_products p')) return { rows: [productRow] }
       if (sql.includes('FROM arsy_products') && sql.includes('FOR UPDATE')) return { rows: [] }
       return { rows: [] }
     },

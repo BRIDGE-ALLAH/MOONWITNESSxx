@@ -250,7 +250,10 @@ try {
   const productList = await context.request.get(`${baseUrl}/api/products?limit=100`)
   assert.equal(productList.status(), 200)
   const productPayload = await productList.json()
-  assert.equal(productPayload.data.some((item) => item.title === title), true)
+  const finalProduct = productPayload.data.find((item) => item.title === title)
+  assert.ok(finalProduct)
+  assert.equal(finalProduct.version, 2)
+  assert.equal(finalProduct.lifecycleState, 'ready')
 
   await page.getByRole('button', { name: 'Sign out' }).click()
   await page.waitForURL((url) => url.pathname === '/login', { timeout: 15_000 })
