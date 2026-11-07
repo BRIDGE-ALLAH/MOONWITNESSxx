@@ -128,6 +128,7 @@ The separate full-workspace typecheck/build workflow was skipped by workflow con
 
 - Added native Node 24 tests for the ARSY browser client: safe request defaults, request ID propagation, GET-only transient retry, no mutation retry, non-JSON gateway error normalization, and timeout normalization.
 - Added fixture invariants for ARSY DECK: explicit demo disclosure, unique IDs, bounded confidence, and sample-only agent states.
+- Hardened the ARSY client URL boundary: absolute/protocol-relative URLs, backslashes, and literal or percent-encoded parent-directory segments are rejected before fetch; regression tests cover these cases.
 - Wired the Headquarter test command into the Asset Integrity CI job without introducing a new test framework dependency.
 - CI execution is pending PR validation. No test pass is claimed before Actions reports success.
 - Browser E2E, keyboard/screen-reader audit, WCAG contrast verification, responsive checks, visual regression, performance budgets, dependency/license review, and ARSY contract tests remain open.
