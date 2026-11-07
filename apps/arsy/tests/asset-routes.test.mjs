@@ -195,8 +195,9 @@ test('inspection records preserve source type and readiness fails closed until a
     })
     assert.equal(readiness.statusCode, 200)
     assert.equal(readiness.json().data.ready, false)
-    assert.equal(readiness.json().data.inspections.rights, 'pass')
-    assert.equal(readiness.json().data.inspections.policy, 'unknown')
+    assert.equal(readiness.json().data.inspections.rights.status, 'pass')
+    assert.equal(readiness.json().data.inspections.rights.source, 'operator-attestation')
+    assert.equal(readiness.json().data.inspections.policy.status, 'unknown')
   } finally {
     await app.close()
   }
