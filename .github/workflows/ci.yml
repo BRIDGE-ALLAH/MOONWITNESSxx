@@ -62,7 +62,7 @@ jobs:
         run: pnpm --filter @riotworks/arsy test
 
       - name: Validate Docker Compose configuration
-        run: docker compose --env-file .env.docker config --quiet
+        run: docker compose --env-file .env.docker.example config --quiet
 
       - name: Test Divine epistemic and provenance suites
         run: pnpm --filter @riotworks/divine test
