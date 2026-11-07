@@ -69,8 +69,9 @@ export function DockerConnector() {
       const payload = remote
         ? { name, kind: 'remote', endpointUrl, tls: { ca, cert, key } }
         : { name, kind: 'local' }
-      await api<DockerServer>('/api/infrastructure/docker/servers', { method: 'POST', body: JSON.stringify(payload) })
+      const registered = await api<DockerServer>('/api/infrastructure/docker/servers', { method: 'POST', body: JSON.stringify(payload) })
       setEndpointUrl(''); setCa(''); setCert(''); setKey('')
+      setSelected(registered.id)
       await loadServers()
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Koneksi Docker gagal.') }
     finally { setBusy(false) }
