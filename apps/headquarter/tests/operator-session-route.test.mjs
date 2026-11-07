@@ -30,7 +30,7 @@ function configureEnvironment() {
   }
 }
 
-function mockSharedLoginLimit(options = {}) {
+function mockSharedLoginLimit() {
   let failures = 0
   const requests = []
   globalThis.fetch = async (_url, init) => {
