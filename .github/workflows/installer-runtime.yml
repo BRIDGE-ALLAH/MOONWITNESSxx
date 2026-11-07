@@ -57,6 +57,8 @@ jobs:
         run: node --test scripts/moonwitness.test.mjs scripts/runtime.test.mjs
       - name: Installer dry run
         run: node scripts/moonwitness.mjs install --profile minimal --dry-run
+      - name: Runtime passport privacy-safe smoke test
+        run: node scripts/runtime.mjs passport
       - name: POSIX launcher syntax
         if: runner.os != 'Windows'
         run: sh -n install.sh
