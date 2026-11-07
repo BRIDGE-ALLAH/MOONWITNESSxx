@@ -76,9 +76,10 @@ test('production session configuration requires HTTPS', () => {
   }), null)
 })
 
-test('operator password comparison and same-origin validation', () => {
-  assert.equal(operatorPasswordMatches('correct horse', 'correct horse'), true)
-  assert.equal(operatorPasswordMatches('incorrect', 'correct horse'), false)
+test('operator password comparison and same-origin validation', async () => {
+  assert.equal(await operatorPasswordMatches('correct horse', 'correct horse', secret), true)
+  assert.equal(await operatorPasswordMatches('incorrect', 'correct horse', secret), false)
+  assert.equal(await operatorPasswordMatches('x'.repeat(1025), password, secret), false)
   const request = new Request('https://hq.example/api/opportunities', {
     method: 'POST',
     headers: { origin: 'https://hq.example' },
@@ -108,11 +109,6 @@ test('post-login return path cannot escape the configured origin', () => {
   assert.equal(safeOperatorReturnTo('/\\\\attacker.example/path', origin), '/riot-radar')
   assert.equal(safeOperatorReturnTo('https://attacker.example/path', origin), '/riot-radar')
   assert.equal(safeOperatorReturnTo(undefined, origin), '/riot-radar')
-})
-test('operator password verification uses a memory-hard KDF and rejects oversized input', async () => {
-  assert.equal(await operatorPasswordMatches(password, password, secret), true)
-  assert.equal(await operatorPasswordMatches('incorrect-password', password, secret), false)
-  assert.equal(await operatorPasswordMatches('x'.repeat(1025), password, secret), false)
 })
 test('operator password verification uses a memory-hard KDF and rejects oversized input', async () => {
   assert.equal(await operatorPasswordMatches(password, password, secret), true)
