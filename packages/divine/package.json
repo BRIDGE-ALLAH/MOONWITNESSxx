@@ -51,6 +51,26 @@
       "types": "./src/adapters/index.ts",
       "import": "./src/adapters/index.ts",
       "default": "./src/adapters/index.ts"
+    },
+    "./epistemic-time": {
+      "types": "./src/epistemic-time/index.ts",
+      "import": "./src/epistemic-time/index.ts",
+      "default": "./src/epistemic-time/index.ts"
+    },
+    "./counterfactual-surgery": {
+      "types": "./src/counterfactual-surgery/index.ts",
+      "import": "./src/counterfactual-surgery/index.ts",
+      "default": "./src/counterfactual-surgery/index.ts"
+    },
+    "./evidence-entropy": {
+      "types": "./src/evidence-entropy/index.ts",
+      "import": "./src/evidence-entropy/index.ts",
+      "default": "./src/evidence-entropy/index.ts"
+    },
+    "./interop-extended": {
+      "types": "./src/interop-extended/index.ts",
+      "import": "./src/interop-extended/index.ts",
+      "default": "./src/interop-extended/index.ts"
     }
   },
   "scripts": {

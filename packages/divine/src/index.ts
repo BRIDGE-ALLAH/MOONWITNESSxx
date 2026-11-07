@@ -11,3 +11,8 @@ export * as Standards from "./standards/index.ts";
 
 export * as Corpus from "./corpus/index.ts";
 export * as Adapters from "./adapters/index.ts";
+
+export * as EpistemicTime from "./epistemic-time/index.ts";
+export * as CounterfactualSurgery from "./counterfactual-surgery/index.ts";
+export * as EvidenceEntropy from "./evidence-entropy/index.ts";
+export * as InteropExtended from "./interop-extended/index.ts";

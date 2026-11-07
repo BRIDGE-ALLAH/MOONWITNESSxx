@@ -930,3 +930,12 @@ Remaining: legal retention/deletion implementation, key-backed signing and trust
 Implementation accuracy note: Phase 10 source-span provenance and abstention are implemented, but prevention of generated sacred/source text from canonical source treatment and task/language-specific hallucination/citation evaluation remain open. Candidate state is an in-memory contract, not a persistent review queue. Phase 9 rights gates are reusable policy guards; enforcement in every live ingestion/display/export/AI adapter remains blocked on platform contracts.
 
 Accuracy correction: Phase 11 currently emits SKOS Concept nodes with scheme references, but does not serialize ConceptScheme nodes or ontology mappings; DIV-P11-002 therefore remains open. The current round-trip check verifies supported identifier preservation only, not full semantic import/export; DIV-P11-011 remains open. Phase 10 currently defines candidate status and review contracts, not a durable queue or a provider adapter; DIV-P10-001 and DIV-P10-005 remain open.
+
+
+## Phase 12–14 implementation update (2026-11-08)
+- [x] Phase 12 initial slice: bitemporal snapshots (`validFrom/validTo` vs `recordedAt`), digest and claim-level diff.
+- [x] Phase 13 initial slice: counterfactual edge removal, impact report and bounded exact minimal cut sets (max 16 edges).
+- [x] Phase 14 initial slice: witness-family entropy, effective family count, concentration and unknown-independence reporting.
+- [x] Phase 11 additive interoperability slice: minimal TEI P5, IIIF Presentation 3 with real dimensions, Semantic Loss Budget.
+- [ ] Durable event store, causal model validation, family-classification provenance, complete TEI/IIIF schema conformance, Unicode fuzzing and rights-cleared empirical evaluation remain open.
+See `PHASE-12-14-EXECUTION.md`. These are domain slices, not production integrations.

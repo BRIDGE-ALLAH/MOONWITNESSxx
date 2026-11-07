@@ -1,0 +1,15 @@
+import test from "node:test";import assert from "node:assert/strict";
+import {createEpistemicSnapshot,diffEpistemicSnapshots} from "../src/epistemic-time/index.ts";
+import {simulateEvidenceRemoval} from "../src/counterfactual-surgery/index.ts";
+import {analyzeEvidenceEntropy} from "../src/evidence-entropy/index.ts";
+import {exportTeiText,buildIiifManifest,evaluateSemanticLossBudget} from "../src/interop-extended/index.ts";
+const rs=[{id:"a",claimRef:"c",value:"old",validFrom:"2026-01-01T00:00:00Z",validTo:"2026-03-01T00:00:00Z",recordedAt:"2026-01-02T00:00:00Z",sourceRefs:["s1"],corpusRelease:"r1",status:"active"},{id:"b",claimRef:"c",value:"new",validFrom:"2026-03-01T00:00:00Z",recordedAt:"2026-03-02T00:00:00Z",supersedes:"a",sourceRefs:["s2"],corpusRelease:"r2",status:"active"}];
+test("bitemporal snapshots and diffs",async()=>{const a=await createEpistemicSnapshot(rs,"2026-02-01T00:00:00Z","2026-02-02T00:00:00Z"),b=await createEpistemicSnapshot(rs,"2026-04-01T00:00:00Z","2026-04-02T00:00:00Z");assert.equal(a.records[0].value,"old");assert.equal(b.records[0].value,"new");assert.equal(diffEpistemicSnapshots(a,b)[0].kind,"changed")});
+test("known-at excludes facts not yet recorded",async()=>assert.equal((await createEpistemicSnapshot(rs,"2026-04-01T00:00:00Z","2026-02-02T00:00:00Z")).records.length,0));
+test("counterfactual surgery computes cut sets",()=>{const g={nodes:["r","a","b","t"],edges:[{id:"1",from:"r",to:"a",provenanceRef:"p"},{id:"2",from:"a",to:"t",provenanceRef:"p"},{id:"3",from:"r",to:"b",provenanceRef:"p"},{id:"4",from:"b",to:"t",provenanceRef:"p"}]};const x=simulateEvidenceRemoval({graph:g,root:"r",target:"t",removeEdgeIds:["1"]});assert.equal(x.disconnected,false);assert.equal(x.minimalCutSets.length,4)});
+test("counterfactual surgery rejects unknown edges",()=>assert.throws(()=>simulateEvidenceRemoval({graph:{nodes:["a","b"],edges:[]},root:"a",target:"b",removeEdgeIds:["x"]}),/Unknown edge/));
+test("entropy counts witness families rather than URLs",()=>{const x=analyzeEvidenceEntropy([{id:"1",sourceRef:"url1",witnessFamilyId:"f1"},{id:"2",sourceRef:"url2",witnessFamilyId:"f1"},{id:"3",sourceRef:"url3",witnessFamilyId:"f2"}]);assert.ok(x.effectiveFamilyCount>1.8&&x.effectiveFamilyCount<1.95);assert.equal(x.dominantFamilyShare,2/3)});
+test("unknown family means independence unknown",()=>assert.equal(analyzeEvidenceEntropy([{id:"1",sourceRef:"s"}]).independenceStatus,"unknown"));
+test("TEI safely escapes XML and reports omitted semantics",()=>{const x=exportTeiText({id:"m",language:"ar",text:"<x>&",sourceRef:"corpus:1"});assert.match(x.xml,/&lt;x&gt;&amp;/);assert.ok(x.losses.includes("variant-apparatus"))});
+test("IIIF rejects placeholder dimensions",()=>assert.throws(()=>buildIiifManifest({id:"m",label:{en:"M"},canvases:[{id:"c",label:"C",width:0,height:0,imageServiceId:"img"}]}),/real positive dimensions/));
+test("semantic loss budget blocks unapproved loss",()=>assert.equal(evaluateSemanticLossBudget([{code:"hand"}],{allowedLossCodes:[],maxOmittedItems:2}).allowed,false));

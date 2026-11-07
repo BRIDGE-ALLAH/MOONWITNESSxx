@@ -28,3 +28,9 @@ Node 22+ is required for native TypeScript tests. No database, ORM, ARSY, Python
 - `./epistemology`: SIDRAT knowledge states, method-specific evidence sufficiency, scope boundaries and explainable abstention.
 
 These modules are deterministic domain contracts. They do not claim theological authority, infer metaphysical truth, or write into canonical Corpus.
+
+## Phases 12–14
+- `./epistemic-time`: bitemporal snapshots and claim-level diffs.
+- `./counterfactual-surgery`: bounded edge-removal impact and minimal cut sets.
+- `./evidence-entropy`: witness-family entropy/concentration with explicit unknown-independence state.
+- `./interop-extended`: bounded TEI P5, IIIF Presentation 3 and semantic loss budget utilities; not full conformance.
