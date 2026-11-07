@@ -183,6 +183,54 @@ jobs:
           printf '%s\n' '{"incident":{"id":"ci-incident","selectedOperationIds":["notify"],"operations":[{"id":"write","action":"write","invariants":["record-exists"]},{"id":"notify","action":"webhook","dependsOn":["write"],"invariants":["single-delivery"]}]}}' > /tmp/moonwitness-incident.json
           pnpm devx incident-compile --input=/tmp/moonwitness-incident.json
 
+  aegis:
+    name: AEGIS Go runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: apps/aegis/go.mod
+          cache: true
+          cache-dependency-path: apps/aegis/go.mod
+
+      - name: Check Go formatting
+        working-directory: apps/aegis
+        run: |
+          files="$(gofmt -l $(find . -name '*.go' -type f))"
+          if [ -n "$files" ]; then
+            printf '%s\\n' "$files"
+            exit 1
+          fi
+
+      - name: Vet and test AEGIS
+        working-directory: apps/aegis
+        run: |
+          go vet ./...
+          go test -race ./...
+
+      - name: Build AEGIS container
+        run: docker build --tag moonwitness-aegis:ci ./apps/aegis
+
+      - name: Smoke test hardened AEGIS container
+        run: |
+          set -euo pipefail
+          cleanup() { docker rm -f aegis-ci >/dev/null 2>&1 || :; }
+          trap cleanup EXIT
+          docker run --detach --name aegis-ci --read-only --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=16m -p 127.0.0.1:3102:3102 moonwitness-aegis:ci
+          status=""
+          for attempt in $(seq 1 30); do
+            status="$(docker inspect --format '{{.State.Health.Status}}' aegis-ci)"
+            if [ "$status" = "healthy" ]; then break; fi
+            sleep 1
+          done
+          test "$status" = "healthy"
+          curl --fail --silent http://127.0.0.1:3102/health/ready
+
   asset-integrity:
     name: Asset integrity
     runs-on: ubuntu-latest

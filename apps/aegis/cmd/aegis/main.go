@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,7 +26,7 @@ func main() {
 
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		client := http.Client{Timeout: 2 * time.Second}
-		response, err := client.Get("http://127.0.0.1:" + itoa(cfg.Port) + "/health/ready")
+		response, err := client.Get("http://127.0.0.1:" + strconv.Itoa(cfg.Port) + "/health/ready")
 		if err != nil {
 			os.Exit(1)
 		}
@@ -36,20 +37,26 @@ func main() {
 		return
 	}
 
+	listener, err := net.Listen("tcp", cfg.Address())
+	if err != nil {
+		logger.Error("unable to bind AEGIS HTTP listener", "address", cfg.Address(), "error", err)
+		os.Exit(1)
+	}
+
 	server := &http.Server{
 		Addr:              cfg.Address(),
 		Handler:           aegishttp.NewHandler(logger),
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 	}
 
+	signals, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	serverErrors := make(chan error, 1)
 	go func() {
 		logger.Info("AEGIS HTTP server starting", "address", cfg.Address())
-		serverErrors <- server.ListenAndServe()
+		serverErrors <- server.Serve(listener)
 	}()
-
-	signals, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	select {
 	case err := <-serverErrors:
@@ -74,8 +81,4 @@ func main() {
 		}
 		logger.Info("AEGIS stopped")
 	}
-}
-
-func itoa(value int) string {
-	return strconv.Itoa(value)
 }
