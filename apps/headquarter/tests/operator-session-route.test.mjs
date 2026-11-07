@@ -166,6 +166,17 @@ test('login limiter ignores spoofed forwarding headers unless one trusted ingres
     createHmac('sha256', secret).update('moonwitness-login-network-v1:203.0.113.99').digest('hex'),
   )
 
+  const ipv6Short = resolveLoginNetworkHash(new Request(`${origin}/api/auth/session`, {
+    headers: { 'x-forwarded-for': '2001:db8::1' },
+  }), { NODE_ENV: 'production', HEADQUARTER_TRUSTED_PROXY_HOPS: '1', HEADQUARTER_SESSION_SECRET: secret })
+  const ipv6Expanded = resolveLoginNetworkHash(new Request(`${origin}/api/auth/session`, {
+    headers: { 'x-forwarded-for': '2001:0db8:0:0:0:0:0:1' },
+  }), { NODE_ENV: 'production', HEADQUARTER_TRUSTED_PROXY_HOPS: '1', HEADQUARTER_SESSION_SECRET: secret })
+  assert.equal(ipv6Short, ipv6Expanded, 'equivalent IPv6 spellings must share one network bucket')
+  assert.equal(resolveLoginNetworkHash(spoofed, {
+    NODE_ENV: 'production', HEADQUARTER_TRUSTED_PROXY_HOPS: '01', HEADQUARTER_SESSION_SECRET: secret,
+  }), null, 'proxy hop configuration must match the exact trusted topology')
+
   for (const forwarded of ['bad-ip, 203.0.113.99', 'not-an-ip']) {
     const request = new Request(`${origin}/api/auth/session`, {
       headers: { 'x-forwarded-for': forwarded },
