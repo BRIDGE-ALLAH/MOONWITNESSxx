@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { auditHeadquarterExperience, auditReleaseReadiness, auditWorkspaceContracts } from './product-audit.mjs'
 
 async function fixture() {
@@ -41,6 +41,24 @@ test('workspace audit rejects missing workspace dependencies and success-masking
     assert.ok(report.findings.some((item) => item.id === 'unresolved-workspace-dependency'))
     assert.ok(report.findings.some((item) => item.id === 'success-masking-script'))
   } finally { await rm(root, { recursive: true, force: true }) }
+})
+
+
+test('workspace audit rejects traversal globs and never scans outside the repository root', async () => {
+  const root = await fixture()
+  const sibling = join(dirname(root), basename(root) + '-outside')
+  try {
+    await mkdir(sibling, { recursive: true })
+    await writeFile(join(sibling, 'package.json'), JSON.stringify({ name: '@outside/escape' }))
+    await writeFile(join(root, 'pnpm-workspace.yaml'), 'packages:\n  - "../*"\n')
+    const report = await auditWorkspaceContracts({ root })
+    assert.equal(report.ok, false)
+    assert.ok(report.findings.some((item) => item.id === 'unsupported-workspace-pattern'))
+    assert.equal(report.packages.some((item) => item.name === '@outside/escape'), false)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+    await rm(sibling, { recursive: true, force: true })
+  }
 })
 
 test('Headquarter audit checks navigation-to-route integrity and persistent disclosure', async () => {
