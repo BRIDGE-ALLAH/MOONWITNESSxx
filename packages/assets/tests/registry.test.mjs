@@ -34,3 +34,26 @@ test("all meaningful illustrations have alt text and every asset has provenance"
     if (!asset.decorative) assert.ok(asset.alt?.length);
   }
 });
+
+test("registered dimensions match every SVG viewBox aspect ratio", async () => {
+  for (const asset of Object.values(assetRegistry)) {
+    const path = fileURLToPath(new URL(asset.src));
+    const source = await readFile(path, "utf8");
+    const root = source.match(/<svg\b[^>]*>/i)?.[0];
+    assert.ok(root, asset.id + ": missing SVG root");
+
+    const viewBox = root.match(/\bviewBox="([^"]+)"/i)?.[1];
+    assert.ok(viewBox, asset.id + ": missing viewBox");
+    const values = viewBox.trim().split(/[\s,]+/).map(Number);
+    assert.equal(values.length, 4, asset.id + ": viewBox requires four numbers");
+    assert.ok(values.every(Number.isFinite), asset.id + ": viewBox contains non-finite values");
+    assert.ok(values[2] > 0 && values[3] > 0, asset.id + ": viewBox dimensions must be positive");
+
+    const sourceRatio = values[2] / values[3];
+    const registryRatio = asset.width / asset.height;
+    assert.ok(
+      Math.abs(sourceRatio - registryRatio) < 0.02,
+      asset.id + ": SVG viewBox ratio " + sourceRatio + " does not match registry ratio " + registryRatio,
+    );
+  }
+});
