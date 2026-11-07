@@ -1,4 +1,5 @@
 import Fastify from 'fastify'
+import rateLimit from '@fastify/rate-limit'
 import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
@@ -11,6 +12,7 @@ export interface CreateAppOptions {
 
 export function createApp(options: CreateAppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? true })
+  app.register(rateLimit, { global: false })
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
 
@@ -37,7 +39,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   typedApp.get('/health/live', async () => ({ status: 'alive' }))
 
-  typedApp.get('/health/ready', async (_request, reply) => {
+  typedApp.get('/health/ready', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (_request, reply) => {
     try {
       await databasePool.query('SELECT 1')
       return { status: 'ready' }
