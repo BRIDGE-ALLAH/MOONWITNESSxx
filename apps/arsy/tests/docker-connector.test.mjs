@@ -6,7 +6,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { getDockerInfo, getDockerContainerLogs, listDockerContainers } from '../src/docker/engine.ts'
-import { decryptDockerCredentials, encryptDockerCredentials, validateRemoteDockerEndpoint, validateTlsCredentials } from '../src/docker/security.ts'
+import { decryptDockerCredentials, encryptDockerCredentials, resolveRemoteDockerEndpoint, validateRemoteDockerEndpoint, validateTlsCredentials } from '../src/docker/security.ts'
 import { createApp } from '../src/app.ts'
 
 const key = Buffer.alloc(32, 7).toString('base64')
@@ -23,6 +23,23 @@ test('remote endpoint validation requires HTTPS and an explicit exact host allow
     'https://docker.example.com/private',
     'https://docker.example.com:4444',
   ]) assert.throws(() => validateRemoteDockerEndpoint(value, env))
+})
+
+test('remote Docker DNS is revalidated and private rebinding answers are rejected', async () => {
+  let resolutions = 0
+  const resolver = async () => {
+    resolutions += 1
+    return resolutions === 1
+      ? [{ address: '8.8.8.8', family: 4 }]
+      : [{ address: '127.0.0.1', family: 4 }]
+  }
+  const first = await resolveRemoteDockerEndpoint('https://docker.example.com:2376', env, resolver)
+  assert.deepEqual(first.addresses, ['8.8.8.8'])
+  await assert.rejects(
+    resolveRemoteDockerEndpoint('https://docker.example.com:2376', env, resolver),
+    /blocked address/,
+  )
+  assert.equal(resolutions, 2)
 })
 
 test('remote Docker TLS credentials are authenticated-encrypted and never returned as plaintext', () => {
@@ -198,6 +215,7 @@ test('remote Docker Engine requires a valid mutually authenticated TLS session',
       const info = await getDockerInfo({
         kind: 'remote',
         endpointUrl: 'https://docker.example.com:2376',
+        addresses: ['127.0.0.1'],
         tls: { ca, cert: clientCert, key: clientKey },
       })
       assert.equal(info.Name, 'mtls-fixture-engine')
