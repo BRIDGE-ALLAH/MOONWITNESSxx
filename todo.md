@@ -144,9 +144,9 @@ Create only packages with real ownership and entrypoints. Avoid empty placeholde
 
 ### 2.1 Target package responsibilities
 
-- [~] `packages/orm`: initial public model/field/relation metadata, model kinds, manifests, registry snapshot, error vocabulary, Environment/Recordset contracts drafted in `packages/orm/src/index.ts`; runtime behavior remains Phase 2/3.
-- [~] `packages/orm-db-adaptor`: provider-neutral connection/transaction/query/schema SPI and capability negotiation drafted in `packages/orm-db-adaptor/src/index.ts`; contract tests and consumer verification remain.
-- [~] `packages/orm-db`: UnitOfWork, planner/reconciler, receipt/store, risk policy and semantic UpgradeHandler contracts drafted in `packages/orm-db/src/index.ts`; orchestration implementation remains.
+- [~] `packages/orm`: public metadata contracts and workspace manifest/export map exist; deterministic composer added in `src/registry.ts`. Phase 2 declaration/field runtime, tests and deep immutability remain.
+- [~] `packages/orm-db-adaptor`: provider-neutral SPI and workspace manifest/export map exist; contract tests, provider adapters and consumer verification remain.
+- [~] `packages/orm-db`: UnitOfWork, planner/reconciler, receipt/store, risk policy and semantic UpgradeHandler contracts plus workspace manifest exist; orchestration implementation and tests remain.
 - [ ] `packages/orm-db-adaptor-postgres`: implement PostgreSQL pool/driver integration, type mapping, introspection, DDL and query execution after SPI verification.
 - [ ] `packages/orm-db-adaptor-sqlite`: approved package name for the SQLite System Database adapter; implement connection lifecycle, mapping, introspection, DDL and system-store operations after SPI verification.
 - [ ] `packages/arsy-core`: ARSY application lifecycle, plugin composition, runtime context, logging, health, and service container.
@@ -159,11 +159,11 @@ Create only packages with real ownership and entrypoints. Avoid empty placeholde
 - [x] Define `ModelConstructor`, `ModelDefinition`, `ModelKind`, `FieldDefinition`, `RelationDefinition`, `MixinDefinition`, and `ModelExtensionDefinition` shapes.
 - [x] Define separate `AddonManifest` and `ModuleManifest` contracts in `@riotworks/orm`.
 - [x] Define package/module IDs, semantic versions, compatibility ranges, dependencies, conflicts, capabilities and public entrypoint metadata in the initial manifest contracts.
-- [~] Define `RegistrySnapshot` shape with fingerprint and explicit addon/module order; deterministic composition/hash implementation remains.
+- [x] Define `RegistrySnapshot` shape and implement deterministic addon/module ordering, composition and SHA-256 fingerprint in `packages/orm/src/registry.ts`; automated tests and deep immutability verification remain.
 - [x] Define provider capability vocabulary and explicit `requireCapabilities` rejection in `@riotworks/orm-db-adaptor`.
 - [~] Define initial ORM declaration/registry/access/validation/provider error codes; concurrency and reconciliation error taxonomy remain.
-- [ ] Define public API versus internal API boundaries. Addons must not import private ORM internals.
-- [ ] Define package export maps and enforce dependency direction with lint rules.
+- [~] Add explicit package export maps for the three ORM/persistence packages; addon-facing API/internal boundary enforcement and export consumer fixture remain.
+- [~] Add explicit export maps for `@riotworks/orm`, `@riotworks/orm-db-adaptor`, and `@riotworks/orm-db`; dependency-direction lint rules remain.
 
 **Acceptance criteria**
 - [ ] Contracts compile independently of Fastify and concrete SQL drivers.
@@ -842,3 +842,37 @@ Use these labels consistently when updating this file:
 - [x] Add the provider-neutral domain expression AST.
 - [x] Make addon compatibility explicit for ARSY, ORM and optional API versions.
 - [x] Encode the approved v1 database role pairing in the adapter identity type: SQLite = System Database; PostgreSQL = Business Database.
+
+
+## Parallel execution log — Phase 1 completion work and Phase 3 start
+
+**Phase 1 branch:** `chore/phase-1-package-contracts`  
+**Phase 3 branch:** `feat/phase-3-deterministic-registry`
+
+### Phase 1 follow-through in this slice
+
+- [x] Add workspace package manifests and public export maps for `@riotworks/orm`, `@riotworks/orm-db-adaptor`, and `@riotworks/orm-db`.
+- [x] Add a `./registry` public subpath for the ORM registry composer.
+- [ ] Run clean pnpm install and refresh/check lockfile.
+- [ ] Run TypeScript checks and ESLint for all three packages.
+- [ ] Add and execute contract tests and minimal consumer fixture.
+- [ ] Implement and integration-test PostgreSQL Business Database adapter.
+- [ ] Implement and integration-test SQLite System Database adapter.
+- [ ] Complete ARSY Core integration and persistence lifecycle wiring.
+- [ ] Add CI evidence; no phase completion claim until the full gate passes.
+
+### Phase 3 initial implementation
+
+- [x] Add deterministic addon/module topological ordering and cycle detection.
+- [x] Validate addon/module ownership, duplicate IDs, required/optional dependencies and conflicts.
+- [x] Validate addon dependency versions for exact, caret and tilde three-part ranges.
+- [x] Compose model field metadata with deterministic extension ordering and fail-closed field collisions.
+- [x] Validate direct relation targets and missing mixins.
+- [x] Generate a stable SHA-256 registry fingerprint that excludes creation timestamp.
+- [~] Return a frozen registry snapshot; deep-freeze and mutation tests remain.
+- [ ] Implement full model inheritance and explicit field/method override semantics.
+- [ ] Inject BaseEntity metadata exactly once after the BaseEntity contract is finalized.
+- [ ] Persist registry snapshot/fingerprint in SQLite System Database and implement atomic activation.
+- [ ] Add comprehensive registry unit and System Mode integration tests.
+
+**Evidence note:** These changes were authored through GitHub repository operations. No clean checkout, package installation, TypeScript compiler, lint, test runner, database service or GitHub Actions result was executed in this work session. The new implementation is therefore an unverified code contribution, not a passing build.
