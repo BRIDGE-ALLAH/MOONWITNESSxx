@@ -221,8 +221,8 @@ export class ListingRepository {
       },
       {
         key: 'policy-current',
-        status: officialPolicy && channel.policyReviewedAt && channel.policyRecheckAt && new Date(channel.policyRecheckAt).getTime() > now ? 'pass' : 'unknown',
-        rationale: officialPolicy && channel.policyReviewedAt && channel.policyRecheckAt && new Date(channel.policyRecheckAt).getTime() > now ? 'Official policy evidence is current within its recheck window.' : 'Official policy evidence is missing, not observed, or past its recheck date.',
+        status: officialPolicy && channel.policyReviewedAt && channel.policyRecheckAt && new Date(channel.policyReviewedAt).getTime() <= now && new Date(channel.policyRecheckAt).getTime() > now ? 'pass' : 'unknown',
+        rationale: officialPolicy && channel.policyReviewedAt && channel.policyRecheckAt && new Date(channel.policyReviewedAt).getTime() <= now && new Date(channel.policyRecheckAt).getTime() > now ? 'Official policy evidence is current within its recheck window.' : 'Official policy evidence is missing, not observed, future-dated or past its recheck date.',
         evidence: officialPolicy ? [officialPolicy.sourceUrl] : [],
       },
       {
