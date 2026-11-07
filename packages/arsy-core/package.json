@@ -6,9 +6,6 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "fastify start --listen 0.0.0.0:3000",
-    "dev": "fastify dev",
-    "build": "fastify build",
     "lint": "pnpm --filter @riotworks/lint run lint",
     "type-check": "pnpm --filter @riotworks/types run type-check",
     "test:governance": "node --experimental-strip-types --test tests/*.test.mjs"
