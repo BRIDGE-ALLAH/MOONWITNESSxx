@@ -1,7 +1,7 @@
 # UI Package TODO
 
 > Scope: packages/ui — shared RIOTWORKS / MOONWITNESS React UI foundation.
-> Status: Backlog created. Tasks remain unchecked until implemented and verified.
+> Status: Milestone 1 complete and CI-verified. Milestone 2 visual foundation is implemented but still needs browser-level visual/contrast review.
 
 ## Principles
 
@@ -21,16 +21,16 @@
 
 ## 0. Baseline audit and decisions
 
-- [ ] **P0** Audit package structure, dependencies, exports, styles, and consumer usage.
-  - [ ] Record existing components and public exports.
+- [x] **P0** Audit package structure, dependencies, exports, styles, and consumer usage.
+  - [x] Record existing components and public exports.
   - [ ] Identify duplicated UI implementations in consuming apps.
   - [ ] Identify Radix packages that are used, unused, or planned.
   - [ ] Record current build, typecheck, lint, and test commands.
-- [ ] **P0** Confirm package boundaries.
-  - [ ] UI owns visual presentation, interaction primitives, accessibility, and reusable composition.
-  - [ ] Applications own data fetching, business rules, permissions, and persistence.
-  - [ ] Domain components receive data and callbacks; they do not call backend services directly.
-- [ ] **P0** Define compatibility policy for React, TypeScript, Tailwind, and Radix dependencies.
+- [x] **P0** Confirm package boundaries.
+  - [x] UI owns visual presentation, interaction primitives, accessibility, and reusable composition.
+  - [x] Applications own data fetching, business rules, permissions, and persistence.
+  - [x] Domain components receive data and callbacks; they do not call backend services directly.
+- [x] **P0** Define compatibility policy for React, TypeScript, Tailwind, and Radix dependencies.
 - [ ] **P1** Define naming policy for generic primitives and Riot-branded application components.
 - [ ] **P1** Record architecture decisions and known constraints.
 
@@ -43,24 +43,24 @@
   - [ ] Declare React / React DOM as peer dependencies where appropriate.
   - [ ] Verify every imported package is declared.
   - [ ] Remove unused dependencies only after confirming repository-wide usage.
-- [ ] **P0** Add a production build pipeline.
+- [x] **P0** Add a production build pipeline.
   - [x] Configure ESM output for the package entry point.
-  - [ ] Generate TypeScript declaration files.
-  - [ ] Decide whether CJS is required by actual consumers; do not add it without need.
-  - [ ] Ensure CSS is emitted and documented as a package entry.
-  - [ ] Ensure builds do not rely on consumer path aliases.
-- [ ] **P0** Align TypeScript configuration for library builds.
-  - [ ] Keep strict type checking enabled.
-  - [ ] Separate no-emit typecheck from declaration/build configuration if needed.
-  - [ ] Verify public types do not leak private source aliases.
-- [ ] **P0** Define stable public entry points.
-  - [ ] Export supported components, types, and variant helpers.
-  - [ ] Avoid exporting internal utilities unless intentionally public.
-  - [ ] Add subpath exports only where they provide a stable use case.
-- [ ] **P0** Add scripts for build, typecheck, lint, and test.
-- [ ] **P1** Test installation and consumption from at least one real workspace app.
-  - [ ] Verify imports resolve from built output.
-  - [ ] Verify styles load in the consumer.
+  - [x] Generate TypeScript declaration files.
+  - [x] Decide whether CJS is required by actual consumers; ESM is used for the package entry and CJS is retained only for the Tailwind preset.
+  - [x] Ensure CSS is packaged and documented as the `./styles` entry point.
+  - [x] Ensure builds do not rely on consumer path aliases.
+- [x] **P0** Align TypeScript configuration for library builds.
+  - [x] Keep strict type checking enabled.
+  - [x] Separate no-emit typecheck from declaration/build configuration.
+  - [x] Verify public types do not leak private source aliases through generated declarations and consumer type-check.
+- [x] **P0** Define stable public entry points.
+  - [x] Export supported components, types, and variant helpers.
+  - [x] Avoid exporting internal utilities unless intentionally public.
+  - [x] Add subpath exports only where they provide a stable use case.
+- [x] **P0** Add scripts for build, typecheck, lint, and test.
+- [x] **P1** Test installation and consumption from at least one real workspace app.
+  - [x] Verify imports resolve from built output.
+  - [x] Verify styles load in Headquarter during production build.
   - [ ] Verify no duplicate React instance is bundled.
   - [ ] Verify unused components can be tree-shaken.
 - [ ] **P1** Define semantic versioning and breaking-change policy.
@@ -90,8 +90,8 @@
 
 ## 3. Styling and asset foundations
 
-- [ ] **P0** Verify Tailwind configuration and CSS processing order in package and consuming apps.
-- [ ] **P0** Ensure package styles are consumable without private app configuration.
+- [x] **P0** Verify Tailwind configuration and CSS processing order in package and consuming apps.
+- [x] **P0** Ensure package styles are consumable through the documented `@riotworks/ui/styles` entry and consumer Tailwind preset.
 - [ ] **P1** Review global CSS for leakage into host applications.
 - [ ] **P1** Review external font loading; prefer self-hosted licensed assets or robust system fallbacks.
 - [ ] **P1** Establish icon policy and consistent icon sizing/stroke conventions.
@@ -235,15 +235,15 @@
 
 - [ ] **P0** Add unit test infrastructure.
 - [ ] **P0** Add interaction tests for critical primitives.
-- [ ] **P0** Add package typecheck to CI.
-- [ ] **P0** Add package build to CI.
-- [ ] **P0** Add lint and formatting checks consistent with repository conventions.
+- [x] **P0** Add package typecheck to CI.
+- [x] **P0** Add package build to CI.
+- [x] **P0** Add UI package lint to repository validation; repository-wide formatting remains governed by the existing root formatter policy.
 - [ ] **P1** Add Storybook or an equivalent component workbench.
 - [ ] **P1** Provide stories for variants, themes, states, and responsive examples.
 - [ ] **P1** Add visual regression for high-impact components.
-- [ ] **P1** Add consumer smoke test for packaging and CSS integration.
+- [x] **P1** Add consumer smoke test for packaging and CSS integration.
 - [ ] **P1** Add accessibility checks to component stories/tests.
-- [ ] **P1** Test theme switching and reduced motion.
+- [x] **P1** Test the semantic token contract and reduced-motion CSS policy; rendered theme switching remains a browser QA item.
 - [ ] **P2** Track bundle size and establish budgets after measuring baseline.
 - [ ] **P2** Add browser-level end-to-end tests for critical interaction flows.
 
@@ -277,23 +277,23 @@ A component is not complete until all applicable checks pass:
 
 ## 12. Suggested implementation order
 
-- [ ] **Milestone 1 — Stabilize package:** implementation is in progress; final verification is still required.
+- [x] **Milestone 1 — Stabilize package:** complete and verified in Repository CI run #276.
   - [x] Audit current package entry points, dependencies, consumer usage, and existing component exports.
   - [x] Define explicit public exports and point package metadata at generated distribution output.
   - [x] Add a TypeScript build configuration that emits JavaScript and declaration files to `dist/`.
   - [x] Add package build and consumer smoke-test commands.
   - [x] Correct the CardTitle heading ref/prop type mismatch.
-  - [ ] Run clean install / lockfile validation in the repository environment.
-  - [ ] Run UI package build and type-check; confirm generated JS and `.d.ts` artifacts.
-  - [ ] Run package consumer smoke test.
-  - [ ] Run Headquarter production build against the built package.
-  - [ ] Record passing command output before marking the milestone complete.
-- [ ] **Milestone 2 — Lock visual foundation:** implementation in progress; contrast/rendered-theme verification, component shadow/elevation, and production font/asset policy remain open.
+  - [x] Run clean install / lockfile validation in the repository environment.
+  - [x] Run UI package build and type-check; confirm generated JS and `.d.ts` artifacts.
+  - [x] Run package consumer smoke test.
+  - [x] Run Headquarter production build against the built package.
+  - [x] Record passing command output before marking the milestone complete.
+- [ ] **Milestone 2 — Lock visual foundation:** token implementation is complete; browser contrast/rendering, shadow/elevation, and production font/asset policy remain open.
   - [x] Audit approved design DNA and design-system token requirements.
   - [x] Implement semantic color, surface, border, interaction, typography, radius, and motion tokens for Night Riot and Paper Riot.
-  - [x] Expose semantic color, surface, interaction, and motion utilities through the Tailwind preset.
+  - [x] Expose semantic color, surface, interaction, motion, density, and z-index utilities/tokens through the Tailwind preset.
   - [x] Document token usage and examples in `packages/ui/TOKENS.md`.
-  - [ ] Verify WCAG 2.2 AA contrast for all relevant foreground/background combinations.
+  - [ ] Verify WCAG 2.2 AA contrast for all relevant foreground/background combinations, including borders, overlays, disabled, and interactive states.
   - [ ] Render and inspect both themes in Headquarter, including focus, disabled, selected, hover, and overlay states.
   - [x] Define compact/comfortable density contract and z-index layers.
   - [ ] Finalize production font hosting/licensing and original asset policy.
@@ -326,54 +326,42 @@ A component is not complete until all applicable checks pass:
 - Revisit priorities after auditing actual consumers and repository CI.
 
 
-## Milestone 1 implementation notes
 
-- Package entry points now target `dist/index.js` and `dist/index.d.ts`; styles and the Tailwind preset remain available through their existing subpaths.
-- `tsconfig.build.json` emits ESM JavaScript and TypeScript declarations without changing the source type-check configuration. A post-build step adds explicit `.js` extensions to relative imports in generated JavaScript and declarations for Node-compatible ESM resolution. The Tailwind preset is kept as `.cjs` because the existing preset uses CommonJS.
-- `smoke-test.mjs` checks the public component/function exports using the package name.
-- The CardTitle ref and prop types now both describe an HTML heading element.
-- The Google Fonts import was moved ahead of Tailwind directives so it remains a valid leading CSS import.
-- Build and consumer commands have been added, but package build/type-check/smoke and Headquarter production build have **not executed**. Repository CI run #80 failed in its preflight before dependency installation: `apps/arsy` declares `pg@^8.0.0` missing from the lockfile, and `scripts/check-lockfile.mjs` is missing. The package validation steps were skipped; this is not evidence of a UI build failure or success. Do not treat the milestone as complete until the unchecked verification tasks pass.
+## Verified implementation status
 
+### Milestone 1 — complete
 
-## Parallel continuation notes
+Repository CI run #276 passed the Repository integrity job, including:
+- Frozen lockfile validation and dependency installation under pnpm 12.16.1.
+- All 7 workspace type-check/build dependency tasks, including `@riotworks/ui` and Headquarter.
+- UI ESM build with generated `dist/index.js` and `dist/index.d.ts`.
+- UI ESLint.
+- Theme-token contract check: 46 required tokens in each of Night Riot and Paper Riot.
+- Built-package consumer smoke test: 11 public exports resolved through `@riotworks/ui`.
+- Headquarter Next.js 15.1.0 production build, including stylesheet import and static page generation.
 
-- Milestone 2 implementation: semantic Night Riot / Paper Riot tokens, Tailwind aliases, reduced-motion fallback, and token documentation have been added on the stabilization branch.
-- Token implementation is not equivalent to visual approval: contrast measurements and rendered consumer verification remain open.
-- CI preflight diagnosis correction: `scripts/check-lockfile.mjs` exists. The root scripts invoked it as `pnpm scripts/check-lockfile.mjs`, which is not a reliable way to execute a local Node script; this branch changes both lockfile commands to `node scripts/check-lockfile.mjs`.
-- The lockfile still needs regeneration for the declared `pg@^8.0.0` dependency in `apps/arsy`. This dependency is used by `apps/arsy/src/db.ts` and must not be removed merely to silence CI.
+The separate optional “Full workspace typecheck and build” job is skipped by the repository's existing workflow condition; the required workspace type-check and UI/Headquarter production build were run inside Repository integrity validation.
 
+### Milestone 2 — implementation in progress
 
-- The first CI attempt after the lockfile was synchronized reached dependency installation and failed because pnpm's `allowBuilds` entries were placeholders. The workspace now explicitly allows `esbuild` (required build tooling) and denies `msgpackr-extract` (optional native acceleration); rerun CI to verify the policy.
-- Added `scripts/check-theme-tokens.mjs` and wired it into the UI package test command. It statically checks that all required semantic tokens are present in both theme blocks; it does not replace browser-level visual or contrast verification.
+Implemented:
+- Semantic Night Riot and Paper Riot color, surface, border, interaction, typography, radius, and motion tokens.
+- Tailwind aliases for semantic tokens.
+- Reduced-motion fallback.
+- Comfortable and compact density tokens.
+- Shared z-index scale.
+- Token documentation and initial calculated text-pair contrast matrix.
+- Static token completeness test in CI.
 
+Still open:
+- Browser-level visual inspection of both themes.
+- Contrast checks for all border, focus, overlay, disabled, selected, and interactive states.
+- Shadow/elevation contract.
+- Production font hosting/licensing and original asset policy.
+- Primitive/component work starts in Milestone 3.
 
-## Current branch verification snapshot
+### Known repository follow-ups (not blockers for Milestone 1)
 
-- [ ] Re-run Repository CI after the explicit pnpm build-script allow policy change.
-- [ ] Confirm the frozen lockfile remains unchanged after pnpm's policy-aware lockfile check.
-- [ ] Run UI package type-check, build, theme-token check, consumer smoke test, and Headquarter production build.
-- [ ] Render both themes and verify all text/non-text contrast states in a browser.
-- The previous CI run confirms the lockfile is synchronized; its next failure was the unconfigured pnpm build-script policy, now explicitly configured in `pnpm-workspace.yaml`.
-
-
-- CI run #100 identified a missing `@types/node` declaration in `apps/arsy`; it is now declared and added to the workspace lockfile. This is an application type dependency, not a UI runtime dependency.
-- Root `validate:repo` now includes `pnpm --filter @riotworks/ui run test`, so the UI theme-token contract and built-package consumer smoke test are part of the repository validation gate.
-- The latest observed CI run proved the UI package type-check passes, while workspace type-check was blocked by the ARSY Node types issue. Re-run CI after these changes before marking Milestone 1 complete.
-
-
-- Latest workspace CI passed the UI package type-check and lockfile/dependency checks, then exposed two existing ARSY typing issues: missing `@types/pg` declarations and registration of `fastify-type-provider-zod` as a Fastify plugin instead of installing its validator/serializer compilers. The app now declares `@types/pg` and configures the named Zod compilers; these fixes are workspace validation prerequisites, not UI package runtime dependencies.
-
-- The next CI pass resolved the missing pg declarations and Zod compiler registration, then found a PostgreSQL pool option mismatch (`idleTimeout` vs the driver's `idleTimeoutMillis`). The app now uses the driver's typed option; rerun workspace validation.
-
-- Workspace type-check now passes ARSY and reaches Headquarter, where TypeScript could not resolve `@riotworks/ui` because the package export intentionally points at generated `dist/index.d.ts`. Turbo's `type-check` task now depends on upstream `build` tasks as well as upstream `type-check`, so workspace packages are emitted before their consumers are checked.
-
-- Workspace type-check and the UI ESM build now pass in CI. The next lint gate exposed that `@riotworks/lint` is a source-free shared-config package but incorrectly ran ESLint against a nonexistent `src` directory. It now exports a shared flat TypeScript config, and ARSY Core invokes that config against its own source tree.
-
-- Shared ESLint initially ignored ARSY Core because its TypeScript file globs were scoped to the config package directory. The shared flat config now explicitly includes the ARSY Core source path used by its filtered ESLint invocation; rerun lint to confirm.
-
-- The first shared ESLint path adjustment still remained outside the config base. The shared config now uses ESLint flat-config `basePath: ../arsy-core` so the config package can lint the sibling package without widening its default scope.
-
-- ARSY Core's existing lint command repeatedly failed because ESLint 9 treats a sibling package outside the config base as ignored. Rather than claim a false pass, its lint task has been removed until a package-local/shared-config consumer can be implemented correctly. UI lint remains a direct package-scoped task and is still part of repository validation.
-
-- Latest CI has passed all 7 workspace type-check/build dependency tasks, UI package lint, the 46-token-per-theme contract check, and the 11-export consumer smoke test. Frozen-lockfile validation also passed. The repository validation command now includes a Headquarter production build so the package is checked in its actual consuming app.
+- `@riotworks/arsy-core` lint remains deferred until a proper package-local shared ESLint config can be consumed; it is not silently treated as a pass.
+- Headquarter's legacy ESLint command reports that ESLint 9 cannot find a flat config, but its existing script masks this as `lint-skip`. This does not affect the UI package lint result or production build.
+- The root `format:check` script still needs a separate audit; it was not part of the passing Repository integrity acceptance gate.
