@@ -146,7 +146,7 @@ try {
   // Portfolio analytics must use persisted records and explicitly label unavailable cohorts.
   await page.goto(`${baseUrl}/aftershock`, { waitUntil: 'domcontentloaded' })
   await page.getByText('Financial contribution by currency').waitFor({ state: 'visible' })
-  await page.getByText('Net contribution (before tax reserve)', { exact: true }).waitFor({ state: 'visible' })
+  await page.getByText('Net contribution (before tax reserve and payouts)', { exact: true }).waitFor({ state: 'visible' })
   await page.getByText('Verified tax reserve', { exact: true }).waitFor({ state: 'visible' })
   await page.getByText('300', { exact: true }).waitFor({ state: 'visible' })
   await page.getByText('5000', { exact: true }).waitFor({ state: 'visible' })
