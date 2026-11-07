@@ -141,41 +141,116 @@ export class DeterministicRegistryComposer implements RegistryComposer {
     }
 
     const registryModels: Record<string, RegistryModelEntry> = {};
-    for (const [name, model] of [...modelsByName.entries()].sort(([left], [right]) => left.localeCompare(right))) {
+    const resolvedModels = new Map<string, {
+      fields: Record<string, FieldDefinition>;
+      extensionIds: string[];
+    }>();
+
+    const resolveModelFields = (name: string, trail: readonly string[] = []) => {
+      const cached = resolvedModels.get(name);
+      if (cached) return cached;
+      if (trail.includes(name)) {
+        throw new OrmError("ORM_DEPENDENCY_CYCLE", "Model inheritance cycle: " + [...trail, name].join(" -> "));
+      }
+      const model = modelsByName.get(name);
+      if (!model) throw new OrmError("ORM_INVALID_MODEL", 'Unknown inherited model "' + name + '".');
+
       const fields: Record<string, FieldDefinition> = {};
       const origins = new Map<string, string>();
+      const extensionIds: string[] = [];
+
+      for (const parentName of model.extends ?? []) {
+        const parent = modelsByName.get(parentName);
+        if (!parent) {
+          throw new OrmError("ORM_INVALID_MODEL", 'Model "' + name + '" inherits unknown model "' + parentName + '".');
+        }
+        if ((parent.kind ?? "persistent") !== "abstract") {
+          throw new OrmError(
+            "ORM_INVALID_MODEL",
+            'Model "' + name + '" can inherit only abstract models; use a model extension to extend persistent model "' + parentName + '".',
+          );
+        }
+        const inherited = resolveModelFields(parentName, [...trail, name]);
+        for (const [fieldName, field] of Object.entries(inherited.fields)) {
+          if (Object.hasOwn(fields, fieldName)) {
+            throw new OrmError("ORM_DUPLICATE_FIELD", 'Multiple inherited models contribute "' + name + "." + fieldName + '".');
+          }
+          fields[fieldName] = field;
+          origins.set(fieldName, "inherit:" + parentName + ":" + (origins.get(fieldName) ?? fieldName));
+        }
+        extensionIds.push(...inherited.extensionIds);
+      }
+
       const addFields = (source: string, contribution: Readonly<Record<string, FieldDefinition>>) => {
         for (const [fieldName, field] of Object.entries(contribution)) {
           if (!fieldIdentifier.test(fieldName) || !field || typeof field.kind !== "string") {
-            throw new OrmError("ORM_INVALID_FIELD", `Invalid field descriptor "${name}.${fieldName}".`);
+            throw new OrmError("ORM_INVALID_FIELD", 'Invalid field descriptor "' + name + "." + fieldName + '".');
           }
-          if (Object.hasOwn(fields, fieldName)) throw new OrmError("ORM_DUPLICATE_FIELD", `Field "${name}.${fieldName}" is contributed by "${origins.get(fieldName)}" and "${source}".`);
-          fields[fieldName] = Object.freeze({ ...field, ...(field.options ? { options: Object.freeze({ ...field.options }) } : {}) });
+          const exists = Object.hasOwn(fields, fieldName);
+          if (exists && field.override !== true) {
+            throw new OrmError(
+              "ORM_DUPLICATE_FIELD",
+              'Field "' + name + "." + fieldName + '" is contributed by "' + origins.get(fieldName) + '" and "' + source + '". Mark an intentional compatible replacement with override: true.',
+            );
+          }
+          if (!exists && field.override === true) {
+            throw new OrmError("ORM_INVALID_OVERRIDE", 'Field "' + name + "." + fieldName + '" declares override but no inherited field exists.');
+          }
+          if (exists) {
+            const previous = fields[fieldName];
+            if (previous.kind !== field.kind) {
+              throw new OrmError("ORM_INVALID_OVERRIDE", 'Field override "' + name + "." + fieldName + '" changes field kind.');
+            }
+            if ("target" in previous && "target" in field && previous.target !== field.target) {
+              throw new OrmError("ORM_INVALID_OVERRIDE", 'Relation override "' + name + "." + fieldName + '" changes relation target.');
+            }
+          }
+          fields[fieldName] = Object.freeze({
+            ...field,
+            ...(field.options ? { options: Object.freeze({ ...field.options }) } : {}),
+          });
           origins.set(fieldName, source);
         }
       };
-      addFields(`model:${name}`, model.fields);
+
+      addFields("model:" + name, model.fields);
       const contributions = (extensions.get(name) ?? []).sort((a, b) =>
         (modulePosition.get(a.module) ?? Number.MAX_SAFE_INTEGER) - (modulePosition.get(b.module) ?? Number.MAX_SAFE_INTEGER)
-        || (a.priority ?? 0) - (b.priority ?? 0) || a.id.localeCompare(b.id));
+        || (a.priority ?? 0) - (b.priority ?? 0)
+        || a.id.localeCompare(b.id));
+
       for (const extension of contributions) {
         for (const mixinId of extension.mixins ?? []) {
           const mixin = mixins.get(mixinId);
-          if (!mixin) throw new OrmError("ORM_INVALID_MODEL", `Extension "${extension.id}" references unknown mixin "${mixinId}".`);
-          addFields(`mixin:${mixinId}`, mixin.fields);
+          if (!mixin) throw new OrmError("ORM_INVALID_MODEL", 'Extension "' + extension.id + '" references unknown mixin "' + mixinId + '".');
+          addFields("mixin:" + mixinId, mixin.fields);
         }
-        if (extension.fields) addFields(`extension:${extension.id}`, extension.fields);
+        if (extension.fields) addFields("extension:" + extension.id, extension.fields);
+        extensionIds.push(extension.id);
       }
+
       for (const [fieldName, field] of Object.entries(fields)) {
         if ("target" in field && typeof field.target === "string" && !modelsByName.has(field.target)) {
-          throw new OrmError("ORM_UNKNOWN_RELATION_TARGET", `Relation "${name}.${fieldName}" targets unknown model "${field.target}".`);
+          throw new OrmError("ORM_UNKNOWN_RELATION_TARGET", 'Relation "' + name + "." + fieldName + '" targets unknown model "' + field.target + '".');
         }
       }
+
+      const resolved = { fields, extensionIds };
+      resolvedModels.set(name, resolved);
+      return resolved;
+    };
+
+    for (const [name, model] of [...modelsByName.entries()].sort(([left], [right]) => left.localeCompare(right))) {
+      const resolved = resolveModelFields(name);
       const module = modules.get(model.module)!;
       registryModels[name] = Object.freeze({
-        name, module: model.module, kind: model.kind ?? "persistent",
-        fields: Object.freeze(fields), sourceAddon: module.addon,
-        extensions: Object.freeze(contributions.map((item) => item.id)),
+        name,
+        module: model.module,
+        kind: model.kind ?? "persistent",
+        fields: Object.freeze(resolved.fields),
+        sourceAddon: module.addon,
+        inherits: Object.freeze([...(model.extends ?? [])]),
+        extensions: Object.freeze(resolved.extensionIds),
       });
     }
 
