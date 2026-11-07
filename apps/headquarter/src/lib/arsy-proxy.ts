@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server'
 import {
   getOperatorSessionConfig,
   readOperatorSessionCookie,
@@ -10,25 +9,25 @@ export async function proxyArsyRequest(
   request: Request,
   apiPath: string,
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
-): Promise<NextResponse> {
+): Promise<Response> {
   const sessionConfig = getOperatorSessionConfig()
   if (!sessionConfig) {
-    return NextResponse.json({ error: { code: 'OPERATOR_AUTH_NOT_CONFIGURED', message: 'Headquarter operator authentication is not configured.' } }, { status: 503 })
+    return Response.json({ error: { code: 'OPERATOR_AUTH_NOT_CONFIGURED', message: 'Headquarter operator authentication is not configured.' } }, { status: 503 })
   }
 
   const session = verifyOperatorSession(readOperatorSessionCookie(request), sessionConfig.secret)
   if (!session || session.operatorId !== sessionConfig.operatorId) {
-    return NextResponse.json({ error: { code: 'UNAUTHENTICATED', message: 'An authenticated operator session is required.' } }, { status: 401 })
+    return Response.json({ error: { code: 'UNAUTHENTICATED', message: 'An authenticated operator session is required.' } }, { status: 401 })
   }
 
   if (method !== 'GET' && !requestHasTrustedOrigin(request, sessionConfig.publicOrigin)) {
-    return NextResponse.json({ error: { code: 'ORIGIN_REJECTED', message: 'Cross-origin state changes are not allowed.' } }, { status: 403 })
+    return Response.json({ error: { code: 'ORIGIN_REJECTED', message: 'Cross-origin state changes are not allowed.' } }, { status: 403 })
   }
 
   const baseUrl = process.env.ARSY_API_BASE_URL?.trim()
   const operatorToken = process.env.ARSY_OPERATOR_TOKEN?.trim()
   if (!baseUrl || !operatorToken) {
-    return NextResponse.json({ error: { code: 'ARSY_NOT_CONFIGURED', message: 'The server-side ARSY connection is not configured.' } }, { status: 503 })
+    return Response.json({ error: { code: 'ARSY_NOT_CONFIGURED', message: 'The server-side ARSY connection is not configured.' } }, { status: 503 })
   }
 
   const hasBody = method === 'POST' || method === 'PATCH'
@@ -53,15 +52,15 @@ export async function proxyArsyRequest(
         const value = response.headers.get(name)
         if (value) headers.set(name, value)
       }
-      return new NextResponse(await response.arrayBuffer(), { status: response.status, headers })
+      return new Response(await response.arrayBuffer(), { status: response.status, headers })
     }
     const payload = response.status === 204 ? null : await response.json().catch(() => ({
       error: { code: 'INVALID_ARSY_RESPONSE', message: 'ARSY returned an unreadable response.' },
     }))
     return payload === null
-      ? new NextResponse(null, { status: response.status })
-      : NextResponse.json(payload, { status: response.status })
+      ? new Response(null, { status: response.status })
+      : Response.json(payload, { status: response.status })
   } catch {
-    return NextResponse.json({ error: { code: 'ARSY_UNREACHABLE', message: 'The ARSY service could not be reached.' } }, { status: 503 })
+    return Response.json({ error: { code: 'ARSY_UNREACHABLE', message: 'The ARSY service could not be reached.' } }, { status: 503 })
   }
 }

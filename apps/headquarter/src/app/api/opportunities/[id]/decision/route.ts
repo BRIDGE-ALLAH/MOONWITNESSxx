@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server'
-import { proxyArsyRequest } from '../../../../../lib/arsy-proxy'
+import { proxyArsyRequest } from '../../../../../lib/arsy-proxy.ts'
 
 export const runtime = 'nodejs'
 
@@ -9,7 +8,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 export async function PATCH(request: Request, context: RouteContext) {
   const { id } = await context.params
   if (!UUID_PATTERN.test(id)) {
-    return NextResponse.json(
+    return Response.json(
       { error: { code: 'INVALID_ID', message: 'Opportunity ID must be a UUID.' } },
       { status: 400 },
     )
