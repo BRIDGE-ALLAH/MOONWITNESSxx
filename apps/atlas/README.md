@@ -42,7 +42,7 @@ FreeRADIUS is the RADIUS data-plane engine. ATLAS will own NAS inventory, subscr
 
 FreeRADIUS is launched by the development Compose stack using the upstream freeradius/freeradius-server:3.2.10 image. The upstream image's default configuration has no production NAS clients or subscriber database. It must be configured with explicit clients, secure shared secrets, certificates, and an authentication/accounting backend before being exposed to network devices. The Compose port bindings default to loopback for safety.
 
-Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user. This database is intentionally separate from ATLAS control-plane tables. The upstream FreeRADIUS image is not yet wired to this SQL backend; the ATLAS/FreeRADIUS adapter and accounting schema are still follow-up work. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
+On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user. The initialization script runs only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. The upstream FreeRADIUS image is not yet wired to this SQL backend; the ATLAS/FreeRADIUS adapter and accounting schema are still follow-up work. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
 
 ## Run with Docker Compose
 

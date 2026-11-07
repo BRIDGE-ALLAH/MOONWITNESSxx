@@ -61,6 +61,7 @@ jobs:
           ATLAS_DB_PASSWORD: ci-atlas-db-password
           ATLAS_DB_ROOT_PASSWORD: ci-root-password
           ATLAS_REDIS_PASSWORD: ci-redis-password
+          RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
         run: docker compose config --quiet
 
       - name: Build ATLAS container
