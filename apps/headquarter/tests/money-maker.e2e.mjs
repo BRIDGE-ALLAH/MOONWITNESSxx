@@ -83,6 +83,14 @@ try {
   await page.getByRole('status').filter({ hasText: 'Product brief created' }).waitFor({ state: 'visible', timeout: 30_000 })
   await page.getByText(title, { exact: true }).waitFor({ state: 'visible' })
 
+  // Move the product through valid lifecycle states using the actual UI and API.
+  await page.getByLabel(`Lifecycle state for ${title}`).selectOption('production')
+  await page.getByRole('status').filter({ hasText: `Product lifecycle updated: ${title} · production` }).waitFor({ state: 'visible' })
+  await page.getByLabel(`Lifecycle state for ${title}`).selectOption('review')
+  await page.getByRole('status').filter({ hasText: `Product lifecycle updated: ${title} · review` }).waitFor({ state: 'visible' })
+  await page.getByLabel(`Lifecycle state for ${title}`).selectOption('ready')
+  await page.getByRole('status').filter({ hasText: `Product lifecycle updated: ${title} · ready` }).waitFor({ state: 'visible' })
+
   // Record a real pending ledger event and reconcile it with a source URL.
   await page.goto(`${baseUrl}/mizan-ledger`, { waitUntil: 'domcontentloaded' })
   await page.getByLabel('Event type').selectOption('gross-receipt')
