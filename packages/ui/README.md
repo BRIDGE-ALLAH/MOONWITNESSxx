@@ -11,7 +11,7 @@ import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@riotwo
 import '@riotworks/ui/styles'
 ```
 
-The stylesheet defines the shared semantic CSS variables and Night Riot / Paper Riot color modes. The consuming application owns the theme provider and decides when to apply the `.dark` class.
+The stylesheet defines the shared semantic CSS variables and Night Riot / Paper Riot color modes. See [TOKENS.md](./TOKENS.md) for the token contract, semantic usage, Tailwind aliases, and verification requirements. The consuming application owns the theme provider and decides when to apply the `.dark` class.
 
 ## Tailwind
 
