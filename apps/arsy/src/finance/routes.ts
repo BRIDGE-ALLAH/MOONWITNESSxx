@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { FinancialRepository, type FinancialEventType } from './repository.ts'
 
-const eventTypes = ['gross-receipt', 'platform-fee', 'refund', 'chargeback', 'variable-cost', 'production-cost', 'tax-reserve', 'fx-adjustment', 'payout', 'payout-reversal'] as const satisfies readonly FinancialEventType[]
+const eventTypes = ['gross-receipt', 'platform-fee', 'refund', 'chargeback', 'variable-cost', 'production-cost', 'tax-reserve', 'payout', 'payout-reversal'] as const satisfies readonly FinancialEventType[]
 const createSchema = z.object({
   productId: z.string().uuid().optional(),
   eventType: z.enum(eventTypes),
