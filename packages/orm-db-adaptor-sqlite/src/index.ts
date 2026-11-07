@@ -1,4 +1,5 @@
 import Database from "better-sqlite3";
+import { randomUUID } from "node:crypto";
 import type {
   DatabaseAdapter,
   DatabaseCapabilities,
@@ -68,7 +69,7 @@ function executeQuery<TRow>(db: SqliteDatabase, request: QueryRequest): QueryRes
 }
 
 class SqliteTransaction implements DatabaseTransaction {
-  readonly id = "sqlite-tx-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  readonly id = randomUUID();
   #active = true;
 
   constructor(
@@ -219,7 +220,7 @@ export class SqliteSystemDatabaseAdapter implements DatabaseAdapter {
         name: item.name,
         columns: rawColumns.sort((a, b) => a.cid - b.cid).map((column) => ({
           name: column.name,
-          dataType: validateType(column.type || "TEXT"),
+          dataType: column.type || "TEXT",
           nullable: column.notnull !== 1,
           ...(column.dflt_value !== null ? { defaultExpression: column.dflt_value } : {}),
           ordinal: column.cid + 1,
@@ -246,6 +247,9 @@ export class SqliteSystemDatabaseAdapter implements DatabaseAdapter {
         const columnName = String(column?.name ?? "");
         const existing = db.prepare("PRAGMA table_info(" + table + ")").all() as Array<{ name: string }>;
         if (!existing.some((item) => item.name === columnName)) {
+          if (column.nullable === false && column.defaultExpression === undefined) {
+            throw new Error("SQLite cannot add a NOT NULL column without a default; use a semantic upgrade handler.");
+          }
           db.exec("ALTER TABLE " + table + " ADD COLUMN " + columnDefinition(column));
         }
       } else if (operation.kind === "create-index") {
