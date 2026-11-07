@@ -9,13 +9,13 @@
 |---|---|---|---|---|
 | ARSY DECK | `/arsy-deck` | Headquarter / ARSY | Reference UI, demo repository | Public workspace-pulse contract, workspace permission checks, source timestamps, contract tests |
 | SIGNAL ROOM | `/signal-room` | Signal domain / ARSY | Prototype | Evidence/search contracts, provenance, pagination, source freshness |
-| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Partial vertical slice: operator-authenticated capture/list UI and evidence-backed ARSY API on review branch; database migration and live persistence not yet verified | Product lifecycle/versioning, asset provenance/storage, inspection, channel listing, financial events/reconciliation, real PostgreSQL E2E and browser E2E |
+| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Partial vertical slice: operator-authenticated evidence capture/list, owner-scoped ARSY persistence, idempotent create, hard-gate evidence checks, and eligible opportunity → version-1 product brief promotion on review branch. PostgreSQL integration coverage is configured; current-head execution is unverified. | Opportunity edit/detail/decision/archive UI, full product/version lifecycle, asset provenance/storage, inspections, channel listing, real PostgreSQL CI pass and browser E2E |
 | THE FORGE | `/the-forge` | Production domain / ARSY | Prototype | Brief/product/job contracts, versioning, artifact storage |
 | ZILL WATCH | `/zill-watch` | Quality & policy / ARSY | Prototype | Inspection contract, rights/policy enforcement, review audit |
 | LAUNCH BAY | `/launch-bay` | Distribution / ARSY | Prototype | Verified account/capability contract, allowed publication workflow, external receipt |
 | SIDRA ARCHIVE | `/sidra-archive` | Asset domain / ARSY | Prototype | Asset/version/provenance contract and storage authorization |
 | AFTERSHOCK | `/aftershock` | Analytics / ARSY | Prototype | Source-backed event/metric definitions, timeframe, sample size |
-| MIZAN LEDGER | `/mizan-ledger` | Finance domain / ARSY | Prototype | Financial event contract, reconciliation, export permissions and audit |
+| MIZAN LEDGER | `/mizan-ledger` | Finance domain / ARSY | Partial vertical slice: operator-authenticated manual financial-event capture, retry-safe idempotency, evidence-backed reconciliation, and summaries computed from verified persisted events on review branch. PostgreSQL integration coverage is configured; current-head execution is unverified. | Provider integrations, FX source/precision rules, payout lifecycle, export permissions, reconciliation browser E2E and verified production database operations |
 | RIOT ENGINE | `/riot-engine` | Workflow / ARSY | Prototype | Workflow/run lifecycle, idempotent actions, operator permission, audit |
 
 ## Administration
