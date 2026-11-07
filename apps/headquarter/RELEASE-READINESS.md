@@ -8,7 +8,7 @@
 
 - Structural and ownership baseline documented in `ARCHITECTURE.md`.
 - ARSY browser transport boundary with timeout, cancellation, request IDs, safe error normalization, GET-only retry, and relative-path traversal protection.
-- Night Riot / Paper Riot semantic token foundation in `packages/ui`.
+- MOONWITNESS Observatory / Archive semantic token foundation in `packages/ui`.
 - ARSY DECK reference feature with explicit synthetic fixture and no fake mutation capability.
 - Navigation and administration IA with planned capabilities disabled.
 - Native Node 24 test suite for ARSY client, ARSY DECK fixture, Decision Graph, and Scenario Forge.
@@ -62,3 +62,18 @@ The **Headquarter foundation workstream** can close when required workspace CI a
 ## Required full-workspace CI result
 
 PR #43 head `44d5cb62413e2e03de89b46961439ea8953001b0`: Repository Integrity, Asset Integrity, full-workspace validation/build, and CodeQL all passed. The former optional `FULL_QUALITY_CI` gate has been removed.
+
+
+## Current mainline update — 2026-11-08
+
+**Observed main:** `1f16b12c77cab5f73a6d05fb1fbc4f12689a6f0b`.
+
+- PR #154 has merged the authenticated, owner-scoped, read-only Docker Engine connector. ARSY persists connection metadata in PostgreSQL; remote TLS credentials are encrypted; Headquarter displays real Engine information and container inventory/logs through a server-side proxy.
+- Exact PR-head verification passed: Docker/PostgreSQL integration, Headquarter browser E2E including reload/persistence, Repository CI including full workspace typecheck/build, Asset Integrity, Developer Experience, WITNESS FABRIC, CodeQL, and container image build.
+- The delivered connector intentionally has no start/stop/exec/deploy operations. A configured local Docker socket is host-root-equivalent. The current fallback login limiter is not a distributed security boundary; shared login throttling remains a separate blocker tracked in Issue #123.
+- The Money Maker workflows (opportunity, versioned product, asset, inspection, channel, listing, finance, payout/FX) remain on unmerged draft PR #126 and are not on main. That branch is materially behind and diverged; its checks must be rerun after a controlled reconciliation.
+- UI/Assets package documentation and SVG/font governance corrections are merged; rendered accessibility/visual review, logo-owner approval, and redistribution licensing remain open.
+
+## Current production promotion decision
+
+**NO-GO.** No production target or deployment workflow, managed secrets, TLS/ingress, backup/restore, monitoring, rollback authority, production smoke-test credentials or verified production URL are evidenced. Do not equate CI/container build success with a production deployment. Root package version `1.0.11` also differs from the latest numbered changelog entry `1.0.0`; authoritative tag/release history must be reconciled before a version bump.
