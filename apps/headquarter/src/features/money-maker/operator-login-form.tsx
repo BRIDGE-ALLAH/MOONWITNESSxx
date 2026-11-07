@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { safeOperatorReturnTo } from '../../lib/operator-session'
+import { safeOperatorReturnTo } from '../../lib/operator-return-to'
 
 export function OperatorLoginForm({ returnTo = '/riot-radar' }: { returnTo?: string }) {
   const [password, setPassword] = useState('')

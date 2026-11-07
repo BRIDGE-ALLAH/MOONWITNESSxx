@@ -91,6 +91,11 @@ export function DockerConnector() {
   }, [])
 
   const selectedServer = servers.find((server) => server.id === selected)
+  const engineMetrics: Array<[string, string]> = [
+    ['Engine', String(engine?.serverVersion ?? '—')],
+    ['OS', String(engine?.operatingSystem ?? '—')],
+    ['Containers', String(containers.length)],
+  ]
   return (
     <main className="mx-auto max-w-7xl space-y-6 p-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -112,7 +117,7 @@ export function DockerConnector() {
           </form>
         </div>
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">{[['Engine', engine?.serverVersion ?? '—'],['OS', engine?.operatingSystem ?? '—'],['Containers', String(containers.length)]].map(([label,value]) => <div key={label} className="border border-border p-4"><p className="font-mono text-[10px] uppercase text-muted-foreground">{label}</p><p className="mt-2 truncate text-lg">{String(value)}</p></div>)}</div>
+          <div className="grid gap-3 sm:grid-cols-3">{engineMetrics.map(([label,value]) => <div key={label} className="border border-border p-4"><p className="font-mono text-[10px] uppercase text-muted-foreground">{label}</p><p className="mt-2 truncate text-lg">{String(value)}</p></div>)}</div>
           <div className="border border-border"><div className="border-b border-border p-4"><h2 className="font-mono text-xs uppercase tracking-widest">Container inventory</h2><p className="mt-1 text-xs text-muted-foreground">{selectedServer?.name ?? 'Pilih server'} · Maximum 100 records</p></div>
             {containers.length === 0 ? <p className="p-6 text-sm text-muted-foreground">{busy ? 'Memuat inventory…' : 'Tidak ada container, atau belum ada server yang dipilih.'}</p> : <div className="divide-y divide-border">{containers.map((container) => <div key={container.id} className="flex flex-wrap items-center justify-between gap-3 p-4"><div className="min-w-0"><p className="truncate font-mono text-sm">{container.names[0] || container.id.slice(0,12)}</p><p className="truncate text-xs text-muted-foreground">{container.image} · {container.id.slice(0,12)}</p></div><div className="flex items-center gap-3"><div className="text-right"><p className="font-mono text-xs uppercase">{container.state}</p><p className="text-xs text-muted-foreground">{container.status}</p></div><button onClick={() => void loadLogs(selected, container.id)} disabled={busy} className="border border-border px-3 py-2 font-mono text-[10px] uppercase">Logs</button></div></div>)}</div>}
           </div>
