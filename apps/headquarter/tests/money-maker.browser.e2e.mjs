@@ -321,6 +321,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await page.getByText('Opportunity promotion rate', { exact: true }).waitFor()
     await page.getByText('First-sale rate', { exact: true }).waitFor()
     await page.getByText('100.00%', { exact: true }).first().waitFor()
+    await page.getByRole('heading', { name: 'All-time financial contribution by currency' }).waitFor()
     await page.getByText('Net contribution · before tax reserve and payouts', { exact: true }).waitFor()
     await page.getByText('Tax reserve · verified', { exact: true }).waitFor()
     await page.getByText('5000', { exact: true }).first().waitFor()
