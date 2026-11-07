@@ -146,8 +146,8 @@ test('channel optimistic updates reject stale revisions', async () => {
     const response = await app.inject({
       method: 'PATCH', url: `/api/v1/channels/${channelId}`,
       headers: { 'x-arsy-operator-token': token },
-      payload: { ...body, expectedRevision: 0 },
+      payload: { ...body, expectedRevision: 1 },
     })
-    assert.equal(response.statusCode, 400)
+    assert.equal(response.statusCode, 409)
   } finally { await app.close() }
 })
