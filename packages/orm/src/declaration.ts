@@ -1,4 +1,5 @@
-import type { FieldDefinition, FieldMap, ModelDeclaration } from "./index.js";
+import type { FieldDefinition, FieldMap } from "./index.js";
+import type { ModelDeclaration } from "./model.js";
 
 const identifier = /^[a-z][a-z0-9_.-]*$/;
 const fieldIdentifier = /^[a-z][a-zA-Z0-9_]*$/;
