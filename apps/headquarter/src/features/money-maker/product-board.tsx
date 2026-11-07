@@ -33,8 +33,6 @@ const lifecycleActions: Record<string, Array<{ state: 'production' | 'review' | 
   brief: [{ state: 'production', label: 'Start production' }, { state: 'retired', label: 'Retire' }],
   production: [{ state: 'review', label: 'Send to review' }, { state: 'retired', label: 'Retire' }],
   review: [{ state: 'production', label: 'Return to production' }, { state: 'retired', label: 'Retire' }],
-  ready: [{ state: 'retired', label: 'Retire' }],
-  listed: [{ state: 'retired', label: 'Retire' }],
   retired: [],
 }
 
