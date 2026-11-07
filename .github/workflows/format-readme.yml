@@ -1,0 +1,33 @@
+name: Format governance README
+
+on:
+  push:
+    branches:
+      - format-readme
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --write governance/README.md
+      - name: Commit formatted README
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add governance/README.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'style: format governance README'
+            git push origin HEAD:format-readme
+          fi
