@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { DatabasePool } from '../db.ts'
+import type { ProductLifecycleState } from './lifecycle.ts'
 
 type QueryResult<T> = { rows: T[] }
 type ProductRow = {
@@ -101,6 +102,40 @@ export class ProductRepository {
     return row ? mapProduct(row) : null
   }
 
+  async transitionLifecycle(
+    ownerId: string,
+    actorId: string,
+    id: string,
+    expectedState: ProductLifecycleState,
+    nextState: ProductLifecycleState,
+  ): Promise<ProductRecord | null> {
+    const auditId = randomUUID()
+    const result = await this.db.query(
+      `WITH updated AS (
+        UPDATE arsy_products
+        SET lifecycle_state = $4, updated_at = now(), updated_by = $3
+        WHERE owner_id = $1 AND id = $2 AND lifecycle_state = $5
+        RETURNING *
+      ), audited AS (
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $6, $1, 'product', updated.id, 'lifecycle-changed', $3,
+          jsonb_build_object('from', $5, 'to', $4)
+        FROM updated
+      )
+      SELECT ${columns}
+      FROM updated p
+      JOIN arsy_product_versions v ON v.product_id = p.id
+      WHERE v.version = (
+        SELECT MAX(latest.version)
+        FROM arsy_product_versions latest
+        WHERE latest.product_id = p.id
+      )`,
+      [ownerId, id, actorId, nextState, expectedState, auditId],
+    )
+    const row = rows<ProductRow>(result)[0]
+    return row ? mapProduct(row) : null
+  }
   async list(ownerId: string, limit = 50): Promise<ProductRecord[]> {
     const result = await this.db.query(
       `SELECT DISTINCT ON (p.id) ${columns}
