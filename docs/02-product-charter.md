@@ -8,7 +8,7 @@
 
 MOONWITNESS is an evidence-first knowledge and operations ecosystem. Its initial product experience helps a solo operator or small creator team discover evidence-backed opportunities, create original digital works, govern assets and provenance, prepare compliant distribution, account for revenue and costs, and learn from portfolio outcomes.
 
-These creative-commerce workflows are one applied domain of the wider MOONWITNESS promise: SEE MORE. KNOW MORE. The human purpose is expressed by the Brand Manifesto: WHEN THE MOON RISES, WE SHARE WHAT MATTERS.
+These creative-commerce workflows are one applied domain of the wider MOONWITNESS promise: SEE MORE. KNOW MORE. The human purpose is expressed by the Brand Manifesto: WHEN THE MOON RISES, WE SHARE MESSAGES.
 
 RIOTWORKS remains a separately governed creative/engineering studio identity and is not the product name.
 
