@@ -1,6 +1,6 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 
 # Legacy services are intentionally excluded until their unique behavior is migrated
 # into the single canonical app/package owner and covered by tests.

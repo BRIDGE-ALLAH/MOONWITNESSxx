@@ -5,7 +5,7 @@ import {
   containsBackgroundShelling,
   containsSuppressedFailure,
   findMissingWorkspaceImporters,
-  getProjectLockfileDocument
+  getProjectLockfileDocument,
 } from './repo-audit.mjs'
 
 test('accepts conventional commit subjects with and without scopes', () => {
@@ -72,10 +72,9 @@ snapshots:
 
   const projectDocument = getProjectLockfileDocument(lockfile)
   assert.match(projectDocument, /apps\/headquarter:/)
-  assert.deepEqual(
-    findMissingWorkspaceImporters(lockfile, ['apps/headquarter', 'packages/ui']),
-    ['packages/ui']
-  )
+  assert.deepEqual(findMissingWorkspaceImporters(lockfile, ['apps/headquarter', 'packages/ui']), [
+    'packages/ui',
+  ])
 })
 
 test('reads a single-document lockfile as the project lockfile', () => {
@@ -114,7 +113,7 @@ snapshots: {}
     findMissingWorkspaceImporters(lockfile, [
       'packages/arsy-core',
       'packages/contract',
-      'packages/lint'
+      'packages/lint',
     ]),
     []
   )

@@ -3,10 +3,7 @@ import uiConfig from '@riotworks/ui/tailwind.config'
 
 const config: Config = {
   darkMode: ['class'],
-  content: [
-    './src/**/*.{ts,tsx}',
-    '../../packages/ui/src/**/*.{ts,tsx}',
-  ],
+  content: ['./src/**/*.{ts,tsx}', '../../packages/ui/src/**/*.{ts,tsx}'],
   presets: [uiConfig],
   theme: {
     extend: {},

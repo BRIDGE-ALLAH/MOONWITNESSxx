@@ -12,22 +12,22 @@ RIOTWORKS should minimize repetitive owner work while keeping rights, policy, fi
 
 ## 2. Specialist workforce
 
-| Agent | Responsibility | Output |
-|---|---|---|
-| COMMANDER | Plans, delegates, prioritizes | Task plan and run ledger |
-| SCOUT | Finds public market signals | Evidence bundle |
-| ANALYST | Evaluates opportunity | Score and confidence |
-| PRODUCT ARCHITECT | Defines buyer job and product spec | Product brief |
-| MAKER | Produces approved creative assets | Versioned artifacts |
-| EDITOR | Reviews content, structure, claims | Editorial report |
-| LOCALIZER | Adapts region/language/format | Locale package |
-| METADATA SPECIALIST | Creates channel-specific metadata | Listing package |
-| ZILL GUARDIAN | Checks rights, policy, quality | Inspection report |
-| DISTRIBUTOR | Prepares/publishes allowed listing actions | Publication receipt |
-| KEEPER | Manages assets, versions, provenance | Asset manifest |
-| AFTERSHOCK ANALYST | Evaluates actual outcomes | Learning report |
-| MIZAN ACCOUNTANT | Reconciles income and costs | Ledger entries |
-| POLICY WATCHER | Tracks official rule changes | Policy alert and review task |
+| Agent               | Responsibility                             | Output                       |
+| ------------------- | ------------------------------------------ | ---------------------------- |
+| COMMANDER           | Plans, delegates, prioritizes              | Task plan and run ledger     |
+| SCOUT               | Finds public market signals                | Evidence bundle              |
+| ANALYST             | Evaluates opportunity                      | Score and confidence         |
+| PRODUCT ARCHITECT   | Defines buyer job and product spec         | Product brief                |
+| MAKER               | Produces approved creative assets          | Versioned artifacts          |
+| EDITOR              | Reviews content, structure, claims         | Editorial report             |
+| LOCALIZER           | Adapts region/language/format              | Locale package               |
+| METADATA SPECIALIST | Creates channel-specific metadata          | Listing package              |
+| ZILL GUARDIAN       | Checks rights, policy, quality             | Inspection report            |
+| DISTRIBUTOR         | Prepares/publishes allowed listing actions | Publication receipt          |
+| KEEPER              | Manages assets, versions, provenance       | Asset manifest               |
+| AFTERSHOCK ANALYST  | Evaluates actual outcomes                  | Learning report              |
+| MIZAN ACCOUNTANT    | Reconciles income and costs                | Ledger entries               |
+| POLICY WATCHER      | Tracks official rule changes               | Policy alert and review task |
 
 Agents are logical roles. The first MVP may use fewer runtime agents or a single orchestrator with specialized tasks.
 
@@ -44,6 +44,7 @@ Level is per action, not per platform. An API that allows analytics read does no
 ## 4. Human approval requirements
 
 Approval is required for:
+
 - First publication on a platform.
 - New product categories with uncertain rights or policies.
 - Any uncertain or high-impact IP finding.
@@ -63,6 +64,7 @@ Every run follows:
 Queued → Planned → Executing → Validating → Awaiting Approval (if needed) → Completed / Failed / Cancelled.
 
 Each run stores:
+
 - Run ID.
 - Trigger and schedule.
 - Agent/model and tool versions.
@@ -94,6 +96,7 @@ Each run stores:
 ## 7. Scheduling
 
 Schedules should support:
+
 - One-time research runs.
 - Daily/weekly policy and opportunity monitoring.
 - Production queue processing.
@@ -106,6 +109,7 @@ Do not continuously scrape a platform. Respect official quotas, caching rules, a
 ## 8. Failure handling
 
 When an external action fails:
+
 1. Stop unsafe retries.
 2. Preserve the request and error response.
 3. Check whether the external action partially succeeded.

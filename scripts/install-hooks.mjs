@@ -4,7 +4,7 @@ function runGit(args) {
   return spawnSync('git', args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
-    windowsHide: true
+    windowsHide: true,
   })
 }
 

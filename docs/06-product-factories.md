@@ -11,6 +11,7 @@ Every product family follows:
 Opportunity → Product Brief → Rights/Policy Preflight → Production → Technical QA → Creative QA → Metadata → Package → Channel Readiness → Publication → Performance → Maintenance / Retirement.
 
 A production job must have:
+
 - Product ID and version.
 - Opportunity/evidence reference.
 - Intended buyer and job.
@@ -27,9 +28,11 @@ A production job must have:
 ## 2. Factory portfolio
 
 ### 2.1 Digital Utility Factory — P1
+
 Original spreadsheets, planners, calculators, Notion/workspace templates, checklists, dashboards, printable utilities, and structured packs.
 
 Quality requirements:
+
 - Real functional test cases.
 - Clear instructions and compatibility.
 - Example data separated from blank template.
@@ -38,9 +41,11 @@ Quality requirements:
 - Localization checked for units, dates, currency, and language.
 
 ### 2.2 Stock Asset Factory — P1
+
 Original illustrations, vectors, backgrounds, textures, motion graphics, and video assets.
 
 Quality requirements:
+
 - Visual uniqueness and professional finish.
 - Composition, artifacts, anatomy, text, and geometry inspection as relevant.
 - Rights and model/tool terms recorded.
@@ -50,9 +55,11 @@ Quality requirements:
 - Correct formats, dimensions, color profile, and file integrity.
 
 ### 2.3 Affiliate Media Factory — P2
+
 Original product explainers, truthful demonstrations, setup tutorials, comparisons, and short-form content for eligible affiliate programs.
 
 Quality requirements:
+
 - Accurate product facts from reliable sources.
 - Clear material-connection/affiliate disclosure.
 - No fake hands-on claims.
@@ -62,9 +69,11 @@ Quality requirements:
 - Respect platform disclosure and branded-content rules.
 
 ### 2.4 Publishing Factory — P2
+
 Original ebooks, workbooks, practical guides, learning materials, and reference products.
 
 Quality requirements:
+
 - Editorial review, factual verification, citations, and rights checks.
 - Human responsibility for usefulness and correctness.
 - AI-generated content disclosed where required by publisher policy.
@@ -72,9 +81,11 @@ Quality requirements:
 - Validate formatting, navigation, cover, metadata, and preview.
 
 ### 2.5 Workflow Product Factory — P3
+
 Original automation templates, n8n workflows, ComfyUI workflows, scripts, presets, developer utilities, and configuration packs.
 
 Quality requirements:
+
 - Reproducible setup instructions.
 - Version and dependency manifest.
 - License and third-party dependency review.
@@ -86,9 +97,11 @@ Quality requirements:
 Do not redistribute a platform or dependency in a way that violates its license. n8n's Sustainable Use License and commercial embedding rules must be checked before any product embeds, white-labels, or resells n8n functionality.
 
 ### 2.6 Media Factory — P3
+
 Original tutorial, documentary-style explainer, educational media, animation, and story-led video.
 
 Quality requirements:
+
 - Original point of view and structure.
 - Meaningful editorial input.
 - Fact checking.
@@ -98,9 +111,11 @@ Quality requirements:
 - Preserve project files and source records.
 
 ### 2.7 Game Asset Factory — P4
+
 Original 2D/3D assets, icons, UI kits, sprites, VFX, SFX, textures, and models for creator/game marketplaces.
 
 Quality requirements:
+
 - File and engine compatibility.
 - Scale, naming, rigging, texture, and performance checks.
 - License and dependencies.
@@ -108,9 +123,11 @@ Quality requirements:
 - No copied IP, trademark, or prohibited user-generated content.
 
 ### 2.8 Microgame Factory — P4
+
 Small games, interactive learning products, browser games, and platform-native experiences.
 
 Quality requirements:
+
 - Playability and device testing.
 - Clear tutorial and controls.
 - Performance and accessibility.
@@ -121,6 +138,7 @@ Quality requirements:
 ## 3. Product family strategy
 
 Build a coherent family around a validated buyer job. Example: a small-business inventory problem could produce:
+
 - A functional inventory spreadsheet.
 - A localized variant.
 - A quick-start guide.
@@ -132,6 +150,7 @@ Each output must stand alone as useful work. No thin duplication or keyword-stuf
 ## 4. Living Product lifecycle
 
 Products can move through:
+
 - Draft.
 - In Production.
 - QA.
@@ -143,6 +162,7 @@ Products can move through:
 - Retired.
 
 For maintainable products, store:
+
 - Semantic version.
 - Change notes.
 - Compatibility.
@@ -154,6 +174,7 @@ For maintainable products, store:
 ## 5. Creative reuse rules
 
 Reuse source assets only when:
+
 - Ownership/license permits the derivative.
 - The destination marketplace allows the use.
 - The new product adds real value.
@@ -165,6 +186,7 @@ Never upload near-identical assets merely to occupy search results.
 ## 6. Packaging standards
 
 A product package may include:
+
 - Final deliverable.
 - Preview images/screenshots.
 - Readme or quick-start guide.
@@ -177,6 +199,7 @@ A product package may include:
 ## 7. Rejection and recovery
 
 If QA fails:
+
 1. Keep the failed artifact and report.
 2. Categorize defect.
 3. Decide fix, regenerate, or retire.

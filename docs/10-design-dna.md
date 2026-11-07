@@ -15,18 +15,23 @@ Reference the visual languages of punk photocopy zines, underground comics, stre
 ## 2. The five visual forces
 
 ### PUNK ZINE
+
 Photocopy grain, torn paper, imperfect ink, collage, cutout type, visible print texture.
 
 ### UNDERGROUND COMIC
+
 Original characters, bold outlines, halftone, panel composition, expressive scenes, action marks.
 
 ### NEO-BRUTALISM
+
 Strong geometry, hard borders, deliberate asymmetry, graphic hierarchy, confident negative space.
 
 ### PREMIUM GAME HUD
+
 Operational status, contextual panels, crisp metrics, focused motion, tactical information density.
 
 ### INDUSTRIAL FUTURISM
+
 Technical labels, mechanical details, diagrammatic marks, workshop surfaces, engineered precision.
 
 Street/Pop Art is the expressive accent layer.
@@ -34,6 +39,7 @@ Street/Pop Art is the expressive accent layer.
 ## 3. Design tension
 
 RIOTWORKS must balance two modes:
+
 - **Riot mode:** expressive artwork, campaign headers, discovery, storytelling, product creation.
 - **Control mode:** readable data, finance, tables, forms, approvals, policy, errors, and audit trails.
 
@@ -41,17 +47,17 @@ Do not make every screen loud. Use high-energy compositions for focal zones and 
 
 ## 4. Core palette
 
-| Token | Value | Role |
-|---|---|---|
-| Obsidian | #111315 | Main dark canvas |
-| Deep Industrial | #191C1E | Dark secondary surface |
-| Panel Charcoal | #24282A | Dark panel |
-| Paper Bone | #F3EBDD | Light canvas |
-| Acid Lime | #D2FF38 | Signature accent |
-| Riot Orange | #FF542D | Action and creative energy |
-| Electric Blue | #40D9FF | Informational accent |
-| Riot Pink | #F047A4 | Expressive accent |
-| Muted Ink | #777A76 | Supporting text / markings |
+| Token           | Value   | Role                       |
+| --------------- | ------- | -------------------------- |
+| Obsidian        | #111315 | Main dark canvas           |
+| Deep Industrial | #191C1E | Dark secondary surface     |
+| Panel Charcoal  | #24282A | Dark panel                 |
+| Paper Bone      | #F3EBDD | Light canvas               |
+| Acid Lime       | #D2FF38 | Signature accent           |
+| Riot Orange     | #FF542D | Action and creative energy |
+| Electric Blue   | #40D9FF | Informational accent       |
+| Riot Pink       | #F047A4 | Expressive accent          |
+| Muted Ink       | #777A76 | Supporting text / markings |
 
 Use semantic colors separately for success, warning, danger, and neutral. Brand color is not a substitute for semantic status.
 
@@ -110,6 +116,7 @@ A screenshot should be identifiable as RIOTWORKS from its typography, compositio
 ## 11. Motion and sound
 
 Motion:
+
 - Comic panel reveal for selected transitions.
 - Crisp panel slide and snap.
 - Short status pulse for active work.
@@ -118,6 +125,7 @@ Motion:
 - Reduced-motion preference must be respected.
 
 Sound:
+
 - Optional mechanical click, paper impact, radio-static accent, short bass confirmation.
 - Off by default or governed by explicit user preference.
 - Never play automatically on page load.
@@ -126,6 +134,7 @@ Sound:
 ## 12. Theme direction
 
 Create two intentionally designed themes:
+
 - **Night Riot:** Obsidian, Deep Industrial, Acid Lime, high contrast.
 - **Paper Riot:** Paper Bone, dark ink, controlled orange/lime accents, print/editorial feel.
 

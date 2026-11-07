@@ -44,7 +44,9 @@ export function findMissingWorkspaceImporters(lockfileContent, workspacePaths) {
   const projectLockfile = getProjectLockfileDocument(lockfileContent)
   const importerSection = projectLockfile.split(/\npackages:\s*\n/, 1)[0]
   const importerPaths = new Set(
-    [...importerSection.matchAll(/^  ([^ \r\n][^:\r\n]*):(?:\s*\{\})?\s*$/gm)].map((match) => match[1])
+    [...importerSection.matchAll(/^  ([^ \r\n][^:\r\n]*):(?:\s*\{\})?\s*$/gm)].map(
+      (match) => match[1]
+    )
   )
 
   return workspacePaths.filter((path) => !importerPaths.has(path))
@@ -70,7 +72,9 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     errors.push(`Root package name must be "moonwitness"; found "${rootPackage.name}".`)
   }
   if (rootPackage.packageManager !== 'pnpm@12.16.1') {
-    errors.push('packageManager must remain pinned to pnpm@12.16.1 until the lockfile is deliberately upgraded.')
+    errors.push(
+      'packageManager must remain pinned to pnpm@12.16.1 until the lockfile is deliberately upgraded.'
+    )
   }
 
   const requiredScripts = [
@@ -83,7 +87,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     'validate:repo',
     'validate',
     'lockfile:check',
-    'lockfile:refresh'
+    'lockfile:refresh',
   ]
   for (const name of requiredScripts) {
     if (!rootPackage.scripts?.[name]) errors.push(`Missing required root script: ${name}`)
@@ -91,7 +95,9 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
 
   for (const [name, command] of Object.entries(rootPackage.scripts ?? {})) {
     if (containsBackgroundShelling(command)) {
-      errors.push(`Root script "${name}" uses uncontrolled shell backgrounding; use Turbo for parallel tasks.`)
+      errors.push(
+        `Root script "${name}" uses uncontrolled shell backgrounding; use Turbo for parallel tasks.`
+      )
     }
     if (containsSuppressedFailure(command)) {
       errors.push(`Root script "${name}" hides a failed check or contains a skip placeholder.`)
@@ -102,7 +108,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     'scripts/check-format.mjs',
     'scripts/check-staged.mjs',
     'scripts/check-commit-message.mjs',
-    'scripts/install-hooks.mjs'
+    'scripts/install-hooks.mjs',
   ]) {
     if (!(await exists(path))) errors.push(`Missing required repository tooling script: ${path}`)
   }
@@ -117,7 +123,9 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     errors.push('pnpm-workspace.yaml must include apps/* and packages/*.')
   }
   if (workspaceConfig.includes('"services/*"')) {
-    errors.push('services/* must not be a workspace until its ownership and runtime boundaries are reconciled.')
+    errors.push(
+      'services/* must not be a workspace until its ownership and runtime boundaries are reconciled.'
+    )
   }
 
   // Pass 1: collect every package manifest before resolving cross-package references.
@@ -145,7 +153,9 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
         packageNames.set(manifest.name, manifestPath)
       }
       if (manifest.private !== true) {
-        warnings.push(`Workspace package should remain private until publishing is explicitly designed: ${manifestPath}`)
+        warnings.push(
+          `Workspace package should remain private until publishing is explicitly designed: ${manifestPath}`
+        )
       }
       workspacePackages.push({ path: relativePath, manifest, manifestPath })
     }
@@ -158,23 +168,33 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
       manifest.main,
       manifest.module,
       manifest.types,
-      ...flattenExportTargets(manifest.exports)
+      ...flattenExportTargets(manifest.exports),
     ].filter((target) => typeof target === 'string' && target.length > 0)
 
     for (const target of new Set(targets)) {
-      if (target.startsWith('node:') || target.startsWith('http:') || target.startsWith('https:')) continue
+      if (target.startsWith('node:') || target.startsWith('http:') || target.startsWith('https:'))
+        continue
       const relativeTarget = target.startsWith('./') ? target.slice(2) : target
       if (relativeTarget.startsWith('../') || relativeTarget.startsWith('/')) continue
       const targetPath = `${packagePath}/${relativeTarget}`
       if (!(await exists(targetPath))) {
-        warnings.push(`Declared package entrypoint does not exist: ${targetPath} (${manifest.name})`)
+        warnings.push(
+          `Declared package entrypoint does not exist: ${targetPath} (${manifest.name})`
+        )
       }
     }
 
-    for (const section of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
+    for (const section of [
+      'dependencies',
+      'devDependencies',
+      'peerDependencies',
+      'optionalDependencies',
+    ]) {
       for (const [dependency, specifier] of Object.entries(manifest[section] ?? {})) {
         if (String(specifier).startsWith('workspace:') && !packageNames.has(dependency)) {
-          errors.push(`${manifestPath} declares ${dependency} as ${specifier}, but that workspace package does not exist.`)
+          errors.push(
+            `${manifestPath} declares ${dependency} as ${specifier}, but that workspace package does not exist.`
+          )
         }
       }
     }
@@ -182,8 +202,14 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     for (const [scriptName, command] of Object.entries(manifest.scripts ?? {})) {
       const sourceCommand = String(command)
       const tsxTarget = sourceCommand.match(/\btsx\s+(?:watch\s+)?([^\s]+)/)?.[1]
-      if (tsxTarget && !tsxTarget.startsWith('-') && !(await exists(`${packagePath}/${tsxTarget}`))) {
-        errors.push(`${manifest.name} script "${scriptName}" targets missing file ${packagePath}/${tsxTarget}.`)
+      if (
+        tsxTarget &&
+        !tsxTarget.startsWith('-') &&
+        !(await exists(`${packagePath}/${tsxTarget}`))
+      ) {
+        errors.push(
+          `${manifest.name} script "${scriptName}" targets missing file ${packagePath}/${tsxTarget}.`
+        )
       }
 
       const delegatedScripts = sourceCommand.matchAll(
@@ -201,15 +227,21 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
       }
 
       if (containsBackgroundShelling(command)) {
-        errors.push(`${manifest.name} script "${scriptName}" uses uncontrolled shell backgrounding; use Turbo for parallel tasks.`)
+        errors.push(
+          `${manifest.name} script "${scriptName}" uses uncontrolled shell backgrounding; use Turbo for parallel tasks.`
+        )
       }
       if (containsSuppressedFailure(command)) {
-        errors.push(`${manifest.name} script "${scriptName}" hides a failed check or contains a skip placeholder.`)
+        errors.push(
+          `${manifest.name} script "${scriptName}" hides a failed check or contains a skip placeholder.`
+        )
       }
       const matches = String(command).matchAll(/--filter(?:=|\s+)(@[a-zA-Z0-9._/-]+)/g)
       for (const match of matches) {
         if (!packageNames.has(match[1])) {
-          errors.push(`${manifest.name} script "${scriptName}" targets unknown workspace package ${match[1]}.`)
+          errors.push(
+            `${manifest.name} script "${scriptName}" targets unknown workspace package ${match[1]}.`
+          )
         }
       }
     }
@@ -231,15 +263,24 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     '.github/workflows/ci.yml',
     '.github/workflows/weekly-detection.yml',
     '.github/workflows/codeql.yml',
-    '.github/workflows/refresh-lockfile.yml'
+    '.github/workflows/refresh-lockfile.yml',
   ]) {
     if (!(await exists(path))) errors.push(`Missing required workflow: ${path}`)
   }
 
   const preCommit = await readText('.husky/pre-commit')
-  for (const forbidden of ['generate-commit', 'KILO_API_KEY', 'CHANGELOG.md', 'package.json', 'curl ', 'wget ']) {
+  for (const forbidden of [
+    'generate-commit',
+    'KILO_API_KEY',
+    'CHANGELOG.md',
+    'package.json',
+    'curl ',
+    'wget ',
+  ]) {
     if (preCommit.includes(forbidden)) {
-      errors.push(`pre-commit must not invoke network/AI or mutate release state; found "${forbidden}".`)
+      errors.push(
+        `pre-commit must not invoke network/AI or mutate release state; found "${forbidden}".`
+      )
     }
   }
 
@@ -260,7 +301,9 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     const serviceEntries = await readdir(resolve(root, 'services'), { withFileTypes: true })
     for (const entry of serviceEntries) {
       if (entry.isDirectory() && (await exists(`services/${entry.name}/package.json`))) {
-        notes.push(`Legacy service excluded from pnpm workspace: services/${entry.name}. Migrate unique behavior before retirement.`)
+        notes.push(
+          `Legacy service excluded from pnpm workspace: services/${entry.name}. Migrate unique behavior before retirement.`
+        )
       }
     }
   }
@@ -272,7 +315,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     counts: { errors: errors.length, warnings: warnings.length, notes: notes.length },
     errors,
     warnings,
-    notes
+    notes,
   }
 
   const lines = [
@@ -284,9 +327,13 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     `- Errors: ${errors.length}`,
     `- Warnings: ${warnings.length}`,
     `- Notes: ${notes.length}`,
-    ''
+    '',
   ]
-  for (const [heading, items] of [['Errors', errors], ['Warnings', warnings], ['Notes', notes]]) {
+  for (const [heading, items] of [
+    ['Errors', errors],
+    ['Warnings', warnings],
+    ['Notes', notes],
+  ]) {
     lines.push(`## ${heading}`, '')
     if (items.length === 0) lines.push('- None', '')
     else {
@@ -299,7 +346,10 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   if (writeReport) {
     const outputDirectory = resolve(root, '.artifacts')
     await mkdir(outputDirectory, { recursive: true })
-    await writeFile(resolve(outputDirectory, 'repo-audit.json'), `${JSON.stringify(report, null, 2)}\n`)
+    await writeFile(
+      resolve(outputDirectory, 'repo-audit.json'),
+      `${JSON.stringify(report, null, 2)}\n`
+    )
     await writeFile(resolve(outputDirectory, 'repo-audit.md'), markdown)
   }
 

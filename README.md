@@ -33,15 +33,15 @@ Sacred and spiritual language is treated respectfully. It is not used as a gimmi
 
 ## Business engines
 
-| Priority | Factory | Example products | Monetization route |
-|---|---|---|---|
-| P1 | Digital Utility | Original spreadsheets, calculators, planners, templates, useful packs | Eligible digital marketplaces |
-| P1 | Stock Asset | Original illustrations, vectors, backgrounds, motion/video assets | Agencies accepting the asset type |
-| P2 | Affiliate Media | Honest product explainers and demonstrations | Eligible affiliate programs |
-| P2 | Publishing | Original ebooks, workbooks, practical guides | Publisher/retail royalties |
-| P3 | Workflow Products | Original automation templates, scripts, presets, creator workflows | Suitable creator marketplaces |
-| P3 | Media | Original explainers, tutorials, animation, educational media | Platform monetization when eligible |
-| P4 | Game Assets & Microgames | Original UI kits, models, game assets, experiences | Eligible creator stores and programs |
+| Priority | Factory                  | Example products                                                      | Monetization route                   |
+| -------- | ------------------------ | --------------------------------------------------------------------- | ------------------------------------ |
+| P1       | Digital Utility          | Original spreadsheets, calculators, planners, templates, useful packs | Eligible digital marketplaces        |
+| P1       | Stock Asset              | Original illustrations, vectors, backgrounds, motion/video assets     | Agencies accepting the asset type    |
+| P2       | Affiliate Media          | Honest product explainers and demonstrations                          | Eligible affiliate programs          |
+| P2       | Publishing               | Original ebooks, workbooks, practical guides                          | Publisher/retail royalties           |
+| P3       | Workflow Products        | Original automation templates, scripts, presets, creator workflows    | Suitable creator marketplaces        |
+| P3       | Media                    | Original explainers, tutorials, animation, educational media          | Platform monetization when eligible  |
+| P4       | Game Assets & Microgames | Original UI kits, models, game assets, experiences                    | Eligible creator stores and programs |
 
 Channels are enabled only after current country eligibility, payout, policy, fees, and integration capability are checked.
 
@@ -108,33 +108,33 @@ Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm
 
 ## Repository documentation
 
-| Path | Purpose |
-|---|---|
-| [MASTER-PROMPT](./MASTER-PROMPT) | Full-stack implementation master prompt |
-| [docs/01-ecosystem-narrative.md](./docs/01-ecosystem-narrative.md) | MoonWitness narrative and values |
-| [docs/02-product-charter.md](./docs/02-product-charter.md) | Product definition and scope |
-| [docs/03-business-model.md](./docs/03-business-model.md) | Revenue portfolio and economics |
-| [docs/04-marketplace-portfolio.md](./docs/04-marketplace-portfolio.md) | Marketplace rules and channel capability |
-| [docs/05-market-intelligence.md](./docs/05-market-intelligence.md) | Demand research and scoring |
-| [docs/06-product-factories.md](./docs/06-product-factories.md) | Production factories |
-| [docs/07-autonomy-operating-model.md](./docs/07-autonomy-operating-model.md) | Agents, automation, approvals |
-| [docs/08-technical-architecture.md](./docs/08-technical-architecture.md) | Headquarter, ARSY, ORM and adapters |
-| [docs/09-information-architecture.md](./docs/09-information-architecture.md) | Headquarter navigation and journeys |
-| [docs/10-design-dna.md](./docs/10-design-dna.md) | RIOT art direction |
-| [docs/11-design-system.md](./docs/11-design-system.md) | Tokens and components |
-| [docs/12-character-art-bible.md](./docs/12-character-art-bible.md) | Comic character universe |
-| [docs/13-domain-and-data-model.md](./docs/13-domain-and-data-model.md) | Base entities and domain data |
-| [docs/14-governance-and-risk.md](./docs/14-governance-and-risk.md) | Rights, security, and compliance |
-| [docs/15-roadmap-and-acceptance.md](./docs/15-roadmap-and-acceptance.md) | Phases and acceptance criteria |
-| [docs/16-research-register.md](./docs/16-research-register.md) | Research sources and caveats |
-| [docs/17-glossary.md](./docs/17-glossary.md) | Canonical terminology |
-| [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md) | Workspace, packages, ORM, adapter architecture |
-| [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md) | Addon manifests, model inheritance, base fields |
-| [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md) | ARSY internal schema API and programmatic reconciliation |
-| [docs/21-database-provider-strategy.md](./docs/21-database-provider-strategy.md) | PostgreSQL/libSQL decision, portability, BaseEntity mapping |
-| [docs/22-base-platform-and-orm-capability-blueprint.md](./docs/22-base-platform-and-orm-capability-blueprint.md) | Complete base addon catalog, Odoo-inspired ORM capability matrix, mixins and ownership boundaries |
-| [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md) | Actual repository inventory, defects, canonical topology and revised implementation roadmap |
-| [docs/24-repository-and-automation-governance.md](./docs/24-repository-and-automation-governance.md) | Canonical repository boundaries, scripts, hooks, CI, security, releases, Wiki and Pages rules |
+| Path                                                                                                               | Purpose                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| [MASTER-PROMPT](./MASTER-PROMPT)                                                                                   | Full-stack implementation master prompt                                                           |
+| [docs/01-ecosystem-narrative.md](./docs/01-ecosystem-narrative.md)                                                 | MoonWitness narrative and values                                                                  |
+| [docs/02-product-charter.md](./docs/02-product-charter.md)                                                         | Product definition and scope                                                                      |
+| [docs/03-business-model.md](./docs/03-business-model.md)                                                           | Revenue portfolio and economics                                                                   |
+| [docs/04-marketplace-portfolio.md](./docs/04-marketplace-portfolio.md)                                             | Marketplace rules and channel capability                                                          |
+| [docs/05-market-intelligence.md](./docs/05-market-intelligence.md)                                                 | Demand research and scoring                                                                       |
+| [docs/06-product-factories.md](./docs/06-product-factories.md)                                                     | Production factories                                                                              |
+| [docs/07-autonomy-operating-model.md](./docs/07-autonomy-operating-model.md)                                       | Agents, automation, approvals                                                                     |
+| [docs/08-technical-architecture.md](./docs/08-technical-architecture.md)                                           | Headquarter, ARSY, ORM and adapters                                                               |
+| [docs/09-information-architecture.md](./docs/09-information-architecture.md)                                       | Headquarter navigation and journeys                                                               |
+| [docs/10-design-dna.md](./docs/10-design-dna.md)                                                                   | RIOT art direction                                                                                |
+| [docs/11-design-system.md](./docs/11-design-system.md)                                                             | Tokens and components                                                                             |
+| [docs/12-character-art-bible.md](./docs/12-character-art-bible.md)                                                 | Comic character universe                                                                          |
+| [docs/13-domain-and-data-model.md](./docs/13-domain-and-data-model.md)                                             | Base entities and domain data                                                                     |
+| [docs/14-governance-and-risk.md](./docs/14-governance-and-risk.md)                                                 | Rights, security, and compliance                                                                  |
+| [docs/15-roadmap-and-acceptance.md](./docs/15-roadmap-and-acceptance.md)                                           | Phases and acceptance criteria                                                                    |
+| [docs/16-research-register.md](./docs/16-research-register.md)                                                     | Research sources and caveats                                                                      |
+| [docs/17-glossary.md](./docs/17-glossary.md)                                                                       | Canonical terminology                                                                             |
+| [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md)                 | Workspace, packages, ORM, adapter architecture                                                    |
+| [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md)                                 | Addon manifests, model inheritance, base fields                                                   |
+| [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md)       | ARSY internal schema API and programmatic reconciliation                                          |
+| [docs/21-database-provider-strategy.md](./docs/21-database-provider-strategy.md)                                   | PostgreSQL/libSQL decision, portability, BaseEntity mapping                                       |
+| [docs/22-base-platform-and-orm-capability-blueprint.md](./docs/22-base-platform-and-orm-capability-blueprint.md)   | Complete base addon catalog, Odoo-inspired ORM capability matrix, mixins and ownership boundaries |
+| [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md) | Actual repository inventory, defects, canonical topology and revised implementation roadmap       |
+| [docs/24-repository-and-automation-governance.md](./docs/24-repository-and-automation-governance.md)               | Canonical repository boundaries, scripts, hooks, CI, security, releases, Wiki and Pages rules     |
 
 ## Current status
 

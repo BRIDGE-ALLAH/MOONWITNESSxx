@@ -36,7 +36,7 @@ if (diff.status === 1) {
     [
       'pnpm-lock.yaml was stale and has been regenerated in the working tree.',
       'Review the diff, then commit it together with the manifest changes.',
-      'CI remains blocked until the refreshed lockfile is committed.'
+      'CI remains blocked until the refreshed lockfile is committed.',
     ].join('\n')
   )
   process.exit(1)

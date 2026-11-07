@@ -17,10 +17,13 @@
 ## 2. Token layers
 
 ### Primitive colors
+
 Use the palette in docs/10-design-dna.md.
 
 ### Semantic colors
+
 Define independent tokens for:
+
 - success
 - warning
 - danger
@@ -33,6 +36,7 @@ Define independent tokens for:
 Never encode meaning through color alone. Pair with text, iconography, or shape.
 
 ### Surface layers
+
 - canvas
 - elevated canvas
 - primary panel
@@ -44,20 +48,24 @@ Never encode meaning through color alone. Pair with text, iconography, or shape.
 - scrim
 
 ### Typography tokens
+
 - display-2xl, display-xl, display-lg
 - heading-xl, heading-lg, heading-md
 - body-lg, body-md, body-sm
 - label, overline, mono, metric
 
 ### Spacing scale
+
 Use a consistent 4px base scale. Define spacing values centrally; avoid arbitrary one-off values unless a visual exception is documented.
 
 ### Shape and border
+
 Use hard-edged rectangles and intentional radii. Avoid excessive rounded-pill cards. Strong outlines and offset shadows are part of the brand.
 
 ## 3. Layout system
 
 Desktop:
+
 - Persistent left navigation.
 - Top command bar.
 - Main canvas.
@@ -65,9 +73,11 @@ Desktop:
 - Content max widths appropriate to the task.
 
 Tablet:
+
 - Collapsible sidebar and contextual drawer.
 
 Mobile:
+
 - Compact navigation.
 - Prioritized cards and stacked data rows.
 - Persistent access to critical approvals and alerts.
@@ -77,6 +87,7 @@ Use responsive grids and avoid horizontal page overflow.
 ## 4. Component catalog
 
 Core:
+
 - RiotAppShell
 - RiotSidebar
 - RiotTopbar
@@ -96,6 +107,7 @@ Core:
 - RiotSkeleton
 
 Domain:
+
 - SignalCard
 - EvidenceRow
 - OpportunityScore
@@ -120,6 +132,7 @@ Domain:
 - TechnicalStamp
 
 Components must have:
+
 - Typed props.
 - Clear variants.
 - Sensible empty/loading/error states.
@@ -132,6 +145,7 @@ Components must have:
 ## 5. Status system
 
 Standard status vocabulary:
+
 - DRAFT
 - QUEUED
 - RUNNING
@@ -144,6 +158,7 @@ Standard status vocabulary:
 - ARCHIVED
 
 Inspection result vocabulary:
+
 - PASS
 - WARNING
 - BLOCKED
@@ -183,6 +198,7 @@ Do not conflate product lifecycle status, job execution status, and policy inspe
 ## 9. Accessibility
 
 Target WCAG 2.2 AA as a design goal:
+
 - Sufficient contrast.
 - Visible focus.
 - Semantic headings and landmarks.
@@ -197,6 +213,7 @@ Target WCAG 2.2 AA as a design goal:
 ## 10. Quality gates
 
 A component is not approved until:
+
 - Dark and light theme states are checked.
 - Desktop and mobile states are checked.
 - Keyboard operation is checked.

@@ -70,6 +70,7 @@ We retire what no longer serves.
 - Use plain, literal language for money, rights, safety, errors, and approvals.
 
 Examples:
+
 - Completion: "DONE. THE WORK IS OUT." only when a real or clearly simulated action has completed.
 - Empty research state: "NOTHING WORTH CHASING. SCAN AGAIN."
 - Pending inspection: "ZILL IS CHECKING THE GOODS."
@@ -77,13 +78,13 @@ Examples:
 
 ## 7. Values translated into product behavior
 
-| Value | Product expression |
-|---|---|
-| Amanah | Accurate representation, provenance, clear disclosure |
-| Ihsan | Quality and usefulness before volume |
-| Mizan | Revenue balanced with cost, risk, and responsibility |
-| Adl | Respect for creators, buyers, ownership, and attribution |
-| Hikmah | Evidence-led decisions and proportionate automation |
+| Value  | Product expression                                       |
+| ------ | -------------------------------------------------------- |
+| Amanah | Accurate representation, provenance, clear disclosure    |
+| Ihsan  | Quality and usefulness before volume                     |
+| Mizan  | Revenue balanced with cost, risk, and responsibility     |
+| Adl    | Respect for creators, buyers, ownership, and attribution |
+| Hikmah | Evidence-led decisions and proportionate automation      |
 
 These values are ethical design principles, not claims that the product represents or grants spiritual authority.
 

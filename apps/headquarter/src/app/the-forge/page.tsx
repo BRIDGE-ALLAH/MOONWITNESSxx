@@ -1,4 +1,12 @@
-import { Badge, Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@riotworks/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@riotworks/ui'
 
 const productFamilies = [
   {
@@ -50,9 +58,7 @@ export default function TheForge() {
     <main className="min-h-screen bg-obsidian text-paper-bone p-8">
       <div className="mx-auto max-w-7xl">
         <header className="border-b border-acid-lime/30 pb-8 mb-8">
-          <h1 className="text-5xl font-display uppercase leading-none mb-4">
-            THE FORGE
-          </h1>
+          <h1 className="text-5xl font-display uppercase leading-none mb-4">THE FORGE</h1>
           <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">
             Product Workshop
           </p>
@@ -117,7 +123,9 @@ export default function TheForge() {
                   <summary className="cursor-pointer text-sm text-acid-lime underline">
                     Production State
                   </summary>
-                  <Badge variant="outline" className="ml-2 text-xs">{product.productionState}</Badge>
+                  <Badge variant="outline" className="ml-2 text-xs">
+                    {product.productionState}
+                  </Badge>
                   <p>{product.productionState}</p>
                 </details>
 
@@ -125,7 +133,9 @@ export default function TheForge() {
                   <summary className="cursor-pointer text-sm text-acid-lime underline">
                     Quality State
                   </summary>
-                  <Badge variant="outline" className="ml-2 text-xs">{product.qualityState}</Badge>
+                  <Badge variant="outline" className="ml-2 text-xs">
+                    {product.qualityState}
+                  </Badge>
                   <p>{product.qualityState}</p>
                 </details>
 

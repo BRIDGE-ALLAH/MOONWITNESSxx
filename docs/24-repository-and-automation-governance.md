@@ -32,12 +32,12 @@ This document gives every responsibility one owner. Automation must be observabl
 
 ### Canonical workspace
 
-| Path | Ownership |
-|---|---|
-| `apps/headquarter` | Human-facing web application |
-| `apps/arsy` | Backend HTTP API and orchestration runtime |
-| `packages/*` | Reusable contracts, libraries, adapters, and addon modules |
-| `services/*` | Legacy prototypes, excluded from pnpm workspace and runtime ownership |
+| Path               | Ownership                                                             |
+| ------------------ | --------------------------------------------------------------------- |
+| `apps/headquarter` | Human-facing web application                                          |
+| `apps/arsy`        | Backend HTTP API and orchestration runtime                            |
+| `packages/*`       | Reusable contracts, libraries, adapters, and addon modules            |
+| `services/*`       | Legacy prototypes, excluded from pnpm workspace and runtime ownership |
 
 The pnpm workspace intentionally includes only `apps/*` and `packages/*`. Do not add `services/*` to the workspace as a shortcut. First identify unique behavior, move it to the canonical owner, add tests, and then retire/archive the duplicate implementation.
 
@@ -53,13 +53,13 @@ The pnpm workspace intentionally includes only `apps/*` and `packages/*`. Do not
 
 ## 3. Toolchain and package-manager policy
 
-| Tool | Baseline |
-|---|---|
-| Node.js | 22+ locally; Node.js 24 in CI |
-| pnpm | 12.16.1, pinned in root `package.json` |
-| Workspace orchestration | Turborepo |
-| Formatting | Prettier 3 |
-| Unit tests for repository automation | Node.js built-in test runner |
+| Tool                                 | Baseline                               |
+| ------------------------------------ | -------------------------------------- |
+| Node.js                              | 22+ locally; Node.js 24 in CI          |
+| pnpm                                 | 12.16.1, pinned in root `package.json` |
+| Workspace orchestration              | Turborepo                              |
+| Formatting                           | Prettier 3                             |
+| Unit tests for repository automation | Node.js built-in test runner           |
 
 Do not silently upgrade the package manager or lockfile format. A package-manager upgrade is a deliberate toolchain change that includes the manifest, lockfile, CI setup, local instructions, and validation evidence.
 
@@ -90,22 +90,22 @@ The lockfile workflow makes one narrow exception to PR governance: the current r
 
 ## 4. Command contract
 
-| Command | Sole responsibility |
-|---|---|
-| `pnpm dev` | Start workspace packages that define a persistent dev task |
-| `pnpm dev:headquarter` | Start Headquarter |
-| `pnpm dev:arsy` | Start ARSY |
-| `pnpm check:repo` | Read-only workspace and automation audit |
-| `pnpm audit:repo` | Write ignored audit artifacts under `.artifacts/` |
-| `pnpm format` | Format repository files |
-| `pnpm format:check` | Verify formatting |
-| `pnpm lint` | Repository structure and formatting gate |
-| `pnpm type-check` | Run package-level Turbo type-check tasks |
-| `pnpm test` | Run Node.js automation tests |
-| `pnpm lockfile:check` | Verify lockfile is reproducible from workspace manifests |
-| `pnpm lockfile:refresh` | Deliberately regenerate the pnpm lockfile |
-| `pnpm validate:repo` | Run repository integrity, formatting, and automation tests |
-| `pnpm validate` | Run repository validation, package type-checks, and builds |
+| Command                 | Sole responsibility                                        |
+| ----------------------- | ---------------------------------------------------------- |
+| `pnpm dev`              | Start workspace packages that define a persistent dev task |
+| `pnpm dev:headquarter`  | Start Headquarter                                          |
+| `pnpm dev:arsy`         | Start ARSY                                                 |
+| `pnpm check:repo`       | Read-only workspace and automation audit                   |
+| `pnpm audit:repo`       | Write ignored audit artifacts under `.artifacts/`          |
+| `pnpm format`           | Format repository files                                    |
+| `pnpm format:check`     | Verify formatting                                          |
+| `pnpm lint`             | Repository structure and formatting gate                   |
+| `pnpm type-check`       | Run package-level Turbo type-check tasks                   |
+| `pnpm test`             | Run Node.js automation tests                               |
+| `pnpm lockfile:check`   | Verify lockfile is reproducible from workspace manifests   |
+| `pnpm lockfile:refresh` | Deliberately regenerate the pnpm lockfile                  |
+| `pnpm validate:repo`    | Run repository integrity, formatting, and automation tests |
+| `pnpm validate`         | Run repository validation, package type-checks, and builds |
 
 A package-level task must be backed by an actual implementation and test target. Do not add scripts that only print success, delegate unrelated work, or swallow failures. Root scripts must not use uncontrolled shell backgrounding (`&`) to simulate parallel execution; Turbo owns workspace parallelism and exit-code propagation.
 
@@ -159,15 +159,15 @@ A normal commit must not bump versions, update release notes, create tags, gener
 
 ## 6. GitHub Actions ownership
 
-| Workflow | Trigger | Responsibility | Permissions |
-|---|---|---|---|
-| `ci.yml` | Push, PR, manual | Lockfile integrity and repository validation; optional full workspace gate | `contents: read` |
-| `weekly-detection.yml` | Weekly, manual | Read-only audit report and automation tests | `contents: read` |
-| `format-changed.yml` | Push to `main`, manual | Format only changed supported files, push a formatting-only commit when required, then dispatch CI | `contents: write`, `actions: write` |
-| `codeql.yml` | Push, PR, weekly | Static security analysis | `contents: read`, `security-events: write`, `actions: read` |
-| `pr-labeler.yml` | PR updates | Apply path-based labels | `contents: read`, `pull-requests: write` |
-| `refresh-lockfile.yml` | Manifest/workspace/lockfile changes on `main`, manual | Regenerate, frozen-verify, commit a lockfile-only bot change to `main`, then dispatch CI | `contents: write`, `actions: write` |
-| Dependabot | Weekly | Propose dependency and Actions updates | Managed by GitHub |
+| Workflow               | Trigger                                               | Responsibility                                                                                     | Permissions                                                 |
+| ---------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `ci.yml`               | Push, PR, manual                                      | Lockfile integrity and repository validation; optional full workspace gate                         | `contents: read`                                            |
+| `weekly-detection.yml` | Weekly, manual                                        | Read-only audit report and automation tests                                                        | `contents: read`                                            |
+| `format-changed.yml`   | Push to `main`, manual                                | Format only changed supported files, push a formatting-only commit when required, then dispatch CI | `contents: write`, `actions: write`                         |
+| `codeql.yml`           | Push, PR, weekly                                      | Static security analysis                                                                           | `contents: read`, `security-events: write`, `actions: read` |
+| `pr-labeler.yml`       | PR updates                                            | Apply path-based labels                                                                            | `contents: read`, `pull-requests: write`                    |
+| `refresh-lockfile.yml` | Manifest/workspace/lockfile changes on `main`, manual | Regenerate, frozen-verify, commit a lockfile-only bot change to `main`, then dispatch CI           | `contents: write`, `actions: write`                         |
+| Dependabot             | Weekly                                                | Propose dependency and Actions updates                                                             | Managed by GitHub                                           |
 
 ### CI staging
 

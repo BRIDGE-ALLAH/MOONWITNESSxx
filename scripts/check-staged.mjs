@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process'
 
 const staged = spawnSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z'], {
   encoding: 'utf8',
-  maxBuffer: 10 * 1024 * 1024
+  maxBuffer: 10 * 1024 * 1024,
 })
 
 if (staged.error || staged.status !== 0) {
@@ -24,7 +24,7 @@ const result = spawnSync(
   ['exec', 'prettier', '--check', '--ignore-unknown', ...files],
   {
     stdio: 'inherit',
-    shell: process.platform === 'win32'
+    shell: process.platform === 'win32',
   }
 )
 
