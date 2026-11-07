@@ -10,26 +10,26 @@ export type EvidenceEventKind =
   | 'action.recorded'
   | 'outcome.recorded'
 
-export interface EvidenceEvent<T = Record<string, unknown>> {
+export interface EvidenceEvent {
   id: string
   kind: EvidenceEventKind
   aggregateId: string
   occurredAt: string
   recordedAt: string
   actorId: string
-  payload: T
+  payload: Record<string, unknown>
   evidenceIds: string[]
   previousHash: string | null
   hash: string
 }
 
-export interface EvidenceEventInput<T = Record<string, unknown>> {
+export interface EvidenceEventInput {
   id: string
   kind: EvidenceEventKind
   aggregateId: string
   occurredAt: string
   actorId: string
-  payload: T
+  payload: Record<string, unknown>
   evidenceIds?: string[]
 }
 
@@ -58,7 +58,8 @@ export class InMemoryEvidenceStore implements EvidenceStore {
 }
 
 function canonicalJson(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value)
+  if (typeof value === 'undefined') return '"__undefined__"'
+  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null'
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
   const record = value as Record<string, unknown>
   return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(',')}}`
@@ -72,7 +73,7 @@ function hashEvent(event: Omit<EvidenceEvent, 'hash'>): string {
 export class EvidenceLedger {
   constructor(private readonly store: EvidenceStore) {}
 
-  async append<T>(input: EvidenceEventInput<T>): Promise<EvidenceEvent<T>> {
+  async append(input: EvidenceEventInput): Promise<EvidenceEvent> {
     if (!input.id.trim() || !input.aggregateId.trim() || !input.actorId.trim()) {
       throw new Error('id, aggregateId and actorId are required')
     }
@@ -85,7 +86,7 @@ export class EvidenceLedger {
       recordedAt: new Date().toISOString(),
       previousHash: previous?.hash ?? null,
     }
-    const event = { ...base, hash: hashEvent(base) } as EvidenceEvent<T>
+    const event = { ...base, hash: hashEvent(base) }
     await this.store.append(event)
     return event
   }
