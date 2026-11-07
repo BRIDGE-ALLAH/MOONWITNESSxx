@@ -59,6 +59,24 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
       'https://example.com/paid-statement', now,
     )
     assert.equal(paid?.status, 'paid')
+
+    // A paid payout may later be disputed, but it cannot become failed without
+    // a reversal ledger movement. A paid_at value is evidence that the payment
+    // occurred; only an explicit reversal can neutralize that movement.
+    const disputed = await payouts.transition(
+      ownerId, ownerId, created.payout.id, 'disputed',
+      'Synthetic integration fixture tests a post-payment dispute.',
+      'https://example.com/dispute-statement', now,
+    )
+    assert.equal(disputed?.status, 'disputed')
+    assert.deepEqual(disputed?.allowedNextStatuses, ['paid', 'reversed'])
+    assert.equal(disputed?.allowedNextStatuses.includes('failed'), false)
+    assert.equal(await payouts.transition(
+      ownerId, ownerId, created.payout.id, 'failed',
+      'A previously paid payout cannot be marked failed without a reversal.',
+      'https://example.com/invalid-failed-after-paid', now,
+    ), null)
+
     const reversed = await payouts.transition(
       ownerId, ownerId, created.payout.id, 'reversed',
       'Synthetic integration fixture tests a payout reversal.',
@@ -115,7 +133,7 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
     const payoutRows = await persistedPayouts.list(ownerId)
     assert.equal(payoutRows.length, 1)
     assert.equal(payoutRows[0].status, 'reversed')
-    assert.equal(payoutRows[0].history.length, 3)
+    assert.equal(payoutRows[0].history.length, 4)
     assert.equal((await persistedPayouts.list(otherOwner)).length, 0)
 
     const events = await new FinancialRepository(pool).list(ownerId)
