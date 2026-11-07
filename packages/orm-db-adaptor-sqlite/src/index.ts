@@ -80,41 +80,43 @@ function executeQuery<TRow>(db: SqliteDatabase, request: QueryRequest): QueryRes
 class SqliteTransaction implements DatabaseTransaction {
   readonly id = randomUUID();
   #active = true;
+  readonly #db: SqliteDatabase;
+  readonly #onClose: () => void;
 
-  constructor(
-    private readonly db: SqliteDatabase,
-    private readonly onClose: () => void,
-  ) {}
+  constructor(db: SqliteDatabase, onClose: () => void) {
+    this.#db = db;
+    this.#onClose = onClose;
+  }
 
   get isActive(): boolean {
-    return this.#active && this.db.inTransaction;
+    return this.#active && this.#db.inTransaction;
   }
 
   async query<TRow = Readonly<Record<string, unknown>>>(request: QueryRequest): Promise<QueryResult<TRow>> {
     this.#assertActive();
-    return executeQuery<TRow>(this.db, request);
+    return executeQuery<TRow>(this.#db, request);
   }
 
   async commit(): Promise<void> {
     this.#assertActive();
     try {
-      this.db.exec("COMMIT");
+      this.#db.exec("COMMIT");
     } catch (error) {
-      if (this.db.inTransaction) this.db.exec("ROLLBACK");
+      if (this.#db.inTransaction) this.#db.exec("ROLLBACK");
       throw error;
     } finally {
       this.#active = false;
-      this.onClose();
+      this.#onClose();
     }
   }
 
   async rollback(): Promise<void> {
     if (!this.#active) return;
     try {
-      if (this.db.inTransaction) this.db.exec("ROLLBACK");
+      if (this.#db.inTransaction) this.#db.exec("ROLLBACK");
     } finally {
       this.#active = false;
-      this.onClose();
+      this.#onClose();
     }
   }
 
