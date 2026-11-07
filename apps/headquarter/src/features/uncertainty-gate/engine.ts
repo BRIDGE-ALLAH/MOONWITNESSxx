@@ -21,7 +21,7 @@ export function assessGovernanceReadiness(
   const policyValid = Number.isFinite(policy.minimumEvidenceCoverage) && policy.minimumEvidenceCoverage >= 0 && policy.minimumEvidenceCoverage <= 1 && Number.isFinite(policy.maximumRelativeRange) && policy.maximumRelativeRange >= 0
   const invalidMetrics = input.metrics.filter((metric) => !metricIsValid(metric))
   const missingMetrics = input.metrics.filter((metric) => metric.sourceQuality === 'missing')
-  const coverage = input.requiredEvidenceCount <= 0
+  const coverage = !countsValid || input.requiredEvidenceCount <= 0
     ? 0
     : Math.max(0, Math.min(1, input.verifiedEvidenceCount / input.requiredEvidenceCount))
   const maxRelativeRange = input.metrics.filter(metricIsValid).reduce((maximum, metric) => {
