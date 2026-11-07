@@ -334,7 +334,7 @@
 }
 
 
-  .riot-signal-constellation,
+@layer components {\n  .riot-signal-constellation,
   .riot-decision-trail {
     --riot-experience-accent: var(--primary);
     display: grid;
@@ -697,3 +697,4 @@
     .riot-signal-constellation__node-core,
     .riot-decision-trail__event { transition: none; }
   }
+\n}\n
