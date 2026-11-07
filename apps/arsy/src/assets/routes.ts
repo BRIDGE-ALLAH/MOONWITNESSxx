@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
@@ -99,6 +99,10 @@ export function registerAssetRoutes(app: FastifyInstance, db: DatabasePool, env:
     if (!asset) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Asset was not found.' } })
     try {
       const content = await storage.read(asset.storageKey)
+      const checksum = createHash('sha256').update(content).digest('hex')
+      if (asset.checksumSha256 && checksum !== asset.checksumSha256) {
+        return reply.code(503).send({ error: { code: 'ASSET_CHECKSUM_MISMATCH', message: 'Stored asset content failed SHA-256 verification.' } })
+      }
       return reply.type(asset.mediaType)
         .header('content-disposition', `attachment; filename*=UTF-8''${encodeURIComponent(asset.filename)}`)
         .header('x-content-sha256', asset.checksumSha256 ?? '')
