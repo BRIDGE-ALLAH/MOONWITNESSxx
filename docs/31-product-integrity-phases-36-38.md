@@ -13,10 +13,10 @@
 - `apps/arsy` declared `lint: echo lint-skip`, a success-shaped command that did no linting.
 
 ### Implemented correction
-- The ARSY app owns compilation (`tsc --noEmit false --outDir dist`) and startup (`node dist/index.js`).
+- The ARSY app owns its build/type-check and startup scripts; the runtime uses Node 24's built-in TypeScript type stripping (`node --experimental-strip-types src/index.ts`) rather than delegating lifecycle to arsy-core.
 - The core package no longer advertises app-level `build`, `start`, or `dev` scripts.
 - Runtime host/port are validated through one typed resolver; defaults are container-reachable `0.0.0.0:3001`.
-- The Dockerfile starts the compiled application in production mode.
+- The Dockerfile starts the app-owned production entrypoint with NODE_ENV=production and a container-reachable listener.
 - The misleading lint success stub was removed; type-check remains an actual gate.
 - Docker Compose health checks use Node's built-in `fetch`, avoiding an undeclared `curl` dependency in Alpine images.
 
