@@ -103,7 +103,7 @@ export class WitnessLedger {
   }
 
   events(): readonly WitnessEvent[] {
-    return this.#events.map((event) => Object.freeze({ ...event, payload: deepFreeze(structuredClone(event.payload)), evidenceRefs: Object.freeze([...event.evidenceRefs]) })) as readonly WitnessEvent[];
+    return this.#events.map((event) => Object.freeze({ ...event, payload: deepFreeze(structuredClone(event.payload)), evidenceRefs: Object.freeze([...(event.evidenceRefs ?? [])]) })) as readonly WitnessEvent[];
   }
 
   async verify(): Promise<{ valid: boolean; checked: number; headHash: string; errors: string[] }> {
