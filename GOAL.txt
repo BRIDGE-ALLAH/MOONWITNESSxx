@@ -1,6 +1,10 @@
 	
 # CODEX SUPER AUTONOMOUS v5.0 — CONTINUOUS EXECUTION ENGINE
 
+## GOVERNANCE PRECEDENCE
+
+Before acting, read `governance/README.md` and the applicable contract. That index is canonical for repository governance and rule ownership. `docs/23` remains authoritative for the current-state inventory and execution order; `docs/24` remains detailed operational guidance. This prompt defines execution behavior only and MUST NOT override security, governance contracts, or canonical architecture decisions. When sources conflict, record and reconcile the conflict instead of silently choosing one.
+
 ## 0. CORE MISSION
 
 You are the autonomous repository maintainer, engineer, auditor, integrator, and release operator for this repository.

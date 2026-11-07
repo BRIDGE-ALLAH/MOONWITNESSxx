@@ -41,13 +41,32 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   const notes = []
   const packageNames = new Map()
   const workspacePackages = []
+  const declaredPackageNames = new Set()
+
+  // Pre-index names so script dependency checks do not depend on directory iteration order.
+  for (const workspaceRoot of ['apps', 'packages']) {
+    const entries = await readdir(resolve(root, workspaceRoot), { withFileTypes: true })
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      const manifestPath = `${workspaceRoot}/${entry.name}/package.json`
+      if (await exists(manifestPath)) {
+        const manifest = await readJson(manifestPath)
+        if (manifest.name) declaredPackageNames.add(manifest.name)
+      }
+    }
+  }
 
   const rootPackage = await readJson('package.json')
   if (rootPackage.name !== 'moonwitness') {
     errors.push(`Root package name must be "moonwitness"; found "${rootPackage.name}".`)
   }
+  if (rootPackage.engines?.node !== '>=22') {
+    errors.push('Node.js engine must remain >=22 to match the supported local baseline.')
+  }
   if (rootPackage.packageManager !== 'pnpm@12.16.1') {
-    errors.push('packageManager must remain pinned to pnpm@12.16.1 until the lockfile is deliberately upgraded.')
+    errors.push(
+      'packageManager must remain pinned to pnpm@12.16.1 until the lockfile is deliberately upgraded.'
+    )
   }
 
   const requiredScripts = [
@@ -58,18 +77,26 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     'validate:repo',
     'validate',
     'lockfile:check',
-    'lockfile:refresh'
+    'lockfile:refresh',
+    'format',
+    'lint',
+    'type-check',
   ]
   for (const name of requiredScripts) {
     if (!rootPackage.scripts?.[name]) errors.push(`Missing required root script: ${name}`)
   }
 
   const workspaceConfig = await readText('pnpm-workspace.yaml')
-  if (!workspaceConfig.includes('"apps/*"') || !workspaceConfig.includes('"packages/*"')) {
+  if (
+    !/^\s*-\s*["']apps\/\*["']\s*$/m.test(workspaceConfig) ||
+    !/^\s*-\s*["']packages\/\*["']\s*$/m.test(workspaceConfig)
+  ) {
     errors.push('pnpm-workspace.yaml must include apps/* and packages/*.')
   }
   if (workspaceConfig.includes('"services/*"')) {
-    errors.push('services/* must not be a workspace until its ownership and runtime boundaries are reconciled.')
+    errors.push(
+      'services/* must not be a workspace until its ownership and runtime boundaries are reconciled.'
+    )
   }
 
   for (const workspaceRoot of ['apps', 'packages']) {
@@ -79,6 +106,13 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
       const relativePath = [workspaceRoot, entry.name].join('/')
       const manifestPath = `${relativePath}/package.json`
       if (!(await exists(manifestPath))) {
+        const entries = await readdir(resolve(root, relativePath))
+        if (entries.every((name) => ['todo.md', 'README.md'].includes(name))) {
+          notes.push(
+            `Planning-only folder is not a workspace package until it has a manifest: ${relativePath}.`
+          )
+          continue
+        }
         errors.push(`Workspace directory has no package.json: ${relativePath}`)
         continue
       }
@@ -96,7 +130,9 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
         packageNames.set(manifest.name, manifestPath)
       }
       if (manifest.private !== true) {
-        warnings.push(`Workspace package should remain private until publishing is explicitly designed: ${manifestPath}`)
+        warnings.push(
+          `Workspace package should remain private until publishing is explicitly designed: ${manifestPath}`
+        )
       }
       workspacePackages.push({ path: relativePath, manifest })
 
@@ -104,21 +140,25 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
         manifest.main,
         manifest.module,
         manifest.types,
-        ...flattenExportTargets(manifest.exports)
+        ...flattenExportTargets(manifest.exports),
       ].filter((target) => typeof target === 'string' && target.startsWith('./'))
 
       for (const target of new Set(targets)) {
         const targetPath = `${relativePath}/${target.slice(2)}`
         if (!(await exists(targetPath))) {
-          warnings.push(`Declared package entrypoint does not exist: ${targetPath} (${manifest.name})`)
+          warnings.push(
+            `Declared package entrypoint does not exist: ${targetPath} (${manifest.name})`
+          )
         }
       }
 
       for (const [scriptName, command] of Object.entries(manifest.scripts ?? {})) {
         const matches = String(command).matchAll(/--filter\s+(@[a-zA-Z0-9._/-]+)/g)
         for (const match of matches) {
-          if (!packageNames.has(match[1]) && !workspacePackages.some((item) => item.manifest.name === match[1])) {
-            warnings.push(`${manifest.name} script "${scriptName}" targets unknown workspace package ${match[1]}.`)
+          if (!declaredPackageNames.has(match[1])) {
+            warnings.push(
+              `${manifest.name} script "${scriptName}" targets unknown workspace package ${match[1]}.`
+            )
           }
         }
       }
@@ -126,7 +166,11 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   }
 
   const lockfile = await readText('pnpm-lock.yaml')
-  const importerSection = lockfile.split(/\npackages:\s*\n/, 1)[0]
+  // pnpm 12 may include a package-manager lock document before the workspace lock document.
+  // Use the final top-level packages section so importer checks inspect the workspace document.
+  const packageSectionIndex = lockfile.lastIndexOf('\npackages:\n')
+  const importerSection =
+    packageSectionIndex >= 0 ? lockfile.slice(0, packageSectionIndex) : lockfile
   const missingImporters = workspacePackages
     .map((item) => item.path.split(sep).join('/'))
     .filter((path) => !new RegExp(`^  ${escapeRegExp(path)}:\\s*$`, 'm').test(importerSection))
@@ -172,7 +216,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     counts: { errors: errors.length, warnings: warnings.length, notes: notes.length },
     errors,
     warnings,
-    notes
+    notes,
   }
 
   const lines = [
@@ -184,12 +228,12 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     `- Errors: ${errors.length}`,
     `- Warnings: ${warnings.length}`,
     `- Notes: ${notes.length}`,
-    ''
+    '',
   ]
   for (const [heading, items] of [
     ['Errors', errors],
     ['Warnings', warnings],
-    ['Notes', notes]
+    ['Notes', notes],
   ]) {
     lines.push(`## ${heading}`, '')
     if (items.length === 0) lines.push('- None', '')
@@ -203,7 +247,10 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   if (writeReport) {
     const outputDirectory = resolve(root, '.artifacts')
     await mkdir(outputDirectory, { recursive: true })
-    await writeFile(resolve(outputDirectory, 'repo-audit.json'), `${JSON.stringify(report, null, 2)}\n`)
+    await writeFile(
+      resolve(outputDirectory, 'repo-audit.json'),
+      `${JSON.stringify(report, null, 2)}\n`
+    )
     await writeFile(resolve(outputDirectory, 'repo-audit.md'), markdown)
   }
 

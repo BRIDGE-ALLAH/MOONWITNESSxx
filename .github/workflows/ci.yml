@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
-      - "feat-*"
-      - "fix-*"
-      - "chore-*"
+      - "feat/**"
+      - "fix/**"
+      - "chore/**"
+      - "docs/**"
+      - "refactor/**"
   pull_request:
     branches:
       - main
@@ -27,6 +29,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -49,6 +53,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate repository, formatting, and automation tests
+        env:
+          FORMAT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          FORMAT_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          FORMAT_EXCLUDE: ${{ github.event_name == 'push' && '.github/workflows/refresh-lockfile.yml' || '' }}
         run: pnpm run validate:repo
 
       - name: Upload repository audit

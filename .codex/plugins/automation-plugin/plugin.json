@@ -24,8 +24,8 @@
     },
     {
       "name": "check-staged",
-      "description": "Validate staged changes",
-      "command": "git diff --staged",
+      "description": "Check formatting of staged text and configuration files",
+      "command": "pnpm run check:staged",
       "category": "validation"
     }
   ],

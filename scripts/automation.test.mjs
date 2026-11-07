@@ -13,9 +13,10 @@ test('rejects subjects without a conventional type', () => {
   assert.equal(isValidCommitSubject('feature: add dashboard'), false)
 })
 
+test('accepts subjects at the 72-character limit', () => {
+  assert.equal(isValidCommitSubject(`chore: ${'x'.repeat(65)}`), true)
+})
+
 test('rejects subjects longer than 72 characters', () => {
-  assert.equal(
-    isValidCommitSubject(`chore: ${'x'.repeat(66)}`),
-    false
-  )
+  assert.equal(isValidCommitSubject(`chore: ${'x'.repeat(66)}`), false)
 })

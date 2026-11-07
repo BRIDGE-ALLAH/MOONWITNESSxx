@@ -37,19 +37,19 @@ Do not use `--no-frozen-lockfile` as a routine CI or deployment workaround. The 
 
 ## Common commands
 
-| Command | Purpose |
-|---|---|
-| `pnpm dev` | Start all packages with a dev task |
-| `pnpm dev:headquarter` | Start Headquarter only |
-| `pnpm dev:arsy` | Start ARSY only |
-| `pnpm check:repo` | Run the read-only workspace/governance audit |
-| `pnpm audit:repo` | Write an audit report to ignored `.artifacts/` |
-| `pnpm format` | Format supported repository files |
-| `pnpm format:check` | Verify repository formatting |
-| `pnpm test` | Run Node's built-in automation tests |
-| `pnpm lockfile:check` | Detect lockfile drift without overwriting pre-existing local edits |
-| `pnpm validate:repo` | Run repository integrity, format, and automation tests |
-| `pnpm validate` | Run repository validation, package type-checks, and builds |
+| Command                | Purpose                                                            |
+| ---------------------- | ------------------------------------------------------------------ |
+| `pnpm dev`             | Start all packages with a dev task                                 |
+| `pnpm dev:headquarter` | Start Headquarter only                                             |
+| `pnpm dev:arsy`        | Start ARSY only                                                    |
+| `pnpm check:repo`      | Run the read-only workspace/governance audit                       |
+| `pnpm audit:repo`      | Write an audit report to ignored `.artifacts/`                     |
+| `pnpm format`          | Format supported repository files                                  |
+| `pnpm format:check`    | Verify repository formatting                                       |
+| `pnpm test`            | Run Node's built-in automation tests                               |
+| `pnpm lockfile:check`  | Detect lockfile drift without overwriting pre-existing local edits |
+| `pnpm validate:repo`   | Run repository integrity, format, and automation tests             |
+| `pnpm validate`        | Run repository validation, package type-checks, and builds         |
 
 A command is only a reliable quality gate when the affected package actually defines that capability. Do not add placeholder scripts that return success without checking anything.
 
@@ -57,9 +57,9 @@ A command is only a reliable quality gate when the affected package actually def
 
 Use short-lived branches with one of these prefixes:
 
-- `feat-*` for a new capability.
-- `fix-*` for a defect.
-- `chore-*` for tooling, documentation, refactoring, and maintenance.
+- `feat/*` for a new capability.
+- `fix/*` for a defect.
+- `chore/*` for tooling, documentation, refactoring, and maintenance.
 
 The current default integration target is `main`. Do not assume a `dev` branch exists; if a protected `dev` branch is introduced later, update this policy and CI targets together.
 
@@ -74,6 +74,7 @@ chore(ci): pin workflow toolchain
 Keep the subject at or below 72 characters. Git hooks validate formatting for staged text/config files and commit subject syntax. Hooks must stay local, fast, deterministic, and offline.
 
 Every pull request must explain:
+
 - the user or system problem being solved;
 - the owning app/package and boundaries affected;
 - tests and validation actually run;
@@ -95,4 +96,4 @@ Commits must never bump versions or rewrite `CHANGELOG.md`. Release notes and ve
 - GitHub Actions must use least-privilege `GITHUB_TOKEN` permissions. Never put personal tokens or API secrets in committed files.
 - Local AI commit assistance is optional and must never be part of pre-commit or CI.
 
-See [docs/24](./docs/24-repository-and-automation-governance.md) for the complete automation ownership and escalation rules.
+See [governance/README.md](./governance/README.md) for canonical rule contracts and [docs/24](./docs/24-repository-and-automation-governance.md) for detailed operational automation guidance.
