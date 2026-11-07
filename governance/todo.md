@@ -36,7 +36,7 @@
 ### P0.3 Lockfile
 - [x] Check mode is frozen/read-only and cannot rewrite lockfile.
 - [x] Refresh is explicit and refuses pre-existing lockfile edits.
-- [ ] Refresh lockfile for all workspace manifests, including `apps/arsy` `pg` dependency.
+- [x] Refresh lockfile for all workspace manifests, including `apps/arsy` `pg` dependency (generated with pinned pnpm 12.16.1; bot commit `c450ee5`).
 - [ ] Verify importer parity, lockfile check, and frozen install. **Evidence:** reviewed lockfile diff + CI.
 
 ### P0.4 CI/local
@@ -53,7 +53,7 @@
 - [ ] Full workspace type-check/build only after package scripts/entrypoints are real.
 - [ ] Review diff, secrets, changed-file scope; record CI SHA/URL.
 
-**Status:** implementation started. First CI run exposed two baseline issues: lockfile drift (apps/arsy adds pg) and planning-only packages/assets folder without a manifest. The audit now treats a TODO-only folder as planning material and pre-indexes workspace package names. Lockfile refresh, rerun, local execution, and admin rules remain open.
+**Status:** audit passes. Lockfile was regenerated with pinned pnpm 12.16.1 and committed by the one-time branch-scoped action; CI frozen-check/install validation and administrator rules remain open.
 
 ## Phase 1 — Governance authority and rule contracts
 **Goal:** one authority; every hard rule has an owner and enforcement path. **Dependencies:** Phase 0 identity/commands. **Exit:** owner-reviewed contracts and rule-to-enforcement map.
