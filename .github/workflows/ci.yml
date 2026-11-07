@@ -40,6 +40,9 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      - name: Test deterministic repository intelligence tools
+        run: pnpm run test:repo-lab
+
       - name: Generate repository audit report
         run: pnpm run audit:repo
 
@@ -116,6 +119,7 @@ jobs:
         uses: pnpm/action-setup@v6
         with:
           version: 12.16.1
+          cache: pnpm
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
