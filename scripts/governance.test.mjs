@@ -35,9 +35,13 @@ async function createFixture() {
   )
   await put(
     'governance/enforcement.md',
-    ['# Enforcement', '- **REP-01** — Example rule', '  - Enforcement: deterministic test', '  - State: CI active', ''].join(
-      '\n'
-    )
+    [
+      '# Enforcement',
+      '- **REP-01** — Example rule',
+      '  - Enforcement: deterministic test',
+      '  - State: CI active',
+      '',
+    ].join('\n')
   )
   await put(
     'apps/headquarter/package.json',
