@@ -28,9 +28,9 @@ This plugin provides clickable automation commands for common repository mainten
 - **Command:** pnpm run lockfile:check
 - **Category:** Maintenance
 
-### 4. Check Staged Changes
+### 4. Check Staged Formatting
 - **Name:** check-staged
-- **Description:** Validate staged changes follow project conventions
+- **Description:** Validate formatting of staged text/config files
 - **Command:** pnpm run check:staged
 - **Category:** Validation
 
