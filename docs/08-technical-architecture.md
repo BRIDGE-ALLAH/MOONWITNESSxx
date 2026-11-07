@@ -1,75 +1,191 @@
-# 08 — Technical Architecture: Headquarter, ARSY, ORM & SQL Providers
+# 08 — Technical Architecture: Headquarter, ARSY, ORM & Providers
 
-**Status:** Approved target architecture | **Version:** 1.3 | **Updated:** 2026-11-07
+**Status:** Approved target architecture | **Version:** 1.4 | **Updated:** 2026-11-07
 
 ## 1. Canonical decisions
-RIOTWORKS uses one backend (ARSY), one metadata-driven ORM, one provider-neutral database contract, and relational SQL providers.
-- PostgreSQL is the recommended production provider.
-- libSQL is the lightweight SQLite-compatible provider for local, embedded, and single-node profiles.
-- Kysely is an internal query/dialect tool inside SQL adapters, not a second ORM.
-- RIOTWORKS ORM remains the only model registry, addon system, and desired-schema source.
-- PocketBase is not part of the v1 persistence architecture.
-- Schema changes use code-first model declarations and ARSY's private programmatic schema API; routine hand-authored migration files are not required.
 
-## 2. Applications
-Headquarter is the frontend and operator experience. It consumes typed ARSY contracts and never connects directly to databases or receives database credentials.
-ARSY is the Fastify application/composition root. It loads configuration, security, selected database adapter, ORM, trusted addons, services, routes, and private operations APIs.
+MOONWITNESS is the canonical repository. RIOTWORKS is a product/business division within it. The platform has one canonical backend application (ARSY), one TypeScript-native declaration-based ORM, one provider-neutral persistence contract, and explicit infrastructure/connector boundaries.
+
+- Model definitions are programmatic TypeScript declarations inside addon/module code. There is no separate manually maintained schema file or second schema language.
+- ARSY composes declarations into a deterministic model registry during **System Mode**. Runtime metadata is derived from code; it is not an independently edited source of truth.
+- **SQLite is the ARSY System Database** for control-plane state, module/plugin installation state, registry fingerprints/snapshots, system configuration, and system audit. Its single-writer constraint is respected.
+- **PostgreSQL is the primary Business Database** for durable business records and concurrent application workloads.
+- Redis is shared runtime infrastructure for cache, coordination, locks, and queue transport where required. It is not durable business storage or the canonical model registry.
+- Local disk and S3-compatible object storage own binary objects; business databases own attachment metadata and access policy.
+- Telegram and similar services are connectors, not database providers.
+- Kysely is private query/dialect infrastructure inside SQL adapters, not a second ORM.
+- PocketBase is not part of the v1 persistence architecture.
+- Schema synchronization is programmatic and controlled by ARSY System Mode. Normal requests and Runtime Mode never perform schema DDL.
+
+libSQL may be evaluated as an optional lightweight business-data provider for a deliberate local/single-node profile. It does not replace the SQLite System Database contract or PostgreSQL's production Business Database role.
+
+## 2. Applications and runtime ownership
+
+- **Headquarter:** Next.js frontend and operator experience. It consumes versioned ARSY contracts and never connects directly to databases or receives database credentials.
+- **ARSY:** Fastify API and application composition root. It loads configuration, authentication/authorization, provider capabilities, ORM registry, trusted modules, application services, routes, and private operator APIs.
+- **Worker:** optional future deployable app with its own lifecycle. It consumes jobs/events and invokes application services; it does not duplicate business logic.
+- **ARSY Core:** reusable Fastify lifecycle, configuration, logging, errors, correlation, health/readiness, and shutdown primitives. It does not own business models or SQL dialects.
 
 ## 3. Package ownership
+
 | Package | Owns | Must not own |
 |---|---|---|
-| packages/arsy-core | Fastify lifecycle, plugins, runtime context, logging, errors, health | Business models or SQL |
-| packages/orm | Model metadata, registry, addon composition, domain/query AST, typed model API, lifecycle | SQL dialect, connections, physical DDL |
-| packages/orm-db | Connections, transactions, unit-of-work, schema reconciliation, schema ledger, data-upgrade coordination | Provider SQL or domain fields |
-| packages/orm-db-adaptor | Provider-neutral CRUD/query/schema contracts, capabilities, registry | Concrete drivers |
-| packages/orm-db-adaptor-libsql | libSQL connection, SQLite mapping, introspection, DDL, query execution | ORM declarations |
-| packages/orm-db-adaptor-postgres | PostgreSQL pool, mapping, introspection, DDL, query execution | ORM declarations |
-| packages/orm-addon-base | Minimal BaseEntity, optional lifecycle mixins, AuditTrail | Universal business fields |
-| packages/orm-addon-project | Project models and services | Persistence/audit infrastructure |
-| packages/orm-addon-intelligent | AI/agent models and services | Plaintext provider secrets |
-| packages/types | Framework-neutral primitives | Framework/database runtime |
+| apps/headquarter | Next.js UI, browser state, ARSY API client | DB connections, ORM access, DB credentials |
+| apps/arsy | Fastify composition, routes, application services | Duplicate core internals or direct Headquarter concerns |
+| packages/arsy-core | Fastify lifecycle/plugins, runtime context, logging, errors, health | Business models or SQL |
+| packages/orm | Declarations, field metadata, registry, inheritance/extensions, domains, env/recordset contracts | SQL dialect, connections, physical DDL |
+| packages/orm-db | Transactions, unit-of-work, schema planning/reconciliation, ledger, upgrade orchestration | Provider-specific SQL syntax or business fields |
+| packages/orm-db-adaptor | Provider-neutral persistence contracts and capability negotiation | Concrete drivers |
+| packages/orm-db-adaptor-sqlite | SQLite System Database mapping, introspection, DDL and query execution | Business addon declarations |
+| packages/orm-db-adaptor-postgres | PostgreSQL Business Database pool, mapping, introspection, DDL and query execution | ORM declarations |
+| packages/orm-addon-base | Independently declared foundational addons | Project/AI business fields |
+| packages/orm-addon-project | Project domain models and services | Generic persistence/security/audit infrastructure |
+| packages/orm-addon-intelligent | AI/agent domain models and services | Plaintext provider secrets |
+| packages/types | Framework/database-neutral primitives | Framework/database runtime |
 | packages/contract | Runtime API schemas and inferred wire types | Persistence logic |
-| packages/lint | Tooling and import boundaries | Runtime code |
 
-Keep repository package spelling "adaptor" consistently.
+Keep the repository package spelling `adaptor` consistently where existing paths use it.
 
 ## 4. Dependency direction
-Headquarter → contract/types/UI. ARSY → arsy-core, contract, types, ORM/database packages, installed addons. Addons → ORM and declared addon dependencies. ORM → neutral types/interfaces. orm-db → adapter contract/types. Concrete SQL adapters → adapter contract, Kysely, own driver. Base addon → ORM only.
-Forbidden: Headquarter importing DB drivers, credentials, schema-admin privileges; addons importing Kysely/raw SQL; ORM importing concrete providers; private cross-addon imports; app-to-app source imports; circular dependencies.
 
-## 5. ORM and query responsibilities
-ORM owns metadata, registry, extension composition, validation, relations, domain/query AST, typed CRUD, lifecycle, environment/context, capability checks. It does not own raw SQL, connections, provider catalogs, physical DDL, or SQL compilation. SQL adapters use Kysely internally; Kysely types/instances never leak into addon APIs. Do not introduce Drizzle or another ORM as a parallel schema/model authority.
+Headquarter → contract/types/UI. ARSY → ARSY Core, contract, types, ORM/database runtime, providers, and enabled trusted addons. Addons → ORM and declared addon dependencies. ORM → neutral types/interfaces. ORM DB runtime → provider-neutral adapter contract. Concrete adapters → adapter contract, Kysely (if selected), and their own driver.
 
-## 6. Database providers
-PostgreSQL: recommended for production concurrent agents/workers, ledger writes, reporting, multiple ARSY processes, and multi-instance deployment.
-libSQL: local quickstart, embedded/self-hosted single-node profiles, demos, and low-write workloads. It retains SQLite's single-writer constraint; a remote URL does not turn it into PostgreSQL.
-Policy: PostgreSQL production default; libSQL lightweight local/single-node; CI runs shared contract tests against both; capability differences are declared and tested. Same model API does not imply identical concurrency or performance. Changing connection string does not move data.
+Forbidden dependencies:
+- Headquarter → database drivers, credentials, schema-admin privileges, or direct ORM runtime.
+- Addons → Kysely builders, raw SQL, or concrete database drivers.
+- ORM → concrete providers.
+- Provider adapters → business addon classes.
+- Private cross-addon imports, app-to-app source imports, and circular dependencies.
 
-## 7. Programmatic schema reconciliation
-Trusted TypeScript addon models are the only desired-schema source. The reconciler introspects actual schema, calculates a deterministic plan, classifies changes, applies permitted safe DDL through the adapter, verifies results, and records receipts.
-SQLite/libSQL and PostgreSQL do not expose one universal REST schema API. ARSY exposes a private control-plane API; the adapter applies provider-native schema operations through its DB connection. This removes routine handwritten migration files, not physical DDL.
+## 5. Programmatic declaration-based ORM
 
-## 8. Private schema operations API
-- POST /internal/admin/schema/plan — read-only plan.
-- POST /internal/admin/schema/reconcile — apply permitted safe changes.
-- POST /internal/admin/schema/verify — verify desired/actual schema.
-- GET /internal/admin/schema/status — fingerprints, last run, lock, drift.
-Require deployment/operator service identity and least privilege. Normal Headquarter sessions cannot mutate schema. CLI, CI, release job, and HTTP entry point call the same SchemaReconciliationService. Apply schema once in a serialized setup/release task, never from every ARSY replica or ordinary request.
+The ORM follows Odoo's useful architectural ideas—model registry, module dependencies, extension, recordsets, environment/context, and reusable abstract mixins—without cloning Odoo or promising API compatibility.
+
+The canonical v1 declaration is TypeScript source code. Preferred shape:
+
+```ts
+import { Model, fields } from "@riotworks/orm";
+
+export class Customer extends Model {
+  static modelName = "crm.customer";
+  static module = "crm";
+
+  static fields = {
+    name: fields.Char({ required: true, maxLength: 160 }),
+    email: fields.Char({ index: true }),
+    active: fields.Boolean({ default: true }),
+    creditLimit: fields.Decimal({ precision: 18, scale: 2 }),
+    companyId: fields.ManyToOne("res.company", {
+      onDelete: "restrict",
+    }),
+  };
+}
+```
+
+The declaration remains in the model/module source; it is not a separate schema file. The ORM normalizes declarations into immutable metadata. Property decorators may be considered later as optional syntax sugar, but must normalize to the same metadata contract and are not required for v1.
+
+ORM responsibilities:
+- model/field/relation metadata and persistent/abstract/transient model kinds;
+- deterministic addon/module registry, inheritance and extension composition;
+- constraints, defaults, computed/related/translated fields;
+- safe domain/query AST and typed CRUD/recordsets;
+- lifecycle hooks, validation, environment/context, cache/prefetch;
+- integration with ACL, record rules, field policies and tenant scope.
+
+ORM does not own connections, SQL dialects, physical DDL, or provider-specific query compilation. Kysely may be used internally by SQL adapters only. Do not introduce Prisma, Drizzle, or another ORM as a parallel model registry or desired-schema authority.
+
+### Environment and recordsets
+
+`env` is the scoped execution context: transaction/unit-of-work, authenticated principal, workspace/tenant, optional company, permissions, locale/timezone, trace/request metadata, and approved ARSY service capabilities.
+
+`recordset` is the typed collection facade for one model and one environment. It has predictable empty/single/multiple behavior, batch operations, relation access, and controlled prefetch. Recordsets from different tenants, registries, principals, or transactions cannot be mixed implicitly.
+
+Prefer explicit `env.models` access as the foundational API. Static/class convenience methods may be added later but must delegate to the active environment and must not hide transaction or security context.
+
+## 6. System Mode and Runtime Mode
+
+**System Mode** is an explicit install/upgrade/reconciliation lifecycle, not a request middleware.
+
+1. Initialize the SQLite System Database and core configuration.
+2. Discover installed trusted packages and validate signatures, manifests, compatibility, and permissions.
+3. Resolve addon/module dependency graph.
+4. Register model declarations and compose the deterministic registry.
+5. Inject BaseEntity metadata exactly once and validate fields, relations, extensions, policies, and conflicts.
+6. Generate a registry fingerprint and desired persistence snapshot.
+7. Compare desired state with actual database state and produce a deterministic plan.
+8. Apply only permitted changes under a serialized system/deployment lock.
+9. Run approved typed semantic upgrade handlers when required.
+10. Verify persistence state and record an immutable synchronization receipt.
+11. Activate Runtime Mode with the verified registry.
+
+**Runtime Mode** serves API requests and worker jobs using an already-built, verified, immutable registry. It executes model operations and transactions; it does not discover arbitrary code or run schema DDL. API replicas must not race to reconcile schema on startup. Readiness becomes maintenance/degraded/incompatible when installed registry and required database state disagree.
+
+## 7. Database and infrastructure providers
+
+| Capability | Primary responsibility | Notes |
+|---|---|---|
+| SQLite | ARSY System Database | Control-plane state; one serialized writer; persistent local volume; backup/integrity checks |
+| PostgreSQL | Business Database | Primary durable business records; concurrent API/worker transactions |
+| Redis | Runtime infrastructure | Shared cache, locks, coordination, queue transport; not authoritative business storage |
+| Local disk | Local file staging | Temporary/local persistence only unless an explicit durable deployment policy exists |
+| S3-compatible storage / Cloudflare R2 | Object storage | Durable binary objects; database stores object key, checksum, metadata, access policy |
+| Telegram | Connector | Bot/webhook/notification/file-transfer integration; never a database abstraction |
+
+SQLite and PostgreSQL have distinct ownership. Do not assume a distributed transaction across them. Cross-boundary work uses explicit orchestration, idempotency, and outbox patterns where appropriate.
+
+## 8. Programmatic schema reconciliation
+
+Trusted TypeScript declarations are the only desired model/schema source. The registry produces a normalized desired persistence snapshot. The reconciler introspects actual schema, calculates a deterministic plan, classifies risk, applies permitted provider-native operations, verifies results, and records receipts.
+
+- Additive, deterministic, non-destructive changes may be eligible for automatic application.
+- Destructive changes, type narrowing, relation semantic changes, data transformations, and drops require explicit operator approval and recovery readiness.
+- Removing a declaration or disabling an addon never silently drops stored tables/columns/data.
+- Semantic data upgrades use versioned TypeScript handlers owned by the module; no routine handwritten SQL migration-file workflow is required.
+- Schema writes run in one serialized System Mode/release process, not every API/Worker replica.
+
+Private operator API contract:
+- `POST /internal/admin/schema/plan` — read-only deterministic plan.
+- `POST /internal/admin/schema/reconcile` — authorize and apply permitted changes.
+- `POST /internal/admin/schema/verify` — verify actual state.
+- `GET /internal/admin/schema/status` — fingerprints, drift, last receipt and lock status.
+
+The adapter executes provider-native DDL through its own database connection. This is not a claim that SQLite and PostgreSQL expose a common REST schema endpoint. Require deployment/operator identity and least-privilege credentials. Normal Headquarter sessions cannot mutate schema.
 
 ## 9. BaseEntity and audit
-The authoritative BaseEntity contains exactly id, createdAt, createdById, updatedAt and updatedById. For v1 SQL providers ARSY generates UUID IDs; adapters normalize libSQL TEXT and PostgreSQL UUID to the same opaque string contract. createdAt/updatedAt are UTC instants; createdById/updatedById reference the canonical principal and are set only from trusted server context.
-Ownership attribution beyond creator/updater, archive, version, soft delete, toggleable active/enabled, workspace scope and company scope remain explicit opt-in mixins or addon fields. Business state is domain-owned; do not inject universal active.
-AuditEvent is a separate append-oriented audit model/service, not a replacement for BaseEntity actor metadata. SQL business mutation and required audit insert share one transaction. External side effects use a transactional outbox.
 
-## 10. Runtime, security, testing
-Fastify routes delegate to application services. Provide health/readiness, versioned APIs, private schema operations, structured logs, request correlation, centralized validation/errors, graceful shutdown. Keep DB credentials server-side; separate runtime and schema-apply privileges where possible. Preserve unowned tables. Require backup/restore validation before destructive changes. Test both adapters for CRUD, relations, constraints, transactions, audit atomicity, schema sync, drift, recovery, and capability differences.
+Every persisted model receives exactly five ORM-managed fields: `id`, `createdAt`, `createdById`, `updatedAt`, and `updatedById`. Actor attribution comes from trusted server-side Environment context, never an untrusted client payload. Bootstrap/import/system actors must be explicit or have documented null provenance.
 
-This is a target architecture contract, not a claim that packages already exist.
+Do not universally add active/enabled, archive, soft-delete, revision, workspace/company scope, owner, display name, or arbitrary metadata. Those remain explicit mixins or owning-addon fields.
 
+AuditEvent is separate from BaseEntity actor metadata. Required audit writes for a business mutation share its PostgreSQL transaction. External side effects use a transactional outbox.
 
-## 10. v1.3 base-platform clarification (supersedes older minimal summaries)
-BaseEntity is not the complete base platform. The universal persisted metadata is id, createdAt, createdById, updatedAt and updatedById. The source package packages/orm-addon-base contains independently declared manifests for base.core, identity, security, workspace, optional company, audit, events, optional communication/activity, attachment, sequence, settings, localization, transient, import-export, optional integration and taxonomy. The ORM target includes persistent/abstract/transient models, computed/related/translated fields, deterministic extension, domain AST, recordsets, prefetch/cache, ACL/record rules and field policies. docs/22 is canonical where earlier sections are less detailed.
+## 10. Security, runtime and testing
 
+Fastify routes delegate to application services. ORM models are not automatically public HTTP APIs. Enforce model ACL, record rules, field policies, tenant scope, and relation traversal checks on every supported operation. Secrets live in a secret manager; records store references only. Audit/logging redact secrets and sensitive payloads.
 
-## 11. Current repository implementation status
-The canonical repository snapshot and implementation gaps are recorded in docs/23. The tracked code currently has thin Headquarter and ARSY prototypes and several utility packages. ORM, orm-db, SQL adapters and Base Platform addons are not implemented. apps/headquarter package metadata and apps/arsy/arsy-core dependency wiring require repair before feature development. Treat docs/23 as the authoritative execution plan.
+Provide health/readiness, versioned contracts, private schema operations, structured logs, request correlation, centralized validation/errors, graceful shutdown, backups, and restore drills. Test provider capabilities, transactions, audit atomicity, schema idempotency/drift/recovery, tenant isolation, and plugin trust boundaries.
+
+## 11. Canonical references and status
+
+- Detailed Base Platform and ORM capability matrix: `docs/22-base-platform-and-orm-capability-blueprint.md`.
+- Actual repository inventory, gaps, and execution order: `docs/23-repository-audit-and-current-execution-plan.md`.
+- Odoo reference concepts: https://www.odoo.com/documentation/master/developer/reference/backend/orm.html
+- Kysely (adapter-internal only): https://kysely.dev/docs/getting-started
+
+This document describes the approved target architecture, not a claim that the ORM, database runtime, or addons are already implemented.
+
+## 12. Glossary
+
+- **Model:** named business/system record type declared in TypeScript.
+- **Field:** typed property descriptor contributing metadata and runtime behavior to a model.
+- **Module:** installable business capability with a manifest, dependencies, declarations, services and policies.
+- **Addon:** a versioned unit contributing one or more modules or extensions.
+- **Plugin:** installable package/integration unit with trust level, permissions, lifecycle and one or more capabilities.
+- **Provider:** infrastructure implementation of a capability such as database, cache, object storage or queue.
+- **Registry:** immutable runtime composition of enabled module declarations and extensions.
+- **Environment (`env`):** scoped execution context containing identity, tenant, transaction, policy and service access.
+- **Recordset:** typed collection of model records bound to one Environment.
+- **System Mode:** controlled discovery, composition, installation, upgrade and reconciliation lifecycle.
+- **Runtime Mode:** normal API/worker execution against a verified registry.
+- **Schema Plan:** deterministic proposed physical database changes derived from the registry.
+- **Upgrade Handler:** versioned TypeScript transformation for semantic data changes.
