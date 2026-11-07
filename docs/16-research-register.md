@@ -45,3 +45,32 @@ The individual ingredients are established research directions. MOONWITNESS shou
 
 ### New product hypothesis: Evidence Flight Recorder
 Package an independently verifiable incident bundle: anchored event prefix + claim-genome branch + policy decision + counterfactual sensitivity report + drift alerts. Cross-vendor portability and cryptographically signed provenance may differentiate it, but this is a hypothesis, not a world-first claim. Requires signed checkpoint implementation, interoperability study, adversarial benchmark and legal prior-art review.
+
+
+## 9. Temporal trust, signed provenance and agent memory (2026-11-08)
+
+### Research papers / technical prior art
+- **Quipu: A Governed Bitemporal Knowledge Graph Store** (arXiv:2608.16813, 17 Aug 2026): https://arxiv.org/abs/2608.16813 — directly relevant prior art for bitemporal facts, trust labels, signed verdicts and governance-as-query. Our current M7 is a small in-memory bitemporal projection, not a Quipu-equivalent governed store.
+- **TRACE: Tamper-Resistant Accountability and Cryptographic Evidence for Multi-Agent AI Systems** (IEEE BigDataSecurity 2026): https://doi.org/10.1109/BigDataSecurity69476.2026.00021 — provenance graph, cryptographic commitments, Merkle commitments and historical reconstruction. Important prior art for signed checkpoints and flight recorder.
+- **STALE: Can LLM Agents Know When Their Memories Are No Longer Valid?** (arXiv:2605.06527): https://arxiv.org/abs/2605.06527 — tests implicit conflicts, state resolution and downstream adaptation; motivates explicit invalidation and propagation tests.
+- **Agent Zero Memory: Provenance-Aware Long-Term Memory for LLM Agents** (arXiv:2608.29606): https://arxiv.org/abs/2608.29606 — parallel episodic, associative and documentary memory structures with citation-locked retrieval; direct comparison target.
+- **From Agent Traces to Trust: A Survey of Evidence Tracing and Execution Provenance in LLM Agents** (2026): https://github.com/xiaoqi-7/Agent-Tracing-Survey — taxonomy for trace sources, provenance relations, runtime safety, recovery and privacy-aware audit.
+- **MuSK: Multi-scale knowledge learning for provenance-graph anomaly detection** (Computer Networks, Oct 2026): https://doi.org/10.1016/j.comnet.2026.112728 — motivates graph-level anomaly scoring beyond simple node-level staleness.
+
+### Reddit practitioner scan (anecdotal, not peer-reviewed)
+- Stale facts continue to be trusted after state changes: https://www.reddit.com/r/AI_Agents/comments/1wg41et/the_memory_trust_gap_why_your_agent_acts_on_stale/
+- Memory should refuse unsupported claims and preserve deletion evidence: https://www.reddit.com/r/AI_Agents/comments/1vxotwh/i_gave_my_agents_a_memory_that_refuses_to/
+- Stale repository facts remain retrievable after code changes: https://www.reddit.com/r/AI_Agents/comments/1u4o1jj/nobody_talks_about_this_but_my_agents_memory/
+- Superseded facts remain equally retrievable without explicit suppression: https://www.reddit.com/r/AI_Agents/comments/1uxwp0i/after_a_year_building_agent_memory_im_convinced/
+
+### GitHub trend / prior-art scan
+- 47-repository agentic knowledge-base survey: https://github.com/irresi/awesome-agentic-knowledge-base — reports Graphiti bitemporal edges, append-only event logs, signed memory capsules, local-first/no-DB designs and multiple storage patterns. Treat the survey as a lead list, not an independent benchmark.
+- GitHub knowledge-graph trend snapshot: https://github.locker/topics/knowledge-graph — auto-ontology, Graphify and Hindsight are relevant fast-moving projects; star velocity is not proof of technical quality.
+- AI memory trend snapshot: https://gittrend.io/trending/ai-memory — useful discovery signal for agent-memory projects; verify actual source code and licenses before adoption.
+
+### New ideas to validate (not world-first claims)
+1. **Revocation Propagation Graph:** a source revocation should invalidate every dependent claim, summary, plan, cached answer and pending action, with proof that the invalidation reached all projections.
+2. **Proof-Carrying Memory:** every retrieved memory carries a compact proof path (source → extraction → claim → revision → current validity) and the runtime refuses to act when the proof is incomplete.
+3. **Adversarial Memory Integrity Benchmark:** reproduce deletion, rollback, reorder, replay, fork and backup-restore attacks; publish machine-readable verdicts so third parties can reproduce results.
+
+The three prototypes M7–M9 are deliberately bounded. M7 is a claim projection, M8 a signed sequence/head checkpoint, M9 a deterministic replay bundle. They are not a production database, complete provenance standard, or KMS integration.
