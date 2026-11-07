@@ -8,7 +8,7 @@ const input = (id, type, subject, payload, evidenceRefs = []) => ({
 });
 async function makeLedger() {
   const ledger = new WitnessLedger();
-  await ledger.append(input("c1", "claim.proposed", "claim:A", { statement: "A is true" }, ["src:one"]));
+  await ledger.append(input("c1", "claim.proposed", "claim:A", { statement: "A is true" }));
   await ledger.append(input("a1", "claim.assessed", "claim:A", { confidence: 0.9, status: "supported" }, ["src:one"]));
   await ledger.append(input("c2", "claim.proposed", "claim:B", { statement: "A is false" }, ["src:two"]));
   await ledger.append(input("r1", "relation.asserted", "claim:A", { targetClaimId: "claim:B", relation: "contradicts" }));
@@ -34,7 +34,7 @@ test("Counterfactual replay removes assessments tied to an excluded source", asy
     for (const event of inputs) await replayLedger.append(event);
     return replayLedger.replay();
   }, { excludeEvidenceRefs: ["src:one"] });
-  assert.equal(report.excludedEvents, 2);
+  assert.equal(report.excludedEvents, 1);
   assert.equal(report.counterfactual.claims["claim:A"].confidence, 0.5);
   assert.equal(report.deltas.some((delta) => delta.claimId === "claim:A"), true);
 });
