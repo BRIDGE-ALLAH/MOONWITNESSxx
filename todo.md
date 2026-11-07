@@ -1029,3 +1029,10 @@ See `docs/34-phase-9-system-mode-control-plane.md`. Implementation source exists
 - [ ] Latest Phase 8 CI revision adds PostgreSQL service-backed provider/ARSY integration tests; confirm these are executed and passing (not skipped).
 
 Evidence: https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42395999916
+
+
+### Phase 9 CI execution note
+
+- [!] First Phase 9 CI run 541 reached repository lint and failed on one unused destructuring binding in the snapshot digest helper; that binding was removed in commit `c932363ebc08c6e0c97ac38ef7c152f9be4c11ab`.
+- [!] Follow-up PR workflow run 554 was cancelled before checkout/validation completed; it provides no verification evidence.
+- [ ] Obtain a fresh successful repository-integrity and full-workspace CI run for the latest Phase 9 head before treating the store package as verified.
