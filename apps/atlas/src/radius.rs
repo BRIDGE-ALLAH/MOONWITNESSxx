@@ -53,6 +53,8 @@ pub struct ActiveSession {
     pub acctsessiontime: Option<i64>,
     pub acctinputoctets: Option<i64>,
     pub acctoutputoctets: Option<i64>,
+    pub acctinputgigawords: Option<i64>,
+    pub acctoutputgigawords: Option<i64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -275,7 +277,7 @@ pub async fn delete_subscriber(username: &str) -> Result<bool, sqlx::Error> {
 
 pub async fn active_sessions() -> Result<Vec<ActiveSession>, sqlx::Error> {
     sqlx::query_as::<_, ActiveSession>(
-        "SELECT acctsessionid, username, nasipaddress, framedipaddress, CAST(acctstarttime AS CHAR) AS acctstarttime, acctsessiontime, acctinputoctets, acctoutputoctets FROM radacct WHERE acctstoptime IS NULL ORDER BY acctstarttime DESC LIMIT 500",
+        "SELECT acctsessionid, username, nasipaddress, framedipaddress, CAST(acctstarttime AS CHAR) AS acctstarttime, acctsessiontime, acctinputoctets, acctoutputoctets, acctinputgigawords, acctoutputgigawords FROM radacct WHERE acctstoptime IS NULL ORDER BY acctstarttime DESC LIMIT 500",
     )
     .fetch_all(radius_db::pool().await?)
     .await
@@ -285,7 +287,7 @@ pub async fn accounting_summary() -> Result<AccountingSummary, sqlx::Error> {
     let pool = radius_db::pool().await?;
     let (total_sessions, active_sessions, input_octets, output_octets) =
         sqlx::query_as::<_, (i64, i64, i64, i64)>(
-            "SELECT CAST(COUNT(*) AS SIGNED), CAST(SUM(CASE WHEN acctstoptime IS NULL THEN 1 ELSE 0 END) AS SIGNED), CAST(COALESCE(SUM(acctinputoctets), 0) AS SIGNED), CAST(COALESCE(SUM(acctoutputoctets), 0) AS SIGNED) FROM radacct",
+            "SELECT CAST(COUNT(*) AS SIGNED), CAST(SUM(CASE WHEN acctstoptime IS NULL THEN 1 ELSE 0 END) AS SIGNED), CAST(COALESCE(SUM(COALESCE(acctinputoctets, 0) + COALESCE(acctinputgigawords, 0) * 4294967296), 0) AS SIGNED), CAST(COALESCE(SUM(COALESCE(acctoutputoctets, 0) + COALESCE(acctoutputgigawords, 0) * 4294967296), 0) AS SIGNED) FROM radacct",
         )
         .fetch_one(pool)
         .await?;

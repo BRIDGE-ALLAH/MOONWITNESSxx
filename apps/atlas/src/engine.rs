@@ -80,17 +80,16 @@ pub fn validate(input: &EngineWriteRequest) -> Result<(), &'static str> {
             "endpoint scheme must match engine type and must not contain embedded credentials",
         );
     }
-    if let Some(key) = &input.secret_env_key {
-        if !key.starts_with("ATLAS_ENGINE_SECRET_")
+    if let Some(key) = &input.secret_env_key
+        && (!key.starts_with("ATLAS_ENGINE_SECRET_")
             || key.len() > 128
             || !key
                 .chars()
-                .all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit() || ch == '_')
-        {
-            return Err(
-                "secret_env_key must be an environment variable named ATLAS_ENGINE_SECRET_*",
-            );
-        }
+                .all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit() || ch == '_'))
+    {
+        return Err(
+            "secret_env_key must be an environment variable named ATLAS_ENGINE_SECRET_*",
+        );
     }
     Ok(())
 }

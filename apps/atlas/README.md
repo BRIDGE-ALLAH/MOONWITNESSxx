@@ -1,148 +1,329 @@
-# ATLAS
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 
-**DNS, RADIUS & Observability Control Plane** for MOONWITNESS.
+use crate::radius_db;
 
-ATLAS manages DNS, RADIUS, and observability engines, network inventory, desired state, reconciliation, and operational visibility. It is a control plane—not a DNS server, RADIUS protocol server, syslog receiver, metrics database, or log analytics engine.
+#[derive(Debug, Serialize, FromRow)]
+pub struct Nas {
+    pub id: i64,
+    pub nasname: String,
+    pub shortname: Option<String>,
+    pub nas_type: Option<String>,
+    pub ports: Option<i32>,
+    pub description: Option<String>,
+    pub secret_configured: bool,
+}
 
-## Architecture boundary
+#[derive(Debug, Deserialize)]
+pub struct NasWriteRequest {
+    pub nasname: String,
+    pub shortname: Option<String>,
+    #[serde(default = "default_nas_type")]
+    pub nas_type: String,
+    pub ports: Option<i32>,
+    pub secret: String,
+    pub description: Option<String>,
+}
 
-- **ARSY** owns ecosystem identity, authorization, policy, approval, orchestration, and canonical audit.
-- **ATLAS** owns DNS/RADIUS/observability configuration management, inventory, engine adapters, operational workflows, and reconciliation.
-- **AEGIS** executes infrastructure provisioning and lifecycle operations.
-- **External engines** own data-plane work: PowerDNS Authoritative, Unbound, dnsdist, FreeRADIUS, VictoriaMetrics, VictoriaLogs, and log collectors.
+fn default_nas_type() -> String {
+    "other".to_string()
+}
 
-ATLAS can run standalone. When integrated, it must honor ARSY governance and delegate infrastructure execution to AEGIS. ATLAS does not become a competing identity or governance plane.
+#[derive(Debug, Serialize, FromRow)]
+pub struct Subscriber {
+    pub username: String,
+}
 
-## Runtime and dependencies
+#[derive(Debug, Deserialize)]
+pub struct SubscriberWriteRequest {
+    pub username: String,
+    pub password: String,
+    pub groupname: Option<String>,
+    #[serde(default = "default_credential_mode")]
+    pub credential_mode: String,
+}
 
-- Rust 2024, minimum Rust 1.94
-- Loco.rs 1.3 with Axum handlers
-- MariaDB 11.4 for transactional control-plane metadata, accessed through SQLx MySQL protocol driver
-- Redis 7.4 is a **required** ATLAS dependency for cache and ephemeral coordination
-- Server-served dashboard; no separate frontend runtime
+#[derive(Debug, Serialize, FromRow)]
+pub struct ActiveSession {
+    pub acctsessionid: String,
+    pub username: String,
+    pub nasipaddress: String,
+    pub framedipaddress: String,
+    pub acctstarttime: Option<String>,
+    pub acctsessiontime: Option<i64>,
+    pub acctinputoctets: Option<i64>,
+    pub acctoutputoctets: Option<i64>,
+    pub acctinputgigawords: Option<i64>,
+    pub acctoutputgigawords: Option<i64>,
+}
 
-Loco's built-in SeaORM database integration currently targets PostgreSQL and SQLite. ATLAS therefore uses SQLx's MySQL driver directly for MariaDB rather than claiming native Loco/SeaORM MariaDB support.
+#[derive(Debug, Serialize)]
+pub struct AccountingSummary {
+    pub total_sessions: i64,
+    pub active_sessions: i64,
+    pub input_octets: i64,
+    pub output_octets: i64,
+}
 
-## External engine stack
+pub fn validate_nas(input: &NasWriteRequest) -> Result<(), &'static str> {
+    if input.nasname.trim().is_empty() || input.nasname.len() > 128 {
+        return Err("nasname must contain 1 to 128 characters");
+    }
+    let valid_ip = input.nasname.parse::<std::net::IpAddr>().is_ok()
+        || input.nasname.parse::<ipnet::IpNet>().is_ok();
+    if !valid_ip {
+        return Err("nasname must be an IPv4/IPv6 address or CIDR network");
+    }
+    if input
+        .shortname
+        .as_ref()
+        .is_some_and(|value| value.len() > 32)
+    {
+        return Err("shortname must not exceed 32 characters");
+    }
+    if input.nas_type.trim().is_empty() || input.nas_type.len() > 30 {
+        return Err("nas_type must contain 1 to 30 characters");
+    }
+    if input.secret.len() < 32
+        || input.secret.len() > 60
+        || !input
+            .secret
+            .bytes()
+            .all(|byte| (0x21..=0x7e).contains(&byte))
+    {
+        return Err("NAS shared secret must be 32-60 printable non-space ASCII characters");
+    }
+    if input
+        .description
+        .as_ref()
+        .is_some_and(|value| value.len() > 200)
+    {
+        return Err("description must not exceed 200 characters");
+    }
+    Ok(())
+}
 
-| Domain | Engine | Responsibility |
-|---|---|---|
-| Authoritative DNS | PowerDNS Authoritative | DNS zone and record serving |
-| Recursive DNS | Unbound | Recursive resolution |
-| DNS traffic | dnsdist | DNS proxying, routing, and protection |
-| RADIUS AAA | FreeRADIUS 3.2 | Authentication, authorization, accounting, EAP, and proxying |
-| Metrics | VictoriaMetrics | Time-series metrics storage |
-| Logs | VictoriaLogs | Log ingestion, storage, and search |
+fn default_credential_mode() -> String {
+    "bcrypt".to_string()
+}
 
-No ClickHouse or DuckDB component is part of ATLAS. VictoriaMetrics stores metrics; VictoriaLogs stores and searches logs. ATLAS only configures and observes these systems through adapters.
+pub fn validate_subscriber(input: &SubscriberWriteRequest) -> Result<(), &'static str> {
+    if input.username.trim().is_empty()
+        || input.username.len() > 64
+        || input.username.chars().any(char::is_control)
+    {
+        return Err("username must contain 1 to 64 non-control characters");
+    }
+    if input.password.len() < 12
+        || input.password.len() > 253
+        || input.password.chars().any(char::is_control)
+    {
+        return Err("subscriber password must contain 12 to 253 non-control characters");
+    }
+    if input
+        .groupname
+        .as_ref()
+        .is_some_and(|value| value.trim().is_empty() || value.len() > 64)
+    {
+        return Err("groupname must contain 1 to 64 characters");
+    }
+    if !matches!(input.credential_mode.as_str(), "bcrypt" | "nt_hash") {
+        return Err("credential_mode must be bcrypt or nt_hash");
+    }
+    Ok(())
+}
 
-### RADIUS boundary
+pub async fn list_nas() -> Result<Vec<Nas>, sqlx::Error> {
+    sqlx::query_as::<_, Nas>(
+        "SELECT id, nasname, shortname, `type` AS nas_type, ports, description, (secret <> '') AS secret_configured FROM nas ORDER BY nasname",
+    )
+    .fetch_all(radius_db::pool().await?)
+    .await
+}
 
-FreeRADIUS is the RADIUS data-plane engine. ATLAS will own NAS inventory, subscriber profiles, authentication policies, VLAN/rate-limit policies, realms, session visibility, accounting views, and engine lifecycle operations.
+pub async fn create_nas(input: &NasWriteRequest) -> Result<Nas, sqlx::Error> {
+    let pool = radius_db::pool().await?;
+    let mut tx = pool.begin().await?;
+    sqlx::query("INSERT INTO nas (nasname, shortname, `type`, ports, secret, description) VALUES (?, ?, ?, ?, ?, ?)")
+        .bind(input.nasname.trim())
+        .bind(input.shortname.as_deref())
+        .bind(input.nas_type.trim())
+        .bind(input.ports)
+        .bind(&input.secret)
+        .bind(input.description.as_deref())
+        .execute(&mut *tx)
+        .await?;
+    let id: i64 = sqlx::query_scalar("SELECT CAST(LAST_INSERT_ID() AS SIGNED)")
+        .fetch_one(&mut *tx)
+        .await?;
+    tx.commit().await?;
+    get_nas(id).await?.ok_or(sqlx::Error::RowNotFound)
+}
 
-FreeRADIUS runs from a derived official 3.2.10 image with SQL authentication/accounting enabled. Its management Status-Server is isolated on the internal Docker network and accepts probes only from ATLAS. The RADIUS status secret is separate from NAS shared secrets. The upstream sample EAP certificates remain development-only and must be replaced before production.
+pub async fn get_nas(id: i64) -> Result<Option<Nas>, sqlx::Error> {
+    sqlx::query_as::<_, Nas>(
+        "SELECT id, nasname, shortname, `type` AS nas_type, ports, description, (secret <> '') AS secret_configured FROM nas WHERE id = ?",
+    )
+    .bind(id)
+    .fetch_optional(radius_db::pool().await?)
+    .await
+}
 
-On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user, then imports the upstream FreeRADIUS 3.2.10 MySQL schema. The initialization scripts run only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. NAS clients are read at FreeRADIUS startup; adding or changing a NAS row currently requires a FreeRADIUS reload/restart. Subscriber records can be inserted into `radcheck` and group/policy replies into `radreply` / `radusergroup`; ATLAS exposes NAS and subscriber CRUD endpoints. NAS changes are persisted in the `nas` table but FreeRADIUS reads clients at process startup, so a FreeRADIUS restart/reload is required before a newly created or modified NAS is accepted. Subscriber credentials are never stored in clear text. The API defaults to bcrypt (`Crypt-Password`) for PAP-compatible password verification. Set `credential_mode: "nt_hash"` only when MS-CHAPv2 compatibility is required; NT hashes are legacy and materially weaker, so prefer EAP-TLS where possible. Only one credential attribute is stored per subscriber to avoid ambiguous FreeRADIUS password selection. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
+pub async fn update_nas(id: i64, input: &NasWriteRequest) -> Result<Option<Nas>, sqlx::Error> {
+    if get_nas(id).await?.is_none() {
+        return Ok(None);
+    }
+    sqlx::query("UPDATE nas SET nasname = ?, shortname = ?, `type` = ?, ports = ?, secret = ?, description = ? WHERE id = ?")
+        .bind(input.nasname.trim())
+        .bind(input.shortname.as_deref())
+        .bind(input.nas_type.trim())
+        .bind(input.ports)
+        .bind(&input.secret)
+        .bind(input.description.as_deref())
+        .bind(id)
+        .execute(radius_db::pool().await?)
+        .await?;
+    get_nas(id).await
+}
 
-## Run with Docker Compose
+pub async fn delete_nas(id: i64) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM nas WHERE id = ?")
+        .bind(id)
+        .execute(radius_db::pool().await?)
+        .await?;
+    Ok(result.rows_affected() > 0)
+}
 
-From apps/atlas, copy .env.example to .env, replace all placeholder passwords and the control token with long random values, then run:
+pub async fn list_subscribers() -> Result<Vec<Subscriber>, sqlx::Error> {
+    sqlx::query_as::<_, Subscriber>("SELECT DISTINCT username FROM radcheck ORDER BY username")
+        .fetch_all(radius_db::pool().await?)
+        .await
+}
 
-    cp .env.example .env
-    docker compose up --build -d
+fn derive_credential(password: &str, mode: &str) -> Result<(String, String), sqlx::Error> {
+    match mode {
+        "bcrypt" => {
+            let hash = bcrypt::hash(password, 12)
+                .map_err(|_| sqlx::Error::Protocol("bcrypt hashing failed".to_string()))?;
+            Ok(("Crypt-Password".to_string(), hash))
+        }
+        "nt_hash" => {
+            use md4::{Digest, Md4};
 
-The dashboard is bound to 127.0.0.1:5150 by default. Set `ATLAS_CONTROL_TOKEN`, `RADIUS_STATUS_SECRET`, and database/cache passwords to at least 32 random characters. Engine and RADIUS management endpoints require `ATLAS_CONTROL_TOKEN` as a Bearer token. The default internal subnet is `172.31.240.0/24`. If it conflicts with an existing route, change the subnet and the fixed ATLAS/FreeRADIUS status-client addresses together in Compose and the FreeRADIUS status virtual-server config. MariaDB and Redis are internal-only. VictoriaMetrics and VictoriaLogs are exposed on loopback at ports 8428 and 9428. FreeRADIUS UDP ports 1812 and 1813 are also loopback-bound by default.
+            let mut hasher = Md4::new();
+            for unit in password.encode_utf16() {
+                hasher.update(unit.to_le_bytes());
+            }
+            let hash = format!("0x{}", hex::encode(hasher.finalize()));
+            Ok(("NT-Password".to_string(), hash))
+        }
+        _ => Err(sqlx::Error::Protocol(
+            "unsupported credential mode".to_string(),
+        )),
+    }
+}
 
-Do not change RADIUS_BIND_ADDRESS to a public or LAN interface until you have installed a production clients.conf, replaced test certificates, configured real NAS clients with unique strong secrets, configured firewall rules, and set up an authentication/accounting backend.
+pub async fn create_or_update_subscriber(
+    input: &SubscriberWriteRequest,
+) -> Result<(), sqlx::Error> {
+    let password = input.password.clone();
+    let mode = input.credential_mode.clone();
+    let (attribute, value) =
+        tokio::task::spawn_blocking(move || derive_credential(&password, &mode))
+            .await
+            .map_err(|_| sqlx::Error::Protocol("password hashing task failed".to_string()))??;
 
-## Run locally
+    let pool = radius_db::pool().await?;
+    let mut tx = pool.begin().await?;
+    sqlx::query("DELETE FROM radcheck WHERE username = ? AND attribute IN ('Cleartext-Password', 'Crypt-Password', 'NT-Password')")
+        .bind(input.username.trim())
+        .execute(&mut *tx)
+        .await?;
+    sqlx::query("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, ?, ':=', ?)")
+        .bind(input.username.trim())
+        .bind(attribute)
+        .bind(value)
+        .execute(&mut *tx)
+        .await?;
+    sqlx::query("DELETE FROM radusergroup WHERE username = ?")
+        .bind(input.username.trim())
+        .execute(&mut *tx)
+        .await?;
+    if let Some(group) = input.groupname.as_deref() {
+        sqlx::query("INSERT INTO radusergroup (username, groupname, priority) VALUES (?, ?, 1)")
+            .bind(input.username.trim())
+            .bind(group.trim())
+            .execute(&mut *tx)
+            .await?;
+    }
+    tx.commit().await
+}
 
-Install Rust 1.94+ and the Loco CLI:
+pub async fn delete_subscriber(username: &str) -> Result<bool, sqlx::Error> {
+    let pool = radius_db::pool().await?;
+    let mut tx = pool.begin().await?;
+    let mut changed = 0;
+    for table in ["radcheck", "radreply", "radusergroup"] {
+        let query = format!("DELETE FROM {table} WHERE username = ?");
+        changed += sqlx::query(&query)
+            .bind(username)
+            .execute(&mut *tx)
+            .await?
+            .rows_affected();
+    }
+    tx.commit().await?;
+    Ok(changed > 0)
+}
 
-    cargo install loco --version 1.3.1
-    export DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas'
-    export REDIS_URL='redis://:password@127.0.0.1:6379/0'
-    export RADIUS_DATABASE_URL='mysql://radius:password@127.0.0.1:3306/radius'
-    export ATLAS_CONTROL_TOKEN='replace-with-a-long-random-control-token'
-    cargo loco start
+pub async fn active_sessions() -> Result<Vec<ActiveSession>, sqlx::Error> {
+    sqlx::query_as::<_, ActiveSession>(
+        "SELECT acctsessionid, username, nasipaddress, framedipaddress, CAST(acctstarttime AS CHAR) AS acctstarttime, acctsessiontime, acctinputoctets, acctoutputoctets, acctinputgigawords, acctoutputgigawords FROM radacct WHERE acctstoptime IS NULL ORDER BY acctstarttime DESC LIMIT 500",
+    )
+    .fetch_all(radius_db::pool().await?)
+    .await
+}
 
-The dashboard is served at http://127.0.0.1:5150/.
+pub async fn accounting_summary() -> Result<AccountingSummary, sqlx::Error> {
+    let pool = radius_db::pool().await?;
+    let (total_sessions, active_sessions, input_octets, output_octets) =
+        sqlx::query_as::<_, (i64, i64, i64, i64)>(
+            "SELECT CAST(COUNT(*) AS SIGNED), CAST(SUM(CASE WHEN acctstoptime IS NULL THEN 1 ELSE 0 END) AS SIGNED), CAST(COALESCE(SUM(COALESCE(acctinputoctets, 0) + COALESCE(acctinputgigawords, 0) * 4294967296), 0) AS SIGNED), CAST(COALESCE(SUM(COALESCE(acctoutputoctets, 0) + COALESCE(acctoutputgigawords, 0) * 4294967296), 0) AS SIGNED) FROM radacct",
+        )
+        .fetch_one(pool)
+        .await?;
+    Ok(AccountingSummary {
+        total_sessions,
+        active_sessions,
+        input_octets,
+        output_octets,
+    })
+}
 
-## API
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-- GET /api/v1/system/health — actual ATLAS MariaDB, RADIUS database, and Redis probe results.
-- GET /api/v1/system/readiness — returns 503 unless ATLAS MariaDB, RADIUS database, and Redis are reachable.
-- GET /api/v1/system/version — build/package version.
-- GET /api/v1/engines/catalog — engine integration catalog and adapter status.
-- GET /api/v1/engines — list registered engines (Bearer token required).
-- POST /api/v1/engines — register an engine (Bearer token required).
-- GET /api/v1/engines/{id} — retrieve an engine (Bearer token required).
-- PUT /api/v1/engines/{id} — update an engine (Bearer token required).
-- DELETE /api/v1/engines/{id} — remove an engine (Bearer token required).
-- GET /api/v1/engines/{id}/health — run a live backend probe (Bearer token required).
-- GET/POST /api/v1/dns/engines/{engine_id}/zones — list or create PowerDNS zones (Bearer token required). Zone creation requires a fully-qualified zone name and at least two nameservers.
-- GET/DELETE/PATCH /api/v1/dns/engines/{engine_id}/zones/{zone_id} — inspect/delete a zone or apply validated RRset changes (Bearer token required).
-- GET/POST /api/v1/radius/nas — list or create NAS clients (Bearer token required).
-- PUT /api/v1/radius/nas/{id} — update a NAS client and rotate its shared secret (Bearer token required).
-- DELETE /api/v1/radius/nas/{id} — remove a NAS client (Bearer token required).
-- GET/POST /api/v1/radius/subscribers — list or create/update subscriber credentials and optional group (Bearer token required). The POST body accepts `username`, `password`, optional `groupname`, and optional `credential_mode` (`bcrypt` default or `nt_hash`).
-- DELETE /api/v1/radius/subscribers/{username} — remove subscriber authentication/policy rows (accounting history is retained).
-- GET /api/v1/radius/sessions/active — inspect active sessions from radacct (Bearer token required).
-- GET /api/v1/radius/accounting/summary — accounting totals and octet counters (Bearer token required).
+    #[test]
+    fn rejects_weak_nas_secrets_and_invalid_addresses() {
+        let input = NasWriteRequest {
+            nasname: "not-an-ip".to_string(),
+            shortname: Some("router".to_string()),
+            nas_type: "other".to_string(),
+            ports: None,
+            secret: "weak".to_string(),
+            description: None,
+        };
+        assert!(validate_nas(&input).is_err());
+    }
 
-Set ATLAS_CONTROL_TOKEN to a long random secret in standalone mode. Do not expose the control API directly to the public internet. In integrated deployments, place it behind ARSY's authenticated authorization gateway; the local bearer token is a bootstrap/standalone guard, not a replacement for ARSY governance.
+    #[test]
+    fn validates_bcrypt_and_nt_hash_credential_modes() {
+        let bcrypt = derive_credential("correct horse battery staple", "bcrypt").unwrap();
+        assert_eq!(bcrypt.0, "Crypt-Password");
+        assert!(!bcrypt.1.contains("correct horse"));
 
-Loco's built-in /_ping, /_health, and /_readiness routes remain available.
-
-An engine being present in Compose or in the catalog does not mean ATLAS has a working adapter or has verified its operational state.
-
-## MariaDB schema
-
-ATLAS uses MariaDB for transactional control-plane metadata only. It does not store DNS query traffic, syslog streams, metrics samples, or raw observability data.
-
-Install SQLx CLI and apply versioned migrations:
-
-    cargo install sqlx-cli --no-default-features --features mysql,rustls
-    DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas' sqlx migrate run --source migrations
-
-The migrations create the engine registry, add non-secret adapter configuration and secret environment-variable references, and seed the local Compose FreeRADIUS, VictoriaMetrics, and VictoriaLogs endpoints. Apply all migrations in order. Application readiness checks the ATLAS database, the separate RADIUS database, and Redis with real connection probes.
-
-## Development checks
-
-    cargo fmt --check
-    cargo clippy --all-targets -- -D warnings
-    cargo test
-    cargo build --release
-    docker compose config
-
-## Implementation status
-
-### Implemented in this foundation
-
-- Loco application and runtime CLI.
-- ATLAS dashboard shell with DNS, RADIUS, database, Redis, and observability status surfaces.
-- Versioned health, readiness, version, and engine catalog endpoints.
-- Persistent engine registry CRUD (list, create, retrieve, update, delete) with input validation.
-- Bearer-token protection for engine and RADIUS management and health probes; control routes remain disabled until a 32+ character ATLAS_CONTROL_TOKEN is configured.
-- Live HTTP health probes for PowerDNS Authoritative, VictoriaMetrics, and VictoriaLogs; native FreeRADIUS Status-Server probe via radclient. Unbound and dnsdist are explicitly reported as unsupported until their native adapters land.
-- MariaDB connectivity probe with bounded connection pool configuration.
-- Required Redis connectivity probe; readiness fails when Redis is unavailable.
-- Separate RADIUS database connection probe; readiness fails if the AAA database is unavailable.
-- Automatic embedded SQLx migrations and local engine seed records at Compose startup.
-- NAS CRUD, subscriber credential provisioning, active session listing, and accounting summaries. Passwords are stored as bcrypt or NT hashes, never clear text.
-- Compose services for MariaDB, Redis, VictoriaMetrics, VictoriaLogs, and a derived FreeRADIUS image wired to a dedicated SQL database.
-- FreeRADIUS SQL authentication/accounting schema and SQL module activation in default and inner-tunnel virtual servers.
-- Initial engine registry schema migration.
-- Dedicated Rust CI workflow.
-
-### Planned; not yet implemented
-
-- Unbound and dnsdist native control adapters.
-
-- VictoriaMetrics and VictoriaLogs query/configuration APIs beyond basic health probes.
-- Production certificate rotation, RadSec listener profile, and dynamic NAS reload without restarting FreeRADIUS.
-- Collector management, desired/actual state reconciliation, and durable operational jobs.
-- ARSY authorization/approval integration and AEGIS execution integration.
-- HA, backup/restore, secrets management, and production hardening.
-
-Do not treat a planned adapter or an unconfigured integration as operational.
+        let nt_hash = derive_credential("password", "nt_hash").unwrap();
+        assert_eq!(nt_hash.0, "NT-Password");
+        assert_eq!(nt_hash.1, "0x8846f7eaee8fb117ad06bdd830b7586c");
+    }
+}
