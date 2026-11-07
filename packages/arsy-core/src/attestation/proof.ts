@@ -78,6 +78,9 @@ export function validateExecutionTrace(
       decisions.set(event.actionId, event)
     }
     if (event.kind === 'approval.recorded' && event.approved === true) {
+      const decision = decisions.get(event.actionId)
+      if (!decision || decision.kind !== 'policy.allowed' || decision.sequence >= event.sequence) violations.push('approval_without_prior_allow')
+      if (approvals.has(event.actionId)) violations.push('multiple_approvals_for_action')
       approvals.add(event.actionId)
       approvalSequence.set(event.actionId, event.sequence)
     }
@@ -130,7 +133,10 @@ export function createExecutionAttestation(
   if (!contract.id || !contract.version || Number.isNaN(Date.parse(issuedAt))) {
     throw new Error('Valid execution contract id, version and issuedAt are required')
   }
-  const traceDigest = createHash('sha256').update(canonical(events)).digest('hex')
+  if (events.length && Date.parse(issuedAt) < Date.parse(events[events.length - 1].occurredAt)) {
+    throw new ExecutionProofError(['attestation_issued_before_trace_end'])
+  }
+  const traceDigest = createHash('sha256').update(canonical({ contract, events })).digest('hex')
   return {
     executionId: contract.id,
     contractVersion: contract.version,
