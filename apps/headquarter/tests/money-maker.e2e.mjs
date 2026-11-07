@@ -65,6 +65,14 @@ try {
   const opportunityCard = page.getByTestId('opportunity-card').filter({ hasText: title })
   await opportunityCard.waitFor({ state: 'visible', timeout: 30_000 })
 
+  // Review source provenance, score rationale and hard gates; then persist an optimistic edit.
+  await opportunityCard.locator('details').first().locator('summary').click()
+  await opportunityCard.getByText('Playwright isolated evidence fixture').waitFor({ state: 'visible' })
+  await opportunityCard.getByRole('button', { name: 'Edit opportunity record' }).click()
+  await opportunityCard.getByLabel('Buyer problem').fill('Inventory counts drift between channels and operators discover discrepancies before orders fail.')
+  await opportunityCard.getByRole('button', { name: 'Save revision' }).click()
+  await page.getByRole('status').filter({ hasText: 'Opportunity updated to revision' }).waitFor({ state: 'visible' })
+
   // Exercise the actual decision endpoint and its audit-producing workflow.
   await opportunityCard.getByLabel(`Decision for ${title}`).selectOption('research-more')
   await opportunityCard.getByLabel(`Decision rationale for ${title}`).fill('Wait for an independent source before product promotion.')
@@ -82,6 +90,15 @@ try {
   await page.getByTestId('create-product-brief').click()
   await page.getByRole('status').filter({ hasText: 'Product brief created' }).waitFor({ state: 'visible', timeout: 30_000 })
   await page.getByText(title, { exact: true }).waitFor({ state: 'visible' })
+
+  // Product edits append a version; lifecycle transitions are explicit and audited.
+  await page.getByText('Version history & edit brief').click()
+  await page.getByLabel('Brief summary').fill('Version two: adds a documented reconciliation export.')
+  await page.getByRole('button', { name: 'Create version 2' }).click()
+  await page.getByRole('status').filter({ hasText: 'Created immutable version 2' }).waitFor({ state: 'visible', timeout: 30_000 })
+  await page.getByLabel('Lifecycle rationale').fill('The versioned brief is approved for implementation work.')
+  await page.getByRole('button', { name: 'Start production' }).click()
+  await page.getByRole('status').filter({ hasText: 'moved to production' }).waitFor({ state: 'visible', timeout: 30_000 })
 
   // Record a real pending ledger event and reconcile it with a source URL.
   await page.goto(`${baseUrl}/mizan-ledger`, { waitUntil: 'domcontentloaded' })
