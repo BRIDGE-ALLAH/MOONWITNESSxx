@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   const password = body && typeof body === 'object' && 'password' in body && typeof body.password === 'string'
     ? body.password
     : ''
-  if (!password || !operatorPasswordMatches(password, config.password, config.secret)) {
+  if (!password || Buffer.byteLength(password, 'utf8') > 1024 || !operatorPasswordMatches(password, config.password, config.secret)) {
     const recorded = await callSharedLoginLimiter('failure', buckets)
     if (!recorded.ok) return unavailable('LOGIN_PROTECTION_UNAVAILABLE')
     if (recorded.retryAfterSeconds > 0) return rateLimited(recorded.retryAfterSeconds)
