@@ -3,8 +3,8 @@ packages:
   - "packages/*"
 
 # services/* is intentionally excluded from the workspace.
-# It contains legacy prototypes; do not add it until ownership and runtime boundaries are reconciled.
+# Legacy prototypes must be reviewed before they can become canonical apps/packages.
 allowBuilds:
-  esbuild: set this to true or false
-  msgpackr-extract: set this to true or false
+  esbuild: true
+  msgpackr-extract: true
   sharp: true
