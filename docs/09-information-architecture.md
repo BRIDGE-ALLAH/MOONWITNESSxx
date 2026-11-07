@@ -10,7 +10,7 @@ The user-facing application is named **HEADQUARTER** and lives at apps/headquart
 
 The backend application is **ARSY**, located at apps/arsy. Do not use web as the frontend product or app name.
 
-HEADQUARTER is the MOONWITNESS human-facing command center. Its initial commercial workspace supports RIOTWORKS workflows without changing the MOONWITNESS master product identity. ARSY supplies the backend API and orchestration runtime.
+HEADQUARTER is the MOONWITNESS human-facing command center. Its initial RIOTWORKS division workspace supports the division's commercial workflows without changing the MOONWITNESS master product identity. ARSY supplies the backend API and orchestration runtime.
 
 The modules below are workspaces within HEADQUARTER, not separate top-level apps. The wider target application catalog (seven core experiences plus COCKPIT and the E-ISP storefront) is defined in [docs/32](./32-universe-and-product-architecture-registry.md); those additional apps are not current workspace implementations.
 
