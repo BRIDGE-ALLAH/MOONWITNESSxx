@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
+import { createHmac, scrypt, timingSafeEqual } from 'node:crypto'
 
 export const OPERATOR_SESSION_COOKIE = 'mw_operator_session'
 const SESSION_TTL_SECONDS = 8 * 60 * 60
@@ -21,7 +21,7 @@ export function getOperatorSessionConfig(env: NodeJS.ProcessEnv = process.env): 
   const secret = env.HEADQUARTER_SESSION_SECRET?.trim()
   const publicOrigin = env.HEADQUARTER_PUBLIC_ORIGIN?.trim()
 
-  if (!operatorId || operatorId.length > 128 || !password || password.length < 16 ||
+  if (!operatorId || operatorId.length > 128 || !password || password.length < 16 || password.length > 1024 ||
       !secret || Buffer.byteLength(secret, 'utf8') < 32 || !publicOrigin) return null
 
   try {
@@ -92,9 +92,23 @@ export function requestHasTrustedOrigin(request: Request, publicOrigin: string):
   }
 }
 
-export function operatorPasswordMatches(supplied: string, expected: string): boolean {
-  const actualDigest = createHash('sha256').update(supplied).digest()
-  const expectedDigest = createHash('sha256').update(expected).digest()
+const PASSWORD_KDF_OPTIONS = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }
+const PASSWORD_DERIVED_KEY_LENGTH = 64
+
+function derivePasswordDigest(password: string, salt: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, PASSWORD_DERIVED_KEY_LENGTH, PASSWORD_KDF_OPTIONS, (error, derivedKey) => {
+      if (error) reject(error)
+      else resolve(derivedKey)
+    })
+  })
+}
+
+/** Use a memory-hard KDF for operator secrets; never compare passwords with fast hashes. */
+export async function operatorPasswordMatches(supplied: string, expected: string, salt: string): Promise<boolean> {
+  if (!supplied || supplied.length > 1024 || !expected || expected.length > 1024 || !salt || Buffer.byteLength(salt, 'utf8') < 32) return false
+  const actualDigest = await derivePasswordDigest(supplied, salt)
+  const expectedDigest = await derivePasswordDigest(expected, salt)
   return timingSafeEqual(actualDigest, expectedDigest)
 }
 
