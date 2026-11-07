@@ -2,7 +2,7 @@
 
 ## Master identity
 
-MOONWITNESS is the master brand. RIOTWORKS is a separate studio identity and is not part of the default MOONWITNESS lockup.
+MOONWITNESS is the master brand. RIOTWORKS is its product and operating division, not a separate studio or competing master identity. RIOTWORKS-owned surfaces may use the division's visual expression while preserving MOONWITNESS parent-brand attribution.
 
 - **Core Promise:** SEE MORE. KNOW MORE.
 - **Brand Manifesto:** WHEN THE MOON RISES, WE SHARE MESSAGES. (WMR-WSM)
