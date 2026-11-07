@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   # Local development infrastructure. Do not use committed defaults in production.
   postgres:
