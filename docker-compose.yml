@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  # PostgreSQL database — recommended for production
+  # PostgreSQL database — local development service
   postgres:
     image: postgres:16-alpine
     container_name: moonwitness-postgres
