@@ -419,6 +419,7 @@ Still deferred and intentionally not claimed complete:
 
 Delivered in this pass:
 - [x] Add a practical component workbench at `apps/headquarter/src/app/ui-lab/page.tsx`, rendering the real shared package in the actual host shell.
+- [x] Recompose the Headquarter landing page around the MOONWITNESS signal story, with a cinematic hero and a clear Observe → Interpret → Make rhythm.
 - [x] Add MOONWITNESS visual DNA contract: nocturnal intelligence, signal energy, editorial scale, instrument language, and living-but-not-noisy motion (`VISUAL-DNA.md`).
 - [x] Add `RiotSignalHeader`, `RiotLiveIndicator`, and `RiotAtmosphere` as reusable, typed, public brand-language components.
 - [x] Add restrained signal pulse, ambient drift, grid, and grain treatments with reduced-motion fallbacks.
