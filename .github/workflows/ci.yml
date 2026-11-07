@@ -46,6 +46,8 @@ jobs:
         run: pnpm run lockfile:check
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Test Divine core and Corpus adapter
+        run: pnpm --filter @riotworks/divine test
       - name: Validate repository, formatting, and automation tests
         env:
           FORMAT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -84,6 +86,8 @@ jobs:
         run: pnpm --filter @riotworks/ui type-check
       - name: Type-check Headquarter application
         run: pnpm --filter @riotworks/headquarter type-check
+      - name: Test Headquarter API boundary and demo fixture
+        run: pnpm --filter @riotworks/headquarter test
       - name: Build Headquarter production bundle (lint checked separately)
         run: pnpm --filter @riotworks/headquarter exec next build --no-lint
       - name: Validate registry and SVG source assets
