@@ -103,3 +103,11 @@ Both modules are domain foundations only. Their UI, persistence, read-only ARSY 
 - `/decision-graph` composes the Decision Graph Explorer from the domain-owned synthetic fixture and pure integrity assessor. It surfaces traceability, contradiction links, stale evidence, and Decision Debt without claiming live provenance.
 - `/scenario-forge` composes the Scenario Arena. It compares explicit scenarios against one immutable fixture and ranks absolute metric deltas as a descriptive sensitivity lens, not causal attribution.
 - Both routes are marked prototype in navigation. They have no ARSY endpoint, persistence, or production write path. See `PHASE-9-10-RESEARCH.md` for research signals and validation hypotheses.
+
+
+## Phase 11–13 governance kernel
+
+- `features/replay-capsule` canonicalizes scenario inputs/results and computes a SHA-256 content digest. Verification checks digest integrity and deterministic recomputation. It does not authenticate a signer or trusted time.
+- `features/decision-debt` compiles missing/stale/contradictory decision rationale and traverses downstream `causes` links into a review backlog. Scores prioritize attention; they are not probabilities.
+- `features/uncertainty-gate` validates low/base/high ranges, source quality, evidence coverage, stale evidence, contradictions, and unresolved assumptions. It can block or route to human review; it never approves.
+- `/governance-lab` presents these engines with synthetic fixtures. No live ARSY integration, persistence, or production mutation path exists.
