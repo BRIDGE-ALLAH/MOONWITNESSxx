@@ -286,6 +286,25 @@ export function LaunchBayBoard() {
     return receiptDrafts[listing.id] ?? { externalListingId: '', publicUrl: '', evidenceReference: '', confirmation: '' }
   }
 
+  async function copyListingPackage(listing: Listing) {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(listing.listingPackage, null, 2))
+      setMessage('Manual listing package JSON copied.')
+    } catch {
+      setError('Clipboard access is unavailable. Use the package JSON viewer or download it instead.')
+    }
+  }
+
+  function downloadListingPackage(listing: Listing) {
+    const blob = new Blob([JSON.stringify(listing.listingPackage, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `listing-package-${listing.id}.json`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
   async function recordReceipt(listing: Listing) {
     const draft = defaultReceiptType(listing)
     const receiptType = listing.status === 'ready' ? 'manual-submission' : listing.status === 'submitted' ? 'publication-confirmation' : 'withdrawal-confirmation'
@@ -406,6 +425,7 @@ export function LaunchBayBoard() {
           <div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-display text-lg uppercase">{product?.title ?? listing.productId}</h3><p className="text-xs text-muted-ink">{channel?.displayName ?? listing.channelId} · v{listing.productVersion} · {new Date(listing.createdAt).toLocaleString()}</p></div><span className="border border-acid-lime/30 px-2 py-1 font-mono text-[10px] uppercase">{listing.status}</span></div>
           <p className="break-all font-mono text-[10px] text-muted-ink">Package SHA-256: {listing.packageHash}</p>
           <div className="grid gap-2 md:grid-cols-2">{listing.readinessSnapshot.gates.map((gate) => <div key={gate.key} className="border border-acid-lime/10 p-2 text-xs"><p className="font-mono uppercase">{gate.key} · <strong className={gate.status === 'pass' ? 'text-acid-lime' : gate.status === 'blocked' ? 'text-red-300' : 'text-orange-200'}>{gate.status}</strong></p><p className="mt-1 text-muted-ink">{gate.rationale}</p></div>)}</div>
+          <div className="flex flex-wrap gap-2"><button type="button" onClick={() => void copyListingPackage(listing)} className="border border-acid-lime/30 px-3 py-2 font-mono text-[10px] uppercase">Copy package JSON</button><button type="button" onClick={() => downloadListingPackage(listing)} className="border border-acid-lime/30 px-3 py-2 font-mono text-[10px] uppercase">Download package JSON</button></div>
           <details className="border-t border-acid-lime/10 pt-2"><summary className="cursor-pointer font-mono text-[10px] uppercase text-acid-lime">View deterministic manual package</summary><pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-words bg-obsidian p-3 text-[10px]">{JSON.stringify(listing.listingPackage, null, 2)}</pre></details>
           {canRecord && <details className="border-t border-acid-lime/10 pt-2"><summary className="cursor-pointer font-mono text-[10px] uppercase text-acid-lime">Record actual {receiptType.replaceAll('-', ' ')} receipt</summary><div className="mt-3 grid gap-2 md:grid-cols-2">
             <label className="text-[10px] font-mono uppercase">External listing ID<input value={draft.externalListingId} onChange={(event) => setReceiptDrafts((current) => ({ ...current, [listing.id]: { ...draft, externalListingId: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
