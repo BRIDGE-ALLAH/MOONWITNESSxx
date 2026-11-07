@@ -57,9 +57,9 @@ SQLite/libSQL and PostgreSQL do not expose one universal REST schema API. ARSY e
 Require deployment/operator service identity and least privilege. Normal Headquarter sessions cannot mutate schema. CLI, CI, release job, and HTTP entry point call the same SchemaReconciliationService. Apply schema once in a serialized setup/release task, never from every ARSY replica or ordinary request.
 
 ## 9. BaseEntity and audit
-BaseEntity contains only id (opaque stable string identifier), createdAt (UTC), and updatedAt (UTC). For v1 SQL providers ARSY generates UUID IDs; the adapter maps them to TEXT on libSQL and UUID on PostgreSQL. libSQL maps id to TEXT/timestamps to normalized UTC ISO-8601; PostgreSQL maps id to UUID/timestamps to TIMESTAMPTZ. Adapters normalize these to one TypeScript contract.
-Ownership attribution, archive, version, soft delete, and toggleable active/enabled are opt-in mixins. Business state is domain-owned; do not inject universal active.
-AuditTrail is one central append-oriented model/service. SQL business mutation and required audit insert share one transaction. External side effects use a transactional outbox.
+The authoritative BaseEntity contains exactly id, createdAt, createdById, updatedAt and updatedById. For v1 SQL providers ARSY generates UUID IDs; adapters normalize libSQL TEXT and PostgreSQL UUID to the same opaque string contract. createdAt/updatedAt are UTC instants; createdById/updatedById reference the canonical principal and are set only from trusted server context.
+Ownership attribution beyond creator/updater, archive, version, soft delete, toggleable active/enabled, workspace scope and company scope remain explicit opt-in mixins or addon fields. Business state is domain-owned; do not inject universal active.
+AuditEvent is a separate append-oriented audit model/service, not a replacement for BaseEntity actor metadata. SQL business mutation and required audit insert share one transaction. External side effects use a transactional outbox.
 
 ## 10. Runtime, security, testing
 Fastify routes delegate to application services. Provide health/readiness, versioned APIs, private schema operations, structured logs, request correlation, centralized validation/errors, graceful shutdown. Keep DB credentials server-side; separate runtime and schema-apply privileges where possible. Preserve unowned tables. Require backup/restore validation before destructive changes. Test both adapters for CRUD, relations, constraints, transactions, audit atomicity, schema sync, drift, recovery, and capability differences.
@@ -69,3 +69,7 @@ This is a target architecture contract, not a claim that packages already exist.
 
 ## 10. v1.3 base-platform clarification (supersedes older minimal summaries)
 BaseEntity is not the complete base platform. The universal persisted metadata is id, createdAt, createdById, updatedAt and updatedById. The source package packages/orm-addon-base contains independently declared manifests for base.core, identity, security, workspace, optional company, audit, events, optional communication/activity, attachment, sequence, settings, localization, transient, import-export, optional integration and taxonomy. The ORM target includes persistent/abstract/transient models, computed/related/translated fields, deterministic extension, domain AST, recordsets, prefetch/cache, ACL/record rules and field policies. docs/22 is canonical where earlier sections are less detailed.
+
+
+## 11. Current repository implementation status
+The canonical repository snapshot and implementation gaps are recorded in docs/23. The tracked code currently has thin Headquarter and ARSY prototypes and several utility packages. ORM, orm-db, SQL adapters and Base Platform addons are not implemented. apps/headquarter package metadata and apps/arsy/arsy-core dependency wiring require repair before feature development. Treat docs/23 as the authoritative execution plan.
