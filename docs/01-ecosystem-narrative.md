@@ -17,7 +17,7 @@ MOONWITNESS is the master ecosystem and product identity. It exists within the b
 - **ZILL** represents guardianship, integrity, and protection.
 - **MIZAN** represents balance, accounting, and accountability.
 
-RIOTWORKS may retain its own studio identity in its own portfolio and attribution. It must not appear in MOONWITNESS product lockups or be used as the default visual language of MoonWitness applications.
+RIOTWORKS may retain a distinct division-level visual identity for its own products and workflows. It remains subordinate to the MOONWITNESS master brand and must not replace the master identity across the wider ecosystem.
 
 ## 2. The world MOONWITNESS responds to
 
