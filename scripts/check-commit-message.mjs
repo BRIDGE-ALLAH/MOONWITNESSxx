@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs'
 
 const conventionalCommitPattern =
-  /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9][a-z0-9._/-]*\))?!?: .{1,72}$/i
+  /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9][a-z0-9._/-]*\))?!?: .+$/i
 
 export function isValidCommitSubject(subject) {
-  return conventionalCommitPattern.test(subject)
+  return subject.length <= 72 && conventionalCommitPattern.test(subject)
 }
 
 const messagePath = process.argv[2]
