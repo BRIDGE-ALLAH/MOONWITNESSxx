@@ -131,7 +131,7 @@ export class ProductRepository {
         INSERT INTO arsy_product_versions (id, product_id, version, brief, acceptance_criteria, created_by)
         SELECT $3, $2, next_version.version, $4::jsonb, $5::jsonb, $6
         FROM next_version
-        WHERE EXISTS (SELECT 1 FROM arsy_products WHERE owner_id = $1 AND id = $2)
+        WHERE EXISTS (SELECT 1 FROM arsy_products WHERE owner_id = $1 AND id = $2 AND lifecycle_state <> 'retired')
         RETURNING *
       ), updated AS (
         UPDATE arsy_products SET lifecycle_state = 'production', updated_at = now(), updated_by = $6
