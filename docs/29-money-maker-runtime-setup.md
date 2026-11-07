@@ -47,10 +47,11 @@ Generate independent random values for the operator token and session secret. St
 - Every limiter API call is server-to-server and protected by the existing `ARSY_OPERATOR_TOKEN`. If the shared service cannot be reached or the limiter write fails, Headquarter returns 503 and does not issue a session.
 - Local development sets `HEADQUARTER_TRUSTED_PROXY_HOPS=0` and uses one explicit `local-development` network bucket. Arbitrary `X-Forwarded-For` headers are ignored in this mode; local requests intentionally share that bucket.
 - Production must set `HEADQUARTER_TRUSTED_PROXY_HOPS` to the actual trusted ingress hop count (1–8) and configure a 32+ byte `HEADQUARTER_PROXY_IDENTITY_SECRET` shared with the ingress. Keep Headquarter private behind that ingress; do not expose its application port directly.
-- The ingress must determine the client address using only the configured trusted proxy chain, strip all inbound `X-Forwarded-For` and `X-MW-Client-*` headers, and set exactly these three headers:
+- The ingress must determine the client address using only the configured trusted proxy chain, strip all inbound `X-Forwarded-For` and `X-MW-Client-*` headers, and set exactly these four headers:
   - `X-MW-Client-IP`: canonical client IP address;
   - `X-MW-Client-Timestamp`: current Unix timestamp in seconds;
-  - `X-MW-Client-Signature`: lowercase hex HMAC-SHA256 of `<client-ip>.<timestamp>` using `HEADQUARTER_PROXY_IDENTITY_SECRET`.
+  - `X-MW-Proxy-Hops`: configured trusted hop count as a decimal integer;
+  - `X-MW-Client-Signature`: lowercase hex HMAC-SHA256 of `<client-ip>.<timestamp>.<trusted-proxy-hops>` using `HEADQUARTER_PROXY_IDENTITY_SECRET`.
 - Headquarter accepts only a valid IP, a timestamp within 60 seconds, and a constant-time-valid HMAC signature. Raw forwarded headers without the signed assertion are never trusted. Missing/invalid identity returns 503 rather than falling back to a spoofable address.
 - Apply migration `005_shared_login_attempts.sql` before enabling this route. The table contains only bucket type, keyed digest, failure count, timestamps and lockout expiry.
 
