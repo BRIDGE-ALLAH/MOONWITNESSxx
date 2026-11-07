@@ -1,0 +1,71 @@
+name: Temporary formatting preview
+
+on:
+  push:
+    branches:
+      - format-preview
+
+permissions:
+  contents: read
+
+jobs:
+  format-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format tracked implementation files
+        run: |
+          pnpm exec prettier --write --ignore-unknown \
+            .github/ISSUE_TEMPLATE/bug_report.yml \
+            .github/ISSUE_TEMPLATE/feature_request.yml \
+            .github/workflows/ci.yml \
+            .github/workflows/codeql.yml \
+            .github/workflows/refresh-lockfile.yml \
+            .github/workflows/weekly-detection.yml \
+            docker-compose.yml \
+            docs/developer-installer.md \
+            docs/operational-twin-research.md \
+            docs/runtime-lifecycle.md \
+            governance/README.md \
+            scripts/governance.mjs \
+            scripts/moonwitness.mjs \
+            scripts/moonwitness.test.mjs \
+            scripts/runtime.mjs \
+            scripts/runtime.test.mjs
+      - name: Stage formatted output
+        run: |
+          mkdir -p formatted-output
+          while IFS= read -r file; do
+            mkdir -p "formatted-output/$(dirname "$file")"
+            cp "$file" "formatted-output/$file"
+          done <<'FILES'
+          .github/ISSUE_TEMPLATE/bug_report.yml
+          .github/ISSUE_TEMPLATE/feature_request.yml
+          .github/workflows/ci.yml
+          .github/workflows/codeql.yml
+          .github/workflows/refresh-lockfile.yml
+          .github/workflows/weekly-detection.yml
+          docker-compose.yml
+          docs/developer-installer.md
+          docs/operational-twin-research.md
+          docs/runtime-lifecycle.md
+          governance/README.md
+          scripts/governance.mjs
+          scripts/moonwitness.mjs
+          scripts/moonwitness.test.mjs
+          scripts/runtime.mjs
+          scripts/runtime.test.mjs
+          FILES
+      - uses: actions/upload-artifact@v6
+        with:
+          name: formatted-moonwitness-files
+          path: formatted-output/
+          retention-days: 1
