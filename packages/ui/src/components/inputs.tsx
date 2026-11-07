@@ -1,6 +1,5 @@
 import * as React from 'react'
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
-import * as RadioPrimitive from '@radix-ui/react-radio-group'
 import * as SwitchPrimitive from '@radix-ui/react-switch'
 import { Label } from '@radix-ui/react-label'
 import { Check } from 'lucide-react'
@@ -24,9 +23,10 @@ export const Checkbox = React.forwardRef<React.ElementRef<typeof CheckboxPrimiti
 })
 Checkbox.displayName='Checkbox'
 
-export const RadioGroup=React.forwardRef<React.ElementRef<typeof RadioPrimitive.Root>,React.ComponentPropsWithoutRef<typeof RadioPrimitive.Root>>(({className,...props},ref)=><RadioPrimitive.Root ref={ref} className={cn('grid gap-3',className)} {...props}/>)
+export const RadioGroup=React.forwardRef<HTMLDivElement,React.HTMLAttributes<HTMLDivElement>>(({className,...props},ref)=><div ref={ref} role="radiogroup" className={cn('grid gap-3',className)} {...props}/>)
 RadioGroup.displayName='RadioGroup'
-export const RadioGroupItem=React.forwardRef<React.ElementRef<typeof RadioPrimitive.Item>,React.ComponentPropsWithoutRef<typeof RadioPrimitive.Item>>(({className,...props},ref)=><RadioPrimitive.Item ref={ref} className={cn('h-4 w-4 rounded-full border border-input bg-background text-primary shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:opacity-50',className)} {...props}><RadioPrimitive.Indicator className="flex items-center justify-center"><span className="h-2 w-2 rounded-full bg-current"/></RadioPrimitive.Indicator></RadioPrimitive.Item>)
+export interface RadioGroupItemProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>,'type'>{}
+export const RadioGroupItem=React.forwardRef<HTMLInputElement,RadioGroupItemProps>(({className,...props},ref)=><input ref={ref} type="radio" className={cn('h-4 w-4 shrink-0 accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:opacity-50',className)} {...props}/>)
 RadioGroupItem.displayName='RadioGroupItem'
 
 export const Switch=React.forwardRef<React.ElementRef<typeof SwitchPrimitive.Root>,React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>>(({className,...props},ref)=><SwitchPrimitive.Root ref={ref} className={cn('peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-input transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:opacity-50 data-[state=checked]:bg-primary',className)} {...props}><SwitchPrimitive.Thumb className="pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg transition-transform data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0"/></SwitchPrimitive.Root>)
