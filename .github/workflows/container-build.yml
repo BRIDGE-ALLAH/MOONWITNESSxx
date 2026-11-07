@@ -2,7 +2,7 @@ name: Container build verification
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, "feat-*", "feat/**", "fix-*", "fix/**"]
   push:
     branches: [main]
   workflow_dispatch:
