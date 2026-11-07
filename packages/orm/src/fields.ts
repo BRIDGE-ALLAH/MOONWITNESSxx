@@ -27,7 +27,7 @@ function descriptor<TValue>(
     required: options.required ?? false,
     nullable: options.nullable ?? !options.required,
     readonly: options.readonly ?? false,
-    index: options.index ?? false,
+    index: options.index ?? options.unique ?? false,
     unique: options.unique ?? false,
     ...(options.default !== undefined ? { default: options.default } : {}),
     ...(options.label !== undefined ? { label: options.label } : {}),
@@ -69,7 +69,7 @@ function relation<TTarget extends string>(
 export const fields = Object.freeze({
   Char: (options: CharOptions = {}) => descriptor<string | null>("char", options),
   Text: (options: CommonFieldOptions<string | null> = {}) => descriptor<string | null>("text", options),
-  Boolean: (options: CommonFieldOptions<boolean> = {}) => descriptor<boolean>("boolean", options),
+  Boolean: (options: CommonFieldOptions<boolean | null> = {}) => descriptor<boolean | null>("boolean", options),
   Integer: (options: IntegerOptions = {}) => descriptor<number | null>("integer", options),
   Float: (options: FloatOptions = {}) => descriptor<number | null>("float", options),
   Decimal: (options: DecimalOptions) => {
@@ -80,7 +80,7 @@ export const fields = Object.freeze({
   Date: (options: CommonFieldOptions<string | null> = {}) => descriptor<string | null>("date", options),
   DateTime: (options: CommonFieldOptions<string | null> = {}) => descriptor<string | null>("datetime", options),
   Time: (options: CommonFieldOptions<string | null> = {}) => descriptor<string | null>("time", options),
-  UUID: (options: CommonFieldOptions<string> = {}) => descriptor<string>("uuid", options),
+  UUID: (options: CommonFieldOptions<string | null> = {}) => descriptor<string | null>("uuid", options),
   JSON: <TValue = Readonly<Record<string, unknown>>>(options: CommonFieldOptions<TValue> = {}) => descriptor<TValue>("json", options),
   Selection: <T extends string>(options: SelectionOptions<T>) => {
     if (!options.values.length) throw new TypeError("Selection fields require at least one value.");
