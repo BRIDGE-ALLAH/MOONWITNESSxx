@@ -24,6 +24,7 @@ apps/headquarter/
       command-palette.tsx
     features/            # domain-owned modules and read models
       arsy-deck/         # reference feature: types, repository, demo fixture, view
+      money-maker/       # operator-authenticated opportunity, product brief, and financial ledger workflows
       decision-graph/    # Phase 7: decision/evidence provenance graph and pure assessor
       scenario-forge/    # Phase 8: deterministic shadow-only scenario kernel
     platform/            # cross-feature integrations
@@ -56,15 +57,15 @@ Existing route URLs are preserved. Locale routing under `/id` and `/en` is not e
 
 ## ARSY API boundary
 
-The frontend-safe adapter lives in `src/platform/arsy`. It targets the versioned public API prefix (`/api/v1` by default) or `NEXT_PUBLIC_ARSY_API_BASE_URL` when configured. It adds a request ID, uses cookie-based credentials, supports cancellation and timeouts, disables implicit response caching, and retries transient failures only for GET requests. It does not import ARSY internals or store bearer tokens.
+The browser-safe adapter lives in `src/platform/arsy`; it must never carry privileged service credentials. Protected commerce operations use server-side App Router BFF routes in `src/lib/arsy-proxy.ts`, which validate the signed operator session, enforce same-origin checks for mutations, forward only approved idempotency metadata, and attach the ARSY token server-side. The ARSY root hook independently protects every `/api/v1/*` route using the configured operator ID and token.
 
-The adapter is transport infrastructure, not proof that a backend capability exists. Login, session renewal, permission evaluation, workspace selection, health, and feature endpoints must be wired only after ARSY publishes the corresponding contract. ARSY remains the authorization enforcement point.
+The adapter is transport infrastructure, not proof that a backend capability exists. Each feature still requires a real domain contract, persistence, permissions, and tests. Health, product, opportunity, and finance endpoints must not infer connected/healthy states from sample data.
 
 ## Operator session boundary
 
-The Money Maker opportunity proxy is protected by a Headquarter-owned operator session. The login endpoint verifies `HEADQUARTER_OPERATOR_PASSWORD`, issues an eight-hour HMAC-signed `HttpOnly`, `SameSite=Strict` cookie, and requires a configured `HEADQUARTER_SESSION_SECRET` (at least 32 bytes) plus exact `HEADQUARTER_PUBLIC_ORIGIN`. Production configuration requires HTTPS. State-changing session and opportunity requests validate the browser `Origin`; the opportunity proxy rejects missing, expired, tampered, or mismatched operator sessions before forwarding to ARSY.
+The Money Maker opportunity, product, and finance proxies are protected by a Headquarter-owned operator session. The login endpoint verifies `HEADQUARTER_OPERATOR_PASSWORD`, issues an eight-hour HMAC-signed `HttpOnly`, `SameSite=Strict` cookie, and requires a configured `HEADQUARTER_SESSION_SECRET` (at least 32 bytes) plus exact `HEADQUARTER_PUBLIC_ORIGIN`. Production configuration requires HTTPS. State-changing session and opportunity requests validate the browser `Origin`; the opportunity proxy rejects missing, expired, tampered, or mismatched operator sessions before forwarding to ARSY.
 
-The browser session identity must match the configured `ARSY_OPERATOR_ID`; the privileged `ARSY_OPERATOR_TOKEN` remains server-only and is never a browser credential. This is a single-operator boundary, not a general multi-user identity, role, tenant, or SSO system. New proxy routes must reuse this authorization boundary rather than forwarding service credentials directly.
+The browser session identity must match the configured `ARSY_OPERATOR_ID`; the privileged `ARSY_OPERATOR_TOKEN` remains server-only and is never a browser credential. This is a single-operator boundary, not a general multi-user identity, role, tenant, or SSO system. New proxy routes must reuse this authorization boundary rather than forwarding service credentials directly. Login currently has a five-failure/15-minute process-local throttle as defense in depth; production ingress must add a shared/distributed rate limit before running multiple Headquarter instances.
 
 ## Design-system contract
 
@@ -88,7 +89,7 @@ See `FEATURE-ROLLOUT.md` for ownership, production gates, and administration rea
 
 ## Current known limitations
 
-- Most feature pages still contain local/static demo data. ARSY DECK retains an explicit fixture. The Money Maker opportunity API is a separate persisted ARSY capability; its complete browser-to-PostgreSQL production journey and broader product lifecycle are still gated.
+- Most non-commerce feature pages still contain local/static demo data. ARSY DECK retains an explicit fixture. Money Maker now has partial opportunity → product brief → financial event/reconciliation slices backed by ARSY/PostgreSQL contracts; exact-head CI, browser E2E, and production persistence remain unverified.
 - The Money Maker opportunity proxy now has a dedicated single-operator Headquarter session boundary. General multi-user authentication, role/tenant authorization, workspace persistence, and locale routing remain unimplemented; do not treat the single-operator gate as a platform-wide identity system.
 - Administration is aligned with the approved IA at the navigation/roadmap level only; planned entries remain disabled until routes, contracts, and authorization exist.
 - Browser-level responsive, keyboard, screen-reader, contrast, and theme verification remains a release task.
