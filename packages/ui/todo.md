@@ -1,7 +1,7 @@
 # UI Package TODO
 
 > Scope: packages/ui — shared RIOTWORKS / MOONWITNESS React UI foundation.
-> Status: Milestones 1 and 3–6 delivered; Milestone 7 maturity and visual-language implementation added. Milestone 2 browser visual QA and Milestone 7 browser/a11y regression gates remain open.
+> Status: Milestones 1 and 3–9 implemented; CI verified for Milestones 7–9. Remaining release gates are browser visual QA, accessibility review, Headquarter ESLint 9 cleanup, and branch synchronization.
 
 ## Principles
 
@@ -481,7 +481,7 @@ The workbench is an in-app component inventory, not Storybook. The new Node test
 
 ### Release boundary
 
-Milestones 8 and 9 are implementation-complete but CI-pending. Browser rendering and accessibility audits remain release gates; static tests alone do not certify those properties. Keep PR #24 open until checks are green and a maintainer explicitly approves merge.
+Milestones 7–9 are implementation-complete and verified by Repository CI run #783 for the code head. A later documentation-only update was verified by run #786. The separate optional full-workspace quality job was skipped by the existing `FULL_QUALITY_CI` condition. Headquarter's legacy ESLint 9 command still falls back to `lint-skip`; UI package lint passed. Browser visual review and accessibility audits remain release gates. PR #24 is also 29 commits behind `main` and GitHub reports `mergeable_state: dirty`; synchronize the branch and resolve conflicts before merge.
 
 
 ### Latest CI evidence — run #783
