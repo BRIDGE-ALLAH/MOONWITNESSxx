@@ -243,3 +243,46 @@ pub fn validate_rrsets(zone: &str, input: &RrsetPatchRequest) -> Result<(), &'st
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_fully_qualified_zone_names() {
+        assert!(validate_zone_name("example.org.").is_ok());
+        assert!(validate_zone_name("example.org").is_err());
+        assert!(validate_zone_name("-bad.example.").is_err());
+    }
+
+    #[test]
+    fn permits_service_labels_but_restricts_rrsets_to_zone() {
+        let valid = RrsetPatchRequest {
+            rrsets: vec![RrsetWrite {
+                name: "_acme-challenge.example.org.".to_string(),
+                record_type: "TXT".to_string(),
+                ttl: Some(300),
+                changetype: "REPLACE".to_string(),
+                records: vec![RrRecord {
+                    content: "challenge-token".to_string(),
+                    disabled: false,
+                }],
+            }],
+        };
+        assert!(validate_rrsets("example.org.", &valid).is_ok());
+
+        let invalid = RrsetPatchRequest {
+            rrsets: vec![RrsetWrite {
+                name: "other.net.".to_string(),
+                record_type: "A".to_string(),
+                ttl: Some(300),
+                changetype: "REPLACE".to_string(),
+                records: vec![RrRecord {
+                    content: "192.0.2.1".to_string(),
+                    disabled: false,
+                }],
+            }],
+        };
+        assert!(validate_rrsets("example.org.", &invalid).is_err());
+    }
+}
