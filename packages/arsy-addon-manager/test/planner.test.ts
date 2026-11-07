@@ -42,7 +42,7 @@ test("quarantines invalid signature and unsafe entrypoint candidates", () => {
   assert.equal(plan.blocked.length, 1);
 });
 test("rejects module dependency cycles", () => {
-  const planner = new AddonInstallPlanner({ capabilityPolicy: policy });
+  const planner = new AddonInstallPlanner({ capabilityPolicy: policy, runtimeVersions });
   const value = candidate("sales", ["sales", "billing"]);
   const cyclic = { ...value, modules: [
     { id: "sales", addon: "sales", version: "1.0.0", depends: [{ module: "billing", version: "^1.0.0" }] },
@@ -54,7 +54,7 @@ test("rejects module dependency cycles", () => {
 });
 
 test("orders addon dependencies before dependents and rejects addon cycles", () => {
-  const planner = new AddonInstallPlanner({ capabilityPolicy: policy });
+  const planner = new AddonInstallPlanner({ capabilityPolicy: policy, runtimeVersions });
   const base = candidate("base");
   const child = {
     ...candidate("child"),
@@ -79,4 +79,11 @@ test("blocks addons whose declared runtime compatibility does not match the inst
   const plan = planner.plan([incompatible]);
   assert.equal(plan.operations.length, 0);
   assert.match(plan.blocked[0]?.reason ?? "", /ARSY runtime version is incompatible/);
+});
+
+test("produces the same plan fingerprint regardless of candidate input order", () => {
+  const planner = new AddonInstallPlanner({ capabilityPolicy: policy, runtimeVersions, now: () => new Date("2026-01-01T00:00:00.000Z") });
+  const base = candidate("base");
+  const child = { ...candidate("child"), manifest: { ...candidate("child").manifest, dependencies: [{ addon: "base", version: "^1.0.0" }] } };
+  assert.equal(planner.plan([base, child]).id, planner.plan([child, base]).id);
 });
