@@ -6,6 +6,7 @@ import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
 import { registerOpportunityRoutes } from './opportunities/routes.ts'
 import { registerProductRoutes } from './products/routes.ts'
+import { registerFinancialRoutes } from './finance/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
