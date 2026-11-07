@@ -209,6 +209,8 @@ jobs:
 
       - name: Type-check shared UI package
         run: pnpm --filter @riotworks/ui type-check
+      - name: Test shared UI theme contracts
+        run: pnpm --filter @riotworks/ui test
 
       - name: Type-check Headquarter application
         run: pnpm --filter @riotworks/headquarter type-check
@@ -318,5 +320,5 @@ jobs:
           pnpm --filter @riotworks/arsy migrate:up
           pnpm --filter @riotworks/arsy migrate:up
 
-      - name: Verify real PostgreSQL opportunity lifecycle and reconnect persistence
+      - name: Verify real PostgreSQL commerce lifecycle and reconnect persistence
         run: node --experimental-strip-types --test apps/arsy/tests/opportunity-postgres.integration.mjs
