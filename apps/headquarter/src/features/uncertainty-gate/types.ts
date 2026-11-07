@@ -26,6 +26,7 @@ export type GovernanceGatePolicy = {
 
 export type GovernanceGateReasonCode =
   | 'invalid_metric_range'
+  | 'invalid_governance_counters'
   | 'missing_required_metric'
   | 'low_evidence_coverage'
   | 'stale_evidence'
