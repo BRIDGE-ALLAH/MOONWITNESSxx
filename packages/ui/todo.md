@@ -8,7 +8,7 @@
 - Keep this package focused on reusable presentation and interaction infrastructure.
 - Keep domain rules, authorization, persistence, and workflow decisions in application/backend layers.
 - Prefer composable React + TypeScript APIs over a custom JSON/schema-driven UI framework.
-- Preserve RIOTWORKS visual identity and support Night Riot + Paper Riot.
+- Preserve the RIOTWORKS division visual identity and support Night Riot + Paper Riot within explicitly RIOTWORKS-owned product surfaces.
 - Do not mark a task complete until its acceptance criteria are verified.
 
 ## Priority legend
