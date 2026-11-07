@@ -32,7 +32,7 @@ Import `brand-tokens.css` as a reference layer. Product themes should map these 
 - Body/UI: Space Grotesk 400–600 (fallback Segoe UI).
 - Technical: IBM Plex Mono 400–500 (fallback system monospace).
 
-These are family recommendations only. Font binaries are not included because font redistribution rights have not been verified.
+Space Grotesk and IBM Plex Mono are verified upstream as SIL Open Font License 1.1 families. See `fonts/README.md` and `fonts/OFL-1.1.txt` for the license record and conditions. Font binaries remain intentionally unbundled until a pinned upstream release, source hashes, family-specific copyright notices, and reproducible import are recorded.
 
 ## Artwork and texture
 
