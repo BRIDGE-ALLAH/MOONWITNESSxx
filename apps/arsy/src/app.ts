@@ -1,5 +1,5 @@
-import Fastify from 'fastify'
 import rateLimit from '@fastify/rate-limit'
+import Fastify from 'fastify'
 import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
@@ -39,14 +39,17 @@ export function createApp(options: CreateAppOptions = {}) {
 
   typedApp.get('/health/live', async () => ({ status: 'alive' }))
 
-  typedApp.get('/health/ready', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (_request, reply) => {
+  typedApp.get(
+    '/health/ready',
+    { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+    async (_request, reply) => {
     try {
       await databasePool.query('SELECT 1')
       return { status: 'ready' }
     } catch {
       return reply.code(503).send({ status: 'not-ready' })
-    }
-  })
+    },
+  )
 
   setupDatabase(app, databasePool)
   return app
