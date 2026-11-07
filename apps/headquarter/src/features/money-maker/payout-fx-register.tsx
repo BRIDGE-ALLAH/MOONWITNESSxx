@@ -158,6 +158,11 @@ export function PayoutFxRegister() {
       const payload = await response.json()
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Payout transition was rejected.')
+      setTransitionDrafts((current) => {
+        const next = { ...current }
+        delete next[payout.id]
+        return next
+      })
       setMessage(`Payout ${payout.id} updated to ${draft.status}. Ledger movement was recorded only for paid/reversed status.`)
       await refresh()
     } catch (cause) {
@@ -247,7 +252,7 @@ export function PayoutFxRegister() {
         })}</div>}
     </section>
 
-    <form onSubmit={createPayout} className="space-y-4 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
+    <form onSubmit={createPayout} onChange={() => setPayoutKey('')} className="space-y-4 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
       <div><h2 className="font-display text-xl uppercase">Record expected payout</h2><p className="text-xs text-muted-ink">Only reviewed, enabled C1+ channels are selectable. This creates a pending record, not proof of payment.</p></div>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-xs font-mono uppercase">Channel<select name="channelId" required disabled={eligibleChannels.length === 0} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-3 text-xs"><option value="">Select reviewed channel</option>{eligibleChannels.map((channel) => <option key={channel.id} value={channel.id}>{channel.displayName} · {channel.capability}</option>)}</select></label>
@@ -269,7 +274,7 @@ export function PayoutFxRegister() {
       {conversions.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-4 text-sm text-muted-ink">No FX conversions recorded.</p> : <div className="space-y-2">{conversions.map((conversion) => <article key={conversion.id} className="border border-acid-lime/20 p-3 text-xs"><p className="font-mono">{conversion.fromCurrency} {conversion.fromAmountMinor} → {conversion.toCurrency} {conversion.toAmountMinor}</p><p className="text-muted-ink">Rate {conversion.rateNumerator}/{conversion.rateDenominator} · {conversion.rateSource} · {new Date(conversion.observedAt).toLocaleString()}</p><a className="underline text-muted-ink" href={conversion.sourceUrl} target="_blank" rel="noreferrer">Open rate evidence</a></article>)}</div>}
     </section>
 
-    <form onSubmit={createFxConversion} className="space-y-4 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
+    <form onSubmit={createFxConversion} onChange={() => setFxKey('')} className="space-y-4 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
       <div><h2 className="font-display text-xl uppercase">Record manual FX conversion</h2><p className="text-xs text-muted-ink">Select a verified source event. This stores a conversion record for reporting; it does not rewrite the source event or combine currency totals.</p></div>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-xs font-mono uppercase md:col-span-2">Verified source event<select name="sourceEventId" required className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-3 text-xs"><option value="">Select verified event</option>{verifiedEvents.map((item) => <option key={item.id} value={item.id}>{item.eventType} · {item.currency} {item.amountMinor} · {item.id}</option>)}</select></label>
