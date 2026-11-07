@@ -90,6 +90,9 @@ jobs:
       - name: Type-check Headquarter application
         run: pnpm --filter @riotworks/headquarter type-check
 
+      - name: Build Headquarter production bundle
+        run: pnpm --filter @riotworks/headquarter build
+
       - name: Validate registry and SVG source assets
         run: node --experimental-strip-types packages/assets/scripts/validate-assets.mjs
 
