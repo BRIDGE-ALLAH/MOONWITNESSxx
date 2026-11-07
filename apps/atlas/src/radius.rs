@@ -167,10 +167,7 @@ pub async fn get_nas(id: i64) -> Result<Option<Nas>, sqlx::Error> {
     .await
 }
 
-pub async fn update_nas(
-    id: i64,
-    input: &NasWriteRequest,
-) -> Result<Option<Nas>, sqlx::Error> {
+pub async fn update_nas(id: i64, input: &NasWriteRequest) -> Result<Option<Nas>, sqlx::Error> {
     if get_nas(id).await?.is_none() {
         return Ok(None);
     }

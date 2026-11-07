@@ -4,7 +4,7 @@ pub mod cache;
 pub mod config;
 pub mod controllers;
 pub mod database;
+pub mod dns;
 pub mod engine;
 pub mod radius;
 pub mod radius_db;
-pub mod dns;

@@ -74,14 +74,14 @@ impl PowerDnsClient {
     }
 
     fn zone_url(&self, zone: &str) -> String {
-        format!(
-            "{}/api/v1/servers/localhost/zones/{}",
-            self.base_url, zone
-        )
+        format!("{}/api/v1/servers/localhost/zones/{}", self.base_url, zone)
     }
 
     fn zones_url(&self) -> String {
-        format!("{}/api/v1/servers/localhost/zones?dnssec=false", self.base_url)
+        format!(
+            "{}/api/v1/servers/localhost/zones?dnssec=false",
+            self.base_url
+        )
     }
 
     pub async fn list_zones(&self) -> Result<Value, reqwest::Error> {
@@ -207,8 +207,8 @@ pub fn validate_rrsets(zone: &str, input: &RrsetPatchRequest) -> Result<(), &'st
         return Err("request must contain between 1 and 100 RRsets");
     }
     let allowed_types = [
-        "A", "AAAA", "CAA", "CNAME", "DNSKEY", "DS", "HTTPS", "LOC", "MX", "NAPTR",
-        "NS", "PTR", "SRV", "SSHFP", "SVCB", "TLSA", "TXT",
+        "A", "AAAA", "CAA", "CNAME", "DNSKEY", "DS", "HTTPS", "LOC", "MX", "NAPTR", "NS", "PTR",
+        "SRV", "SSHFP", "SVCB", "TLSA", "TXT",
     ];
     for rrset in &input.rrsets {
         validate_rrset_name(&rrset.name)?;
