@@ -208,6 +208,8 @@ jobs:
 
       - name: Type-check shared UI package
         run: pnpm --filter @riotworks/ui type-check
+      - name: Test shared UI theme contracts
+        run: pnpm --filter @riotworks/ui test
 
       - name: Type-check Headquarter application
         run: pnpm --filter @riotworks/headquarter type-check
