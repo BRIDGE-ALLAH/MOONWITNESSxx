@@ -9,7 +9,9 @@
 - ARSY is the only business API and PostgreSQL owner.
 - Headquarter calls ARSY through server-side Next.js route handlers. Browser code never receives the ARSY service token.
 - ARSY protects every `/api/v1/*` business route with both a configured operator identity and a server-side token.
-- Headquarter uses a signed eight-hour HttpOnly, SameSite=Strict operator session. Login and state-changing BFF requests validate the exact configured origin.
+- Headquarter uses a signed eight-hour HttpOnly, SameSite=Strict operator session. Password verification uses asynchronous scrypt; login and state-changing BFF requests validate the exact configured origin.
+- Login failures are tracked by an authenticated ARSY endpoint in PostgreSQL using account-wide and trusted-network buckets. The fifth failure in 15 minutes blocks login across all ARSY/Headquarter instances; if shared protection is unavailable, login fails closed.
+- Production must set `HEADQUARTER_TRUSTED_PROXY_HOPS=1`; one trusted ingress must overwrite `X-Forwarded-For` with a single canonical client IP, and direct access to Headquarter must be blocked. Local development ignores forwarded headers.
 - The current authorization model is a single owner/operator. It is not multi-user RBAC, tenant management, SSO, or customer authentication.
 - Database migrations are explicit operations; application startup never mutates schema.
 - New financial events are pending until reconciled against evidence. Pending amounts do not contribute to verified net contribution.
@@ -34,7 +36,7 @@
 | `ARSY_OPERATOR_TOKEN` | Yes | Same server-only credential configured in ARSY |
 | `HEADQUARTER_OPERATOR_PASSWORD` | Yes | Strong operator password |
 | `HEADQUARTER_SESSION_SECRET` | Yes | Random signing secret of at least 32 characters |
-| `HEADQUARTER_PUBLIC_ORIGIN` | Yes | Exact browser-facing origin, without a path |
+| `HEADQUARTER_PUBLIC_ORIGIN` | Yes | Exact browser-facing origin, without a path |\n| `HEADQUARTER_TRUSTED_PROXY_HOPS` | Production: `1` | Trust one ingress that overwrites `X-Forwarded-For`; direct app access must be blocked. Leave unset/`0` for local development. |
 
 Generate independent random values for the operator token and session secret. Store them in the deployment secret manager. Never commit actual credentials or use `NEXT_PUBLIC_` for server secrets. The Compose default `ARSY_API_BASE_URL=http://arsy:3001` is for container-to-container traffic; override it to `http://127.0.0.1:3001` when running Headquarter directly on the host.
 
@@ -76,7 +78,7 @@ Run against an isolated development or staging database first. Verify backup and
 - Financial event ingestion using integer minor units, ISO currency, request hashes and idempotency keys.
 - Pending/verified/disputed/reversed reconciliation with evidence URL and audit event.
 - Currency-grouped gross receipts, deductions, payout movements, pending totals and exact net-contribution calculation from verified events.
-- Headquarter signed operator session, same-origin server-side BFF proxies, opportunity edit/archive board, product workshop, financial ledger, channel/listing workspace, inspection records and portfolio analytics.
+- Headquarter signed operator session, asynchronous scrypt password verification, PostgreSQL-shared login throttling, same-origin server-side BFF proxies, opportunity edit/archive board, product workshop, financial ledger, channel/listing workspace, inspection records and portfolio analytics.
 - PostgreSQL integration workflow that applies migrations twice and verifies persistence across reconnects, optimistic update conflicts, product promotion/version locking, latest-inspection readiness, financial idempotency/reconciliation and audit events.
 
 ## Not yet implemented or not production-verified
@@ -86,7 +88,7 @@ Run against an isolated development or staging database first. Verify backup and
 - Automated market-source connectors, freshness/recheck jobs, and measured discovery/conversion cohorts. Signal Room intentionally remains an honest no-source empty state.
 - Payout import and provider reconciliation; current financial events are manually recorded by the operator. Operator-supplied evidence/reconciliation is not a bank or payment-provider verification.
 - Multi-user identities, roles, tenant isolation and customer-facing checkout.
-- Browser E2E, screen-reader/visual regression review, production deployment, managed secret provisioning, backup/restore drill, rollback and live smoke tests.
+- Trusted-ingress enforcement and production login-throttle monitoring have not been verified outside isolated CI; configure one ingress that overwrites the client IP header and block direct access.\n- Browser E2E, screen-reader/visual regression review, production deployment, managed secret provisioning, backup/restore drill, rollback and live smoke tests.
 
 The current asset adapter is single-node filesystem storage. Asset rights/provenance fields are operator-entered and do not independently establish legal permission. Back up the `arsy_assets` Docker volume with the database and test restore before production. Do not run multiple ARSY replicas against independent local volumes.
 

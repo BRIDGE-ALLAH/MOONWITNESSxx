@@ -5,6 +5,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { createDatabasePool } from '../src/db.ts'
+import { createApp } from '../src/app.ts'
 import { evaluateOpportunity, opportunityInputSchema } from '../src/opportunities/domain.ts'
 import { OpportunityRepository } from '../src/opportunities/repository.ts'
 import { ProductRepository } from '../src/products/repository.ts'
@@ -498,5 +499,48 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     await pool.query('DELETE FROM arsy_opportunities WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.end()
     await rm(assetStorageDir, { recursive: true, force: true })
+  }
+})
+
+
+test('shared PostgreSQL login throttling is consistent across two ARSY instances', {
+  skip: !process.env.DATABASE_URL,
+}, async () => {
+  const ownerId = `login-limit-${randomUUID()}`
+  const token = 'integration-shared-login-token'
+  const networkHash = createHash('sha256').update(ownerId).digest('hex')
+  const poolA = createDatabasePool()
+  const poolB = createDatabasePool()
+  const appA = createApp({ databasePool: poolA, logger: false, env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token } })
+  const appB = createApp({ databasePool: poolB, logger: false, env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token } })
+  const send = (app, action) => app.inject({
+    method: 'POST',
+    url: '/api/v1/auth/login-attempts',
+    headers: { 'x-arsy-operator-token': token },
+    payload: { action, networkHash },
+  })
+
+  try {
+    for (let index = 0; index < 4; index += 1) {
+      const response = await send(index % 2 === 0 ? appA : appB, 'failure')
+      assert.equal(response.statusCode, 200)
+      assert.equal(response.json().data.allowed, true)
+    }
+    const fifth = await send(appB, 'failure')
+    assert.equal(fifth.statusCode, 200)
+    assert.equal(fifth.json().data.allowed, false)
+    assert.ok(fifth.json().data.retryAfterSeconds > 0)
+
+    const blockedFromOtherInstance = await send(appA, 'check')
+    assert.equal(blockedFromOtherInstance.json().data.allowed, false)
+
+    const successfulLoginClearsBuckets = await send(appB, 'success')
+    assert.equal(successfulLoginClearsBuckets.json().data.allowed, true)
+    const clearedFromOtherInstance = await send(appA, 'check')
+    assert.equal(clearedFromOtherInstance.json().data.allowed, true)
+  } finally {
+    await poolA.query('DELETE FROM arsy_login_attempt_buckets WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    await appA.close()
+    await appB.close()
   }
 })
