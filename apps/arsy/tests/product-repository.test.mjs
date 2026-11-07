@@ -111,3 +111,20 @@ test('loads version history only after owner-scoped product existence check', as
   assert.deepEqual(calls[0].values, ['owner-a', productRow.id])
   assert.deepEqual(calls[1].values, ['owner-a', productRow.id])
 })
+
+
+test('allows retirement of a previously listed product without reopening publication', async () => {
+  const calls = []
+  const listed = { ...productRow, lifecycle_state: 'listed' }
+  const repository = new ProductRepository({
+    query: async (sql, values) => {
+      calls.push({ sql, values })
+      return { rows: calls.length === 1 ? [listed] : [{ ...listed, lifecycle_state: 'retired' }] }
+    },
+    end: async () => undefined,
+  })
+  const result = await repository.transition('owner-a', 'owner-a', productRow.id, 1, 'retired', 'The listed product has reached end of life and must be retired.')
+  assert.equal(result.conflict, false)
+  assert.equal(result.product?.lifecycleState, 'retired')
+  assert.match(calls[1].sql, /lifecycle-transition/)
+})
