@@ -38,6 +38,7 @@ export function FinancialLedger() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [idempotencyKey, setIdempotencyKey] = useState('')
   const [reconcilingId, setReconcilingId] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -82,6 +83,8 @@ export function FinancialLedger() {
     const data = new FormData(form)
     try {
       const occurredAt = new Date(String(data.get('occurredAt') || '')).toISOString()
+      const stableIdempotencyKey = idempotencyKey || `manual-${crypto.randomUUID()}`
+      setIdempotencyKey(stableIdempotencyKey)
       const response = await fetch('/api/financial-events', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -93,13 +96,14 @@ export function FinancialLedger() {
           occurredAt,
           source: String(data.get('source') || ''),
           providerReference: String(data.get('providerReference') || '') || undefined,
-          idempotencyKey: `manual-${crypto.randomUUID()}`,
+          idempotencyKey: stableIdempotencyKey,
         }),
       })
       const payload = await response.json()
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to record financial event.')
       form.reset()
+      setIdempotencyKey('')
       setMessage(payload.replayed ? 'Existing event returned for this idempotency key.' : 'Financial event recorded as pending reconciliation.')
       await refresh()
     } catch (cause) {
@@ -147,7 +151,7 @@ export function FinancialLedger() {
     </section>
 
     <section className="space-y-3">
-      <div><h2 className="font-display text-2xl uppercase">Financial event register</h2><p className="text-xs text-muted-ink">Manual source-backed entry. New events are pending until reconciled; they are not automatically treated as revenue.</p></div>
+      <div><h2 className="font-display text-2xl uppercase">Financial event register</h2><p className="text-xs text-muted-ink">Manual source-backed entry. Retries reuse the same idempotency key until success. New events are pending until reconciled; they are not automatically treated as revenue.</p></div>
       {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading events…</p>
         : events.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No financial events recorded yet.</p>
         : <div className="space-y-3">{events.map((item) => <article key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-mono text-sm uppercase">{item.eventType.replaceAll('-', ' ')}</h3><p className="mt-1 text-xs text-muted-ink">{item.source} · {new Date(item.occurredAt).toLocaleString()}</p><p className="mt-1 break-all text-[10px] text-muted-ink">ID: {item.id}{item.providerReference ? ` · REF: ${item.providerReference}` : ''}</p></div><div className="text-right"><p className="font-mono text-lg">{item.currency} {item.amountMinor}</p><p className="text-[10px] font-mono uppercase text-acid-lime">{item.reconciliationState}</p></div></div>
