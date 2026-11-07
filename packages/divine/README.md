@@ -14,7 +14,7 @@ Divine does not mint replacement Corpus IDs, duplicate canonical records, genera
 - `./evidence`, `./reasoning`, `./research`: Phase 6–8 evidence graph, defeasible reasoning, reproducible research and experimental proof-carrying certificates.
 - `./preservation`: Phase 9 deterministic SHA-256 manifests, hash-chained decision history, integrity verification and explicit rights-action gate.
 - `./ai`: Phase 10 provider-neutral extraction port, exact source-span validation, model/prompt provenance, candidate-only state, explicit human review and a non-writing promotion envelope.
-- `./interop`: Phase 11 bounded exporters for PROV-O, SKOS, TEI P5, IIIF Presentation 3 and W3C Web Annotation, each with explicit fidelity/loss reports.
+- `./interop`: Phase 11 bounded exporters for PROV-O, SKOS, TEI P5, IIIF Presentation 3 and W3C Web Annotation, each with explicit fidelity/loss reports and an enforceable Semantic Loss Budget policy.
 
 ## Important limits
 These are deterministic domain slices, not production integrations. AI extraction requires an externally supplied provider adapter; this package does not call an AI service. Promotion envelopes do not write to Corpus. Preservation hashes provide tamper evidence, not signatures or legal proof. TEI and IIIF outputs are deliberately minimal profiles; IIIF canvas dimensions are placeholders until supplied by a rights-aware media adapter. No database, graph store, vector store, Python runtime or network dependency is introduced.
