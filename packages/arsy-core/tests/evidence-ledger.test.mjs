@@ -19,7 +19,7 @@ test('appends an ordered hash chain and verifies it', async () => {
 test('makes identical retries idempotent and rejects id collisions', async () => {
   const ledger = new EvidenceLedger(new InMemoryEvidenceStore())
   const input = {
-    id: 'event-1', kind: 'observation.recorded' as const, aggregateId: 'case-1',
+    id: 'event-1', kind: 'observation.recorded', aggregateId: 'case-1',
     occurredAt: '2026-11-08T00:00:00Z', actorId: 'system', payload: { value: 1 },
   }
   const first = await ledger.append(input)
