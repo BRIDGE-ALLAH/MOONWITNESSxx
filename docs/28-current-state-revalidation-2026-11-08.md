@@ -179,3 +179,19 @@ A further remote update occurred after section 8 was written.
 - The repository's latest changes show active remediation, not production readiness. No current CI, live database, browser, container runtime or production deployment verification was performed by this session.
 - Release remains **NO-GO**. Do not infer that a release is safe from merged data-truth fixes or draft backend foundations.
 
+
+### 9.5 GitHub Actions evidence captured for inspected heads
+
+The following check-run states were fetched directly from GitHub after the preceding snapshot:
+
+| Ref | Observed checks | Interpretation |
+|---|---|---|
+| main `2d3bdc6` | Developer Experience succeeded; CodeQL in progress; Repository Integrity, Asset Integrity, WITNESS FABRIC and full workspace typecheck/build cancelled | Mainline quality run is not fully green |
+| PR #102 head `766f58c` | Repository Integrity, Asset Integrity, WITNESS FABRIC, Developer Experience, full workspace typecheck/build, both container image build checks and CodeQL succeeded | Green on this exact PR head, but based on older main `8621f86`; revalidate after updating its base |
+| PR #106 head `6731613` | CodeQL in progress; no other completed checks returned at query time | Not verified |
+| PR #107 head `5b6076a` | Repository Integrity, Asset Integrity, WITNESS FABRIC, Developer Experience and CodeQL succeeded; full workspace typecheck/build in progress | Partially verified; wait for typecheck/build and required checks |
+| PR #109 head `9b3b09d` | Repository Integrity, Asset Integrity, WITNESS FABRIC, Developer Experience and CodeQL checks in progress | Not verified |
+| PR #108 head `8ac5e76` | Checks queued/in progress, including repository/asset/fabric/DX, image build and CodeQL | Documentation PR not yet green at observation time |
+
+These are point-in-time states, not final outcomes. A queued or in-progress check is not a pass. Re-fetch the exact head's checks before merge.
+
