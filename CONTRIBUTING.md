@@ -42,21 +42,21 @@ After `pnpm install`, the root `prepare` script configures `core.hooksPath=.husk
 
 ## Common commands
 
-| Command                | Purpose                                                            |
-| ---------------------- | ------------------------------------------------------------------ |
-| `pnpm dev`             | Start all packages with a dev task                                 |
-| `pnpm dev:headquarter` | Start Headquarter only                                             |
-| `pnpm dev:arsy`        | Start ARSY only                                                    |
-| `pnpm check:repo`      | Run the read-only workspace/governance audit                       |
-| `pnpm audit:repo`      | Write an audit report to ignored `.artifacts/`                     |
-| `pnpm format`          | Format modified, staged, and untracked supported files             |
-| `pnpm format:check`    | Verify formatting for changed files only                           |
-| `pnpm format:check:all` | Audit every tracked Prettier-supported file                        |
-| `pnpm test`            | Run Node's built-in automation tests                               |
-| `pnpm lockfile:check`  | Read-only frozen verification of lockfile consistency              |
-| `pnpm lockfile:refresh` | Guarded lockfile regeneration; refuses pre-existing local edits   |
-| `pnpm validate:repo`   | Run repository integrity, format, and automation tests             |
-| `pnpm validate`        | Run repository validation, package type-checks, and builds         |
+| Command                 | Purpose                                                         |
+| ----------------------- | --------------------------------------------------------------- |
+| `pnpm dev`              | Start all packages with a dev task                              |
+| `pnpm dev:headquarter`  | Start Headquarter only                                          |
+| `pnpm dev:arsy`         | Start ARSY only                                                 |
+| `pnpm check:repo`       | Run the read-only workspace/governance audit                    |
+| `pnpm audit:repo`       | Write an audit report to ignored `.artifacts/`                  |
+| `pnpm format`           | Format modified, staged, and untracked supported files          |
+| `pnpm format:check`     | Verify formatting for changed files only                        |
+| `pnpm format:check:all` | Audit every tracked Prettier-supported file                     |
+| `pnpm test`             | Run Node's built-in automation tests                            |
+| `pnpm lockfile:check`   | Read-only frozen verification of lockfile consistency           |
+| `pnpm lockfile:refresh` | Guarded lockfile regeneration; refuses pre-existing local edits |
+| `pnpm validate:repo`    | Run repository integrity, format, and automation tests          |
+| `pnpm validate`         | Run repository validation, package type-checks, and builds      |
 
 A command is only a reliable quality gate when the affected package actually defines that capability. Do not add placeholder scripts that return success without checking anything. Formatting is intentionally changed-files-only: the current legacy prototype tree has not received a mass-formatting rewrite. The pnpm lockfile is excluded because pnpm owns its serialization. GitHub Actions workflow files are excluded from Prettier and checked separately with actionlint in CI.
 
