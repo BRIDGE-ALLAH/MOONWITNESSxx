@@ -20,6 +20,7 @@ export function evaluateCompletion(
 ): CompletionAssessment {
   if (!contract.id.trim() || !contract.version.trim()) throw new Error('contract id and version are required')
   if (!executorId.trim()) throw new Error('executorId is required')
+  if (!contract.checks.some((check) => check.required !== false)) throw new Error('contract must define at least one required check')
   const checkIds = new Set<string>()
   for (const check of contract.checks) {
     if (!check.id.trim() || checkIds.has(check.id)) throw new Error('Duplicate or empty verification check id: ' + check.id)
@@ -40,7 +41,10 @@ export function evaluateCompletion(
     }
     if (matches.length > 1) return { checkId: check.id, status: 'UNVERIFIED', reasonCodes: ['duplicate_verification_observations'], evidenceRefs: [] }
     const observation = matches[0]
-    if (!observation.verifierId.trim() || Number.isNaN(Date.parse(observation.observedAt))) {
+    if (!['PASS', 'FAIL', 'UNVERIFIED'].includes(observation.status)) {
+      return { checkId: check.id, status: 'UNVERIFIED', reasonCodes: ['invalid_verification_status'], evidenceRefs: [] }
+    }
+    if (typeof observation.verifierId !== 'string' || !observation.verifierId.trim() || Number.isNaN(Date.parse(observation.observedAt))) {
       return { checkId: check.id, status: 'UNVERIFIED', reasonCodes: ['invalid_verifier_or_timestamp'], evidenceRefs: [] }
     }
     const refs = [...(observation.evidenceRefs ?? [])].filter((ref) => ref.trim())
