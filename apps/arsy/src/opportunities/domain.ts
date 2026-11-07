@@ -130,6 +130,13 @@ export const opportunityInputSchema = z.object({
     if (detail.status !== input.hardGates[gate]) {
       context.addIssue({ code: 'custom', path: ['hardGateDetails', gate, 'status'], message: 'Gate detail status must match the gate decision.' })
     }
+    if (detail.status !== 'unknown' && detail.evidenceIds.length === 0) {
+      context.addIssue({
+        code: 'custom',
+        path: ['hardGateDetails', gate, 'evidenceIds'],
+        message: 'A passed or blocked hard gate requires at least one supporting evidence reference.',
+      })
+    }
     for (const evidenceId of detail.evidenceIds) {
       if (!evidenceIds.has(evidenceId)) {
         context.addIssue({ code: 'custom', path: ['hardGateDetails', gate, 'evidenceIds'], message: `Unknown evidence reference: ${evidenceId}` })
