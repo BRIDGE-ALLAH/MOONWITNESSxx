@@ -451,3 +451,15 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Neither module claims a live API, production UI, persistent storage, or real-world execution capability.
 
 - [x] Phase 6 engineering-foundation gate closed after required full-workspace validation/build and CodeQL passed on PR #43.
+
+
+## Phase 9–10 execution record — 2026-11-08
+
+- [x] Phase 9 Decision Graph Explorer route and read-only synthetic graph UI added at `/decision-graph`.
+- [x] Decision Graph UI surfaces traceability, stale evidence, contradiction edges, Decision Debt, and deterministic integrity findings.
+- [x] Phase 10 Scenario Arena route and interactive scenario selection added at `/scenario-forge`.
+- [x] Scenario Arena compares conservative, expected, and stress cases against one immutable synthetic baseline; includes assumption ledger and sensitivity ranking.
+- [x] Navigation exposes both routes as prototype modules; both remain visibly demo/shadow-only.
+- [x] Research notes recorded in `PHASE-9-10-RESEARCH.md` covering papers, GitHub projects, community discussions, product hypotheses, and evaluation metrics.
+- [ ] Browser E2E, keyboard/screen-reader verification, visual regression, and live ARSY contracts remain open.
+- [ ] No live data, persistence, authorization, or production mutation has been claimed or implemented by these UI phases.

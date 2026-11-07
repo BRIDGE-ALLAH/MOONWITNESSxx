@@ -48,3 +48,13 @@
 | Scenario Forge / Shadow Reality | Planning / ARSY | Deterministic shadow-only calculation kernel; no UI or live snapshot | Versioned read-only snapshots, units/freshness, uncertainty model, scenario persistence, explicit approval boundary |
 
 These are foundations, not production features. Scenario results must never be promoted directly to live mutations; Decision Graph explanations must never be mistaken for evidence.
+
+
+## Emerging modules (Phase 9–10)
+
+| Module | Route | Current maturity | Production gate |
+|---|---|---|---|
+| Decision Graph Explorer | `/decision-graph` | Read-only synthetic explorer; graph assessment and Decision Debt display | Versioned append-only ARSY graph contract, workspace authorization, redaction/retention, browser accessibility, graph pagination |
+| Scenario Arena | `/scenario-forge` | Interactive synthetic scenario comparison; deterministic shadow-only calculations | Versioned ARSY snapshot contract, units/freshness, uncertainty semantics, replay capsule, persistence and authorization |
+
+The interfaces are operator-facing prototypes. No scenario can be promoted to a live mutation; no fixture represents real workspace state.
