@@ -10,8 +10,8 @@
     "dev:all": "turbo run dev --parallel",
     "lint:all": "pnpm run lint",
     "lint": "pnpm run format:check",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "node scripts/format-changed.mjs --write",
+    "format:check": "node scripts/format-changed.mjs --check",
     "typecheck:all": "pnpm run type-check",
     "typecheck": "pnpm run type-check",
     "type-check": "turbo run type-check",
@@ -30,6 +30,9 @@
     "turbo": "^2.3.3",
     "typescript": "^5.7.2"
   },
-  "engines": { "node": ">=22", "pnpm": ">=12.16.1" },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=12.16.1"
+  },
   "packageManager": "pnpm@12.16.1"
 }
