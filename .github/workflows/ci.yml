@@ -154,17 +154,17 @@ jobs:
 
       - name: Smoke test adaptive swarm topology
         run: |
-          printf '%s\\n' '{"agents":[{"id":"api","provides":["User.v2"]},{"id":"web","consumes":["User.v2"]}]}' > /tmp/moonwitness-swarm.json
+          printf '%s\n' '{"agents":[{"id":"api","provides":["User.v2"]},{"id":"web","consumes":["User.v2"]}]}' > /tmp/moonwitness-swarm.json
           pnpm devx swarm-plan --input=/tmp/moonwitness-swarm.json
 
       - name: Smoke test autonomy budget
         run: |
-          printf '%s\\n' '{"risk":"high","signals":{"collisions":1}}' > /tmp/moonwitness-autonomy.json
+          printf '%s\n' '{"risk":"high","signals":{"collisions":1}}' > /tmp/moonwitness-autonomy.json
           pnpm devx autonomy-budget --input=/tmp/moonwitness-autonomy.json
 
       - name: Smoke test incident replay compiler
         run: |
-          printf '%s\\n' '{"incident":{"id":"ci-incident","selectedOperationIds":["notify"],"operations":[{"id":"write","action":"write","invariants":["record-exists"]},{"id":"notify","action":"webhook","dependsOn":["write"],"invariants":["single-delivery"]}]}}' > /tmp/moonwitness-incident.json
+          printf '%s\n' '{"incident":{"id":"ci-incident","selectedOperationIds":["notify"],"operations":[{"id":"write","action":"write","invariants":["record-exists"]},{"id":"notify","action":"webhook","dependsOn":["write"],"invariants":["single-delivery"]}]}}' > /tmp/moonwitness-incident.json
           pnpm devx incident-compile --input=/tmp/moonwitness-incident.json
 
   asset-integrity:
