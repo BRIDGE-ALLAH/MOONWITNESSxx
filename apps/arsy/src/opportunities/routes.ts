@@ -5,10 +5,13 @@ import { evaluateOpportunity, opportunityInputSchema } from './domain.ts'
 import { OpportunityRepository } from './repository.ts'
 
 const idSchema = z.string().uuid()
-const updateSchema = opportunityInputSchema.extend({ expectedRevision: z.number().int().positive() })
 const decisionSchema = z.object({
   decision: z.enum(['blocked', 'research-more', 'prototype-candidate', 'park']),
   rationale: z.string().trim().min(10).max(2000),
+})
+const updateSchema = z.object({
+  expectedRevision: z.number().int().positive(),
+  input: opportunityInputSchema,
 })
 const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -53,21 +56,50 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
     return { data: record }
   })
 
+
   app.patch('/api/v1/opportunities/:id', async (request, reply) => {
     const params = z.object({ id: idSchema }).safeParse(request.params)
     const body = updateSchema.safeParse(request.body)
     if (!params.success || !body.success) {
-      return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Opportunity update input is invalid.', details: body.success ? undefined : body.error.flatten() } })
+      return reply.code(400).send({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Opportunity update input is invalid.',
+          ...(body.success ? {} : { details: body.error.flatten() }),
+        },
+      })
     }
-    const { expectedRevision, ...input } = body.data
-    const evaluation = evaluateOpportunity(input)
-    const result = await repository.update(ownerId, actorId, params.data.id, input, evaluation, expectedRevision)
-    if (!result.record) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
-    if (result.conflict) return reply.code(409).send({
-      error: { code: 'REVISION_CONFLICT', message: 'This opportunity changed since it was loaded. Refresh and review the latest record before retrying.' },
-      data: result.record,
-    })
-    return { data: result.record }
+
+    const evaluation = evaluateOpportunity(body.data.input)
+    const result = await repository.update(
+      ownerId,
+      actorId,
+      params.data.id,
+      body.data.expectedRevision,
+      body.data.input,
+      evaluation,
+    )
+    if (result.status === 'not-found') {
+      return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
+    }
+    if (result.status === 'promoted') {
+      return reply.code(409).send({
+        error: {
+          code: 'OPPORTUNITY_VERSION_LOCKED',
+          message: 'This opportunity has an immutable product snapshot. Create a new product version to change the product brief.',
+        },
+      })
+    }
+    if (result.status === 'stale') {
+      return reply.code(409).send({
+        error: { code: 'STALE_WRITE', message: 'This opportunity changed after it was loaded. Reload the latest record before saving.' },
+        current: result.opportunity,
+      })
+    }
+    if (result.status === 'conflict') {
+      return reply.code(409).send({ error: { code: 'UPDATE_CONFLICT', message: 'The opportunity could not be updated. Reload and retry.' } })
+    }
+    return { data: result.opportunity }
   })
 
   app.patch('/api/v1/opportunities/:id/decision', async (request, reply) => {
@@ -81,7 +113,18 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
     if (body.data.decision === 'prototype-candidate' && (gateBlocked || gateUnknown || existing.evaluation.score === null || existing.evaluation.score < 80)) {
       return reply.code(409).send({ error: { code: 'PROMOTION_BLOCKED', message: 'Opportunity cannot be promoted while a hard gate is blocked/unknown or the evidence score is below 80.' } })
     }
-    const record = await repository.decide(ownerId, actorId, params.data.id, body.data.decision, body.data.rationale)
+    const record = await repository.decide(ownerId, actorId, params.data.id, body.data.decision, body.data.rationale, existing.revision)
+    if (!record) {
+      const current = await repository.get(ownerId, params.data.id)
+      if (!current) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
+      if (await repository.isPromoted(ownerId, params.data.id)) {
+        return reply.code(409).send({ error: { code: 'OPPORTUNITY_VERSION_LOCKED', message: 'This opportunity has an immutable product snapshot.' } })
+      }
+      return reply.code(409).send({
+        error: { code: 'STALE_WRITE', message: 'The opportunity changed while this decision was being saved. Reload and retry.' },
+        current,
+      })
+    }
     return { data: record }
   })
 
