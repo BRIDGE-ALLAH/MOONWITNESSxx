@@ -6,7 +6,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const STATE_PATH = '.moonwitness/install-state.json'
-const MIN_NODE_MAJOR = 20
+const MIN_NODE_MAJOR = 22
 
 export function parseArgs(argv) {
   const [command = 'help', ...rest] = argv
