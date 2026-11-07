@@ -28,32 +28,32 @@ test('both themes define the complete semantic token contract', async () => {
     }
     assert.ok(start >= 0 && end > open, 'theme block exists: ' + selector)
     const block = css.slice(open, end)
-    for (const token of required) assert.match(block, new RegExp('--' + token + '\\s*:'), selector + ' defines --' + token)
+    for (const token of required) assert.ok(block.includes('--' + token + ':'), selector + ' defines --' + token)
   }
 })
 
 test('focus, motion, and brand atmosphere have accessible fallbacks', async () => {
   const css = await read('../src/styles/globals.css')
   const brand = await read('../src/components/brand-language.tsx')
-  assert.match(css, /:focus-visible/)
-  assert.match(css, /prefers-reduced-motion:\\s*reduce/)
-  assert.match(css, /\\.riot-atmosphere/)
-  assert.match(css, /\\.riot-live-indicator/)
-  assert.match(brand, /aria-hidden="true"/)
-  assert.match(brand, /aria-live="polite"/)
+  assert.ok(css.includes(':focus-visible'))
+  assert.ok(css.includes('@media (prefers-reduced-motion: reduce)'))
+  assert.ok(css.includes('.riot-atmosphere'))
+  assert.ok(css.includes('.riot-live-indicator'))
+  assert.ok(brand.includes('aria-hidden="true"'))
+  assert.ok(brand.includes('aria-live="polite"'))
 })
 
 test('brand language is part of the intentional public API', async () => {
   const entry = await read('../src/index.ts')
-  assert.match(entry, /RiotSignalHeader/)
-  assert.match(entry, /RiotLiveIndicator/)
-  assert.match(entry, /RiotAtmosphere/)
+  assert.ok(entry.includes('RiotSignalHeader'))
+  assert.ok(entry.includes('RiotLiveIndicator'))
+  assert.ok(entry.includes('RiotAtmosphere'))
 })
 
 test('the component workbench is documented and reachable in Headquarter', async () => {
   const docs = await read('../WORKBENCH.md')
   const page = await read('../../../apps/headquarter/src/app/ui-lab/page.tsx')
-  assert.match(docs, /\\/ui-lab/)
-  assert.match(page, /RiotSignalHeader/)
-  assert.match(page, /RiotAtmosphere/)
+  assert.ok(docs.includes('/ui-lab'))
+  assert.ok(page.includes('RiotSignalHeader'))
+  assert.ok(page.includes('RiotAtmosphere'))
 })
