@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@riotworks/ui'
+import { Badge, Card, CardHeader, CardTitle, CardContent } from '@riotworks/ui'
 
 const trendData = [
   { id: 1, title: 'Digital Art Collectibles', category: 'digital-art', trend: 'up', confidence: 85, source: 'Twitter', sourceLink: 'https://twitter.com' },
@@ -32,12 +32,6 @@ const marketplaceObservations = [
   { id: 1, platform: 'OpenSea', observation: 'Floor prices stabilizing', trend: 'up' },
   { id: 2, platform: 'Magic Eden', observation: 'New collection drops increasing', trend: 'up' },
   { id: 2, platform: 'Rarible', observation: 'Volume decreasing', trend: 'down' },
-]
-
-const evidenceData = [
-  { id: 1, title: 'Twitter Thread Analysis', date: '2024-01-15', type: 'sourced', confidence: 85 },
-  { id: 2, title: 'Community Sentiment Survey', date: '2024-01-10', type: 'sourced', confidence: 72 },
-  { id: 2, title: 'AI-Generated Market Forecast', date: '2024-01-08', type: 'model-generated', confidence: 60 },
 ]
 
 const researchStatus = [
