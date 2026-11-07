@@ -32,6 +32,7 @@ export function OpportunityBoard() {
   const [promotingId, setPromotingId] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [opportunityIdempotencyKey, setOpportunityIdempotencyKey] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [scores, setScores] = useState(emptyScores)
@@ -96,11 +97,14 @@ export function OpportunityBoard() {
       scores: scoreValues, scoreDetails, hardGates, hardGateDetails,
     }
     try {
-      const response = await fetch('/api/opportunities', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+      const stableIdempotencyKey = opportunityIdempotencyKey || `opportunity-${crypto.randomUUID()}`
+      setOpportunityIdempotencyKey(stableIdempotencyKey)
+      const response = await fetch('/api/opportunities', { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': stableIdempotencyKey }, body: JSON.stringify(payload) })
       const result = await response.json()
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(result.error?.message || 'Unable to save opportunity.')
       form.reset()
+      setOpportunityIdempotencyKey('')
       setScores({ ...emptyScores }); setScoreRationales({ ...emptyRationales }); setHardGates({ ...emptyGates }); setGateRationales({ ...emptyGateRationales })
       setMessage('Opportunity saved. Review evidence and hard gates before production.')
       await refresh()
