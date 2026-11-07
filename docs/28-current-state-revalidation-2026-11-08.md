@@ -98,3 +98,46 @@ Preserve existing URLs and shared UI tokens. Prioritize demo/data truth, accessi
 ## Audit limitations
 
 This revalidation used the GitHub repository/API surfaces and CI evidence available in this session. It did not perform a local full clone, run Docker, access production credentials/infrastructure, inspect a live deployed application, or perform manual browser/screen-reader testing. Those checks remain explicitly unverified.
+
+
+## 8. Current mainline revalidation after Docker connector — 2026-11-08
+
+**Observed main HEAD:** `1f16b12c77cab5f73a6d05fb1fbc4f12689a6f0b` (PR #154).
+
+### Merged real product capability
+PR #154 adds a narrowly scoped, authenticated, owner-scoped Docker Engine read-only connector:
+- ARSY server-side adapter for local Unix socket and remote verified TLS/mTLS endpoints.
+- Remote DNS resolution/address validation and address pinning, explicit local socket allowlist, bounded requests, and no arbitrary API proxy.
+- PostgreSQL-persisted connection metadata, encrypted TLS credentials, append-only audit events.
+- Headquarter operator session, server-side proxy, real Engine info/container inventory/logs.
+- Read-only by design. No start/stop/exec/deploy operations are exposed.
+- IPv6 IETF special-purpose parent range `2001::/23` is denied by default with regression tests.
+
+Exact PR-head gates passed before merge: Repository CI (including WITNESS FABRIC, Developer Experience, Asset Integrity, repository integrity, full workspace typecheck/build), Docker/PostgreSQL integration, real Headquarter browser E2E including reload/persistence, CodeQL, and ARSY/Headquarter container image build. Issue #116 is closed for this completed initial slice.
+
+**Security boundary:** access to a local Docker socket is host-root-equivalent and remains explicit opt-in. The branch's process-local fallback limiter is not distributed protection; shared PostgreSQL login throttling remains a separate production gate in Issue #123.
+
+### Current Money Maker state — not integrated
+The successor candidate remains draft PR #126, current inspected head `eef2ecb6fc53bfc7fb3dbbc26df84ee96905130b`:
+- Contains persisted opportunities, product briefs/version history, assets/provenance, inspections, channel review, manual listing package, financial events, payouts/FX, and shared login attempt storage.
+- Product version creation uses an expected-version compare-and-swap at the database row-lock boundary; an owner-scoped history read endpoint and UI are present.
+- A shared HTTP(S)-only evidence URL schema and route-level tests are present.
+- Aftershock uses API-derived persisted data and explicitly reports unavailable conversion/cohort metrics rather than fabricating them.
+
+However, PR #126 remains a draft, is not mergeable, and is 109 commits ahead / 75 behind main from an older base `75ec7ab9...`. Its 127-file diff overlaps the ARSY composition root/database setup, Docker/Compose, env/config/workflow files, Headquarter routes/UI, and shared UI theme files. It must be reconciled carefully with the merged Docker connector and current main; do not force-merge or discard existing branch work. No workflow run is registered for this exact PR head at this revalidation. Earlier queued, cancelled, or failed runs are not evidence of a pass.
+
+### Current package and design state
+- UI/Assets consumer documentation, SVG resource isolation, font runtime/rights correction, and evidence-based asset checklist updates are merged (#159, #160, #162, #163).
+- `@riotworks/ui` remains a private source-exported workspace package; no standalone public distribution or package publication is authorized.
+- The custom MOONWITNESS Signal WOFF2 remains unlicensed/internal-only and is not loaded by runtime.
+- Logo/brand owner approval, external asset redistribution policy, browser visual regression, rendered-state contrast, keyboard/screen-reader and WCAG 2.2 AA checks remain open.
+
+### Release metadata and production decision
+- Root package version is still `1.0.11`; the newest numbered CHANGELOG entry is still `1.0.0`. This discrepancy must be resolved against authoritative tag/release history before any version bump.
+- Workflow inventory currently has CI, CodeQL, container build, Docker/PostgreSQL integration, Headquarter browser E2E, PR labeling, lockfile refresh, corpus migration and weekly detection. No production deployment workflow is present in this inventory.
+- No verified production target, managed secrets, TLS/ingress, backup/restore, monitoring/alerting, rollback authority or live smoke-test credentials/URL are recorded.
+
+**Production readiness remains NO-GO.** No package publication, version bump, tag, GitHub Release or production deployment was attempted.
+
+### Verification boundary
+This update is based on current GitHub main files, PR diffs, issue state and exact PR #154 workflow results. It does not claim access to a local working tree, production PostgreSQL, production secrets, live deployment, manual cross-browser review, or manual assistive-technology testing.
