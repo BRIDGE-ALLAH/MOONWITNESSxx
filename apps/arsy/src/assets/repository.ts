@@ -137,6 +137,11 @@ export class AssetRepository {
         WHERE asset.owner_id = $1 AND asset.id = $2 AND asset.archived_at IS NULL
           AND pv.version = (SELECT MAX(latest.version) FROM arsy_product_versions latest WHERE latest.product_id = p.id)
           AND p.lifecycle_state IN ('brief', 'production', 'review', 'ready')
+          AND NOT EXISTS (
+            SELECT 1 FROM arsy_listings listing
+            WHERE listing.product_version_id = pv.id
+              AND listing.status IN ('ready', 'submitted', 'published')
+          )
         FOR UPDATE OF p
       ), changed AS (
         UPDATE arsy_assets asset SET archived_at = now()
