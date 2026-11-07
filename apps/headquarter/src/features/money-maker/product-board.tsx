@@ -24,8 +24,8 @@ export function ProductBoard() {
     setLoading(true); setError('')
     try {
       const [opportunityResponse, productResponse] = await Promise.all([
-        fetch('/api/opportunities', { cache: 'no-store' }),
-        fetch('/api/products', { cache: 'no-store' }),
+        fetch('/api/opportunities?limit=100', { cache: 'no-store' }),
+        fetch('/api/products?limit=100', { cache: 'no-store' }),
       ])
       const [opportunityPayload, productPayload] = await Promise.all([opportunityResponse.json(), productResponse.json()])
       if (opportunityResponse.status === 401 || productResponse.status === 401) throw new Error('Operator login required. Sign in at /login.')
