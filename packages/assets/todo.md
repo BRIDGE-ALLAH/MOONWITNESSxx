@@ -10,41 +10,40 @@
 
 ## Phase 1 — Identity foundation
 - [x] Create original lunar-aperture symbol.
-- [x] Create original outlined wordmark and primary lockup.
-- [x] Create archive seal and MW monogram.
+- [x] Create wordmark and primary lockup.
+- [x] Create archive seal.
 - [ ] Review logo with owner and approve final master mark.
-- [x] Produce provisional monochrome and small-size SVG variants.
-- [ ] Complete 16/24/32/48/192 px pixel review and browser favicon validation.
+- [x] Produce a small-size symbol candidate and monochrome light/dark SVG exports (provisional pending owner approval).
+- [x] Add scalable favicon SVG candidate; raster-size exports and pixel review remain pending owner approval and browser validation.
 
 ## Phase 2 — Visual DNA
-- [x] Define core palette and visual principles.
+- [x] Define core palette and typography roles.
+- [x] Define editorial, observatory, and evidence visual principles.
 - [x] Define texture, illustration, accessibility, and motion rules.
-- [x] Map brand primitives to Archive and Observatory semantic theme tokens.
-- [x] Audit primary contrast pairs; rendered component-state audit remains a release gate.
+- [x] Define Core Promise and Manifesto placement rules.
+- [x] Map brand primitives to semantic semantic tokens for default Archive, .theme-archive, .dark, and .theme-observatory.
+- [x] Audit primary brand foreground/background pairs and document unsafe combinations in CONTRAST-AUDIT.md; full rendered-state audit remains a release gate.
 
 ## Phase 3 — Asset library
 - [x] Add original lunar contour and orbital grid textures.
-- [x] Add archive ruled-paper pattern and original observatory/evidence illustrations.
-- [x] Register assets with static TypeScript declarations, accessibility metadata, and provenance.
-- [x] Add logo SVG safety, external-reference, viewBox, and registry-dimension tests.
-- [x] Add original MW monogram and validate outlined wordmark and lockup paths.
-- [x] Keep artwork vector-first; raster export only when a real consumer use case requires it.
+- [x] Add archive ruled-paper pattern.
+- [x] Add observation desk and evidence constellation illustrations.
+- [x] Register new assets with static TypeScript declarations and provenance.
+- [x] Add dedicated logo SVG safety, external-reference, and viewBox/registry-dimension tests.
+- [ ] Add optimized raster artwork only where a real use case requires it.
 
 ## Phase 4 — Typography
-- [x] Define MOONWITNESS Signal and Signal Display / Text / Instrument roles.
-- [x] Draw custom outlined wordmark and MW monogram.
-- [x] Create editable glyph source and reproducible font build script.
-- [x] Compile and integrate original Signal Display 0.1 WOFF2.
-- [x] Map Signal Display to local font-face and Signal Text/Instrument to native fallbacks.
-- [ ] Add distinct lowercase glyphs, Indonesian diacritics, extended Latin, kerning, and full font QA.
+- [x] Specify display, body, and technical font families with fallback stacks.
+- [x] Verify Space Grotesk and IBM Plex Mono upstream SIL OFL 1.1 licenses and permitted software embedding/redistribution conditions.
+- [x] Document compliant font-bundling policy, copyright notices, license text, and pinned-source/hash requirements; defer binaries until a reproducible pinned import is justified.
 
 ## Phase 5 — Product integration
-- [x] Replace RIOTWORKS master-brand lockup in Headquarter shell.
-- [x] Render official MOONWITNESS lockup in sidebar and remove studio signature from product shell.
-- [x] Apply MOONWITNESS Signal typography to product headings.
-- [x] Preserve Core Promise and WMR-WSM Manifesto on the landing experience.
-- [x] Apply Archive and Observatory semantic theme mappings.
-- [ ] Run browser visual regression, keyboard/focus, reduced-motion, zoom/reflow, and full component accessibility review.
+- [x] Replace RIOTWORKS master-brand lockup in Headquarter shell and metadata.
+- [x] Add Core Promise and Brand Manifesto to Headquarter landing experience.
+- [x] Map primary UI colors and typography to MoonWitness design tokens.
+- [x] Review Headquarter product screens and replace visible RIOTWORKS product branding with MOONWITNESS identity.
+- [x] Create semantic Observatory and Archive theme mappings and apply them to Headquarter route roots.
+- [ ] Run browser visual regression and full component accessibility review (manual release gate; browser evidence not available in this execution).
 
 ## Phase 6 — Release
 - [ ] Owner approval of logo and brand DNA.
