@@ -49,7 +49,8 @@ export function RiotSignalConstellation({
   const [internalId, setInternalId] = React.useState(nodes[0]?.id ?? '')
   const activeId = selectedId ?? internalId
   const selected = nodes.find((node) => node.id === activeId) ?? nodes[0]
-  const nodeById = new Map<string, RiotSignalNode>()\n  nodes.forEach((node) => nodeById.set(node.id, node))
+  const nodeById = new Map<string, RiotSignalNode>()
+  nodes.forEach((node) => nodeById.set(node.id, node))
   const select = (node: RiotSignalNode) => {
     if (selectedId === undefined) setInternalId(node.id)
     onSelect?.(node)
