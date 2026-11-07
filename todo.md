@@ -963,7 +963,7 @@ See docs/32-phase-7-schema-reconciler.md. This is an initial policy-enforced rec
 - [x] Implement connection, ping, parameterized query, transaction and schema introspection surfaces.
 - [x] Implement idempotent create-table/add-column/create-index DDL with validation and transactional execution.
 - [x] Reject automatic destructive/unsupported DDL for semantic upgrade handling.
-- [x] Add SQLite in-memory integration test source and PostgreSQL connection/identity test source.
+- [x] Add SQLite in-memory/file-backed integration tests and live PostgreSQL container integration test source.
 - [x] Allow the reviewed better-sqlite3 native build.
 - [ ] Verify lockfile, native build, typecheck, lint and adapter tests in CI.
 - [ ] Add PostgreSQL disposable-server integration tests.
@@ -979,4 +979,4 @@ See docs/33-phase-8-database-adapters.md. Adapter code is authored but must not 
 - [x] Replace the legacy direct pg Pool in apps/arsy with the two concrete adapter packages.
 - [x] Add separate system/business database health routes.
 - [x] Close Business Database and System Database through Fastify onClose in reverse dependency order.
-- [ ] Run adapter packages, ARSY boot/shutdown and PostgreSQL container tests in CI.
+- [~] Repository CI now provisions PostgreSQL and runs provider/ARSY lifecycle tests; latest code revision still requires its final CI run.
