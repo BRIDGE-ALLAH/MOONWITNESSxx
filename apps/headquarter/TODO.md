@@ -289,56 +289,81 @@
 
 ## Phase 6 — Enterprise hardening dan release readiness
 
-**Tujuan:** memastikan aplikasi dapat dikembangkan, dioperasikan, dan dirilis dengan kualitas terukur.
+**Tujuan:** menutup fondasi engineering Headquarter dengan quality gate yang wajib, dapat diulang, dan memiliki bukti. Penutupan fase ini tidak sama dengan sertifikasi semua prototype sebagai production-ready.
 
 ### 6.1 Testing
-- [x] Tambahkan Node built-in test runner untuk ARSY browser API client dan integritas fixture ARSY DECK (lihat `tests/`); mencakup request defaults, request ID, GET-only retry, mutation retry prohibition, safe gateway error, timeout, demo disclosure, ID uniqueness, dan bounded confidence.
-- [ ] Perluas unit test untuk utility, hooks, state logic, permission mapping, dan seluruh API adapter behavior.
-- [ ] Component/integration test untuk shell, forms, dialogs, tables, dan feature flows.
-- [ ] E2E test untuk login/session, workspace switch, navigation, critical workflows, dan forbidden access.
-- [ ] Accessibility automated checks ditambah manual keyboard/screen reader review.
-- [ ] Visual regression untuk theme dan viewport representatif.
-- [ ] Contract test untuk integrasi Headquarter–ARSY.
-- [ ] Tambahkan test untuk timeout, offline, retry, cancellation, dan partial failure.
+- [x] Node 24 built-in test runner untuk ARSY browser client dan ARSY DECK fixture.
+- [x] Test keamanan request path: absolute URL, protocol-relative URL, backslash, dan parent traversal literal/encoded.
+- [x] Test awal Decision Graph: provenance, traceability, evidence expiry, confidence, dan dangling references.
+- [x] Test awal Scenario Forge: deterministic replay, baseline immutability, rationale, invalid metric, dan shadow-only output.
+- [ ] Browser component/E2E, accessibility, visual regression, dan ARSY contract tests menunggu browser harness serta kontrak backend yang disetujui.
 
 ### 6.2 Security dan privacy
-- [ ] Audit dependency vulnerabilities dan lisensi dependency.
-- [ ] Audit secret exposure, client bundle, storage, logging, dan error reporting.
-- [ ] Pastikan authorization divalidasi server-side untuk setiap operasi sensitif.
-- [ ] Pastikan data sensitif tidak muncul di URL, log, analytics, atau browser storage tanpa alasan dan perlindungan.
-- [ ] Audit XSS, unsafe HTML, redirect, CSRF/session behavior sesuai auth architecture.
-- [ ] Verifikasi permission boundary melalui direct route/API access.
+- [x] Tolak URL eksternal dan path traversal pada browser API boundary sebelum network request.
+- [x] Error gateway non-JSON dinormalisasi tanpa menampilkan body internal.
+- [x] Mutation tidak pernah di-retry otomatis.
+- [ ] Dependency vulnerability/license review berkala.
+- [ ] Verifikasi CSP, CSRF/session, XSS, redirect, bundle exposure, dan storage setelah deployment/auth architecture tersedia.
+- [ ] Authorization direct-route/API harus diuji bersama ARSY; UI hiding bukan security control.
 
 ### 6.3 Performance dan reliability
-- [ ] Tetapkan budget bundle untuk route utama.
-- [ ] Audit unnecessary client components dan hydration cost.
-- [ ] Optimalkan loading data, cache, pagination, dan rendering tabel besar.
-- [ ] Audit image/font loading dan asset size.
-- [ ] Uji navigasi dan interaksi pada jaringan lambat.
-- [ ] Definisikan performance baseline dan regression threshold.
+- [x] Timeout, cancellation, retry GET-only, no-store, dan request correlation baseline pada ARSY client.
+- [ ] Tetapkan bundle/performance budget berdasarkan hosting dan target perangkat yang disepakati.
+- [ ] Browser profiling, slow-network, hydration, dan visual responsiveness checks.
+- [ ] Definisikan SLO/error budget setelah telemetry dan traffic baseline tersedia.
 
 ### 6.4 CI/CD dan release
-- [ ] CI wajib menjalankan lint, typecheck, unit/integration tests, build, dan quality checks.
-- [ ] Pastikan setiap command mengembalikan exit code yang benar.
-- [ ] Tambahkan dependency/build cache tanpa mengurangi reliabilitas.
-- [ ] Tetapkan environment configuration untuk local, preview, staging, dan production.
-- [ ] Dokumentasikan release, rollback, dan troubleshooting.
-- [ ] Pastikan migration/configuration backend yang dibutuhkan memiliki koordinasi dengan owner ARSY.
-- [ ] Tambahkan smoke test setelah deployment.
+- [x] CI menjalankan lint, workspace type-check, Headquarter tests, asset validation, dan Headquarter production build.
+- [x] Jadikan full-workspace validation dan production build sebagai job wajib (tidak lagi bergantung pada `FULL_QUALITY_CI`).
+- [ ] Verifikasi hasil full-workspace job pada PR penutupan ini sebelum menandai gate selesai.
+- [ ] Staging/production deployment, smoke test, environment secrets, dan rollback memerlukan target deployment serta otorisasi operator.
 
 ### 6.5 Documentation dan ownership
-- [ ] Dokumentasikan cara setup dan menjalankan Headquarter secara lokal.
-- [ ] Dokumentasikan struktur folder dan aturan import.
-- [ ] Dokumentasikan API integration, auth, workspace context, localization, dan theming.
-- [ ] Dokumentasikan cara membuat feature baru mengikuti reference implementation.
-- [ ] Dokumentasikan cara menambah primitive/pattern ke `packages/ui`.
-- [ ] Tetapkan ownership dan jalur eskalasi untuk shell, platform, design system, dan feature.
-- [ ] Sinkronkan dokumen arsitektur ketika implementasi berubah.
+- [x] Dokumentasikan architecture, API boundary, test suite, feature rollout, dan release readiness.
+- [x] Catat batas tanggung jawab Headquarter vs ARSY dan larangan menganggap demo sebagai data live.
+- [x] Tambahkan ownership dan production gate untuk dua domain baru pada Phase 7 dan Phase 8.
+- [ ] Owner operasional dan jalur eskalasi final ditetapkan oleh maintainer proyek.
 
 **Gate Phase 6**
-- [ ] CI hijau dan tidak ada quality gate yang diabaikan.
-- [ ] Security, accessibility, performance, dan critical E2E checks memenuhi kriteria rilis.
-- [ ] Setup, deployment, rollback, dan ownership terdokumentasi.
+- [x] Headquarter-scoped test, type-check, lint/repository integrity, asset checks, production build, dan CodeQL lulus pada PR #38.
+- [ ] Full-workspace validation dan build wajib lulus pada PR penutupan ini.
+- [ ] Production readiness untuk modul yang memakai backend tetap menunggu API, identity, permission, deployment, dan browser verification; gate ini dipisahkan dalam `RELEASE-READINESS.md`.
+
+---
+
+## Phase 7 — Decision Graph / WHY Engine
+
+**Tujuan:** menjadikan keputusan dapat dijelaskan, ditelusuri, diperdebatkan, dan dievaluasi kembali dari bukti asalnya.
+
+- [x] Definisikan graph model: decision, evidence, policy, actor, action, outcome.
+- [x] Definisikan relasi supports, contradicts, constrained_by, made_by, causes, supersedes.
+- [x] Implementasikan pure integrity assessor untuk provenance, confidence, expiry, traceability, dan dangling edges.
+- [x] Tambahkan test untuk keputusan tanpa rationale, bukti kedaluwarsa, confidence invalid, dan malformed validity timestamp.
+- [x] Dokumentasikan trust boundary: AI explanation bukan evidence; ARSY tetap pemilik authorization dan audit.
+- [ ] Buat graph explorer UI yang accessible dan dapat menangani graph besar.
+- [ ] Hubungkan ke append-only decision/evidence contract ARSY dan policy redaction/retention.
+- [ ] Tambahkan review workflow untuk contradictory/stale evidence dan outcome feedback.
+
+**Gate Phase 7:** keputusan memiliki provenance yang dapat diperiksa, kontradiksi tidak disembunyikan, bukti kedaluwarsa terdeteksi, dan akses sumber ditegakkan oleh backend.
+
+---
+
+## Phase 8 — Scenario Forge / Shadow Reality
+
+**Tujuan:** menyediakan laboratorium what-if yang aman, deterministik, dan terpisah dari jalur eksekusi produksi.
+
+- [x] Definisikan baseline metric, assumption, ordered operation, dan replay result contract.
+- [x] Implementasikan pure deterministic engine untuk set/add/multiply.
+- [x] Tolak duplicate IDs, unknown metric, rationale kosong, operasi tidak dikenal, dan nilai non-finite.
+- [x] Pastikan baseline tidak dimutasi dan result selalu berstatus shadow-only.
+- [x] Tambahkan test deterministic replay, immutability, validation, dan isolation.
+- [x] Dokumentasikan hubungan hasil simulasi dengan Decision Graph sebagai analysis evidence.
+- [ ] Tambahkan multi-scenario comparison, sensitivity analysis, dan uncertainty semantics.
+- [ ] Hubungkan ke ARSY read-only snapshot dengan scope, source timestamp, units, dan freshness.
+- [ ] Bangun Scenario Arena UI; jangan menyediakan tombol eksekusi produksi dari hasil simulasi.
+- [ ] Jika kelak ada promotion workflow, wajib ada approval terpisah, policy evaluation, diff, idempotency, dan audit event.
+
+**Gate Phase 8:** replay identik untuk input/versi engine yang sama; semua asumsi dapat diperiksa; hasil simulasi tidak pernah otomatis menjadi perubahan produksi.
 
 ---
 
@@ -416,3 +441,11 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Tambahkan test command ke Asset Integrity CI; branch `headquarter/phase-6-testing-foundation` juga dimasukkan ke trigger push CI.
 - [x] GitHub Actions pada PR #38 lulus: Headquarter tests, type-check assets/UI/Headquarter, production build, asset validation/tests, Repository Integrity, dan CodeQL. Full-workspace quality tetap skipped oleh konfigurasi `FULL_QUALITY_CI`.
 - [ ] Browser E2E, accessibility automation/manual review, visual regression, performance budgets, dan backend contract tests tetap terbuka.
+
+
+## Phase 7–8 execution record — 2026-11-08
+
+- [x] Decision Graph foundation added under `src/features/decision-graph`.
+- [x] Scenario Forge shadow kernel added under `src/features/scenario-forge`.
+- [x] Both modules have domain READMEs, tests, and phase-level product/acceptance specifications.
+- [x] Neither module claims a live API, production UI, persistent storage, or real-world execution capability.

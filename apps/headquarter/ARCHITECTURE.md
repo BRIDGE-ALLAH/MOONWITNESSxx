@@ -24,6 +24,8 @@ apps/headquarter/
       command-palette.tsx
     features/            # domain-owned modules and read models
       arsy-deck/         # reference feature: types, repository, demo fixture, view
+      decision-graph/    # Phase 7: decision/evidence provenance graph and pure assessor
+      scenario-forge/    # Phase 8: deterministic shadow-only scenario kernel
     platform/            # cross-feature integrations
       arsy/              # public ARSY HTTP client and frontend-safe contracts
 ```
@@ -85,3 +87,12 @@ See `FEATURE-ROLLOUT.md` for ownership, production gates, and administration rea
 - Administration is aligned with the approved IA at the navigation/roadmap level only; planned entries remain disabled until routes, contracts, and authorization exist.
 - Browser-level responsive, keyboard, screen-reader, contrast, and theme verification remains a release task.
 - PR #35 was merged to `main` as `51bfe984cde513f5190ab192491681fe41f96aab`. Repository integrity CI passed (lockfile sync, dependency install, workspace type-check, lint/validation); Asset Integrity passed (asset/UI/Headquarter type-check, Headquarter production build, SVG checks, and asset registry tests). CodeQL passed. Browser-level accessibility and visual regression remain unverified.
+
+
+## Decision Graph and Scenario Forge
+
+Phase 7 adds a pure Decision Graph assessor for traceability, provenance, evidence validity, and broken graph references. It models the "why-chain" behind decisions; it is not a substitute for ARSY's append-only audit log or authorization.
+
+Phase 8 adds a pure Scenario Forge calculation kernel. It evaluates explicit operations against an immutable baseline and returns `shadow-only` results. It cannot call APIs, persist state, or execute production changes.
+
+Both modules are domain foundations only. Their UI, persistence, read-only ARSY snapshot contracts, workspace scope, and production approval paths remain gated on platform design.
