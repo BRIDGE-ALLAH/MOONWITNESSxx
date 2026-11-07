@@ -15,3 +15,6 @@ export * as Adapters from "./adapters/index.ts";
 export * as IntegrationReadiness from "./integration-readiness/index.ts";
 export * as Evaluation from "./evaluation/index.ts";
 export * as Temporal from "./temporal/index.ts";
+export * as CounterfactualSurgery from "./counterfactual-surgery/index.ts";
+export * as EvidenceInteractions from "./evidence-interactions/index.ts";
+export * as CitationMutationLab from "./citation-mutation-lab/index.ts";

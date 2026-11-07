@@ -946,3 +946,11 @@ Implemented on branch `feat/divine-phases-12-14-runtime-eval-temporal` as pure-d
 - [ ] Full TEI/IIIF schema validation, SHACL, round-trip import/export and actual IIIF media dimensions.
 
 These implementations are not production completion. See `PHASE-12-14-EXECUTION.md` for research and exact limitations.
+
+
+## Phase 15–17 implementation update (2026-11-08)
+- [x] Phase 15: witness-graph counterfactual edge surgery, reachability impact and exact minimal cut sets bounded to 16 edges.
+- [x] Phase 16: coalition-game Möbius interaction decomposition (orders 1–4), witness-family entropy and sign stability across candidate provenance partitions.
+- [x] Phase 17: exact source-span citation mutation lab for offset drift, zero-width/bidi marks, whitespace, Unicode normalization, confusable substitutions and quote truncation.
+- [ ] Causal model validation, empirically calibrated provenance partitions, language-specific gold sets, comprehensive script-aware confusable catalogs and independent scholarly review remain open.
+See `PHASE-15-17-EXECUTION.md`. These are deterministic research tools, not truth or causal oracles.
