@@ -10,7 +10,6 @@ type ProductRow = {
   lifecycle_state: string
   version_id: string
   version: number
-  versionId: string
   brief: Record<string, unknown>
   acceptance_criteria: string[]
   created_at: Date | string
@@ -24,6 +23,7 @@ export interface ProductRecord {
   productFamily: string
   lifecycleState: string
   version: number
+  versionId: string
   brief: Record<string, unknown>
   acceptanceCriteria: string[]
   createdAt: string
