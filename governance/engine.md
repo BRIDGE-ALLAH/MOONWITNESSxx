@@ -4,12 +4,27 @@ The Governance Engine is the deterministic, offline repository-policy checker. I
 
 ## Commands
 
-| Command | Behavior | Exit |
-| --- | --- | --- |
-| `pnpm governance:check` | Check repository identity, workspace manifests, package dependency direction, entrypoints, instruction precedence, rule register completeness, and workflow permission declarations. | `0` when no errors; `1` on errors. Warnings are advisory unless `--strict` is supplied. |
-| `pnpm governance:doctor` | Report Node, pnpm, and Git availability/version against the pinned toolchain. | `0` when all prerequisites match; `1` otherwise. |
-| `pnpm governance:report` | Emit a machine-readable JSON report including findings and contract-rule coverage counts. | `0` when no errors; `1` on errors. |
-| `pnpm run check:repo` | Run repository audit, frozen lockfile validation, and Governance Engine checks. | Propagates the first failing command. |
+### `pnpm governance:check`
+
+Check repository identity, workspace manifests, package dependency direction, entrypoints,
+instruction precedence, rule register completeness, and workflow permission declarations.
+Exit code `0` means no errors; `1` means errors were found. Warnings are advisory unless
+`--strict` is supplied.
+
+### `pnpm governance:doctor`
+
+Report Node, pnpm, and Git availability/version against the pinned toolchain.
+Exit code `0` means all prerequisites match; `1` means at least one prerequisite does not.
+
+### `pnpm governance:report`
+
+Emit a machine-readable JSON report including findings and contract-rule coverage counts.
+Exit code `0` means no errors; `1` means errors were found.
+
+### `pnpm run check:repo`
+
+Run repository audit, frozen lockfile validation, and Governance Engine checks.
+The first failing command's exit code is propagated.
 
 Run `pnpm governance:check --strict` to promote warnings to failures. The engine does not install dependencies, rewrite files, generate artifacts, access the network, or execute project code.
 
