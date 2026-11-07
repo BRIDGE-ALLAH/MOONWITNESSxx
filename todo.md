@@ -156,9 +156,9 @@ Create only packages with real ownership and entrypoints. Avoid empty placeholde
 
 ### 2.2 Define contracts before implementation
 
-- [~] Define `ModelConstructor`, `ModelDefinition`, `ModelKind`, `FieldDefinition`, and `RelationDefinition`; `MixinDefinition` and `ModelExtensionDefinition` still need explicit contracts.
+- [x] Define `ModelConstructor`, `ModelDefinition`, `ModelKind`, `FieldDefinition`, `RelationDefinition`, `MixinDefinition`, and `ModelExtensionDefinition` shapes.
 - [x] Define separate `AddonManifest` and `ModuleManifest` contracts in `@riotworks/orm`.
-- [~] Define package/module IDs, versions, dependencies, conflicts, capabilities and entrypoint metadata in the initial manifests; compatibility-range validation and export consumer tests remain.
+- [x] Define package/module IDs, semantic versions, compatibility ranges, dependencies, conflicts, capabilities and public entrypoint metadata in the initial manifest contracts.
 - [~] Define `RegistrySnapshot` shape with fingerprint and explicit addon/module order; deterministic composition/hash implementation remains.
 - [x] Define provider capability vocabulary and explicit `requireCapabilities` rejection in `@riotworks/orm-db-adaptor`.
 - [~] Define initial ORM declaration/registry/access/validation/provider error codes; concurrency and reconciliation error taxonomy remain.
@@ -834,3 +834,11 @@ Use these labels consistently when updating this file:
 - [ ] Verify dependency direction mechanically and update the repository audit with actual results.
 
 **Evidence note:** No local pnpm install, TypeScript check, lint, unit test, adapter integration test or CI run has been executed in this slice. The presence of a contract file is not evidence that its behavior is implemented or verified.
+
+
+### Contract refinement
+
+- [x] Add explicit mixin and model-extension contract shapes.
+- [x] Add the provider-neutral domain expression AST.
+- [x] Make addon compatibility explicit for ARSY, ORM and optional API versions.
+- [x] Encode the approved v1 database role pairing in the adapter identity type: SQLite = System Database; PostgreSQL = Business Database.
