@@ -39,6 +39,7 @@ export interface ChannelRecord {
 export interface ChannelReviewInput {
   countryEligibility: Array<{ country: string; status: 'pass' | 'blocked' | 'unknown'; sourceUrl?: string; checkedAt?: string }>
   payoutRequirements: { status: 'pass' | 'blocked' | 'unknown'; sourceUrl?: string; checkedAt?: string; notes: string }
+  policyStatus: 'pass' | 'blocked' | 'unknown'
   policyUrl?: string
   policyCheckedAt?: string
   manualFallback: string
@@ -78,12 +79,19 @@ const columns = `id, slug, display_name, capability, country_eligibility, policy
 export class ChannelRepository {
   constructor(private readonly db: DatabasePool) {}
 
-  async create(slug: string, displayName: string): Promise<ChannelRecord> {
+  async create(ownerId: string, slug: string, displayName: string): Promise<ChannelRecord> {
     const result = await this.db.query(
-      `INSERT INTO arsy_channels (id, slug, display_name, capability, enabled)
+      `WITH created AS (
+       INSERT INTO arsy_channels (id, slug, display_name, capability, enabled)
        VALUES ($1, $2, $3, 'C0', false)
-       RETURNING ${columns}`,
-      [randomUUID(), slug, displayName],
+       RETURNING *
+     ), audited AS (
+       INSERT INTO arsy_commerce_audit_events (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+       SELECT $4, $5, 'channel', id, 'created-c0', $5, jsonb_build_object('slug', slug)
+       FROM created
+     )
+     SELECT ${columns} FROM created`,
+      [randomUUID(), slug, displayName, randomUUID(), ownerId],
     )
     return mapChannel(rows<ChannelRow>(result)[0])
   }
@@ -99,12 +107,13 @@ export class ChannelRepository {
     const eligibleCountry = input.countryEligibility.some((item) => item.country === 'ID' && item.status === 'pass')
     const payoutVerified = input.payoutRequirements.status === 'pass' &&
       Boolean(input.payoutRequirements.sourceUrl && input.payoutRequirements.checkedAt)
-    const policyVerified = Boolean(input.policyUrl && input.policyCheckedAt)
+    const policyVerified = input.policyStatus === 'pass' && Boolean(input.policyUrl && input.policyCheckedAt)
     const capability = eligibleCountry && payoutVerified && policyVerified ? 'C1' : 'C0'
     const enabled = capability === 'C1'
     const evidence = {
       manualFallback: input.manualFallback,
       reviewScope: 'C1 manual listing package only; no marketplace API authorization is implied.',
+      policyStatus: input.policyStatus,
       reviewedAt: new Date().toISOString(),
       reviewedBy: reviewerId,
       capabilityEvidence: 'operator-attested; recheck before each channel launch',
