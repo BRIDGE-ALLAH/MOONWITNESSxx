@@ -285,3 +285,4 @@ PostgreSQL is the primary Business Database for users/workspaces and business-do
 Redis provides runtime cache/coordination/locks/queue transport; it is not the durable source of business or model-definition truth. Object-storage providers store bytes while business records store metadata/object keys. Telegram is an external connector, never a database provider. libSQL can be evaluated as an optional lightweight business provider, but does not replace SQLite control-plane ownership or PostgreSQL production default.
 
 Only trusted, verified in-process addons may contribute executable TypeScript model classes to the ARSY registry. Community/untrusted plugins run isolated and communicate through versioned, permission-scoped RPC contracts. A future declarative remote-model contract must not allow arbitrary remote code injection into the main process.
+\n\nSee `docs/24-architecture-decision-records.md` for the accepted ADR record of these contracts.
