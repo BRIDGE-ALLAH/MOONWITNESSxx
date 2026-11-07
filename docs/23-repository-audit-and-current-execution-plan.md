@@ -111,6 +111,8 @@ This is expected unfinished work, not evidence that the docs are wrong. Do not c
 | AUD-020 | Medium | Commit generator writes temp artifacts and suggests a Kilo model/key as part of pre-commit | Keep AI commit assistance optional, explicit, offline fallback; generated files must not be silently staged. |
 | AUD-021 | High | Package scripts in several manifests point to absent source/config or another package's scripts | Audit every manifest main, exports, and script against actual tracked files. |
 | AUD-022 | Medium | Documentation Wiki/Pages generation currently produces only local docs assets, not proof of a published Wiki or Pages site | Treat docs as source; deploy/publish only through a validated explicit workflow. |
+| AUD-023 | High | .copilot-instructions.md still describes a different local path and apps/web, and forbids root config changes even when required | Replace with canonical MOONWITNESS instructions, current topology and docs/23 precedence. |
+| AUD-024 | High | turbo.json has no test task and root scripts target package scripts that are missing or indirect | Define test task and align every root/package script with real package capabilities. |
 
 ## 5. Canonical target architecture — reconciled
 
@@ -321,6 +323,15 @@ Every feature has one canonical owner. No direct cross-app source imports. No ad
 
 No new large feature should begin until P0 exits. Do not create GitHub issues automatically from this audit until the repository's issue automation is repaired and duplicate-safe.
 
-## 10. Audit limitations
+## 10. Audit remediation already applied in this documentation pass
+- Added this audit and revised execution plan as docs/23.
+- Updated README to distinguish actual prototype packages from planned ORM/database packages and linked the new audit.
+- Updated MASTER-PROMPT to v3.4 with MOONWITNESS as canonical repository and docs/23 precedence.
+- Replaced stale .copilot-instructions.md with MOONWITNESS paths, app ownership, five-field BaseEntity, schema and automation rules.
+- Updated docs/08, 15, 18, 19, 20, 21 and 22 to align the five-field BaseEntity and staged implementation plan.
+
+These are documentation/governance corrections only. No application runtime, package manifest, workflow, hook, or service code has been repaired in this pass. P0 code fixes remain open.
+
+## 11. Audit limitations
 
 This audit uses the tracked GitHub tree and file contents at the stated commit. It does not have the user's local uncommitted files, secrets, runtime environment, or CI execution results. If the local machine has additional unpushed changes, push them before asking for a new audit. Never infer a successful build from the presence of package manifests or lockfiles.
