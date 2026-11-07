@@ -18,13 +18,14 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "dev:doctor": "node scripts/dev-doctor.mjs",
-    "dx:check": "pnpm run dev:doctor && pnpm run format:check && pnpm run lockfile:check",
+    "dx:check": "pnpm run dev:doctor && pnpm run test:dx && pnpm run format:check && pnpm run lockfile:check",
     "validate:fast": "pnpm run dev:doctor && pnpm run typecheck && pnpm run lint && pnpm --filter @riotworks/ui run test",
     "validate:repo": "pnpm run lockfile:check && pnpm run type-check && pnpm run lint",
     "validate": "pnpm run validate:repo && pnpm run build",
     "lockfile:check": "node scripts/check-lockfile.mjs",
     "lockfile:refresh": "node scripts/check-lockfile.mjs --lockfile-only",
-    "type-check": "pnpm run typecheck"
+    "type-check": "pnpm run typecheck",
+    "test:dx": "node --test scripts/tests/*.test.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
