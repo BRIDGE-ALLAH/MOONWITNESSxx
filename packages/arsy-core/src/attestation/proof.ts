@@ -55,23 +55,35 @@ export function validateExecutionTrace(
   const approvals = new Set<string>()
   const started = new Set<string>()
   const terminal = new Set<string>()
+  const approvalSequence = new Map<string, number>()
+  let previousTimestamp = Number.NEGATIVE_INFINITY
 
   events.forEach((event, index) => {
     if (event.sequence !== index) violations.push('trace_sequence_not_contiguous')
     if (!event.id || ids.has(event.id)) violations.push('trace_event_id_duplicate_or_empty')
     ids.add(event.id)
     if (!event.actionId || !event.tenantId || !event.actorId) violations.push('trace_context_incomplete')
-    if (Number.isNaN(Date.parse(event.occurredAt))) violations.push('trace_timestamp_invalid')
+    const timestamp = Date.parse(event.occurredAt)
+    if (Number.isNaN(timestamp)) violations.push('trace_timestamp_invalid')
+    else if (timestamp < previousTimestamp) violations.push('trace_time_moved_backwards')
+    else previousTimestamp = timestamp
     if (event.tenantId !== contract.tenantId) violations.push('tenant_scope_changed')
     if (event.kind === 'policy.allowed' || event.kind === 'policy.denied') {
+      if (event.actorId !== contract.actorId) violations.push('policy_actor_differs_from_contract_actor')
       if (decisions.has(event.actionId)) violations.push('multiple_policy_decisions_for_action')
       decisions.set(event.actionId, event)
     }
-    if (event.kind === 'approval.recorded' && event.approved === true) approvals.add(event.actionId)
+    if (event.kind === 'approval.recorded' && event.approved === true) {
+      approvals.add(event.actionId)
+      approvalSequence.set(event.actionId, event.sequence)
+    }
     if (event.kind === 'effect.started') {
       const decision = decisions.get(event.actionId)
-      if (!decision || decision.kind !== 'policy.allowed') violations.push('effect_without_prior_allow')
+      if (!decision || decision.kind !== 'policy.allowed' || decision.sequence >= event.sequence) violations.push('effect_without_prior_allow')
       if (decision && decision.actorId !== event.actorId) violations.push('effect_actor_differs_from_authorized_actor')
+      if (decision?.approvalRequired && (approvalSequence.get(event.actionId) ?? Number.POSITIVE_INFINITY) >= event.sequence) {
+        violations.push('approval_missing_before_effect')
+      }
       if (started.has(event.actionId)) violations.push('duplicate_effect_start')
       started.add(event.actionId)
     }
