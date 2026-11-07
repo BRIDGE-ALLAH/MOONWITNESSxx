@@ -12,7 +12,7 @@ function arsyConfig() {
   const baseUrl = process.env.ARSY_API_BASE_URL?.trim()
   const operatorToken = process.env.ARSY_OPERATOR_TOKEN?.trim()
   if (!baseUrl || !operatorToken) return null
-  return { baseUrl: baseUrl.replace(/\\/+$/, ''), operatorToken }
+  return { baseUrl: baseUrl.replace(/\/+$/, ''), operatorToken }
 }
 
 async function proxy(request: Request, method: 'GET' | 'POST') {
