@@ -5,7 +5,8 @@ export type ProductLifecycleState = typeof productLifecycleStates[number]
 const allowedTransitions: Record<ProductLifecycleState, readonly ProductLifecycleState[]> = {
   brief: ['production'],
   production: ['review'],
-  review: ['production', 'ready'],
+  // READY is inspection-derived; it must never be set by a generic lifecycle mutation.
+  review: ['production'],
   ready: ['production', 'listed'],
   listed: ['retired'],
   retired: [],

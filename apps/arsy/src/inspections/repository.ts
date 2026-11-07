@@ -81,7 +81,19 @@ export class InspectionRepository {
         ) inspection_history
         ORDER BY inspection_type, inspected_at DESC, id DESC
       ), readiness AS (
-        SELECT COUNT(*) = 4 AND COALESCE(BOOL_AND(status = 'pass'), false) AS ready
+        SELECT
+          COUNT(*) = 4
+          AND COALESCE(BOOL_AND(status = 'pass'), false)
+          AND EXISTS (
+            SELECT 1 FROM arsy_assets asset
+            WHERE asset.product_version_id = $7 AND asset.archived_at IS NULL
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM arsy_assets asset
+            WHERE asset.product_version_id = $7
+              AND asset.archived_at IS NULL
+              AND asset.rights_state <> 'pass'
+          ) AS ready
         FROM latest
       ), product AS (
         UPDATE arsy_products p

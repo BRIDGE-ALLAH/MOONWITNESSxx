@@ -68,6 +68,25 @@ export class ListingRepository {
           AND p.lifecycle_state IN ('ready', 'listed')
           AND pv.version = (SELECT MAX(latest.version) FROM arsy_product_versions latest WHERE latest.product_id = p.id)
           AND c.capability = 'C1' AND c.enabled = true
+          AND EXISTS (
+            SELECT 1 FROM arsy_assets asset
+            WHERE asset.product_version_id = pv.id AND asset.archived_at IS NULL
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM arsy_assets asset
+            WHERE asset.product_version_id = pv.id
+              AND asset.archived_at IS NULL AND asset.rights_state <> 'pass'
+          )
+          AND (
+            SELECT COUNT(*) FROM (
+              SELECT DISTINCT ON (inspection_type) inspection_type, status
+              FROM arsy_inspections
+              WHERE product_version_id = pv.id
+              ORDER BY inspection_type, inspected_at DESC, id DESC
+            ) latest_inspections
+            WHERE status = 'pass'
+          ) = 4
+        FOR UPDATE OF p
       ), created AS (
         INSERT INTO arsy_listings
           (id, product_version_id, channel_id, owner_id, status, listing_package, created_by, updated_by)
@@ -129,6 +148,24 @@ export class ListingRepository {
             WHERE pv.id = arsy_listings.product_version_id
               AND p.owner_id = $1 AND p.lifecycle_state IN ('ready', 'listed')
               AND pv.version = (SELECT MAX(latest.version) FROM arsy_product_versions latest WHERE latest.product_id = p.id)
+              AND EXISTS (
+                SELECT 1 FROM arsy_assets asset
+                WHERE asset.product_version_id = pv.id AND asset.archived_at IS NULL
+              )
+              AND NOT EXISTS (
+                SELECT 1 FROM arsy_assets asset
+                WHERE asset.product_version_id = pv.id
+                  AND asset.archived_at IS NULL AND asset.rights_state <> 'pass'
+              )
+              AND (
+                SELECT COUNT(*) FROM (
+                  SELECT DISTINCT ON (inspection_type) inspection_type, status
+                  FROM arsy_inspections
+                  WHERE product_version_id = pv.id
+                  ORDER BY inspection_type, inspected_at DESC, id DESC
+                ) latest_inspections
+                WHERE status = 'pass'
+              ) = 4
           )
         RETURNING *
       ), product AS (

@@ -59,7 +59,7 @@ export function ZillWatchBoard() {
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to save inspection.')
       form.reset()
-      setMessage(payload.data.productReady ? 'All four latest inspections pass. Product lifecycle is READY.' : 'Inspection recorded. Product remains in REVIEW until all four latest inspections pass.')
+      setMessage(payload.data.productReady ? 'All four latest inspections pass and every active asset has cleared rights. Product lifecycle is READY.' : 'Inspection recorded. Product remains in REVIEW until all four latest inspections pass and every active asset has cleared rights.')
       await refresh()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to save inspection.')
@@ -67,7 +67,7 @@ export function ZillWatchBoard() {
   }
 
   return <main className="min-h-screen bg-obsidian p-6 text-paper-bone md:p-8"><div className="mx-auto max-w-7xl space-y-8">
-    <header className="border-b border-acid-lime/30 pb-6"><p className="font-mono text-xs uppercase tracking-[0.25em] text-acid-lime">RIOTWORKS / Quality & Integrity</p><h1 className="mt-3 font-display text-5xl uppercase">ZILL WATCH</h1><p className="mt-3 max-w-3xl text-sm text-muted-ink">Append-only rights, policy, technical and creative inspections. A product becomes READY only when the latest inspection of all four types passes.</p></header>
+    <header className="border-b border-acid-lime/30 pb-6"><p className="font-mono text-xs uppercase tracking-[0.25em] text-acid-lime">RIOTWORKS / Quality & Integrity</p><h1 className="mt-3 font-display text-5xl uppercase">ZILL WATCH</h1><p className="mt-3 max-w-3xl text-sm text-muted-ink">Append-only rights, policy, technical and creative inspections. A product becomes READY only when all four latest inspections pass and at least one active asset exists with every active asset marked rights-cleared.</p></header>
     {error && <div role="alert" className="border border-red-500/50 p-4 text-sm">{error}</div>}
     {message && <div role="status" className="border border-acid-lime/40 p-4 text-sm">{message}</div>}
     {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading product versions and inspection history…</p> : products.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No product versions are available for inspection. Create a product brief in THE FORGE first.</p> : products.map((product) => {
