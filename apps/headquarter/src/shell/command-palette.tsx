@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { KeyboardEvent } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { NavigationItem } from './navigation'
 
@@ -36,7 +37,7 @@ export function CommandPalette({ open, items, onClose }: CommandPaletteProps) {
 
   if (!open) return null
 
-  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+  const handleDialogKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key !== 'Tab') return
     const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
       'input:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
