@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
-import { readFile, readdir } from 'node:fs/promises'
-import { join, relative } from 'node:path'
+import { access, readFile, readdir } from 'node:fs/promises'
+import { join } from 'node:path'
 
 const WORKSPACE_ROOTS = ['apps', 'packages']
 const SAFE_CONTEXT_FILES = [
@@ -19,7 +19,7 @@ async function readJson(path, root) {
 
 async function exists(path, root) {
   try {
-    await readFile(join(root, path))
+    await access(join(root, path))
     return true
   } catch {
     return false
@@ -39,7 +39,7 @@ export async function loadWorkspacePackages(root) {
       const path = join(workspaceRoot, entry.name)
       try {
         const manifest = await readJson(join(path, 'package.json'), root)
-        if (manifest.name) packages.push({ name: manifest.name, path: path.replaceAll('\\\\', '/'), manifest })
+        if (manifest.name) packages.push({ name: manifest.name, path: path.replaceAll('\\', '/'), manifest })
       } catch {
         // Non-package directories are not workspace packages.
       }
@@ -136,8 +136,7 @@ function workspaceDependencies(manifest) {
 
 export async function createChangePlan({ root, changedFiles }) {
   const packages = await loadWorkspacePackages(root)
-  const byName = new Map(packages.map((pkg) => [pkg.name, pkg]))
-  const direct = new Set()
+    const direct = new Set()
   const reasons = new Map()
   const rootWide = changedFiles.some((file) => !WORKSPACE_ROOTS.some((prefix) => file.startsWith(prefix + '/')))
 
