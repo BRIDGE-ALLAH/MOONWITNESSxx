@@ -177,6 +177,13 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
     assert.equal(replay.replayed, true)
     assert.equal(replay.listing.id, created.listing.id)
     assert.equal(replay.listing.packageHash, created.listing.packageHash)
+    const deterministic = await listings.createPackage(ownerId, ownerId, productId, 1, channel.id, disclosure, randomUUID())
+    assert.ok(deterministic)
+    assert.equal(deterministic.listing.packageHash, created.listing.packageHash)
+    await assert.rejects(
+      listings.createPackage(ownerId, ownerId, productId, 1, channel.id, 'A different disclosure reusing the same idempotency key.', idempotencyKey),
+      /LISTING_IDEMPOTENCY_KEY_REUSED/,
+    )
 
     const submitted = await listings.recordReceipt(ownerId, ownerId, created.listing.id, {
       receiptType: 'manual-submission',
