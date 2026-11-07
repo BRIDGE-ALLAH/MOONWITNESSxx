@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
+import { createHmac, scryptSync, timingSafeEqual } from 'node:crypto'
 
 export const OPERATOR_SESSION_COOKIE = 'mw_operator_session'
 const SESSION_TTL_SECONDS = 8 * 60 * 60
@@ -92,8 +92,13 @@ export function requestHasTrustedOrigin(request: Request, publicOrigin: string):
   }
 }
 
-export function operatorPasswordMatches(supplied: string, expected: string): boolean {
-  const actualDigest = createHash('sha256').update(supplied).digest()
-  const expectedDigest = createHash('sha256').update(expected).digest()
+export function operatorPasswordMatches(supplied: string, expected: string, salt: string): boolean {
+  if (!supplied || supplied.length > 1024 || !salt || Buffer.byteLength(salt, 'utf8') < 32) return false
+
+  // The configured high-entropy session secret provides a stable per-deployment salt.
+  // scrypt deliberately makes each password check expensive; compare fixed-size outputs in constant time.
+  const options = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }
+  const actualDigest = scryptSync(supplied, salt, 64, options)
+  const expectedDigest = scryptSync(expected, salt, 64, options)
   return timingSafeEqual(actualDigest, expectedDigest)
 }
