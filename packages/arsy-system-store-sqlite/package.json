@@ -1,0 +1,27 @@
+{
+  "name": "@riotworks/arsy-system-store-sqlite",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit --strict --skipLibCheck --allowImportingTsExtensions --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts",
+    "lint": "../lint/node_modules/.bin/eslint src test --config ../lint/eslint.config.mjs --max-warnings 0",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@riotworks/orm": "workspace:*",
+    "@riotworks/orm-db": "workspace:*",
+    "@riotworks/orm-db-adaptor": "workspace:*",
+    "@riotworks/orm-db-adaptor-sqlite": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
+  }
+}
