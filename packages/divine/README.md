@@ -5,7 +5,7 @@ Evidence-centric epistemic and research infrastructure for MOONWITNESS.
 **Status:** foundational implementation (Phase 0–2); not production-ready.
 
 ## Identity and ownership
-The existing workspace uses `@riotworks/*`; Divine therefore uses `@riotworks/divine` until repository-wide naming governance changes. MoonWitness Corpus remains the canonical owner of Entity, Resource, Assertion, Evidence, Provenance, Assessment, canonical IDs, source artifacts, textual/manuscript/lexicon profiles, rights and provenance. Divine consumes Corpus read-only and owns research context, addon composition, epistemic policies, reasoning and disposable projections.
+The existing workspace uses `@riotworks/*`; Divine therefore uses `@riotworks/divine` until repository-wide naming governance changes. MoonWitness Corpus remains the canonical owner of Entity, Resource, Assertion, Evidence, Provenance, Assessment, canonical IDs, source artifacts, textual/manuscript/lexicon profiles, rights and provenance. Divine consumes Corpus read-only using its canonical `id` / `record_type` record identity and owns research context, addon composition, epistemic policies, reasoning and disposable projections.
 
 Divine does not mint replacement Corpus IDs, duplicate canonical records, generate scripture, assert metaphysical verification, or import Headquarter internals. ORM, ARSY, ZILL and MIZAN remain adapter ports.
 
