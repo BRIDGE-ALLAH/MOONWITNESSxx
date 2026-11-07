@@ -31,7 +31,8 @@ for (const [key, asset] of Object.entries(assetRegistry)) {
     }
     if (!/<\/svg>\s*$/i.test(svg)) errors.push(`${asset.id}: SVG closing tag missing`);
     const svgRoot = svg.match(/<svg\b[^>]*>/i)?.[0];
-    const viewBox = svgRoot?.match(/\bviewBox="([^"]+)"/i)?.[1];
+    const viewBoxMatch = svgRoot?.match(/\bviewBox\s*=\s*(?:"([^"]+)"|'([^']+)')/i);
+    const viewBox = viewBoxMatch?.[1] ?? viewBoxMatch?.[2];
     const viewBoxValues = viewBox?.trim().split(/[\s,]+/).map(Number);
     if (
       !svgRoot ||
