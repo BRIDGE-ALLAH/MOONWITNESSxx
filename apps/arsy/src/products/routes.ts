@@ -9,6 +9,7 @@ const createSchema = z.object({
   acceptanceCriteria: z.array(z.string().trim().min(3).max(500)).min(1).max(30),
 })
 const versionSchema = z.object({
+  expectedVersion: z.number().int().positive(),
   brief: z.record(z.unknown()),
   acceptanceCriteria: z.array(z.string().trim().min(3).max(500)).min(1).max(30),
 })
@@ -36,12 +37,28 @@ export function registerProductRoutes(app: FastifyInstance, db: DatabasePool, en
     return reply.code(201).send({ data: product })
   })
 
+  app.get('/api/v1/products/:id/versions', async (request, reply) => {
+    const params = z.object({ id: idSchema }).safeParse(request.params)
+    if (!params.success) return reply.code(400).send({ error: { code: 'INVALID_ID', message: 'Product ID must be a UUID.' } })
+    const product = await repository.get(ownerId, params.data.id)
+    if (!product) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Product was not found.' } })
+    return { data: await repository.listVersions(ownerId, params.data.id) }
+  })
+
   app.post('/api/v1/products/:id/versions', async (request, reply) => {
     const params = z.object({ id: idSchema }).safeParse(request.params)
     const body = versionSchema.safeParse(request.body)
     if (!params.success || !body.success) return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Product version input is invalid.' } })
-    const product = await repository.createVersion(ownerId, actorId, params.data.id, body.data.brief, body.data.acceptanceCriteria)
-    if (!product) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Product was not found.' } })
+    const existing = await repository.get(ownerId, params.data.id)
+    if (!existing) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Product was not found.' } })
+    if (existing.version !== body.data.expectedVersion) {
+      return reply.code(409).send({ error: { code: 'VERSION_CONFLICT', message: 'Product changed since this version was loaded. Refresh before saving.' }, data: existing })
+    }
+    const product = await repository.createVersion(
+      ownerId, actorId, params.data.id, body.data.expectedVersion,
+      body.data.brief, body.data.acceptanceCriteria,
+    )
+    if (!product) return reply.code(409).send({ error: { code: 'VERSION_CONFLICT', message: 'Product changed concurrently. Refresh before saving.' } })
     return reply.code(201).send({ data: product })
   })
 

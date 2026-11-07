@@ -17,6 +17,24 @@ type ProductRow = {
   updated_at: Date | string
 }
 
+export interface ProductVersionRecord {
+  id: string
+  version: number
+  brief: Record<string, unknown>
+  acceptanceCriteria: string[]
+  createdAt: string
+  createdBy: string
+}
+
+type ProductVersionRow = {
+  id: string
+  version: number
+  brief: Record<string, unknown>
+  acceptance_criteria: string[]
+  created_at: Date | string
+  created_by: string
+}
+
 export interface ProductRecord {
   id: string
   opportunityId: string | null
@@ -125,35 +143,69 @@ export class ProductRepository {
     return row ? mapProduct(row) : null
   }
 
-  async createVersion(ownerId: string, actorId: string, productId: string, brief: Record<string, unknown>, acceptanceCriteria: string[]): Promise<ProductRecord | null> {
+  async createVersion(
+    ownerId: string,
+    actorId: string,
+    productId: string,
+    expectedVersion: number,
+    brief: Record<string, unknown>,
+    acceptanceCriteria: string[],
+  ): Promise<ProductRecord | null> {
     const result = await this.db.query(
       `WITH locked AS MATERIALIZED (
-        SELECT pg_advisory_xact_lock(hashtextextended($2::text, 0))
-      ), next_version AS (
-        SELECT COALESCE(MAX(version), 0) + 1 AS version
-        FROM arsy_product_versions
-        WHERE product_id = $2 AND EXISTS (SELECT 1 FROM locked)
+        SELECT id, lifecycle_state
+        FROM arsy_products
+        WHERE owner_id = $1 AND id = $2
+        FOR UPDATE
+      ), current_version AS MATERIALIZED (
+        SELECT COALESCE(MAX(v.version), 0) AS version
+        FROM arsy_product_versions v
+        JOIN locked p ON p.id = v.product_id
       ), inserted AS (
-        INSERT INTO arsy_product_versions (id, product_id, version, brief, acceptance_criteria, created_by)
-        SELECT $3, $2, next_version.version, $4::jsonb, $5::jsonb, $6
-        FROM next_version
-        WHERE EXISTS (SELECT 1 FROM arsy_products WHERE owner_id = $1 AND id = $2 AND lifecycle_state IN ('brief', 'production', 'review', 'ready'))
+        INSERT INTO arsy_product_versions
+          (id, product_id, version, brief, acceptance_criteria, created_by)
+        SELECT $4, locked.id, current_version.version + 1, $5::jsonb, $6::jsonb, $7
+        FROM locked CROSS JOIN current_version
+        WHERE current_version.version = $3
+          AND locked.lifecycle_state IN ('brief', 'production', 'review', 'ready')
         RETURNING *
       ), updated AS (
-        UPDATE arsy_products SET lifecycle_state = 'production', updated_at = now(), updated_by = $6
-        WHERE owner_id = $1 AND id = $2 AND EXISTS (SELECT 1 FROM inserted)
-        RETURNING *
+        UPDATE arsy_products p
+        SET lifecycle_state = 'production', updated_at = now(), updated_by = $7
+        FROM inserted
+        WHERE p.owner_id = $1 AND p.id = inserted.product_id
+        RETURNING p.*
       ), audited AS (
-        INSERT INTO arsy_commerce_audit_events (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-        SELECT $7, $1, 'product', updated.id, 'version-created', $6,
-          jsonb_build_object('version', inserted.version)
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $8, $1, 'product', updated.id, 'version-created', $7,
+          jsonb_build_object('version', inserted.version, 'previousVersion', $3)
         FROM updated JOIN inserted ON inserted.product_id = updated.id
       )
       SELECT ${columns} FROM updated p JOIN inserted v ON v.product_id = p.id`,
-      [ownerId, productId, randomUUID(), JSON.stringify(brief), JSON.stringify(acceptanceCriteria), actorId, randomUUID()],
+      [ownerId, productId, expectedVersion, randomUUID(), JSON.stringify(brief), JSON.stringify(acceptanceCriteria), actorId, randomUUID()],
     )
     const row = rows<ProductRow>(result)[0]
     return row ? mapProduct(row) : null
+  }
+
+  async listVersions(ownerId: string, productId: string): Promise<ProductVersionRecord[]> {
+    const result = await this.db.query(
+      `SELECT v.id, v.version, v.brief, v.acceptance_criteria, v.created_at, v.created_by
+       FROM arsy_products p
+       JOIN arsy_product_versions v ON v.product_id = p.id
+       WHERE p.owner_id = $1 AND p.id = $2
+       ORDER BY v.version DESC`,
+      [ownerId, productId],
+    )
+    return rows<ProductVersionRow>(result).map((row) => ({
+      id: row.id,
+      version: row.version,
+      brief: row.brief,
+      acceptanceCriteria: row.acceptance_criteria,
+      createdAt: new Date(row.created_at).toISOString(),
+      createdBy: row.created_by,
+    }))
   }
 
   async transitionLifecycle(
