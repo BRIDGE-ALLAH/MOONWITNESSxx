@@ -89,7 +89,7 @@ export function assessClaimCorroboration(
     .filter((item) => item.disposition === 'quarantine')
     .map((item) => item.evidenceId)
   const independentGroups = new Set(
-    evidence.filter((item) => item.disposition === 'accept').map((item) => item.independenceGroup),
+    evidence.filter((item) => item.disposition === 'accept' && item.independenceGroup.trim()).map((item) => item.independenceGroup),
   )
   return {
     promotable: quarantinedEvidenceIds.length === 0 && independentGroups.size >= minimumIndependentSources,
