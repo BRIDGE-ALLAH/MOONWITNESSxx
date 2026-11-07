@@ -9,6 +9,8 @@ import { registerProductRoutes } from './products/routes.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { registerFinancialRoutes } from './finance/routes.ts'
 import { registerAssetRoutes } from './assets/routes.ts'
+import { registerChannelRoutes } from './channels/routes.ts'
+import { registerListingRoutes } from './listings/routes.ts'
 import type { AssetStorage } from './assets/storage.ts'
 
 export interface CreateAppOptions {
@@ -70,6 +72,8 @@ export function createApp(options: CreateAppOptions = {}) {
     registerProductRoutes(instance, databasePool, env)
     registerFinancialRoutes(instance, databasePool, env)
     registerAssetRoutes(instance, databasePool, env, options.assetStorage)
+    registerChannelRoutes(instance, databasePool, env)
+    registerListingRoutes(instance, databasePool, env)
   })
 
   return app
