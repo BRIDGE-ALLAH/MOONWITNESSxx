@@ -2,13 +2,10 @@
   "name": "@riotworks/arsy-core",
   "version": "0.0.0",
   "private": true,
-  "description": "RIOTWORKS ARSY core — Fastify server with ZOD validation",
+  "description": "MOONWITNESS ARSY Core — reusable Fastify platform primitives",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "fastify start --listen 0.0.0.0:3000",
-    "dev": "fastify dev",
-    "build": "fastify build",
     "lint": "pnpm --filter @riotworks/lint exec eslint ../arsy-core/src --config eslint.config.mjs --max-warnings 0"
   },
   "dependencies": {
