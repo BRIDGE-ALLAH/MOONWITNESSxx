@@ -110,7 +110,7 @@ export async function auditHeadquarterExperience({ root } = {}) {
   for (const route of routes.filter((item) => item !== '/')) {
     if (!seen.has(route)) findings.push(finding('route-not-discoverable', 'warning', route + ' exists but is not listed in Headquarter navigation.'))
   }
-  if (!topbar.includes('labels.demo') || !topbar.includes('aria-label={labels.demo}')) {
+  if (!topbar.includes('labels.demo') || !topbar.includes('aria-label={labels.demo}') || !topbar.includes('role="status"')) {
     findings.push(finding('persistent-demo-disclosure-missing', 'error', 'The topbar must expose an accessible demo-data disclosure on every route and viewport.'))
   }
   return { ok: !findings.some((item) => item.severity === 'error'), routeCount: routes.length, navigableCount: entries.length, routes, findings }
