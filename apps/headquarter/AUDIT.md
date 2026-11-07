@@ -133,3 +133,20 @@ The separate full-workspace typecheck/build workflow was skipped by workflow con
 - PR #38 head `431720caf3ecdfe7266971c6803922c1cd48a2e7`: Repository CI and CodeQL passed. The Headquarter API/fixture tests, asset/UI/Headquarter type-checks, production build, asset validation, and asset registry tests all passed. Full-workspace quality remains skipped because `FULL_QUALITY_CI` is not enabled.
 - Browser E2E, keyboard/screen-reader audit, WCAG contrast verification, responsive checks, visual regression, performance budgets, dependency/license review, and ARSY contract tests remain open.
 - Production promotion remains blocked on approved ARSY identity/session, workspace, permission, and feature API contracts.
+
+
+## Phase 6 closure and Phase 7–8 foundations — 2026-11-08
+
+- PR #38 merged as `9ebd2d08052e3460a9ebdf1c1473becb35c31852`; its Repository Integrity, Headquarter Asset Integrity, and CodeQL checks passed. The full-workspace build was previously optional/skipped.
+- Follow-up branch makes full-workspace validation and build a required CI job; its result is pending PR verification.
+- Added test-covered Decision Graph and Scenario Forge pure domain foundations. Both are isolated from live ARSY, persistence, and production mutations.
+- Phase 6 is scoped to Headquarter engineering foundation. Browser accessibility/E2E, production deployment, identity/permission, and live API contracts remain explicit promotion gates rather than falsely closed checklist items.
+
+
+## Phase 6 final verification — PR #43
+
+- Required full-workspace validation and production build passed (GitHub Actions run `42398091453`).
+- Repository Integrity and Asset Integrity passed, including the new Decision Graph and Scenario Forge tests in the Headquarter test glob.
+- CodeQL passed (run `42398091462`).
+- The full-workspace job is no longer conditional on `FULL_QUALITY_CI`.
+- Phase 6 Headquarter engineering-foundation gate is complete. Production rollout gates remain explicitly external: browser accessibility/E2E, ARSY identity/workspace/permission/API contracts, deployment smoke test, and rollback ownership.
