@@ -910,3 +910,42 @@ Use these labels consistently when updating this file:
 
 **Exit gate:** Each release runs a versioned adversarial suite; policy regressions are detected before deployment; metrics and false positives are reported with the exact corpus version.
 
+## Phase 21 — Developer Environment Doctor
+
+**Status:** [~] Read-only Node/pnpm/workspace/lockfile/dependency readiness diagnostics authored in `scripts/devx/cli.mjs`; clean-machine validation, platform matrix and setup automation remain.
+
+- [~] Add stable machine-readable doctor findings with pass/warn/fail, remediation text and summary.
+- [~] Check Node baseline, exact pnpm pin, workspace globs, lockfile, safe env template, installed dependencies and package scripts.
+- [ ] Validate on clean Linux/macOS/Windows environments and document optional service prerequisites.
+- [ ] Add devcontainer or Nix-based reproducible environment only after measuring actual setup pain and image/toolchain maintenance cost.
+- [ ] Add an onboarding contract test ensuring every required step maps to a runnable command or human prerequisite.
+
+**Exit gate:** a new contributor can diagnose setup blockers in one command without mutating files or requiring network access beyond the already-installed package manager.
+
+## Phase 22 — Change-Aware Workspace Task Graph
+
+**Status:** [~] Read-only changed-file → package ownership → reverse dependency planner authored in `scripts/devx/lib.mjs`; DAG ordering, worktree collision analysis and measured CI savings remain.
+
+- [~] Collect committed, staged, unstaged and untracked paths.
+- [~] Resolve owning packages and reverse workspace dependents.
+- [~] Emit only commands backed by scripts actually present in package manifests.
+- [ ] Add topological DAG execution with bounded concurrency and fail-fast/continue policy.
+- [ ] Add task-to-file/dependency provenance in machine-readable output.
+- [ ] Compare selected verification with full CI and ensure no false-negative test selection.
+- [ ] Add optional worktree collision forecast for parallel agent tasks.
+
+**Exit gate:** change-aware checks reduce unnecessary local test time without weakening required full CI or missing affected package regressions.
+
+## Phase 23 — Agent Context Compiler & Repository Flight Recorder
+
+**Status:** [~] Allowlisted, bounded, fingerprinted repository context compiler authored in `scripts/devx/lib.mjs`; task execution receipts, context freshness leases and agent adapters remain.
+
+- [~] Compile architecture instructions, workspace map, package scripts and governance into Markdown or versioned JSON.
+- [~] Add deterministic SHA-256 fingerprint and explicit truncation behavior.
+- [~] Exclude environment files and arbitrary source files; redact sensitive-looking key/value lines.
+- [ ] Add context freshness lease and automatic invalidation when source instructions/manifests/CI change.
+- [ ] Add opt-in local task receipt with repository fingerprint, command, toolchain, changed paths, exit code and test evidence.
+- [ ] Add cross-agent adapters for Codex/Claude/Copilot using existing standard files; avoid duplicating prompts.
+- [ ] Measure time-to-first-successful-PR, context token cost, correction rate and unrelated-file edit rate.
+
+**Exit gate:** a coding agent can reconstruct the repository's current ownership and valid verification commands from a small, fingerprinted artifact; every task receipt reports observed facts, not inferred success.
