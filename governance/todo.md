@@ -25,7 +25,7 @@
 - [x] Node engine aligned to Node 22+.
 - [x] pnpm engine aligned to pinned `12.16.1`.
 - [x] Replace workspace build allowlist placeholders with explicit booleans.
-- [ ] Verify clean install with Node 22+ / pnpm 12.16.1. **Evidence:** frozen install log.
+- [x] Verify clean install with pinned pnpm 12.16.1. **Evidence:** Repository CI run `42395045245` — frozen lockfile and install pass.
 
 ### P0.2 Root command contract
 
@@ -42,7 +42,7 @@
 - [x] Check mode is frozen/read-only and cannot rewrite lockfile.
 - [x] Refresh is explicit and refuses pre-existing lockfile edits.
 - [x] Refresh lockfile for all workspace manifests, including `apps/arsy` `pg` dependency (generated with pinned pnpm 12.16.1; bot commit `c450ee5`).
-- [ ] Verify importer parity, lockfile check, and frozen install. **Evidence:** reviewed lockfile diff + CI.
+- [x] Verify importer parity, lockfile check, and frozen install. **Evidence:** Repository CI run `42395045245`.
 
 ### P0.4 CI/local
 
@@ -55,8 +55,8 @@
 
 ### P0.5 Acceptance
 
-- [ ] `pnpm run check:repo`, `pnpm run format:check`, `pnpm test`.
-- [ ] `pnpm install --frozen-lockfile` from clean checkout.
+- [x] `pnpm run check:repo`, `pnpm run format:check`, `pnpm test` pass in Repository CI run `42395045245`.
+- [x] `pnpm install --frozen-lockfile` passes from clean checkout in Repository CI run `42395045245`.
 - [ ] Full workspace type-check/build only after package scripts/entrypoints are real.
 - [ ] Review diff, secrets, changed-file scope; record CI SHA/URL.
 
@@ -77,7 +77,7 @@
 
 - [x] Define Owner, Scope, Rules, Allowed, Forbidden, Enforcement, Acceptance evidence, Exceptions.
 - [x] Add Identity, Repository/Architecture, GitHub, Automation, Installation, Security contracts.
-- [ ] Add Architecture/API/Data contracts only after boundaries are reconciled with canonical architecture docs.
+- [x] Add Architecture, API, and Data contracts against docs/08, docs/09, docs/13, docs/18, and docs/21.
 - [ ] Review contracts with owning app/package maintainers.
 
 ### P1.3 Rule ownership/exceptions
@@ -102,7 +102,7 @@
 - [ ] Verify no schema/manifest duplication.
 - [ ] Run audit, format, and automation tests; record exceptions and owners.
 
-**Status:** authority, initial contracts, and core instruction reconciliation implemented. Codex plugin review, enforcement matrix, owner review, and acceptance remain open. CI audit passes; lockfile gate still fails due stale workspace importers and `pg`.
+**Status:** authority and six contract families (identity, repository, GitHub, automation, installation, security) plus architecture/API/data contracts are drafted; agent instructions and Codex automation plugin are reconciled. Enforcement mapping, owner review, and final acceptance remain open. CI audit passes; lockfile gate still fails due stale workspace importers and `pg`.
 
 ## Phase 2 — Programmatic Governance Engine
 
