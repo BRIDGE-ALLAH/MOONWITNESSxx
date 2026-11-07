@@ -46,14 +46,19 @@ export interface ReconciliationReceipt {
   readonly provider: string;
   readonly appliedAt: string;
   readonly actorId: string;
+  readonly approvalId?: string;
   readonly results: readonly Readonly<{ operationId: string; applied: boolean; detail?: string }>[];
   readonly verified: boolean;
+  readonly status: "planned" | "partial" | "verified";
 }
 
 export interface ReconciliationPolicy {
   readonly mode: "off" | "plan" | "safe" | "strict";
   readonly allowDestructive: boolean;
   readonly requireApprovalForReview: boolean;
+  readonly approvedOperationIds?: readonly string[];
+  readonly approvalId?: string;
+  readonly approvedBy?: string;
 }
 
 export interface ReconciliationStore {
@@ -102,3 +107,6 @@ export interface UpgradeHandler {
 export { createUnitOfWorkFactory, withUnitOfWork } from "./runtime.js";
 
 export { DeterministicSchemaPlanner, schemaPlanner } from "./schema-planner.js";
+
+export { ApprovalBoundSchemaReconciler, createSchemaReconciler } from "./reconciler.js";
+export type { SchemaReconcilerOptions } from "./reconciler.js";
