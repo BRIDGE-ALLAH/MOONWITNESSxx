@@ -22,7 +22,10 @@ export function parseComposePs(output) {
     const parsed = JSON.parse(trimmed)
     return Array.isArray(parsed) ? parsed : [parsed]
   } catch {
-    return trimmed.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line))
+    return trimmed
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line))
   }
 }
 
@@ -37,7 +40,12 @@ export function assessChangeRisk({ blastRadius, irreversibility, uncertainty }) 
   return {
     score,
     dimensions,
-    gate: score <= 2 ? 'automated-preflight-only' : score <= 5 ? 'human-approval' : 'blocked-until-reviewed',
+    gate:
+      score <= 2
+        ? 'automated-preflight-only'
+        : score <= 5
+          ? 'human-approval'
+          : 'blocked-until-reviewed',
   }
 }
 
@@ -60,7 +68,10 @@ function readEnvValue(content, key) {
     .split(/\r?\n/)
     .find((entry) => entry.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=/)?.[1] === key)
   return line
-    ? line.slice(line.indexOf('=') + 1).trim().replace(/^['"]|['"]$/g, '')
+    ? line
+        .slice(line.indexOf('=') + 1)
+        .trim()
+        .replace(/^['"]|['"]$/g, '')
     : null
 }
 
@@ -81,21 +92,26 @@ async function composeConfig(root) {
   }
   const rendered = command('docker', ['compose', 'config'], root)
   if (rendered.error) throw rendered.error
-  if (rendered.status !== 0) throw new Error(rendered.stderr.trim() || 'Unable to render Compose configuration')
+  if (rendered.status !== 0)
+    throw new Error(rendered.stderr.trim() || 'Unable to render Compose configuration')
   return createHash('sha256').update(rendered.stdout).digest('hex')
 }
 
 async function getHealth(root) {
   const result = command('docker', ['compose', 'ps', '--format', 'json'], root)
   if (result.error) throw result.error
-  if (result.status !== 0) throw new Error(result.stderr.trim() || 'Unable to inspect Compose services')
+  if (result.status !== 0)
+    throw new Error(result.stderr.trim() || 'Unable to inspect Compose services')
   const containers = parseComposePs(result.stdout)
   const services = EXPECTED_SERVICES.map((service) => {
     const instances = containers.filter((item) => item.Service === service)
-    const healthy = instances.length > 0 && instances.every((item) =>
-      String(item.Health ?? '').toLowerCase() === 'healthy' &&
-      String(item.State ?? '').toLowerCase() === 'running'
-    )
+    const healthy =
+      instances.length > 0 &&
+      instances.every(
+        (item) =>
+          String(item.Health ?? '').toLowerCase() === 'healthy' &&
+          String(item.State ?? '').toLowerCase() === 'running'
+      )
     return { service, instances: instances.length, healthy }
   })
   return { services, ok: services.every((item) => item.healthy) }
@@ -130,11 +146,21 @@ async function runPreflight(root) {
   }
   if (mode === 'production') {
     result.ok = false
-    result.warnings.push('The checked-in Compose stack is development-oriented; production deployment is not supported by this preflight.')
+    result.warnings.push(
+      'The checked-in Compose stack is development-oriented; production deployment is not supported by this preflight.'
+    )
   }
-  if (!env) result.warnings.push('.env is absent; create it from .env.example and set local values before starting Compose.')
-  if (!keys.includes('POSTGRES_PASSWORD') || /POSTGRES_PASSWORD\s*=\s*postgres(?:\s|$)/m.test(env)) {
-    result.warnings.push('PostgreSQL password is unset or uses the local default. Do not expose this stack to an untrusted network.')
+  if (!env)
+    result.warnings.push(
+      '.env is absent; create it from .env.example and set local values before starting Compose.'
+    )
+  if (
+    !keys.includes('POSTGRES_PASSWORD') ||
+    /POSTGRES_PASSWORD\s*=\s*postgres(?:\s|$)/m.test(env)
+  ) {
+    result.warnings.push(
+      'PostgreSQL password is unset or uses the local default. Do not expose this stack to an untrusted network.'
+    )
   }
   try {
     result.composeConfig = await composeConfig(root)
@@ -194,7 +220,9 @@ async function main(argv) {
   const [action = 'help', ...args] = argv
   const root = resolve(process.cwd())
   if (action === 'help' || args.includes('--help')) {
-    process.stdout.write('Usage: node scripts/runtime.mjs <doctor|preflight|health|passport> [--write]\n')
+    process.stdout.write(
+      'Usage: node scripts/runtime.mjs <doctor|preflight|health|passport> [--write]\n'
+    )
     return
   }
   if (action === 'doctor') {
@@ -221,7 +249,11 @@ async function main(argv) {
       const output = join(root, '.artifacts', 'runtime-passport.json')
       await mkdir(join(root, '.artifacts'), { recursive: true })
       await writeFile(output, `${JSON.stringify(result, null, 2)}\n`, { mode: 0o600 })
-      report({ command: 'passport', written: '.artifacts/runtime-passport.json', secretValuesIncluded: false })
+      report({
+        command: 'passport',
+        written: '.artifacts/runtime-passport.json',
+        secretValuesIncluded: false,
+      })
     } else {
       report(result)
     }

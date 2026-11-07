@@ -4,7 +4,7 @@
 
 ## Findings from research and community practice
 
-1. **Self-healing must include a decision not to act.** The 2026 preprint *Safe Remediation as Risk-Constrained Intervention Decision in Microservice Systems* models blast radius, irreversibility, and uncertainty, with a human-in-the-loop gate. Its central lesson is that repair success is not enough; false remediation has a measurable cost.
+1. **Self-healing must include a decision not to act.** The 2026 preprint _Safe Remediation as Risk-Constrained Intervention Decision in Microservice Systems_ models blast radius, irreversibility, and uncertainty, with a human-in-the-loop gate. Its central lesson is that repair success is not enough; false remediation has a measurable cost.
 2. **Cross-platform remediation needs observability and policy boundaries.** The 2026 CROSS paper combines log-driven detection, platform-specific remediation, and telemetry across heterogeneous operating systems. It also acknowledges that operational anomaly evaluation is not the same as adversarial security validation.
 3. **AI self-healing still has a validation gap.** The 2026 systematic review of 99 studies highlights the move from monitoring to agentic repair, but stresses uncertainty, privacy, validation, and human oversight.
 4. **Provenance is a chain, not a package inventory.** SLSA provenance records where, when, and how artifacts were built, including resolved dependencies. A runtime environment should preserve evidence linking source, lockfile, build inputs, artifact, and deployment.
@@ -19,10 +19,13 @@ The implemented first slice is `pnpm runtime:passport`. It captures a privacy-sa
 Next extensions:
 
 ### A. Environment Drift Radar
+
 Compare passports from developer machines, CI, staging, and production. Report only meaningful differences: lockfile digest, toolchain, architecture, Compose config digest, missing variables (names only), and service readiness. This turns "works on my machine" into a diffable evidence object.
 
 ### B. Change Capsule
+
 Before an install, upgrade, migration, or deployment, create a signed/hashed capsule containing:
+
 - pre-change passport and artifact provenance;
 - requested change and exact inputs;
 - blast-radius, irreversibility, and uncertainty scores;
@@ -33,15 +36,19 @@ Before an install, upgrade, migration, or deployment, create a signed/hashed cap
 The capsule is an audit record, not a rollback guarantee. Data migrations and external side effects require their own recovery strategy.
 
 ### C. Resilience Budget Gate
+
 Classify interventions using three bounded dimensions (0–3): blast radius, irreversibility, and uncertainty. Low scores permit deterministic preflight only; medium scores require human approval; high scores are blocked pending explicit review. The first deterministic scoring helper is implemented in `scripts/runtime.mjs`; no automatic remediation is enabled.
 
 ### D. Shadow Restore Lab
+
 Periodically restore a backup into a disposable isolated environment, then validate application invariants (row counts, newest business event, relationships, auth, and attachments). Record a restore passport. Never run restore drills against production data or overwrite the source backup.
 
 ### E. Dependency Quarantine Replay
+
 When a dependency update is proposed, build the previous and candidate lockfile in isolated workspaces, run the same contract tests and service probes, compare behavior and resource profiles, then attach the evidence to the dependency PR.
 
 ### F. Explainable Recovery Graph
+
 Represent service dependencies and recovery actions as a directed graph with preconditions, idempotency, blast radius, reversibility, and proof of success. Agents may propose actions, but only deterministic allowlisted runbooks execute; architecture/data/security/deployment changes require approval.
 
 ## Suggested architecture
@@ -55,10 +62,10 @@ Represent service dependencies and recovery actions as a directed graph with pre
 
 ## Research and implementation references
 
-- Dai et al., *Safe Remediation as Risk-Constrained Intervention Decision in Microservice Systems* (2026): https://www.alphaxiv.org/abs/2607.20005
-- Johnphill et al., *Cross: a cloud-native approach to automated remediation and self-healing in cyber-physical systems* (2026): https://doi.org/10.1186/s42400-026-00549-8
-- *AI-driven self-healing across the edge–cloud continuum: A systematic literature review* (2026): https://doi.org/10.1016/j.infsof.2026.108232
-- Google, *Securing the AI Software Supply Chain* (2024): https://research.google/pubs/securing-the-ai-software-supply-chain/
+- Dai et al., _Safe Remediation as Risk-Constrained Intervention Decision in Microservice Systems_ (2026): https://www.alphaxiv.org/abs/2607.20005
+- Johnphill et al., _Cross: a cloud-native approach to automated remediation and self-healing in cyber-physical systems_ (2026): https://doi.org/10.1186/s42400-026-00549-8
+- _AI-driven self-healing across the edge–cloud continuum: A systematic literature review_ (2026): https://doi.org/10.1016/j.infsof.2026.108232
+- Google, _Securing the AI Software Supply Chain_ (2024): https://research.google/pubs/securing-the-ai-software-supply-chain/
 - SLSA Build Provenance specification: https://slsa.dev/spec/v1.1/provenance
 - devenv: https://github.com/cachix/devenv
 - SafeDeploy (pre-change validation and rollback research example): https://github.com/ydarwish1/safedeploy

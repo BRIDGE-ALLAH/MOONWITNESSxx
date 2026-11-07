@@ -27,7 +27,10 @@ export function parseArgs(argv) {
       throw new Error(`Unknown option: ${value}`)
     }
   }
-  if (options.profile && !['minimal', 'headquarter', 'arsy', 'full-dev'].includes(options.profile)) {
+  if (
+    options.profile &&
+    !['minimal', 'headquarter', 'arsy', 'full-dev'].includes(options.profile)
+  ) {
     throw new Error(`Unknown profile: ${options.profile}`)
   }
   return options
@@ -84,11 +87,11 @@ async function resolvePackageManager(root) {
 async function runPnpm(root, profile, offline) {
   const resolved = await resolvePackageManager(root)
   const plan = buildInstallCommand(profile, offline)
-  const result = spawnSync(
-    resolved.command,
-    [...resolved.prefix, ...plan.args],
-    { cwd: root, stdio: 'inherit', shell: process.platform === 'win32' }
-  )
+  const result = spawnSync(resolved.command, [...resolved.prefix, ...plan.args], {
+    cwd: root,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  })
   if (result.error) throw result.error
   if (result.status !== 0) throw new Error(`pnpm install failed with exit code ${result.status}`)
   return resolved.version
@@ -158,19 +161,36 @@ async function reportDoctor(root, profile) {
       pnpm = { ok: false, expected: packageManager, actual: error.message }
     }
   }
-  const envExists = await stat(join(root, '.env')).then(() => true, () => false)
+  const envExists = await stat(join(root, '.env')).then(
+    () => true,
+    () => false
+  )
   return {
     command: 'doctor',
     profile,
-    checks: { node, git, pnpm, env: { ok: envExists, status: envExists ? 'present' : 'missing (will be copied from template on install)' } },
+    checks: {
+      node,
+      git,
+      pnpm,
+      env: {
+        ok: envExists,
+        status: envExists ? 'present' : 'missing (will be copied from template on install)',
+      },
+    },
     ok: node.ok && pnpm.ok,
   }
 }
 
 async function verify(root) {
   const state = await loadState(root)
-  const envExists = await stat(join(root, '.env')).then(() => true, () => false)
-  const modulesExist = await stat(join(root, 'node_modules/.modules.yaml')).then(() => true, () => false)
+  const envExists = await stat(join(root, '.env')).then(
+    () => true,
+    () => false
+  )
+  const modulesExist = await stat(join(root, 'node_modules/.modules.yaml')).then(
+    () => true,
+    () => false
+  )
   return {
     command: 'verify',
     ok: Boolean(state && envExists && modulesExist),
@@ -188,17 +208,19 @@ function print(value) {
 }
 
 function showHelp() {
-  process.stdout.write([
-    'MOONWITNESS developer setup',
-    '',
-    'Usage: node scripts/moonwitness.mjs <command> [options]',
-    'Commands: install | doctor | repair | update | verify | uninstall',
-    'Profiles: minimal | headquarter | arsy | full-dev',
-    'Options: --profile <name> --offline --dry-run --root <path>',
-    '',
-    'install/repair/update use the pinned pnpm version and frozen lockfile.',
-    'uninstall removes only the generated install-state marker; it never deletes .env or node_modules.',
-  ].join('\n') + '\n')
+  process.stdout.write(
+    [
+      'MOONWITNESS developer setup',
+      '',
+      'Usage: node scripts/moonwitness.mjs <command> [options]',
+      'Commands: install | doctor | repair | update | verify | uninstall',
+      'Profiles: minimal | headquarter | arsy | full-dev',
+      'Options: --profile <name> --offline --dry-run --root <path>',
+      '',
+      'install/repair/update use the pinned pnpm version and frozen lockfile.',
+      'uninstall removes only the generated install-state marker; it never deletes .env or node_modules.',
+    ].join('\n') + '\n'
+  )
 }
 
 export async function runCli(argv, cwd = process.cwd()) {
@@ -259,7 +281,13 @@ export async function runCli(argv, cwd = process.cwd()) {
     installedAt: new Date().toISOString(),
     env: envStatus,
   })
-  print({ command: options.command, profile, result: 'success', env: envStatus, packageManager: pnpmVersion })
+  print({
+    command: options.command,
+    profile,
+    result: 'success',
+    env: envStatus,
+    packageManager: pnpmVersion,
+  })
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

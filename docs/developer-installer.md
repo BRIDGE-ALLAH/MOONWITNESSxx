@@ -27,12 +27,12 @@ Windows PowerShell:
 
 Profiles:
 
-| Profile | Installs |
-| --- | --- |
-| `minimal` | Root workspace tooling only |
+| Profile       | Installs                                   |
+| ------------- | ------------------------------------------ |
+| `minimal`     | Root workspace tooling only                |
 | `headquarter` | Headquarter and its workspace dependencies |
-| `arsy` | ARSY and its workspace dependencies |
-| `full-dev` | Entire pnpm workspace |
+| `arsy`        | ARSY and its workspace dependencies        |
+| `full-dev`    | Entire pnpm workspace                      |
 
 Useful commands:
 

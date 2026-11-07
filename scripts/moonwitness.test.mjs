@@ -32,7 +32,9 @@ test('builds pinned, frozen profile-specific install commands', () => {
 })
 
 test('extracts environment variable names without retaining values', () => {
-  const keys = extractEnvKeys('TOKEN=super-secret\n# comment\n DATABASE_URL = postgres://user:pass@host/db\n')
+  const keys = extractEnvKeys(
+    'TOKEN=super-secret\n# comment\n DATABASE_URL = postgres://user:pass@host/db\n'
+  )
   assert.deepEqual(keys, ['TOKEN', 'DATABASE_URL'])
   assert.equal(JSON.stringify(keys).includes('super-secret'), false)
 })

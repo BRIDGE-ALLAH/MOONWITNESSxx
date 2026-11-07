@@ -20,6 +20,7 @@ Use `docker compose down -v` only when intentionally deleting local database/cac
 ## Health semantics
 
 ARSY exposes:
+
 - `GET /`: application response.
 - `GET /health/live`: process liveness; does not depend on PostgreSQL.
 - `GET /health/ready`: readiness; executes `SELECT 1` against PostgreSQL and returns HTTP 503 when the database is unavailable.
@@ -41,6 +42,7 @@ The passport records repository commit/dirty state, Node/pnpm versions, OS/archi
 ## Deployment safety boundary
 
 The following are intentionally not automated:
+
 - production deploys or host changes;
 - database schema migrations or destructive data operations;
 - backup deletion, volume deletion, or database restore;
