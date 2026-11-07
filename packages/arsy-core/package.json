@@ -6,7 +6,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "lint": "pnpm --filter @riotworks/lint exec eslint ../arsy-core/src --config eslint.config.mjs --max-warnings 0"
+    "lint": "../lint/node_modules/.bin/eslint src --config ../lint/eslint.config.mjs --max-warnings 0"
   },
   "dependencies": {
     "@fastify/jwt": "^8.0.0",
