@@ -11,8 +11,8 @@ const reviewSchema = z.object({
   countryEligibility: z.array(z.object({
     country: z.string().trim().length(2).toUpperCase(),
     status: z.enum(['pass', 'blocked', 'unknown']),
-    sourceUrl: z.string().url(),
-    checkedAt: z.string().datetime({ offset: true }),
+    sourceUrl: z.string().url().optional(),
+    checkedAt: z.string().datetime({ offset: true }).optional(),
   })).min(1).max(30),
   payoutRequirements: z.object({
     status: z.enum(['pass', 'blocked', 'unknown']),
@@ -20,9 +20,21 @@ const reviewSchema = z.object({
     checkedAt: z.string().datetime({ offset: true }).optional(),
     notes: z.string().trim().min(5).max(1000),
   }),
-  policyUrl: z.string().url(),
-  policyCheckedAt: z.string().datetime({ offset: true }),
+  policyUrl: z.string().url().optional(),
+  policyCheckedAt: z.string().datetime({ offset: true }).optional(),
   manualFallback: z.string().trim().min(10).max(2000),
+}).superRefine((input, context) => {
+  for (const [index, item] of input.countryEligibility.entries()) {
+    if (item.status !== 'unknown' && (!item.sourceUrl || !item.checkedAt)) {
+      context.addIssue({ code: 'custom', path: ['countryEligibility', index], message: 'A non-unknown eligibility decision requires a source URL and review time.' })
+    }
+  }
+  if (input.payoutRequirements.status !== 'unknown' && (!input.payoutRequirements.sourceUrl || !input.payoutRequirements.checkedAt)) {
+    context.addIssue({ code: 'custom', path: ['payoutRequirements'], message: 'A non-unknown payout decision requires a source URL and review time.' })
+  }
+  if (Boolean(input.policyUrl) !== Boolean(input.policyCheckedAt)) {
+    context.addIssue({ code: 'custom', path: ['policyUrl'], message: 'Policy URL and review time must be supplied together.' })
+  }
 })
 const idSchema = z.string().uuid()
 
