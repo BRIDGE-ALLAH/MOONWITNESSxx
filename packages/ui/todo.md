@@ -83,8 +83,8 @@
 - [x] **P1** Define typography roles: display, heading, body, label, overline, mono, metric.
 - [ ] **P1** Define shape, border width, shadow/elevation, and layering tokens.
 - [x] **P1** Define motion duration/easing and reduced-motion behavior.
-- [ ] **P1** Define compact and comfortable density modes for operational screens.
-- [ ] **P1** Define z-index conventions for popovers, dialogs, drawers, toasts, and command palette.
+- [x] **P1** Define compact and comfortable density modes for operational screens.
+- [x] **P1** Define z-index conventions for popovers, dialogs, drawers, toasts, and command palette.
 - [x] **P2** Add token reference documentation and examples.
 - [ ] **P2** Add automated checks to prevent accidental raw color and spacing drift where practical.
 
@@ -288,14 +288,14 @@ A component is not complete until all applicable checks pass:
   - [ ] Run package consumer smoke test.
   - [ ] Run Headquarter production build against the built package.
   - [ ] Record passing command output before marking the milestone complete.
-- [ ] **Milestone 2 — Lock visual foundation:** implementation in progress; contrast/rendered-theme verification, density, z-index, and asset policy remain open.
+- [ ] **Milestone 2 — Lock visual foundation:** implementation in progress; contrast/rendered-theme verification, component shadow/elevation, and production font/asset policy remain open.
   - [x] Audit approved design DNA and design-system token requirements.
   - [x] Implement semantic color, surface, border, interaction, typography, radius, and motion tokens for Night Riot and Paper Riot.
   - [x] Expose semantic color, surface, interaction, and motion utilities through the Tailwind preset.
   - [x] Document token usage and examples in `packages/ui/TOKENS.md`.
   - [ ] Verify WCAG 2.2 AA contrast for all relevant foreground/background combinations.
   - [ ] Render and inspect both themes in Headquarter, including focus, disabled, selected, hover, and overlay states.
-  - [ ] Define compact/comfortable density contract and z-index layers.
+  - [x] Define compact/comfortable density contract and z-index layers.
   - [ ] Finalize production font hosting/licensing and original asset policy.
 - [ ] **Milestone 3 — Complete core primitives:** actions, inputs, selection, navigation, overlays, feedback.
 - [ ] **Milestone 4 — Operational UI:** FormField, DataTable, FilterBar, EmptyState, ErrorState, ActivityTimeline.
@@ -342,3 +342,7 @@ A component is not complete until all applicable checks pass:
 - Token implementation is not equivalent to visual approval: contrast measurements and rendered consumer verification remain open.
 - CI preflight diagnosis correction: `scripts/check-lockfile.mjs` exists. The root scripts invoked it as `pnpm scripts/check-lockfile.mjs`, which is not a reliable way to execute a local Node script; this branch changes both lockfile commands to `node scripts/check-lockfile.mjs`.
 - The lockfile still needs regeneration for the declared `pg@^8.0.0` dependency in `apps/arsy`. This dependency is used by `apps/arsy/src/db.ts` and must not be removed merely to silence CI.
+
+
+- The first CI attempt after the lockfile was synchronized reached dependency installation and failed because pnpm's `allowBuilds` entries were placeholders. The workspace now explicitly allows `esbuild` (required build tooling) and denies `msgpackr-extract` (optional native acceleration); rerun CI to verify the policy.
+- Added `scripts/check-theme-tokens.mjs` and wired it into the UI package test command. It statically checks that all required semantic tokens are present in both theme blocks; it does not replace browser-level visual or contrast verification.
