@@ -73,6 +73,7 @@ test('opportunity CRUD and audit persist in PostgreSQL across pool reconnect', {
   skip: !connectionString ? 'ARSY_TEST_DATABASE_URL is not configured' : false,
 }, async () => {
   let pool = new Pool({ connectionString, max: 2 })
+  let poolClosed = false
   const ownerId = randomUUID()
   const actorId = ownerId
 
@@ -95,7 +96,9 @@ test('opportunity CRUD and audit persist in PostgreSQL across pool reconnect', {
     assert.equal(await repository.get(randomUUID(), created.id), null)
 
     await pool.end()
+    poolClosed = true
     pool = new Pool({ connectionString, max: 2 })
+    poolClosed = false
     const reconnectedRepository = new OpportunityRepository(pool)
     const persisted = await reconnectedRepository.get(ownerId, created.id)
     assert.equal(persisted?.id, created.id)
@@ -114,10 +117,11 @@ test('opportunity CRUD and audit persist in PostgreSQL across pool reconnect', {
     )
     assert.deepEqual(audit.rows.map((row) => row.action).sort(), ['archived', 'created', 'decision-changed'].sort())
   } finally {
-    if (!pool.ended) {
+    if (!poolClosed) {
       await pool.query('DELETE FROM arsy_commerce_audit_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
       await pool.query('DELETE FROM arsy_opportunities WHERE owner_id = $1', [ownerId]).catch(() => undefined)
       await pool.end()
+      poolClosed = true
     }
   }
 })
