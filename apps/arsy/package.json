@@ -8,7 +8,6 @@
     "dev": "fastify dev",
     "build": "pnpm --filter @riotworks/arsy-core run build",
     "start": "pnpm --filter @riotworks/arsy-core run start",
-    "lint": "echo lint-skip",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
