@@ -2,7 +2,7 @@
 
 > **Mission:** Own the visual foundation of MOONWITNESS / RIOTWORKS through a reliable, programmatic, reusable, and enterprise-ready asset system.
 >
-> **Status:** Foundation implemented; creative identity and production verification remain in progress
+> **Status:** Technical foundation implemented and verified; original brand artwork and repository-wide baseline cleanup remain in progress
 > **Priority:** P0 foundation, then P1 adoption and expansion
 > **Package:** `@riotworks/assets`
 > **Location:** `packages/assets`
@@ -15,8 +15,8 @@
 - [x] M2 typed registry, resolver, and initial rendering helpers implemented.
 - [x] M3 original starter textures and visual conventions implemented; official brand marks and licensed fonts remain blocked on approved source material.
 - [x] M4 neutral empty-search and recoverable-error illustrations implemented; character library remains blocked on approved original character artwork.
-- [x] M5 local integrity validation, registry tests, and CI validation step implemented; raster optimization and external license confirmation remain outstanding.
-- [x] M6 Headquarter and shared UI integration implemented. ARSY is a Fastify backend service in this repository and is intentionally not coupled to a visual asset package.
+- [x] M5 local integrity validation, registry tests, isolated CI validation, and package/UI/Headquarter type-checks implemented and passing; raster optimization and external license confirmation remain outstanding.
+- [x] M6 Headquarter and shared UI integration implemented; Headquarter production bundling passes. ARSY is a Fastify backend service in this repository and is intentionally not coupled to a visual asset package.
 - [ ] Run `pnpm install --frozen-lockfile`, package tests/type-check, Headquarter type-check, and production build in a full checkout.
 
 ## 1. Product Intent
@@ -265,8 +265,8 @@ packages/assets/
 - [x] Define behavior for unknown IDs (clear development-time error or documented safe fallback).
 - [ ] Avoid silently returning unrelated assets.
 - [ ] Avoid constructing unsafe paths from arbitrary user input.
-- [ ] Ensure references work in the actual Vite / application build configuration used by the repository.
-  - [x] Add the package to Headquarter's Next.js transpile configuration; production build verification is still pending.
+- [x] Ensure references work in the actual application build configuration used by the repository.
+  - [x] Add the package to Headquarter's Next.js transpile configuration and verify production asset bundling.
 - [ ] Verify production build output and asset URLs, not only development mode.
 - [ ] Document any bundler-specific limitation or required configuration.
 
