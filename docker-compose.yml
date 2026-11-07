@@ -45,7 +45,7 @@ services:
       dockerfile: Dockerfile.arsy
     container_name: moonwitness-arsy
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
+      NODE_ENV: ${NODE_ENV:-production}
       HOST: 0.0.0.0
       PORT: ${ARSY_PORT:-3001}
       LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -58,10 +58,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./apps/arsy:/app/apps/arsy
-      - ./packages:/app/packages
-      - /app/node_modules
     networks:
       - moonwitness
     restart: unless-stopped
@@ -85,10 +81,6 @@ services:
     depends_on:
       arsy:
         condition: service_healthy
-    volumes:
-      - ./apps/headquarter:/app/apps/headquarter
-      - ./packages:/app/packages
-      - /app/node_modules
     networks:
       - moonwitness
     restart: unless-stopped
