@@ -1,6 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { createDatabasePool } from '../src/db.ts'
 import { evaluateOpportunity, opportunityInputSchema } from '../src/opportunities/domain.ts'
 import { OpportunityRepository } from '../src/opportunities/repository.ts'
@@ -9,6 +12,8 @@ import { FinancialRepository } from '../src/finance/repository.ts'
 import { ChannelRepository } from '../src/channels/repository.ts'
 import { InspectionRepository } from '../src/inspections/repository.ts'
 import { ListingRepository } from '../src/listings/repository.ts'
+import { AssetRepository } from '../src/assets/repository.ts'
+import { LocalAssetStorage } from '../src/assets/storage.ts'
 
 test('PostgreSQL commerce lifecycle persists opportunities, products, and reconciled finance across reconnects', {
   skip: !process.env.DATABASE_URL,
@@ -16,6 +21,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
   const ownerId = `integration-${randomUUID()}`
   let pool = createDatabasePool()
   const channelSlug = `integration-${randomUUID()}`
+  const assetStorageDir = await mkdtemp(path.join(tmpdir(), 'arsy-asset-integration-'))
   try {
     const evidence = [{
       evidenceId: 'integration-evidence-1',
@@ -214,6 +220,37 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(published?.status, 'published')
     assert.equal(published?.providerReference, 'provider-listing-fixture-001')
 
+
+    const assetStorage = new LocalAssetStorage(assetStorageDir)
+    const assetBytes = Buffer.from('Persisted integration asset binary')
+    const assetId = randomUUID()
+    const storedAsset = await assetStorage.write(ownerId, assetId, assetBytes)
+    const assets = new AssetRepository(pool)
+    const asset = await assets.create(ownerId, ownerId, {
+      id: assetId,
+      productVersionId: revisedProduct.versionId,
+      filename: 'integration-asset.txt',
+      mediaType: 'text/plain',
+      storageKey: storedAsset.storageKey,
+      checksumSha256: storedAsset.checksumSha256,
+      provenance: {
+        creator: 'Integration test fixture',
+        license: 'Original test fixture',
+        originalDeclaration: 'Created only for the isolated PostgreSQL asset integration test.',
+        editHistory: ['Created as a test fixture.'],
+        disclosure: 'Test data only.',
+      },
+      rightsState: 'pass',
+    })
+    assert.ok(asset)
+    assert.equal(asset.checksumSha256, createHash('sha256').update(assetBytes).digest('hex'))
+    const loadedAsset = await assets.get(ownerId, assetId)
+    assert.ok(loadedAsset)
+    assert.deepEqual(await assetStorage.read(loadedAsset.storageKey), assetBytes)
+    assert.equal(await assets.archive(ownerId, ownerId, assetId), true)
+    assert.equal(await assets.get(ownerId, assetId), null)
+    assert.equal((await assets.list(ownerId)).length, 0)
+
     const finance = new FinancialRepository(pool)
     const grossInput = {
       productId: product.id,
@@ -307,12 +344,15 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
       'inspection-recorded',
       'manual-listing-package-created',
       'manual-publication-receipt-recorded',
+      'uploaded',
+      'archived',
     ]) {
       assert.ok(actions.includes(expected), `missing audit action: ${expected}`)
     }
   } finally {
     await pool.query('DELETE FROM arsy_commerce_audit_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_financial_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_assets WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_listings WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_inspections WHERE product_version_id IN (SELECT pv.id FROM arsy_product_versions pv JOIN arsy_products p ON p.id = pv.product_id WHERE p.owner_id = $1)', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_channels WHERE slug = $1', [channelSlug]).catch(() => undefined)
@@ -324,5 +364,6 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     await pool.query('DELETE FROM arsy_products WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_opportunities WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.end()
+    await rm(assetStorageDir, { recursive: true, force: true })
   }
 })
