@@ -262,6 +262,8 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     for (const expected of [
       'created',
       'created-from-opportunity',
+      'version-created',
+      'lifecycle-transition',
       'recorded-pending-reconciliation',
       'reconciled',
       'decision-changed',
