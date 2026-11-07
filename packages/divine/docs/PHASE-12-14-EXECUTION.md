@@ -42,6 +42,12 @@ Every output is explicitly labelled `structural-change-only`. Same-release compa
 - A November 2026 third-party tracker lists Graphify, Understand-Anything, MiroFish and NVIDIA Auto Ontology among high-growth knowledge-graph projects. Tracker rankings are snapshots, not official GitHub Trending: https://github.locker/topics/knowledge-graph
 - The GraphRAG topic also shows graph-native context/provenance projects such as Semantica and Neo4j's LLM Graph Builder: https://github.com/topics/graph-rag
 
+## Additional unique capabilities extracted from the superseded PR lines
+
+- **Witness-Family Firewall:** explicit family-level independence assessment and train/test leakage detector; unknown family assignments are quarantined rather than treated as independent.
+- **Proof-Carrying Research:** a deterministic certificate binds conclusion, rule, scope, Corpus release, witness graph digest, evidence node IDs, graph edge IDs and provenance references. Structural verification detects mismatch; the fingerprint is not a digital signature and does not prove truth.
+- **TEI/IIIF fidelity controls:** minimal TEI P5 and IIIF Presentation 3 exporters plus Semantic Loss Budget were retained from the superseded Phase 9–11 branch. IIIF placeholder dimensions remain a publication blocker.
+
 ## New research prototypes (not novelty claims)
 
 1. **Epistemic Time Machine** — now implemented as a structural release diff; next step is bitemporal event storage only after a canonical event-history contract exists.
