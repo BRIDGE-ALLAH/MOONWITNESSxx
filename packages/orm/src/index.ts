@@ -219,19 +219,36 @@ export interface EnvironmentContext {
   readonly principal: PrincipalReference | null;
   readonly tenantId?: string;
   readonly companyId?: string;
+  readonly allowedCompanyIds?: readonly string[];
   readonly locale: string;
   readonly timeZone: string;
   readonly traceId: string;
+}
+
+export interface EnvironmentDerivation {
+  readonly principal?: PrincipalReference | null;
+  readonly tenantId?: string;
+  readonly companyId?: string;
+  readonly allowedCompanyIds?: readonly string[];
+  readonly locale?: string;
+  readonly timeZone?: string;
+}
+
+export interface ExecutionTransaction {
+  readonly id: string;
+  readonly isActive: boolean;
 }
 
 export interface Environment {
   readonly context: EnvironmentContext;
   readonly registry: RegistrySnapshot;
   readonly models: ModelCollection;
+  readonly transaction: ExecutionTransaction | null;
+  derive(changes?: EnvironmentDerivation): Environment;
 }
 
 export interface ModelCollection {
-  get<TRecord = unknown>(modelName: string): Recordset<TRecord>;
+  get<TRecord = unknown>(modelName: string, ids?: readonly string[]): Recordset<TRecord>;
 }
 
 export interface Recordset<TRecord = unknown> extends AsyncIterable<TRecord> {
@@ -250,3 +267,6 @@ export { Model, readModelDeclaration } from "./model.js";
 export type { ModelDeclaration } from "./model.js";
 export { assertValidModelDeclaration, validateModelDeclaration } from "./declaration.js";
 export type { DeclarationIssue } from "./declaration.js";
+
+export { createEnvironment } from "./runtime.js";
+export type { EnvironmentOptions, RecordsetLoader, RecordsetLoadRequest } from "./runtime.js";
