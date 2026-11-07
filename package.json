@@ -23,7 +23,12 @@
     "type-check": "pnpm run typecheck",
     "format": "prettier --write .",
     "test": "node --experimental-strip-types --test scripts/*.test.mjs scripts/devx/*.test.mjs",
-    "devx": "node scripts/devx/cli.mjs"
+    "devx": "node scripts/devx/cli.mjs",
+    "repo:lab": "node scripts/counterfactual-repo-lab.mjs",
+    "repo:lab:impact": "node scripts/counterfactual-repo-lab.mjs --impact",
+    "repo:lab:cycles": "node scripts/counterfactual-repo-lab.mjs --cycles",
+    "repo:lab:scenario": "node scripts/repo-lab-scenario.mjs",
+    "test:repo-lab": "node --test scripts/tests/counterfactual-repo-lab.test.mjs scripts/tests/repo-lab-intelligence.test.mjs scripts/tests/repo-lab-scenario.test.mjs scripts/tests/repo-lab-workspace.test.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",

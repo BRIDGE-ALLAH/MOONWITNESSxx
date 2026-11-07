@@ -1058,3 +1058,10 @@ See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract c
 - [x] Make DB readiness return 503 and require DATABASE_URL when creating the production pool.
 - [x] Route SIGTERM/SIGINT through one idempotent app.close() operation so Fastify onClose closes the pool.
 - [ ] Verify current-head Repository CI, full workspace build and CodeQL before merge.
+
+
+## Counterfactual Repo Lab (2026-11-08)
+- [x] Build deterministic read-only graph from exact workspace globs `apps/*` and `packages/*`.
+- [x] Fail closed on malformed manifests, invalid dependency fields and duplicate workspace package names.
+- [x] Add reverse-dependency impact, changed-path ownership, cycle radar and scenario replay CLI paths.
+- [x] Add unit, fixture and CLI smoke tests; preserve mandatory CI as advisory-only.
