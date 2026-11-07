@@ -1,35 +1,55 @@
-# Codex Super Autonomous v4.0
+# MOONWITNESS
 
-A lean, modular repository-engineering setup for Codex.
+MOONWITNESS is an evidence-first, agent-governed workspace and product-engineering monorepo. RIOTWORKS is a product division within the ecosystem. The repository contains Headquarter (human-facing web prototype), ARSY (backend runtime and governance primitives), shared packages, WITNESS FABRIC, Divine research tooling, and repository automation.
 
-## Contents
+**Product truth:** Headquarter currently contains prototype/demo screens. Static sample metrics, placeholder accounts, financial rows, and marketplace states are not live production data. ARSY runtime and integration readiness are tracked separately from UI prototypes.
 
-- `GOAL.txt` — paste into the Codex Goal field for a full autonomous work cycle.
-- `AGENTS.md` — concise, always-on repository rules.
-- `.agents/skills/` — five on-demand workflows:
-  - `repo-maintenance`: audit, Issue reconciliation and safe cleanup.
-  - `debug-quality`: root-cause debugging, testing and CI.
-  - `pr-delivery`: PR lifecycle, review, merge and Issue reconciliation.
-  - `release-management`: SemVer, compare range, changelog, tags and GitHub Releases.
-  - `docs-wiki`: minimal Markdown and GitHub Wiki maintenance.
+## Repository map
 
-## Install
+- `apps/headquarter` — Next.js human-facing command center.
+- `apps/arsy` — Fastify HTTP API and orchestration runtime.
+- `packages/*` — shared UI, contracts, assets, ARSY core, evidence and research capabilities.
+- `services/*` — legacy prototypes, intentionally excluded from the pnpm workspace.
+- `docs/` and `todo.md` — architecture decisions, research and implementation status.
+- `.agents/skills/`, `AGENTS.md`, and `GOAL.txt` — Codex engineering workflow pack included in this repository.
 
-Copy `AGENTS.md` into the repository root. Copy the `.agents/` directory into the repository root without overwriting existing content. Keep or merge any existing `AGENTS.md` instructions; do not blindly replace project-specific commands or safety rules.
+## Local development
 
-Paste the contents of `GOAL.txt` into the Codex Goal field. Start/restart the Codex session so the instruction chain and skills are discovered.
+1. Copy `.env.docker.example` to `.env.docker` and replace the placeholder PostgreSQL password with a strong local-only value.
+2. Run `docker compose --env-file .env.docker up --build`.
+3. Headquarter is exposed on localhost:3000 and ARSY on localhost:3001; PostgreSQL and Redis bind to loopback only.
 
-Codex project skills are stored in `.agents/skills/<skill-name>/SKILL.md`. Skills use progressive disclosure: metadata is available for routing, and the full skill is loaded only when selected.
+The Compose file is a local-development profile, not a production deployment specification.
 
-## Design rules
+## Development workflow pack
 
-- Goal is the mission and dispatcher, not a duplicate of every procedure.
-- `AGENTS.md` contains only durable project-wide rules.
-- Skills own detailed repeatable workflows and load only when relevant.
-- GitHub Issues own backlog; Codex owns active execution progress.
-- `.plan/` is optional and only for useful cross-session plans.
-- README/docs/Wiki/CHANGELOG have distinct responsibilities.
+This repository also includes a modular Codex engineering setup:
+- `GOAL.txt` — full autonomous engineering cycle for the Codex Goal field.
+- `AGENTS.md` — durable repository rules.
+- `.agents/skills/` — on-demand workflows for maintenance, debugging, PR delivery, release management and docs/Wiki work.
 
-## Safety
+Copy or adapt these instructions only after reading existing repository rules. Do not overwrite project-specific instructions, user changes, branch protection or approval requirements.
 
-This pack does not grant access or override Codex sandbox, approval, GitHub permissions, branch protection, or repository policies. Production-destructive actions, deployment, external registry publishing and permission changes remain approval-gated.
+## Engineering commands
+
+| Command | Purpose |
+|---|---|
+| `pnpm dev:headquarter` | Start Headquarter locally |
+| `pnpm dev:arsy` | Start ARSY locally |
+| `pnpm test` | Run repository and DevX unit tests |
+| `pnpm check:repo` | Run repository integrity checks |
+| `pnpm validate` | Validate, type-check and build the workspace |
+| `pnpm devx doctor --json` | Inspect local toolchain and workspace |
+| `pnpm devx product-audit --json` | Audit workspace contracts, navigation truth and release blockers |
+
+## Design and safety rules
+
+- Headquarter consumes ARSY through public API contracts; it must not import backend implementation source.
+- ARSY owns HTTP lifecycle. `packages/arsy-core` owns framework-neutral governance primitives.
+- Do not add `services/*` to the workspace as a shortcut; move unique behavior into its canonical owner first.
+- A green build is not a production release. Stable release requires a versioned changelog, a verified tag, release automation, production deployment and live smoke tests.
+- This pack does not grant deployment credentials or override sandbox, approval, GitHub permissions, branch protection or production safety controls.
+
+## Documentation
+
+Start with [CONTRIBUTING.md](./CONTRIBUTING.md), [Repository Reality Audit](./docs/23-repository-audit-and-current-execution-plan.md), [Repository Governance](./docs/24-repository-and-automation-governance.md), and the phase execution documents in `docs/`.
