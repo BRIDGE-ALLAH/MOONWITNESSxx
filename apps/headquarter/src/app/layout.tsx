@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ThemeProvider } from 'next-themes'
 import './globals.css'
+import { AppShell } from '../components/AppShell'
 
 export const metadata: Metadata = {
   title: 'MOONWITNESS // RIOTWORKS',
@@ -12,9 +13,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className="font-ui antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          {children}
+          <AppShell>{children}</AppShell>
         </ThemeProvider>
       </body>
     </html>
   )
 }
+

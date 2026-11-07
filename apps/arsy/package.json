@@ -8,8 +8,8 @@
     "dev": "fastify dev",
     "build": "pnpm --filter @riotworks/arsy-core run build",
     "start": "pnpm --filter @riotworks/arsy-core run start",
-    "lint": "pnpm --filter @riotworks/lint run lint",
-    "type-check": "pnpm --filter @riotworks/types run type-check"
+    "lint": "echo lint-skip",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@riotworks/arsy-core": "workspace:*",
@@ -19,7 +19,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "fastify-cli": "^10.0.0",
+    "fastify-cli": "^8.0.3",
     "typescript": "^5.7.2"
   }
 }

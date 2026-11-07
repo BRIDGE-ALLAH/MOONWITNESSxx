@@ -1,10 +1,7 @@
 import Fastify from 'fastify'
 import Zod from 'zod'
 import fastifyTypeProviderZod from 'fastify-type-provider-zod'
-import { $Ref } from 'zod'
-
-// Import ARSY core modules
-import type { RouteHandler } from '@riotworks/arsy-core'
+// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
 
 const app = Fastify({
   logger: true

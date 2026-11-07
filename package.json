@@ -1,6 +1,6 @@
 {
   "name": "moonwitness",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "private": true,
   "description": "MOONWITNESS monorepo for the creative commerce ecosystem",
   "scripts": {
