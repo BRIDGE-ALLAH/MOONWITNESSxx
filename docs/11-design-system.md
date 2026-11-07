@@ -64,7 +64,7 @@ Define independent tokens for success, warning, danger, info, neutral, focus, se
 - body-lg, body-md, body-sm
 - label, overline, mono, metric
 
-Use Space Grotesk for display/interface and IBM Plex Mono for technical data, with system fallbacks. Font binaries remain excluded until licensing and hosting rights are verified.
+Use Space Grotesk for display/interface and IBM Plex Mono for technical data, with system fallbacks. Both upstream families are documented under SIL OFL 1.1 in `packages/assets/fonts/`; see the license record for reserved-name and redistribution conditions. Font binaries remain excluded until a pinned, hash-verified import is justified.
 
 ### Spacing, shape, and border
 Use a consistent 4px base spacing scale. Prefer deliberate grids, generous whitespace, and restrained radii. Use measured lines and rules as editorial structure; avoid ornamental borders that compete with evidence.
