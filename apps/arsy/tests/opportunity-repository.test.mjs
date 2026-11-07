@@ -71,6 +71,39 @@ test('creates a persisted opportunity with owner and actor attribution', async (
   assert.equal(fake.calls[0].values.at(-2), 'owner-a')
 })
 
+test('updates opportunity data with owner scope and an audit event', async () => {
+  const fake = createDatabase([[row]])
+  const repository = new OpportunityRepository(fake.db)
+  const input = {
+    title: 'Updated inventory utility',
+    buyerProblem: row.buyer_problem,
+    buyerSegment: row.buyer_segment,
+    jobToBeDone: row.job_to_be_done,
+    productHypothesis: row.product_hypothesis,
+    productFamily: row.product_family,
+    candidateChannels: row.candidate_channels,
+    evidence: row.evidence,
+    scores: row.scores,
+    scoreDetails: row.score_details,
+    hardGates: row.hard_gates,
+    hardGateDetails: row.hard_gate_details,
+  }
+  const evaluation = {
+    score: 80,
+    decision: 'prototype-candidate',
+    blockedGates: [],
+    unknownGates: [],
+    missingScoreDimensions: [],
+  }
+
+  const result = await repository.update('owner-a', 'actor-a', row.id, input, evaluation)
+
+  assert.equal(result.title, row.title)
+  assert.match(fake.calls[0].sql, /UPDATE arsy_opportunities[\\s\\S]*owner_id = \\$1 AND id = \\$2/)
+  assert.match(fake.calls[0].sql, /'updated'/)
+  assert.deepEqual(fake.calls[0].values.slice(0, 4), ['owner-a', row.id, 'actor-a', input.title])
+})
+
 test('preserves missing score dimensions when persisted opportunities are reloaded', async () => {
   const incompleteRow = {
     ...row,
