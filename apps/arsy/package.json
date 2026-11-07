@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "fastify-cli": "^8.0.3",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2"
   }
 }
