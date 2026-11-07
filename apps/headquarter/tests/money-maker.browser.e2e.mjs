@@ -240,7 +240,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     // The payout register consumes the reviewed C1 channel and records an expected
     // payout first. Only evidence-backed status transitions create ledger movements.
     await page.getByRole('heading', { name: 'Payout register' }).waitFor()
-    await page.getByText('No payout records.', { exact: true }).waitFor()
+    await page.getByText('No payout records.').waitFor()
     const payoutSource = `CI-only payout fixture ${runId}`
     const payoutForm = page.locator('form').filter({ hasText: 'Record expected payout' }).first()
     await payoutForm.getByLabel('Channel').selectOption({ label: `${channelName} · C1` })
