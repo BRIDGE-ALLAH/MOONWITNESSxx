@@ -21,7 +21,7 @@
 Primary product tagline. It communicates the value delivered by MOONWITNESS and belongs on the primary lockup, concise product signatures, and product entry points.
 
 ### Brand Manifesto
-**WHEN THE MOON RISES, WE SHARE WHAT MATTERS.**
+**WHEN THE MOON RISES, WE SHARE MESSAGES.**
 
 Poetic expression of the brand's human purpose. It belongs in the About page, editorial/campaign storytelling, launch materials, community messages, and selected onboarding moments. It complements rather than replaces the Core Promise.
 
