@@ -38,3 +38,13 @@
 4. Do not show connected/healthy/running/approved states without a source-backed status and timestamp.
 5. Before production promotion, each feature must satisfy the Definition of Done in `TODO.md`, including contract, permission, failure-state, accessibility, test, and observability evidence.
 6. Keep the IA aligned with the approved product journey; technical internals belong in restricted administration, not the daily command surface.
+
+
+## Emerging domain modules (Phase 7–8)
+
+| Module | Domain owner | Current maturity | Production gate |
+|---|---|---|---|
+| Decision Graph / WHY Engine | Governance / ARSY | Pure graph contract + integrity assessor; no UI or live data | Append-only decision/evidence API, provenance, redaction, retention, workspace authorization, graph UX |
+| Scenario Forge / Shadow Reality | Planning / ARSY | Deterministic shadow-only calculation kernel; no UI or live snapshot | Versioned read-only snapshots, units/freshness, uncertainty model, scenario persistence, explicit approval boundary |
+
+These are foundations, not production features. Scenario results must never be promoted directly to live mutations; Decision Graph explanations must never be mistaken for evidence.
