@@ -206,3 +206,28 @@ These are point-in-time states, not final outcomes. A queued or in-progress chec
 - PR #102 has a green check set on its recorded head, but that head is based on older main `8621f86`. It must be rebased/revalidated against current main before merge. PR #106 remains dependent on #102 and has not completed its checks.
 - Current release status remains **NO-GO**. The only verified production release is still `v1.0.0`; no production deployment, live health check, backup/restore or rollback validation was performed in this session.
 
+## 9. Follow-up after verified merges — 2026-11-08
+
+This addendum supersedes the earlier mainline snapshot in this document.
+
+### Current mainline
+- Verified HEAD: `515976bdd105c10e267ab0febfa8802009da2662`.
+- PR #107 merged: removed fabricated Signal Room market trends, category counts, confidence percentages, buyer-problem prevalence, and marketplace observations. Signal Room now states that live sources are not connected.
+- PR #109 merged: removed fabricated Mizan Ledger financial rows, The Forge product/version/provenance examples, and ZILL Watch inspection outcomes. These screens now show truthful disconnected/empty states.
+- PR #104 merged: corrected the shared `CardTitle` forwarded-ref type to match its rendered `h3` element.
+- Exact PR-head checks passed for all three changes. The new mainline commit's own CI was queued at the time of this update; do not infer post-merge CI success from PR-head checks.
+- Root package version remains `1.0.11`. The changelog now contains an Unreleased section. The only published GitHub Release remains `v1.0.0`.
+
+### Remaining product and integration gates
+- Issue #100 remains open. It is the canonical first real commerce vertical slice; the empty-state corrections do not implement opportunity, product, asset, inspection, or financial persistence.
+- PR #106 remains draft and blocked by review findings: credentialed BFF/session boundary consolidation, PostgreSQL read-after-write/reconnect integration coverage, idempotency, migration scope, and explicit operator-assertion provenance. Its current CI was queued and the branch is not mergeable against current main.
+- PR #108 is this documentation update; its exact current-head checks must finish before merge.
+- PR #104, #107, and #109 are merged. Do not recreate their work.
+- Legacy stacked ORM PRs #15–#41 remain draft, branch-dependent, and stale relative to current main. Do not merge them out of order; re-audit their ancestry and current-base diffs before any future integration.
+- Several other feature/dependency PRs remain open. Mergeability, historical CI, or a green check on an obsolete base is not sufficient evidence for integration.
+
+### Release decision
+**Production release remains NO-GO.** No verified production deployment target, managed production secrets, TLS/ingress, backup/restore, rollback, live service health, or production smoke-test path is configured. The local Compose profile is explicitly development-only. Do not bump a release or deploy production merely to satisfy a release checklist.
+
+### Verification limitations
+This update uses GitHub repository files, PR metadata, review records, and CI check-run metadata. It does not claim a local clone, local package execution, Docker image runtime against PostgreSQL, browser E2E, screen-reader testing, or production infrastructure access.
