@@ -102,7 +102,7 @@
 - [ ] Verify no schema/manifest duplication.
 - [ ] Run audit, format, and automation tests; record exceptions and owners.
 
-**Status:** authority and six contract families (identity, repository, GitHub, automation, installation, security) plus architecture/API/data contracts are drafted; agent instructions and Codex automation plugin are reconciled. Enforcement mapping, owner review, and final acceptance remain open. CI audit passes; lockfile gate still fails due stale workspace importers and `pg`.
+**Status:** canonical index, nine separate contracts, enforcement map, and agent/Codex instruction reconciliation are implemented. Owner review and final acceptance remain open. CI audit passes; lockfile gate still fails due stale workspace importers and `pg`.
 
 ## Phase 2 — Programmatic Governance Engine
 
