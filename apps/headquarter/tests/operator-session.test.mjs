@@ -67,12 +67,20 @@ test('production session configuration requires HTTPS', () => {
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: 'http://hq.example',
   }), null)
+  assert.equal(getOperatorSessionConfig({
+    NODE_ENV: 'production',
+    ARSY_OPERATOR_ID: operatorId,
+    HEADQUARTER_OPERATOR_PASSWORD: password,
+    HEADQUARTER_SESSION_SECRET: secret,
+    HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
+  }), null)
   assert.notEqual(getOperatorSessionConfig({
     NODE_ENV: 'production',
     ARSY_OPERATOR_ID: operatorId,
     HEADQUARTER_OPERATOR_PASSWORD: password,
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
+    HEADQUARTER_TRUSTED_PROXY_HOPS: '1',
   }), null)
 })
 
@@ -97,4 +105,46 @@ test('operator session cookie is extracted without trusting other cookies', () =
   })
   assert.equal(readOperatorSessionCookie(request), token)
   assert.equal(readOperatorSessionCookie(new Request('https://hq.example')), undefined)
+})
+
+
+import {
+  createLoginAttemptBucketHashes,
+  resolveTrustedClientNetworkIdentity,
+} from '../src/lib/login-attempt-limiter.ts'
+
+test('production login identity requires a configured trusted proxy and one sanitized client address', () => {
+  const request = new Request('https://hq.example/login', { headers: { 'x-forwarded-for': '198.51.100.42' } })
+  assert.equal(resolveTrustedClientNetworkIdentity(request, 0, 'production'), null)
+  assert.equal(resolveTrustedClientNetworkIdentity(request, 1, 'production'), '198.51.100.42')
+  assert.equal(resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
+    headers: { 'x-forwarded-for': '198.51.100.42, 203.0.113.9' },
+  }), 1, 'production'), null)
+  assert.equal(resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
+    headers: { 'x-forwarded-for': 'not-an-ip' },
+  }), 1, 'production'), null)
+})
+
+test('untrusted client-supplied forwarding headers never select a network bucket in local mode', () => {
+  const first = resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
+    headers: { 'x-forwarded-for': '198.51.100.1' },
+  }), 0, 'development')
+  const second = resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
+    headers: { 'x-forwarded-for': '203.0.113.2' },
+  }), 0, 'development')
+  assert.equal(first, 'local-development')
+  assert.equal(second, 'local-development')
+})
+
+test('login bucket identifiers are keyed, deterministic and do not expose raw operator or IP values', () => {
+  const first = createLoginAttemptBucketHashes(operatorId, '198.51.100.7', secret)
+  const sameNetwork = createLoginAttemptBucketHashes('OPERATOR-TEST', '198.51.100.7', secret)
+  const otherNetwork = createLoginAttemptBucketHashes(operatorId, '203.0.113.8', secret)
+  assert.deepEqual(first, sameNetwork)
+  assert.equal(first.operatorBucketHash, otherNetwork.operatorBucketHash)
+  assert.notEqual(first.networkBucketHash, otherNetwork.networkBucketHash)
+  assert.match(first.operatorBucketHash, /^[a-f0-9]{64}$/)
+  assert.match(first.networkBucketHash, /^[a-f0-9]{64}$/)
+  assert.equal(JSON.stringify(first).includes('198.51.100.7'), false)
+  assert.equal(JSON.stringify(first).includes(operatorId), false)
 })
