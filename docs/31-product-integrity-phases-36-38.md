@@ -40,7 +40,7 @@ Added `pnpm devx product-audit --json` to check:
 - Persistent demo disclosure accessibility.
 - SemVer syntax, a non-empty Unreleased changelog, release/deployment workflow presence, production container entrypoint and compose health checks.
 
-The release preflight deliberately distinguishes local repository evidence from remote production evidence. It cannot verify remote tags, published GitHub Releases, deployment provider state, secrets, live health or smoke tests.
+The release preflight deliberately distinguishes local repository evidence from remote production evidence. It cannot verify remote tags, published GitHub Releases, deployment provider state, secrets, live health or smoke tests. A dedicated `.github/workflows/container-build.yml` now validates Compose syntax and builds both production images on pull requests and main pushes.
 
 ## Research and prior art
 
