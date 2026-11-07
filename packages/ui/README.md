@@ -65,3 +65,11 @@ See PLATFORM.md for action/command registry contracts, plugin slot lifecycle, ap
 The shared brand signatures are exported as `RiotSignalHeader`, `RiotLiveIndicator`, and `RiotAtmosphere`. They provide editorial page hierarchy, explicit live/standby/attention states, and a restrained ambient hero surface. All decorative motion respects `prefers-reduced-motion`.
 
 See [VISUAL-DNA.md](./VISUAL-DNA.md) for the composition and motion contract, and [WORKBENCH.md](./WORKBENCH.md) for the live Headquarter component workbench at `/ui-lab`.
+
+
+## Signal intelligence experiences
+
+- `RiotSignalConstellation` maps host-supplied nodes and relationships, with an accessible selectable inspector for source, observation time, evidence, and optional confidence.
+- `RiotDecisionTrail` presents a host-supplied event sequence and exposes rationale, owner, and supporting evidence.
+
+These components are presentation and navigation surfaces only. They do not infer relationships, create audit records, certify evidence, or guarantee event immutability. See [VISUAL-DNA.md](./VISUAL-DNA.md) for the design principles.
