@@ -25,7 +25,7 @@ export interface PayoutEvidence {
 
 export interface PayoutRecord {
   id: string
-  channelId: string
+  channelId: string | null
   channelName: string
   amountMinor: string
   currency: string
@@ -44,8 +44,8 @@ export interface PayoutRecord {
 
 interface PayoutRow {
   id: string
-  channel_id: string
-  channel_name: string
+  channel_id: string | null
+  channel_name: string | null
   amount_minor: string
   currency: string
   status: PayoutStatus
@@ -127,7 +127,7 @@ function mapPayout(row: PayoutRow): PayoutRecord {
   return {
     id: row.id,
     channelId: row.channel_id,
-    channelName: row.channel_name,
+    channelName: row.channel_name ?? 'Unlinked legacy payout',
     amountMinor: row.amount_minor,
     currency: row.currency.trim(),
     status: row.status,
@@ -245,7 +245,7 @@ export class PayoutRepository {
   async list(ownerId: string, limit = 100): Promise<PayoutRecord[]> {
     const result = await this.db.query(
       `SELECT ${payoutColumns} FROM arsy_payouts p
-       JOIN arsy_channels c ON c.id = p.channel_id
+       LEFT JOIN arsy_channels c ON c.id = p.channel_id
        WHERE p.owner_id = $1 ORDER BY p.created_at DESC LIMIT $2`,
       [ownerId, limit],
     )
@@ -278,7 +278,7 @@ export class PayoutRepository {
     }
     const result = await this.db.query(
       `WITH current AS (
-        SELECT status FROM arsy_payouts WHERE owner_id = $1 AND id = $2
+        SELECT status FROM arsy_payouts WHERE owner_id = $1 AND id = $2 FOR UPDATE
       ), changed AS (
         UPDATE arsy_payouts p SET
           status = $3,
@@ -318,7 +318,7 @@ export class PayoutRepository {
         FROM changed
       )
       SELECT ${payoutColumns} FROM changed p
-      JOIN arsy_channels c ON c.id = p.channel_id`,
+      LEFT JOIN arsy_channels c ON c.id = p.channel_id`,
       [ownerId, id, status, JSON.stringify(evidence), actorId, historyId, rationale,
         financeId, eventType, eventIdempotencyKey, eventRequestHash, auditId],
     )
