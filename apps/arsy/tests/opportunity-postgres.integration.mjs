@@ -166,6 +166,16 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(revisedProduct.lifecycleState, 'production')
 
     const inspections = new InspectionRepository(pool)
+    assert.equal(
+      await inspections.record(ownerId, ownerId, {
+        productVersionId: product.versionId,
+        inspectionType: 'technical',
+        status: 'pass',
+        findings: [{ severity: 'info', description: 'A superseded product version must not be inspected.' }],
+      }),
+      null,
+      'only the current product version may receive inspections',
+    )
     const inspectionTypes = ['rights', 'policy', 'technical', 'creative']
     let finalInspection
     for (const inspectionType of inspectionTypes) {

@@ -14,4 +14,13 @@ The suite uses Node 24's built-in test runner and native TypeScript type strippi
 - `scenario-forge.test.mjs` verifies deterministic shadow replay, baseline immutability, and fail-closed validation.
 - `governance-kernel.test.mjs` verifies SHA-256 capsule integrity/replay, tamper detection, Decision Debt findings and downstream impact, and human-only uncertainty gate states.
 
-These tests do not replace browser E2E, accessibility, visual regression, or backend contract tests. Those require a browser harness and approved ARSY identity/workspace/permission/API contracts.
+## Browser E2E
+
+The focused browser workflow is defined in `.github/workflows/headquarter-e2e.yml`. It installs a pinned Playwright browser runner into the CI temporary directory (not the workspace dependency graph), starts isolated PostgreSQL, ARSY, and Headquarter services, then verifies:
+
+- operator login and the authenticated RIOT RADAR route;
+- creation of a source-labeled opportunity through the actual browser form and Headquarter BFF;
+- persistence after a full browser reload; and
+- anonymous visitors cannot read the persisted opportunity.
+
+Run it in GitHub Actions with the `Headquarter browser E2E` workflow. The test uses clearly labeled synthetic records in an ephemeral CI database. It does not claim that every browser workflow, marketplace integration, accessibility scenario, or visual regression path is covered.
