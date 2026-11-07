@@ -50,10 +50,11 @@ const body = {
 }
 
 function fakePool() {
+  const records = []
   return {
     query: async (sql) => {
       if (sql.includes('INSERT INTO arsy_opportunities')) {
-        return { rows: [{
+        const record = {
           id: '11111111-1111-4111-8111-111111111111',
           title: body.title,
           buyer_problem: body.buyerProblem,
@@ -72,8 +73,11 @@ function fakePool() {
           decision_rationale: null,
           created_at: '2026-11-08T00:00:00.000Z',
           updated_at: '2026-11-08T00:00:00.000Z',
-        }] }
+        }
+        records.push(record)
+        return { rows: [record] }
       }
+      if (sql.includes('FROM arsy_opportunities')) return { rows: records }
       return { rows: [] }
     },
     end: async () => undefined,
@@ -103,7 +107,7 @@ test('opportunity routes require a valid operator token', async () => {
   }
 })
 
-test('authenticated operator can create and list a persisted opportunity', async () => {
+test('authenticated operator create/list routes delegate to the database pool', async () => {
   const app = await createApp({ databasePool: fakePool(), logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
   try {
     const created = await app.inject({
@@ -120,7 +124,8 @@ test('authenticated operator can create and list a persisted opportunity', async
       headers: { 'x-arsy-operator-token': token },
     })
     assert.equal(listed.statusCode, 200)
-    assert.equal(listed.json().data.length, 0)
+    assert.equal(listed.json().data.length, 1)
+    assert.equal(listed.json().data[0].id, created.json().data.id)
   } finally {
     await app.close()
   }
