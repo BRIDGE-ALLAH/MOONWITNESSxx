@@ -7,9 +7,10 @@ on:
       - "feat-*"
       - "fix-*"
       - "chore-*"
+      - "feat/**"
+      - "fix/**"
+      - "chore/**"
   pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
