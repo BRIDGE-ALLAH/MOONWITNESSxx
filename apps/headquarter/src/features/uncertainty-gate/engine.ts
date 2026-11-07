@@ -17,6 +17,8 @@ export function assessGovernanceReadiness(
   policy: GovernanceGatePolicy = DEFAULT_GOVERNANCE_POLICY,
 ): GovernanceGateResult {
   const reasons: GovernanceGateResult['reasons'] = []
+  const countsValid = [input.requiredEvidenceCount, input.verifiedEvidenceCount, input.staleEvidenceCount, input.contradictionCount, input.unresolvedAssumptionCount].every((count) => Number.isInteger(count) && count >= 0)
+  const policyValid = Number.isFinite(policy.minimumEvidenceCoverage) && policy.minimumEvidenceCoverage >= 0 && policy.minimumEvidenceCoverage <= 1 && Number.isFinite(policy.maximumRelativeRange) && policy.maximumRelativeRange >= 0
   const invalidMetrics = input.metrics.filter((metric) => !metricIsValid(metric))
   const missingMetrics = input.metrics.filter((metric) => metric.sourceQuality === 'missing')
   const coverage = input.requiredEvidenceCount <= 0
@@ -27,6 +29,7 @@ export function assessGovernanceReadiness(
     return Math.max(maximum, (metric.high - metric.low) / denominator)
   }, 0)
 
+  if (!countsValid || !policyValid) reasons.push({ code: 'invalid_governance_counters', message: 'Evidence counters and governance thresholds must be finite, non-negative, and within supported bounds' })
   if (invalidMetrics.length) reasons.push({ code: 'invalid_metric_range', message: `${invalidMetrics.length} metric range(s) are invalid` })
   if (missingMetrics.length) reasons.push({ code: 'missing_required_metric', message: `${missingMetrics.length} required metric(s) have missing source data` })
   if (coverage < policy.minimumEvidenceCoverage) reasons.push({ code: 'low_evidence_coverage', message: `Evidence coverage ${Math.round(coverage * 100)}% is below the ${Math.round(policy.minimumEvidenceCoverage * 100)}% threshold` })
@@ -35,7 +38,7 @@ export function assessGovernanceReadiness(
   if (maxRelativeRange > policy.maximumRelativeRange) reasons.push({ code: 'wide_uncertainty_range', message: `Maximum relative uncertainty ${Math.round(maxRelativeRange * 100)}% exceeds the ${Math.round(policy.maximumRelativeRange * 100)}% review threshold` })
   if (input.unresolvedAssumptionCount > 0) reasons.push({ code: 'unresolved_assumptions', message: `${input.unresolvedAssumptionCount} assumption(s) remain unresolved` })
 
-  const blocked = invalidMetrics.length > 0 || missingMetrics.length > 0
+  const blocked = !countsValid || !policyValid || invalidMetrics.length > 0 || missingMetrics.length > 0
     || coverage < Math.min(policy.minimumEvidenceCoverage, 0.5)
     || (policy.blockOnStaleEvidence && input.staleEvidenceCount > 0)
   const status = blocked ? 'blocked'
