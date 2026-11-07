@@ -144,11 +144,11 @@ Create only packages with real ownership and entrypoints. Avoid empty placeholde
 
 ### 2.1 Target package responsibilities
 
-- [ ] `packages/orm`: model declarations, field descriptors, model kinds, metadata types, registry composition, inheritance/extension, environment/recordset contracts, domain AST, validation, lifecycle contracts, and typed model APIs.
-- [ ] `packages/orm-db-adaptor`: provider-neutral persistence capabilities and adapter interfaces; no concrete driver.
-- [ ] `packages/orm-db`: transaction orchestration, unit-of-work, schema introspection/reconciliation coordination, schema ledger, and upgrade orchestration.
-- [ ] `packages/orm-db-adaptor-postgres`: PostgreSQL pool/driver integration, type mapping, introspection, DDL, and query execution.
-- [ ] `packages/orm-db-adaptor-sqlite` (or agreed package name): SQLite System Database adapter and required system-store operations; do not conflate this with the PostgreSQL business adapter.
+- [~] `packages/orm`: initial public model/field/relation metadata, model kinds, manifests, registry snapshot, error vocabulary, Environment/Recordset contracts drafted in `packages/orm/src/index.ts`; runtime behavior remains Phase 2/3.
+- [~] `packages/orm-db-adaptor`: provider-neutral connection/transaction/query/schema SPI and capability negotiation drafted in `packages/orm-db-adaptor/src/index.ts`; contract tests and consumer verification remain.
+- [~] `packages/orm-db`: UnitOfWork, planner/reconciler, receipt/store, risk policy and semantic UpgradeHandler contracts drafted in `packages/orm-db/src/index.ts`; orchestration implementation remains.
+- [ ] `packages/orm-db-adaptor-postgres`: implement PostgreSQL pool/driver integration, type mapping, introspection, DDL and query execution after SPI verification.
+- [ ] `packages/orm-db-adaptor-sqlite`: approved package name for the SQLite System Database adapter; implement connection lifecycle, mapping, introspection, DDL and system-store operations after SPI verification.
 - [ ] `packages/arsy-core`: ARSY application lifecycle, plugin composition, runtime context, logging, health, and service container.
 - [ ] `packages/orm-addon-base`: independently installable base addon manifests and their models/services/policies.
 - [ ] Keep `packages/types` framework/database-neutral.
@@ -156,12 +156,12 @@ Create only packages with real ownership and entrypoints. Avoid empty placeholde
 
 ### 2.2 Define contracts before implementation
 
-- [ ] Define `ModelConstructor`, `ModelDefinition`, `ModelKind`, `FieldDefinition`, `RelationDefinition`, `MixinDefinition`, and `ModelExtensionDefinition`.
-- [ ] Define `AddonManifest` and `ModuleManifest` separately; a plugin package may provide one or more modules.
-- [ ] Define package/module IDs, semantic versions, compatibility ranges, dependencies, conflicts, capabilities, and public exports.
-- [ ] Define `RegistrySnapshot` with deterministic ordering and stable fingerprint/hash.
-- [ ] Define adapter capability negotiation so unsupported provider features fail explicitly.
-- [ ] Define typed error classes/codes for declaration errors, registry conflicts, access denial, validation, concurrency, provider capability gaps, and system reconciliation failures.
+- [~] Define `ModelConstructor`, `ModelDefinition`, `ModelKind`, `FieldDefinition`, and `RelationDefinition`; `MixinDefinition` and `ModelExtensionDefinition` still need explicit contracts.
+- [x] Define separate `AddonManifest` and `ModuleManifest` contracts in `@riotworks/orm`.
+- [~] Define package/module IDs, versions, dependencies, conflicts, capabilities and entrypoint metadata in the initial manifests; compatibility-range validation and export consumer tests remain.
+- [~] Define `RegistrySnapshot` shape with fingerprint and explicit addon/module order; deterministic composition/hash implementation remains.
+- [x] Define provider capability vocabulary and explicit `requireCapabilities` rejection in `@riotworks/orm-db-adaptor`.
+- [~] Define initial ORM declaration/registry/access/validation/provider error codes; concurrency and reconciliation error taxonomy remain.
 - [ ] Define public API versus internal API boundaries. Addons must not import private ORM internals.
 - [ ] Define package export maps and enforce dependency direction with lint rules.
 
@@ -809,3 +809,28 @@ Use these labels consistently when updating this file:
 - [x] Move Fastify CLI build/start ownership to `apps/arsy`.
 - [x] Remove server lifecycle scripts from `packages/arsy-core`; it is a library, not a second server.
 - [ ] Implement and test the actual ARSY Core factory/dependency contract, then integrate it into the app without duplicate Fastify lifecycle.
+
+
+## Phase 1 execution log — package boundaries and public contracts
+
+**Branch:** `chore/phase-1-package-contracts`  
+**Status:** In progress; initial contracts drafted, verification gate not yet met.
+
+### Implemented in this slice
+
+- [x] Create `@riotworks/orm` with a public TypeScript entrypoint for model kinds, field/relation metadata, separate addon/module manifests, registry snapshot, ORM error codes, Environment and Recordset contracts.
+- [x] Create `@riotworks/orm-db-adaptor` with provider-neutral connection, transaction, query, introspection, schema-operation and capability contracts.
+- [x] Create `@riotworks/orm-db` with UnitOfWork, schema plan/risk/approval, reconciliation receipt/store, planner/reconciler and semantic UpgradeHandler contracts.
+- [x] Decide the adapter package name `orm-db-adaptor-sqlite` for the SQLite System Database role; PostgreSQL remains the Business Database adapter.
+- [x] Document package ownership, allowed/forbidden dependency direction and Phase 1 verification gate in `docs/25-phase-1-package-contracts.md`.
+
+### Still required before Phase 1 can be marked complete
+
+- [ ] Add the missing mixin/model-extension contracts and finalize public error taxonomy.
+- [ ] Add adapter/ORM contract tests and a minimal external consumer fixture.
+- [ ] Add concrete PostgreSQL and SQLite adapter packages only with real driver-backed entrypoints and tests.
+- [ ] Create `orm-addon-base` when BaseEntity and the first installable base modules have real declarations/services; do not add an empty placeholder package.
+- [ ] Verify package exports, lint, typecheck, lockfile and clean workspace install.
+- [ ] Verify dependency direction mechanically and update the repository audit with actual results.
+
+**Evidence note:** No local pnpm install, TypeScript check, lint, unit test, adapter integration test or CI run has been executed in this slice. The presence of a contract file is not evidence that its behavior is implemented or verified.
