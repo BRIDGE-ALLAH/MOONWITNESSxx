@@ -13,6 +13,7 @@ import { registerInspectionRoutes } from './inspections/routes.ts'
 import { registerListingRoutes } from './listings/routes.ts'
 import { registerAssetRoutes } from './assets/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
+import { registerPayoutRoutes } from './finance/payout-routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
@@ -76,6 +77,7 @@ export function createApp(options: CreateAppOptions = {}) {
     registerListingRoutes(instance, databasePool, env)
     registerAssetRoutes(instance, databasePool, env)
     registerLoginAttemptRoutes(instance, databasePool, env)
+    registerPayoutRoutes(instance, databasePool, env)
   })
 
   return app
