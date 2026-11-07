@@ -108,6 +108,13 @@ export async function run(args = process.argv.slice(2), root = ROOT) {
   const flag = args[0];
   const target = args[1];
   if (flag === "--json") return console.log(JSON.stringify(graph, null, 2));
+  if (flag === "--cycles") return console.log(JSON.stringify(findDependencyCycles(graph), null, 2));
+  if (flag === "--changed-files") {
+    const changedPaths = args.slice(1);
+    const report = analyzeChangedPaths(graph, changedPaths);
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
   if (flag === "--mermaid") return console.log(toMermaid(graph));
   if (flag === "--impact" || flag === "--simulate-outage") {
     if (!target) throw new Error(`${flag} requires a workspace package name`);
