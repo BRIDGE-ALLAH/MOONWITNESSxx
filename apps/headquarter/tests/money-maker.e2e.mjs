@@ -132,10 +132,34 @@ try {
   await page.getByRole('status').filter({ hasText: 'Product brief created' }).waitFor({ state: 'visible', timeout: 30_000 })
   await page.getByText(title, { exact: true }).waitFor({ state: 'visible' })
 
+  // Product edits append a version; lifecycle transitions are explicit and audited.
+  await page.getByText('Version history & edit brief').click()
+  await page.getByLabel('Brief summary').fill('Version two: adds a documented reconciliation export.')
+  await page.getByRole('button', { name: 'Create version 2' }).click()
+  await page.getByRole('status').filter({ hasText: 'Created immutable version 2' }).waitFor({ state: 'visible', timeout: 30_000 })
+  await page.getByLabel('Lifecycle rationale').fill('The versioned brief is approved for implementation work.')
+  await page.getByRole('button', { name: 'Start production' }).click()
+  await page.getByRole('status').filter({ hasText: 'moved to production' }).waitFor({ state: 'visible', timeout: 30_000 })
+
+  // Reload and query ARSY to prove lifecycle and immutable versions survive a browser refresh.
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  const persistedProductsResponse = await context.request.get(`${baseUrl}/api/products?limit=100`)
+  assert.equal(persistedProductsResponse.status(), 200)
+  const persistedProducts = await persistedProductsResponse.json()
+  const persistedProduct = persistedProducts.data.find((item) => item.title === title)
+  assert.ok(persistedProduct)
+  assert.equal(persistedProduct.version, 2)
+  assert.equal(persistedProduct.lifecycleState, 'production')
+  const versionHistoryResponse = await context.request.get(`${baseUrl}/api/products/${persistedProduct.id}/versions`)
+  assert.equal(versionHistoryResponse.status(), 200)
+  const versionHistory = await versionHistoryResponse.json()
+  assert.deepEqual(versionHistory.data.map((item) => item.version), [2, 1])
+  assert.equal(versionHistory.data[0].brief.summary, 'Version two: adds a documented reconciliation export.')
+
   // Record a real pending ledger event and reconcile it with a source URL.
   await page.goto(`${baseUrl}/mizan-ledger`, { waitUntil: 'domcontentloaded' })
   await page.getByLabel('Event type').selectOption('gross-receipt')
-  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v1` })
+  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v2` })
   await page.getByLabel('Amount · minor units').fill('5000')
   await page.getByLabel('ISO currency').fill('IDR')
   await page.getByLabel('Occurred at').fill(new Date(Date.now() - 60_000).toISOString().slice(0, 16))
@@ -163,7 +187,7 @@ try {
 
   // A verified tax reserve is reported separately and does not reduce operating contribution.
   await page.getByLabel('Event type').selectOption('tax-reserve')
-  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v1` })
+  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v2` })
   await page.getByLabel('Amount · minor units').fill('300')
   await page.getByLabel('ISO currency').fill('IDR')
   await page.getByLabel('Occurred at').fill(new Date(Date.now() - 30_000).toISOString().slice(0, 16))
