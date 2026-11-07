@@ -76,7 +76,7 @@ PR #43 head `44d5cb62413e2e03de89b46961439ea8953001b0`: Repository Integrity, As
 
 ## Current production promotion decision
 
-**NO-GO.** No production target or deployment workflow, managed secrets, TLS/ingress, backup/restore, monitoring, rollback authority, production smoke-test credentials or verified production URL are evidenced. Do not equate CI/container build success with a production deployment. Root package version `1.0.11` also differs from the latest numbered changelog entry `1.0.0`; authoritative tag/release history must be reconciled before a version bump.
+**NO-GO.** No production target or deployment workflow, managed secrets, TLS/ingress, backup/restore, monitoring, rollback authority, production smoke-test credentials or verified production URL are evidenced. Do not equate CI/container build success with a production deployment. Root package version `1.0.11` differs from the latest stable tag/release `v1.0.0`; the tagged package manifest was `1.0.8`, and main is 450 commits beyond the tag. The `1.0.9`–`1.0.11` source version changes have no numbered changelog/release entries; determine whether they were internal-only bumps or missing release records before choosing the next version.
 
 
 ## Version and tag history verified — 2026-11-08
