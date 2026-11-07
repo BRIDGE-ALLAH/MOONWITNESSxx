@@ -20,9 +20,6 @@ const createSchema = z.object({
       message: 'An inspection with blocker findings cannot be marked as passing.',
     })
   }
-  if (input.status === 'pass' && input.findings.some((finding) => finding.severity === 'blocker')) {
-    context.addIssue({ code: 'custom', path: ['findings'], message: 'A passing inspection cannot contain blocker findings.' })
-  }
   if (input.status === 'pass' && ['rights', 'policy'].includes(input.inspectionType) &&
     !input.findings.some((finding) => finding.evidenceUrl)) {
     context.addIssue({ code: 'custom', path: ['findings'], message: 'Passing rights or policy inspection requires at least one evidence URL.' })
