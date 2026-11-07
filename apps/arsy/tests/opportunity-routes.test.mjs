@@ -110,7 +110,7 @@ function fakePool() {
           decision: values[16],
           decision_rationale: values[17],
           updated_at: '2026-11-08T01:00:00.000Z',
-          version: record.version + 1,
+          version: records[index].version + 1,
         }
         records[index] = record
         return { rows: [record] }
