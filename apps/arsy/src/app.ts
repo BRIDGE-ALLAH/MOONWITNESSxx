@@ -12,16 +12,17 @@ export interface CreateAppOptions {
 
 export async function createApp(options: CreateAppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? true })
-
-  // Fastify runs onRoute hooks when a route is declared. Await plugin setup
-  // before registering routes so the rate-limit hook cannot miss them.
-  await app.register(rateLimit, { global: false })
-
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
 
   const typedApp = app.withTypeProvider<ZodTypeProvider>()
   const databasePool = options.databasePool ?? createDatabasePool()
+
+  // The rate-limit plugin is wrapped with fastify-plugin. Register it at the
+  // application root before declaring routes so its onRoute hook can see the
+  // route-level config on both database health endpoints. Keep global limiting
+  // disabled: only routes with an explicit config.rateLimit are throttled.
+  await app.register(rateLimit, { global: false })
 
   typedApp.get(
     '/',
