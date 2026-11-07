@@ -20,7 +20,18 @@
     "validate": "pnpm run validate:repo && pnpm run build",
     "lockfile:check": "node scripts/check-lockfile.mjs",
     "lockfile:refresh": "node scripts/check-lockfile.mjs --lockfile-only",
-    "type-check": "pnpm run typecheck"
+    "type-check": "pnpm run typecheck",
+    "setup:install": "node scripts/moonwitness.mjs install",
+    "setup:doctor": "node scripts/moonwitness.mjs doctor",
+    "setup:repair": "node scripts/moonwitness.mjs repair",
+    "setup:update": "node scripts/moonwitness.mjs update",
+    "setup:verify": "node scripts/moonwitness.mjs verify",
+    "setup:uninstall": "node scripts/moonwitness.mjs uninstall",
+    "runtime:doctor": "node scripts/runtime.mjs doctor",
+    "runtime:preflight": "node scripts/runtime.mjs preflight",
+    "runtime:health": "node scripts/runtime.mjs health",
+    "runtime:passport": "node scripts/runtime.mjs passport",
+    "test:installer-runtime": "node --test scripts/moonwitness.test.mjs scripts/runtime.test.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
