@@ -72,3 +72,7 @@ PocketBase BaseModel includes id, created, updated. If a future PB adapter is ap
 
 ## 11. v1.3 BaseEntity clarification
 The logical BaseEntity now contains id, createdAt, createdById, updatedAt and updatedById. createdById/updatedById reference the canonical principal abstraction and map to TEXT on libSQL and UUID on PostgreSQL. The ORM composes them once; adapters do not create duplicate fields. The full Odoo-inspired base addon suite is documented in docs/22.
+
+
+## 12. Current implementation status and precedence
+The provider strategy is a target decision. At the audited MOONWITNESS snapshot, neither SQL adapter nor the ORM database runtime exists in the tracked tree. PostgreSQL remains the production target and libSQL the local/single-node target; PocketBase remains excluded from v1. docs/23 is authoritative for current implementation inventory and execution order.
