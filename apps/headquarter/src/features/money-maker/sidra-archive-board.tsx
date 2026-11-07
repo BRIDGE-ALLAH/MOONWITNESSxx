@@ -72,12 +72,15 @@ export function SidraArchiveBoard() {
     setSaving(true); setError(''); setMessage('')
     try {
       const contentBase64 = await readBase64(file)
+      const extension = file.name.toLowerCase().split('.').pop() ?? ''
+      const inferredTypes: Record<string, string> = { pdf: 'application/pdf', zip: 'application/zip', json: 'application/json', txt: 'text/plain', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' }
+      const mediaType = file.type || inferredTypes[extension] || 'application/octet-stream'
       const response = await fetch('/api/assets', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           productVersionId: data.get('productVersionId'),
           filename: file.name,
-          mediaType: file.type || 'application/octet-stream',
+          mediaType,
           contentBase64,
           rightsState,
           provenance: {
