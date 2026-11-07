@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { OpportunityRepository } from '../src/opportunities/repository.ts'
 
 function createDatabase(rows) {
@@ -37,38 +38,66 @@ const row = {
   updated_at: '2026-11-08T00:00:00.000Z',
 }
 
-test('creates a persisted opportunity with owner and actor attribution', async () => {
+const input = {
+  title: row.title,
+  buyerProblem: row.buyer_problem,
+  buyerSegment: row.buyer_segment,
+  jobToBeDone: row.job_to_be_done,
+  productHypothesis: row.product_hypothesis,
+  productFamily: row.product_family,
+  candidateChannels: row.candidate_channels,
+  evidence: row.evidence,
+  scores: row.scores,
+  scoreDetails: row.score_details,
+  hardGates: row.hard_gates,
+  hardGateDetails: row.hard_gate_details,
+}
+const evaluation = {
+  score: 80,
+  decision: 'prototype-candidate',
+  blockedGates: [],
+  unknownGates: [],
+  missingScoreDimensions: [],
+}
+const idempotencyKey = 'opportunity-test-0001'
+const requestHash = createHash('sha256').update(JSON.stringify(input)).digest('hex')
+
+test('creates a persisted opportunity with owner, actor and idempotency attribution', async () => {
   const fake = createDatabase([[row]])
   const repository = new OpportunityRepository(fake.db)
-  const result = await repository.create('owner-a', 'owner-a', {
-    title: row.title,
-    buyerProblem: row.buyer_problem,
-    buyerSegment: row.buyer_segment,
-    jobToBeDone: row.job_to_be_done,
-    productHypothesis: row.product_hypothesis,
-    productFamily: row.product_family,
-    candidateChannels: row.candidate_channels,
-    evidence: row.evidence,
-    scores: row.scores,
-    scoreDetails: row.score_details,
-    hardGates: row.hard_gates,
-    hardGateDetails: row.hard_gate_details,
-  }, {
-    score: 80,
-    decision: 'prototype-candidate',
-    blockedGates: [],
-    unknownGates: [],
-    missingScoreDimensions: [],
-  })
+  const result = await repository.create('owner-a', 'owner-a', input, evaluation, idempotencyKey)
 
-  assert.equal(result.id, row.id)
-  assert.equal(result.evaluation.score, 80)
+  assert.equal(result.opportunity.id, row.id)
+  assert.equal(result.opportunity.evaluation.score, 80)
+  assert.equal(result.replayed, false)
   assert.match(fake.calls[0].sql, /INSERT INTO arsy_opportunities/)
+  assert.match(fake.calls[0].sql, /idempotency_key[\s\S]*request_hash/)
   assert.match(fake.calls[0].sql, /score_details[\s\S]*hard_gate_details/)
   assert.equal(fake.calls[0].values[11], JSON.stringify(row.score_details))
   assert.equal(fake.calls[0].values[13], JSON.stringify(row.hard_gate_details))
-  assert.equal(fake.calls[0].values[1], 'owner-a')
-  assert.equal(fake.calls[0].values.at(-2), 'owner-a')
+  assert.equal(fake.calls[0].values[16], idempotencyKey)
+  assert.equal(fake.calls[0].values[17], requestHash)
+  assert.equal(fake.calls[0].values[18], 'owner-a')
+})
+
+test('replays an identical opportunity create request without creating a second record', async () => {
+  const fake = createDatabase([[], [{ ...row, request_hash: requestHash }]])
+  const repository = new OpportunityRepository(fake.db)
+  const result = await repository.create('owner-a', 'owner-a', input, evaluation, idempotencyKey)
+
+  assert.equal(result.opportunity.id, row.id)
+  assert.equal(result.replayed, true)
+  assert.equal(fake.calls.length, 2)
+  assert.match(fake.calls[1].sql, /WHERE owner_id = \$1 AND idempotency_key = \$2/)
+})
+
+test('rejects reuse of an opportunity idempotency key for a different request', async () => {
+  const fake = createDatabase([[], [{ ...row, request_hash: '0'.repeat(64) }]])
+  const repository = new OpportunityRepository(fake.db)
+  await assert.rejects(
+    repository.create('owner-a', 'owner-a', input, evaluation, idempotencyKey),
+    /IDEMPOTENCY_KEY_REUSED/,
+  )
 })
 
 test('preserves missing score dimensions when persisted opportunities are reloaded', async () => {
