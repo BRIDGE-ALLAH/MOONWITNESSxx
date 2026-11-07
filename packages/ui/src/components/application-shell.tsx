@@ -1,6 +1,6 @@
 'use client'
 import * as React from 'react'
-import { Search, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Button } from './button'
 import { Input } from './inputs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './overlays'
@@ -12,12 +12,9 @@ export interface RiotAppShellProps extends React.HTMLAttributes<HTMLDivElement> 
   contextPanel?: React.ReactNode
   statusBar?: React.ReactNode
   sidebarCollapsed?: boolean
-  onSidebarCollapsedChange?: (collapsed: boolean) => void
 }
 export function RiotAppShell({sidebar,topbar,contextPanel,statusBar,sidebarCollapsed,onSidebarCollapsedChange,children,className,...props}:RiotAppShellProps){
- const [localCollapsed,setLocalCollapsed]=React.useState(false)
- const collapsed=sidebarCollapsed??localCollapsed
- const setCollapsed=(v:boolean)=>{if(sidebarCollapsed===undefined)setLocalCollapsed(v);onSidebarCollapsedChange?.(v)}
+ const collapsed=sidebarCollapsed??false
  const [mobileOpen,setMobileOpen]=React.useState(false)
  return <div className={cn('flex min-h-screen min-w-0 flex-col bg-background text-foreground',className)} {...props}>
   <div className="flex min-h-0 flex-1">
