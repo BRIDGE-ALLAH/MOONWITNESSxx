@@ -10,6 +10,6 @@ export default async function AftershockPage() {
   if (!config) return <main className="min-h-[70vh] bg-obsidian p-8 text-paper-bone"><h1 className="font-display text-2xl uppercase">Operator access unavailable</h1><p className="mt-3 text-sm text-muted-ink">Configure the Headquarter operator session before viewing commercial analytics.</p></main>
   const cookieStore = await cookies()
   const session = verifyOperatorSession(cookieStore.get(OPERATOR_SESSION_COOKIE)?.value, config.secret)
-  if (!session || session.operatorId !== config.operatorId) return <OperatorLoginForm />
+  if (!session || session.operatorId !== config.operatorId) return <OperatorLoginForm returnTo="/aftershock" />
   return <AftershockBoard />
 }
