@@ -46,11 +46,11 @@ Forbidden:
 
 `packages/orm/src/index.ts` currently exposes:
 
-- model kinds and field/relation descriptor metadata;
+- model kinds, field/relation descriptor metadata, mixin and model-extension shapes;
 - model constructor and normalized model-definition shapes;
-- separate AddonManifest and ModuleManifest contracts;
+- separate AddonManifest and ModuleManifest contracts, including ARSY/ORM/API compatibility metadata;
 - deterministic RegistrySnapshot and RegistryComposer contracts;
-- stable ORM error codes;
+- stable ORM error codes and a provider-neutral domain expression AST;
 - Environment, principal context, model collection and Recordset contracts.
 
 The canonical declaration syntax remains the static TypeScript field map recorded in ADR-003. The declarations in this phase are public contracts, not the field factory/runtime implementation.
@@ -61,6 +61,7 @@ The canonical declaration syntax remains the static TypeScript field map recorde
 
 - PostgreSQL and SQLite provider identity;
 - explicit provider capability vocabulary and capability negotiation;
+- a discriminated provider identity that locks the v1 role pairing: SQLite/System and PostgreSQL/Business;
 - connection options, query request/result and transaction contracts;
 - schema snapshot/column/index/foreign-key contracts;
 - schema operations and adapter lifecycle interface.
@@ -83,7 +84,7 @@ It does not yet implement transaction behavior, locks, schema diffing, DDL execu
 
 The package name for the control-plane adapter is `orm-db-adaptor-sqlite`, not `orm-db-adaptor-libsql`. The approved System Database is SQLite. PostgreSQL remains the Business Database. This naming avoids making a client/protocol product (libSQL) the architectural identity of the SQLite system-store adapter.
 
-The SQLite adapter and PostgreSQL adapter are separate packages because their connection lifecycle, introspection, DDL and capability sets differ. They implement the same SPI but do not share physical schema ownership.
+The SQLite adapter and PostgreSQL adapter are separate packages because their connection lifecycle, introspection, DDL and capability sets differ. They implement the same SPI but do not share physical schema ownership. The public adapter identity type encodes the v1 pairing as a discriminated union so an adapter cannot accidentally claim SQLite as the Business Database or PostgreSQL as the System Database.
 
 ## 5. Explicit non-goals of this phase
 
