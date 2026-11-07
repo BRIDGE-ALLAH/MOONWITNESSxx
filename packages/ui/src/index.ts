@@ -28,3 +28,6 @@ export { ApprovalCard,JobMonitor,RecordInspector } from './components/platform'
 export type { ApprovalCardProps,ApprovalStatus,JobMonitorProps,JobStatus,RecordInspectorProps } from './components/platform'
 export { createActionRegistry,createCommandRegistry,createPluginSlotRegistry,sortPluginSlots } from './platform/index'
 export type { MaybePromise,ActionContext,ActionDefinition,CommandDefinition,PluginSlotDefinition,Registry } from './platform'
+
+export { RiotSignalHeader, RiotLiveIndicator, RiotAtmosphere } from './components/brand-language'
+export type { RiotSignalHeaderProps, RiotLiveIndicatorProps, RiotAtmosphereProps, RiotSignalState } from './components/brand-language'
