@@ -29,7 +29,7 @@
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `ARSY_API_BASE_URL` | Yes | Private ARSY origin, e.g. `http://arsy:3000` on the same Docker network |
+| `ARSY_API_BASE_URL` | Yes | Private ARSY origin, e.g. `http://arsy:3001` on the same Docker network |
 | `ARSY_OPERATOR_ID` | Yes | Must match ARSY's configured owner ID |
 | `ARSY_OPERATOR_TOKEN` | Yes | Same server-only credential configured in ARSY |
 | `HEADQUARTER_OPERATOR_PASSWORD` | Yes | Strong operator password |
@@ -66,7 +66,10 @@ Run against an isolated development or staging database first. Verify backup and
 
 - Opportunity domain validation, weighted scoring, evidence references, rationales and confidence.
 - Owner-scoped ARSY opportunity create/list/read/decision/archive API and audit events.
-- Product brief creation from an approved opportunity, version 1 persistence and owner-scoped product reads.
+- Product brief creation from an approved opportunity, append-only version revisions and owner-scoped product reads.
+- Append-only rights, policy, technical and creative inspections; a product becomes READY only when the latest inspection of all four types passes.
+- C0/C1 channel registry with Indonesia eligibility, payout and policy evidence. C1 enables manual listing packages only.
+- Manual listing package generation from the latest READY product version and an enabled C1 channel; publication receipts are recorded only after the owner publishes externally.
 - Financial event ingestion using integer minor units, ISO currency, request hashes and idempotency keys.
 - Pending/verified/disputed/reversed reconciliation with evidence URL and audit event.
 - Currency-grouped gross receipts, deductions, payout movements, pending totals and exact net-contribution calculation from verified events.
@@ -76,7 +79,7 @@ Run against an isolated development or staging database first. Verify backup and
 ## Not yet implemented or not production-verified
 
 - Revisions beyond product version 1; binary asset storage, upload/download authorization and checksum verification.
-- Asset provenance editing and rights/technical/creative inspection execution.
+- Asset binary storage/upload/download and a complete asset provenance editor.
 - Channel registry administration, listing package generation, marketplace account OAuth, publication receipts and official marketplace APIs.
 - Automated market-source connectors, freshness/recheck jobs and measured discovery/conversion cohorts.
 - Payout import and provider reconciliation; current financial events are manually recorded by the operator.
