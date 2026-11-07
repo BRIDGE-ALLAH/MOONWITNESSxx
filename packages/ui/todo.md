@@ -371,3 +371,5 @@ A component is not complete until all applicable checks pass:
 - Workspace type-check and the UI ESM build now pass in CI. The next lint gate exposed that `@riotworks/lint` is a source-free shared-config package but incorrectly ran ESLint against a nonexistent `src` directory. It now exports a shared flat TypeScript config, and ARSY Core invokes that config against its own source tree.
 
 - Shared ESLint initially ignored ARSY Core because its TypeScript file globs were scoped to the config package directory. The shared flat config now explicitly includes the ARSY Core source path used by its filtered ESLint invocation; rerun lint to confirm.
+
+- The first shared ESLint path adjustment still remained outside the config base. The shared config now uses ESLint flat-config `basePath: ../arsy-core` so the config package can lint the sibling package without widening its default scope.
