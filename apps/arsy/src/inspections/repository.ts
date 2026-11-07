@@ -87,7 +87,10 @@ export class InspectionRepository {
             updated_at = now(), updated_by = $6
         FROM readiness
         WHERE p.owner_id = $2 AND p.id = (
-          SELECT product_id FROM inserted LIMIT 1
+          SELECT pv.product_id
+          FROM arsy_product_versions pv
+          JOIN inserted ON inserted.product_version_id = pv.id
+          LIMIT 1
         )
         RETURNING p.id, p.lifecycle_state
       ), audited AS (
