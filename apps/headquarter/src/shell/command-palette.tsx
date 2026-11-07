@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { KeyboardEvent } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { NavigationItem } from './navigation'
 
@@ -9,6 +10,7 @@ type CommandPaletteProps = { open: boolean; items: NavigationItem[]; onClose: ()
 export function CommandPalette({ open, items, onClose }: CommandPaletteProps) {
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
   const filteredItems = useMemo(
     () => items.filter((item) => item.label.toLowerCase().includes(query.trim().toLowerCase())),
@@ -35,10 +37,31 @@ export function CommandPalette({ open, items, onClose }: CommandPaletteProps) {
 
   if (!open) return null
 
+  const handleDialogKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key !== 'Tab') return
+    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+      'input:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+    )
+    if (!focusable?.length) {
+      event.preventDefault()
+      return
+    }
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-24" onClick={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="headquarter-command-title" className="w-full max-w-xl border-2 border-acid-lime/40 bg-background p-3">
+      <section ref={dialogRef} onKeyDown={handleDialogKeyDown} role="dialog" aria-modal="true" aria-labelledby="headquarter-command-title" aria-describedby="headquarter-command-description" className="w-full max-w-xl border-2 border-acid-lime/40 bg-background p-3">
         <h2 id="headquarter-command-title" className="sr-only">Command palette</h2>
+        <p id="headquarter-command-description" className="sr-only">Search and navigate to a Headquarter module. Press Escape to close.</p>
         <label htmlFor="headquarter-command-search" className="sr-only">Search Headquarter modules</label>
         <input
           ref={inputRef}
