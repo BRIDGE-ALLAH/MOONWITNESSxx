@@ -13,6 +13,7 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
   const productId = randomUUID()
   const productVersionId = randomUUID()
   const channelKey = `ci-${randomUUID().slice(0, 8)}`
+  const strictChannelKey = `strict-${randomUUID().slice(0, 8)}`
   const policyUrl = 'https://example.com/official-policy'
   let pool = createDatabasePool()
   try {
@@ -31,7 +32,7 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
         buyerSegment: 'Small online sellers',
         jobToBeDone: 'Reconcile stock movement and spot discrepancies.',
         productHypothesis: 'A localized utility template with verifiable stock movement.',
-        candidateChannels: [channelKey],
+        candidateChannels: [channelKey, strictChannelKey],
       }), JSON.stringify(['A seller can reconcile stock movements']), ownerId],
     )
 
@@ -56,6 +57,29 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
         { evidenceType: 'account-eligibility', sourceName: 'Account page', sourceUrl: 'https://example.com/account', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test account eligibility evidence.', limitations: 'CI fixture only.' },
         { evidenceType: 'payout-requirements', sourceName: 'Payout page', sourceUrl: 'https://example.com/payout', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test payout requirements evidence.', limitations: 'CI fixture only.' },
         { evidenceType: 'format-requirements', sourceName: 'Format page', sourceUrl: 'https://example.com/formats', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test accepted format requirements evidence.', limitations: 'CI fixture only.' },
+      ],
+    })
+
+    const strictChannel = await channels.create(ownerId, ownerId, {
+      channelKey: strictChannelKey,
+      displayName: 'Strict format CI channel',
+      countryCode: 'ID',
+      accountEligibility: 'eligible',
+      officialPolicyUrl: 'https://example.com/strict-policy',
+      policyReviewedAt: '2026-11-08T00:00:00Z',
+      policyRecheckAt: '2099-01-01T00:00:00Z',
+      payoutRequirements: { currency: 'IDR', method: 'bank-transfer' },
+      listingRequirements: { acceptedMediaTypes: ['application/pdf'], acceptedProductFamilies: ['digital-utility'], maxAssetBytes: 10485760 },
+      payoutSetupStatus: 'configured',
+      capability: 'C1',
+      grantedScopes: [],
+      quotaNotes: {},
+      channelStatus: 'active',
+      evidence: [
+        { evidenceType: 'official-policy', sourceName: 'Strict official policy', sourceUrl: 'https://example.com/strict-policy', capturedAt: '2026-11-08T00:00:00Z', reviewedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Official channel policy was reviewed.', limitations: 'CI fixture only.' },
+        { evidenceType: 'account-eligibility', sourceName: 'Strict account page', sourceUrl: 'https://example.com/strict-account', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test account eligibility evidence.', limitations: 'CI fixture only.' },
+        { evidenceType: 'payout-requirements', sourceName: 'Strict payout page', sourceUrl: 'https://example.com/strict-payout', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test payout requirements evidence.', limitations: 'CI fixture only.' },
+        { evidenceType: 'format-requirements', sourceName: 'Strict format page', sourceUrl: 'https://example.com/strict-formats', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test accepted media requirements.', limitations: 'CI fixture only.' },
       ],
     })
 
@@ -98,6 +122,14 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
     }
 
     const listings = new ListingRepository(pool)
+    const blockedPackage = await listings.createPackage(
+      ownerId, ownerId, productId, 1, strictChannel.id,
+      'This strict format package should be blocked in isolated CI.', randomUUID(),
+    )
+    assert.ok(blockedPackage)
+    assert.equal(blockedPackage.listing.status, 'blocked')
+    assert.equal(blockedPackage.listing.readinessSnapshot.gates.find((gate) => gate.key === 'format-compatibility')?.status, 'blocked')
+
     const disclosure = 'This is a test listing package generated only in isolated CI.'
     const idempotencyKey = randomUUID()
     const created = await listings.createPackage(ownerId, ownerId, productId, 1, channel.id, disclosure, idempotencyKey)
