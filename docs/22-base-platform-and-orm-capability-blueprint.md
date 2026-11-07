@@ -220,3 +220,68 @@ PocketBase's native model has id, created and updated. This is not a conceptual 
 The 17 logical addon manifests above are the complete target catalog, not a requirement to implement all modules in the first milestone. First deliver base.core, base.identity, base.security, base.workspace, base.audit and base.events after the ORM and database runtime are proven. Next add settings, attachment, sequence and transient capabilities as required by the first commercial workflow. Company, communication, activity, import-export, integration, taxonomy and localization are staged by demonstrated use case. Keep one release package with independent manifests; do not split into 17 npm packages without a real versioning/deployment need.
 
 At the audited MOONWITNESS repository snapshot, the ORM and all Base Platform addon packages are absent. This blueprint is a target contract, not implementation evidence. Follow docs/23 for current-state inventory and execution order.
+
+
+## 14. Canonical TypeScript declaration and System Mode contract
+
+The canonical v1 declaration is programmatic TypeScript source inside the addon/module that owns the model. Do not add a separate hand-maintained schema file or schema DSL as a second source of truth.
+
+Preferred declaration shape:
+
+```ts
+import { Model, fields } from "@riotworks/orm";
+
+export class Customer extends Model {
+  static modelName = "crm.customer";
+  static module = "crm";
+
+  static fields = {
+    name: fields.Char({ required: true, maxLength: 160 }),
+    email: fields.Char({ index: true }),
+    active: fields.Boolean({ default: true }),
+    creditLimit: fields.Decimal({ precision: 18, scale: 2 }),
+  };
+}
+```
+
+The static field map is the canonical v1 syntax because it is explicit, introspectable without constructing a record instance, and compatible with deterministic registry composition. Property decorators may be added later only as optional syntax sugar that normalizes to the same metadata contract. They must not create a second model-definition path or require experimental decorator settings for v1.
+
+The ORM turns declarations into immutable normalized metadata. That metadata is the runtime registry input and the source for desired persistence state; it is not edited independently. Physical database schema is a projection of the composed registry.
+
+### System Mode
+
+System Mode is an explicit install/upgrade/reconciliation lifecycle:
+
+1. Initialize SQLite System Database and core configuration.
+2. Discover trusted packages; validate signatures, manifests, compatibility and permissions.
+3. Resolve enabled addon/module dependency graph.
+4. Register model declarations and compose the deterministic registry.
+5. Inject BaseEntity once; validate fields, relations, extensions, constraints and policy metadata.
+6. Generate a stable registry fingerprint and desired persistence snapshot.
+7. Introspect actual database state and produce a deterministic plan.
+8. Apply only authorized changes under a serialized deployment/system lock.
+9. Run versioned TypeScript semantic upgrade handlers when needed.
+10. Verify the result and persist a synchronization receipt.
+11. Activate Runtime Mode with the verified immutable registry.
+
+Runtime Mode serves API/worker requests against the activated registry. It does not discover arbitrary code or execute schema DDL. Normal HTTP requests never invoke reconciliation. API replicas must not race to apply schema changes.
+
+### Environment and recordset
+
+`env` is an immutable/scoped execution context containing transaction/unit-of-work, authenticated principal, workspace/tenant, optional company context, permissions, locale/timezone, trace/request metadata and approved ARSY service capabilities.
+
+A recordset is a typed collection bound to one model and one Environment. It has consistent empty/single/multiple behavior, batch operations and controlled relation prefetch. Mixing recordsets across tenants, registries, principals or transactions is rejected unless an explicit safe conversion is defined. Prefer `env.models` as the foundational access API; class/static convenience methods must delegate to it and never hide security or transaction context.
+
+### Reconciliation safety
+
+Additive, deterministic, non-destructive changes may be eligible for automatic application. Destructive changes, type narrowing, relation semantic changes, drops and data transformations require an explicit operator plan/approval and recovery readiness. Disabling a module or removing a declaration never silently drops stored data. Semantic transformations use versioned TypeScript handlers; physical DDL remains adapter-owned.
+
+## 15. System Database, Business Database and plugin trust boundary
+
+SQLite is the ARSY System Database for plugin/module installation state, typed system configuration, registry fingerprints/snapshots, schema plans/receipts, system audit and runtime control-plane state. Use a persistent volume, WAL where appropriate, busy timeout, integrity checks and one serialized writer. Do not use a shared network filesystem as a multi-writer SQLite cluster.
+
+PostgreSQL is the primary Business Database for users/workspaces and business-domain records, with transactions for business mutations and required audit/outbox writes. Do not assume a distributed transaction exists between SQLite and PostgreSQL. Use explicit orchestration and idempotent recovery across the boundary.
+
+Redis provides runtime cache/coordination/locks/queue transport; it is not the durable source of business or model-definition truth. Object-storage providers store bytes while business records store metadata/object keys. Telegram is an external connector, never a database provider. libSQL can be evaluated as an optional lightweight business provider, but does not replace SQLite control-plane ownership or PostgreSQL production default.
+
+Only trusted, verified in-process addons may contribute executable TypeScript model classes to the ARSY registry. Community/untrusted plugins run isolated and communicate through versioned, permission-scoped RPC contracts. A future declarative remote-model contract must not allow arbitrary remote code injection into the main process.
