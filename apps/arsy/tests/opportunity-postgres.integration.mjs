@@ -159,10 +159,28 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     }
     const fee = await finance.create(ownerId, ownerId, feeInput)
     assert.ok(fee)
-    assert.equal((await finance.summary(ownerId))[0].pending_minor, '5500')
+    const additionalInputs = [
+      { ...grossInput, eventType: 'refund', amountMinor: '100', idempotencyKey: `refund-${randomUUID()}` },
+      { ...grossInput, eventType: 'chargeback', amountMinor: '50', idempotencyKey: `chargeback-${randomUUID()}` },
+      { ...grossInput, eventType: 'tax-reserve', amountMinor: '300', idempotencyKey: `tax-${randomUUID()}` },
+      { ...grossInput, eventType: 'payout', amountMinor: '150', idempotencyKey: `payout-${randomUUID()}` },
+      { ...grossInput, eventType: 'payout-reversal', amountMinor: '50', idempotencyKey: `payout-reversal-${randomUUID()}` },
+      { ...grossInput, eventType: 'gross-receipt', amountMinor: '750', currency: 'USD', idempotencyKey: `usd-gross-${randomUUID()}` },
+    ]
+    const additionalEvents = []
+    for (const eventInput of additionalInputs) {
+      const createdEvent = await finance.create(ownerId, ownerId, eventInput)
+      assert.ok(createdEvent)
+      additionalEvents.push(createdEvent.event)
+    }
+    const pendingByCurrency = await finance.summary(ownerId)
+    assert.equal(pendingByCurrency.find((item) => item.currency === 'IDR')?.pending_minor, '6150')
+    assert.equal(pendingByCurrency.find((item) => item.currency === 'USD')?.pending_minor, '750')
 
-    assert.ok(await finance.reconcile(ownerId, ownerId, gross.event.id, 'verified', 'Matched to the isolated test statement.', 'https://example.com/gross-receipt'))
-    assert.ok(await finance.reconcile(ownerId, ownerId, fee.event.id, 'verified', 'Matched to the isolated test fee statement.', 'https://example.com/platform-fee'))
+    for (const record of [gross.event, fee.event, ...additionalEvents]) {
+      assert.ok(await finance.reconcile(ownerId, ownerId, record.id, 'verified', 'Matched to the isolated test statement.', 'https://example.com/finance-event'))
+      assert.equal(await finance.reconcile(ownerId, ownerId, record.id, 'verified', 'A verified event must not be reconciled twice.', 'https://example.com/finance-event'), null)
+    }
 
     // Reconnect again so product versions and financial events are read from PostgreSQL.
     await pool.end()
@@ -173,14 +191,24 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.ok(reloadedProduct)
     assert.equal(reloadedProduct.brief.buyerProblem, input.buyerProblem)
     const financialEvents = await persistedFinance.list(ownerId)
-    assert.equal(financialEvents.length, 2)
+    assert.equal(financialEvents.length, 8)
     assert.equal(financialEvents.find((event) => event.id === gross.event.id)?.amountMinor, '5000')
-    const [summary] = await persistedFinance.summary(ownerId)
-    assert.equal(summary.currency, 'IDR')
-    assert.equal(summary.gross_receipts_minor, '5000')
-    assert.equal(summary.deductions_minor, '500')
-    assert.equal(summary.net_contribution_minor, '4500')
-    assert.equal(summary.pending_minor, '0')
+    const summaries = await persistedFinance.summary(ownerId)
+    const idr = summaries.find((item) => item.currency === 'IDR')
+    const usd = summaries.find((item) => item.currency === 'USD')
+    assert.ok(idr)
+    assert.ok(usd)
+    assert.equal(idr.gross_receipts_minor, '5000')
+    assert.equal(idr.deductions_minor, '650')
+    assert.equal(idr.tax_reserve_minor, '300')
+    assert.equal(idr.payout_movements_minor, '100')
+    assert.equal(idr.net_contribution_minor, '4350')
+    assert.equal(idr.pending_minor, '0')
+    assert.equal(usd.gross_receipts_minor, '750')
+    assert.equal(usd.deductions_minor, '0')
+    assert.equal(usd.tax_reserve_minor, '0')
+    assert.equal(usd.net_contribution_minor, '750')
+    assert.equal(usd.pending_minor, '0')
 
     const decided = await new OpportunityRepository(pool).decide(
       ownerId,
