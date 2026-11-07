@@ -10,6 +10,7 @@ type ProductRow = {
   lifecycle_state: string
   version_id: string
   version: number
+  versionId: string
   brief: Record<string, unknown>
   acceptance_criteria: string[]
   created_at: Date | string
@@ -41,6 +42,7 @@ function mapProduct(row: ProductRow): ProductRecord {
     productFamily: row.product_family,
     lifecycleState: row.lifecycle_state,
     version: row.version,
+    versionId: row.version_id,
     brief: row.brief,
     acceptanceCriteria: row.acceptance_criteria,
     createdAt: new Date(row.created_at).toISOString(),
@@ -96,6 +98,37 @@ export class ProductRepository {
       )
       SELECT ${columns} FROM created p JOIN versioned v ON v.product_id = p.id`,
       [ownerId, opportunityId, productId, actorId, versionId, JSON.stringify(acceptanceCriteria), auditId],
+    )
+    const row = rows<ProductRow>(result)[0]
+    return row ? mapProduct(row) : null
+  }
+
+  async createVersion(ownerId: string, actorId: string, productId: string, brief: Record<string, unknown>, acceptanceCriteria: string[]): Promise<ProductRecord | null> {
+    const result = await this.db.query(
+      `WITH locked AS MATERIALIZED (
+        SELECT pg_advisory_xact_lock(hashtextextended($2::text, 0))
+      ), next_version AS (
+        SELECT COALESCE(MAX(version), 0) + 1 AS version
+        FROM arsy_product_versions
+        WHERE product_id = $2 AND EXISTS (SELECT 1 FROM locked)
+      ), inserted AS (
+        INSERT INTO arsy_product_versions (id, product_id, version, brief, acceptance_criteria, created_by)
+        SELECT $3, $2, next_version.version, $4::jsonb, $5::jsonb, $6
+        FROM next_version
+        WHERE EXISTS (SELECT 1 FROM arsy_products WHERE owner_id = $1 AND id = $2)
+        RETURNING *
+      ), updated AS (
+        UPDATE arsy_products SET lifecycle_state = 'production', updated_at = now(), updated_by = $6
+        WHERE owner_id = $1 AND id = $2 AND EXISTS (SELECT 1 FROM inserted)
+        RETURNING *
+      ), audited AS (
+        INSERT INTO arsy_commerce_audit_events (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $7, $1, 'product', updated.id, 'version-created', $6,
+          jsonb_build_object('version', inserted.version)
+        FROM updated JOIN inserted ON inserted.product_id = updated.id
+      )
+      SELECT ${columns} FROM updated p JOIN inserted v ON v.product_id = p.id`,
+      [ownerId, productId, randomUUID(), JSON.stringify(brief), JSON.stringify(acceptanceCriteria), actorId, randomUUID()],
     )
     const row = rows<ProductRow>(result)[0]
     return row ? mapProduct(row) : null
