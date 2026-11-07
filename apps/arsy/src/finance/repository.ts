@@ -128,15 +128,15 @@ export class FinancialRepository {
       `WITH changed AS (
         UPDATE arsy_financial_events SET reconciliation_state = $3,
           metadata = metadata || jsonb_build_object('reconciliation', jsonb_build_object(
-            'rationale', $4, 'evidenceUrl', $5, 'actorId', $6, 'recordedAt', now()
+            'rationale', $4::text, 'evidenceUrl', $5::text, 'actorId', $6::text, 'recordedAt', now()
           ))
         WHERE owner_id = $1 AND id = $2 AND reconciliation_state = 'pending'
         RETURNING *
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-        SELECT $7, owner_id, 'financial-event', id, 'reconciled', $6,
-          jsonb_build_object('state', reconciliation_state, 'rationale', $4, 'evidenceUrl', $5)
+        SELECT $7::uuid, owner_id, 'financial-event', id, 'reconciled', $6::text,
+          jsonb_build_object('state', reconciliation_state, 'rationale', $4::text, 'evidenceUrl', $5::text)
         FROM changed
       )
       SELECT ${columns} FROM changed`,
