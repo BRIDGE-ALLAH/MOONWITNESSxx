@@ -32,7 +32,7 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts src/registry.ts src/fields.ts src/model.ts src/declaration.ts src/runtime.ts",
-    "lint": "pnpm --filter @riotworks/lint exec eslint ../orm/src ../orm/test --config eslint.config.mjs --max-warnings 0",
+    "lint": "../lint/node_modules/.bin/eslint src test --config ../lint/eslint.config.mjs --max-warnings 0",
     "test": "node --experimental-strip-types --test test/*.test.ts"
   }
 }
