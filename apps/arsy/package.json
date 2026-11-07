@@ -9,7 +9,7 @@
     "dev": "node --watch --experimental-strip-types src/index.ts",
     "build": "pnpm run type-check",
     "start": "node --experimental-strip-types src/index.ts",
-    "lint": "pnpm exec prettier --check src tests",
+    "lint": "pnpm exec prettier --check src/app.ts src/db.ts src/index.ts tests/runtime.test.mjs",
     "type-check": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },

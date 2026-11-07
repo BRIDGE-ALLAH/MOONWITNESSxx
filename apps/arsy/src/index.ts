@@ -42,7 +42,10 @@ export async function startServer() {
   return app
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
+) {
   startServer().catch((error: unknown) => {
     console.error('ARSY startup failed:', error)
     process.exitCode = 1
