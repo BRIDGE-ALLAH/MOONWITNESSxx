@@ -107,3 +107,37 @@ Not implemented yet:
 - durable storage, transactional concurrency, evidence graph projections, source authenticity/signatures, claim contradiction engine, actual replay runner, OS-level sandbox, external fixture adapters, CI tests, benchmark corpus, UI, and operator workflows.
 
 The in-memory hash chain detects modifications within the stored event stream; it does not prove that a source is authentic or that a claim is true. A hash chain is not a substitute for signatures, access controls, backups, or independent verification.
+
+
+## Additional research and design correction (2026-11-08)
+
+### Newly reviewed papers
+
+- [When Does Execution Provenance Help Agent Memory Retrieval?](https://arxiv.org/abs/2609.25913): source-aligned provenance units improved complete evidence retrieval under a fixed token budget; graph propagation helped most when support spans multiple events. **Implementation consequence:** preserve exact source spans and typed provenance edges; do not add graph traversal to every query indiscriminately.
+- [Agent Memory Is a Surface for Endogenous Authorization Laundering](https://arxiv.org/abs/2609.01836): stale or fabricated permission memories can cause downstream unauthorized actions. **Implementation consequence:** memory is evidence, never authority; authorization must be re-evaluated against current trusted policy and signed approval records.
+- [Replay Is a Family of Assertions: Fork-Safety in Event-Sourced Agent Runtimes](https://arxiv.org/abs/2611.06924): projection replay, strict execution replay, and counterfactual continuation have different guarantees. **Implementation consequence:** label replay modes explicitly; a projection replay must never be described as full environment replay.
+- [Remembering More, Risking More](https://arxiv.org/abs/2605.17830): memory-induced risk can increase with accumulated exposure and may be detectable before generation. **Implementation consequence:** evaluate memory safety longitudinally and gate on the retrieved evidence set, not only the final answer.
+
+### Additional community review
+
+- [Reddit: memory poisoning experiment](https://www.reddit.com/r/AI_Agents/comments/1wtbtna/i_tried_to_poison_an_ai_agents_memory_it_worked/): practitioner-reported 216/216 poisoned updates in one test; anecdotal and not independently validated. Treat this as a red-team scenario, not a general failure rate.
+- [Reddit: memory architecture for long-running agents](https://www.reddit.com/r/AI_Agents/comments/1wx6lib/i_tested_3_different_memory_architectures_for/): supports separating episodic decision history from semantic retrieval; highlights source poisoning through untrusted external lookups.
+- [Reddit: provenance across tool handoffs](https://www.reddit.com/r/LangChain/comments/1val0bn/tool_output_needs_provenance_when_one_agent_hands/): downstream agents need source type, observation time, actor/permission context, and read/inferred/approved distinction.
+- [Reddit: immutable evidence envelopes](https://www.reddit.com/r/LangChain/comments/1vcu5qf/i_got_tired_of_agents_remembering_by_stuffing/): points out that a pointer to mutable external data is insufficient for historical replay; store the resolved snapshot or explicitly record why it was not captured.
+
+### New implementation slice in this branch
+
+- Phase 16: conservative impact propagation across declared dependencies and experimentally validated causal edges. Temporal co-occurrence edges are explicitly excluded from causal propagation.
+- Phase 17: vector-based trust assessment, independent-origin corroboration, and a source contamination index that enumerates dependent claims/decisions.
+- Phase 14: PostgreSQL append adapter serializes each aggregate with a transaction advisory lock and checks the expected previous hash to prevent cross-process stream forks. The migration remains a System Mode/deployment responsibility.
+- Native Node test fixtures cover evidence idempotency/hash chaining, impact propagation, evidence quarantine, corroboration diversity, and contamination lookup. These tests are wired into CI but have not yet executed in this authoring environment.
+
+### Further differentiated experiments (hypotheses, not novelty claims)
+
+1. **Evidence Capture Contract:** every decision records whether its inputs were snapshotted, hash-only, pointer-only, capture-failed, or legacy-unknown. This makes “not reproducible” an explicit state rather than an auditor's guess.
+2. **Authority Firewall:** memory may propose an authorization change but cannot grant it. Only a separately signed approval event from a principal with current authority can change effective permissions.
+3. **Causal Contamination Quarantine:** a compromised source freezes only dependent claims and pending decisions, not the whole knowledge base; the blast radius is computed over provenance edges and reviewed before recovery.
+4. **Replay Semantics Manifest:** every replay artifact declares projection-only, strict internal replay, or counterfactual simulation, plus which external oracles were served from recorded fixtures.
+5. **No-Op Confidence Gate:** if predicted impact is high but edge provenance is weak, the engine recommends no-op or human review instead of inventing a precise risk estimate.
+
+These ideas are differentiated integration hypotheses. A prior-art and patent search is still required before claiming novelty.
