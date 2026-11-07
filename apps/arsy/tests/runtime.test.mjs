@@ -25,7 +25,7 @@ function createFakePool({ fail = false } = {}) {
 
 test('application factory is side-effect free and serves liveness', async () => {
   const fake = createFakePool()
-  const app = await createApp({ databasePool: fake.pool, logger: false })
+  const app = createApp({ databasePool: fake.pool, logger: false })
 
   try {
     const root = await app.inject({ method: 'GET', url: '/' })
@@ -43,7 +43,7 @@ test('application factory is side-effect free and serves liveness', async () => 
 
 test('readiness and database health return 503 when PostgreSQL is unavailable', async () => {
   const fake = createFakePool({ fail: true })
-  const app = await createApp({ databasePool: fake.pool, logger: false })
+  const app = createApp({ databasePool: fake.pool, logger: false })
 
   try {
     assert.equal((await app.inject('/health/ready')).statusCode, 503)
@@ -56,7 +56,7 @@ test('readiness and database health return 503 when PostgreSQL is unavailable', 
 test('database health endpoints enforce per-client request limits', async () => {
   for (const endpoint of ['/health/ready', '/health/db']) {
     const fake = createFakePool()
-    const app = await createApp({ databasePool: fake.pool, logger: false })
+    const app = createApp({ databasePool: fake.pool, logger: false })
 
     try {
       const responses = []
@@ -75,7 +75,7 @@ test('database health endpoints enforce per-client request limits', async () => 
 
 test('graceful shutdown signal handlers close the Fastify app and database pool once', async () => {
   const fake = createFakePool()
-  const app = await createApp({ databasePool: fake.pool, logger: false })
+  const app = createApp({ databasePool: fake.pool, logger: false })
   const handlers = new Map()
   const shutdown = registerGracefulShutdown(app, (signal, handler) => {
     handlers.set(signal, handler)
