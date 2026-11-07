@@ -85,9 +85,11 @@ export function LaunchBayBoard() {
   const [channels, setChannels] = useState<Channel[]>([])
   const [channelEvidence, setChannelEvidence] = useState<Record<string, ChannelEvidence[]>>({})
   const [channelDrafts, setChannelDrafts] = useState<Record<string, ChannelDraft>>({})
+  const [evidenceDrafts, setEvidenceDrafts] = useState<Record<string, { evidenceType: ChannelEvidence['evidenceType']; sourceName: string; sourceUrl: string; summary: string; limitations: string; evidenceClass: ChannelEvidence['evidenceClass'] }>>({})
   const [products, setProducts] = useState<Product[]>([])
   const [listings, setListings] = useState<Listing[]>([])
   const [listingDrafts, setListingDrafts] = useState<Record<string, { channelId: string; disclosure: string }>>({})
+  const [packageKeys, setPackageKeys] = useState<Record<string, string>>({})
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, ReceiptDraft>>({})
   const [channelForm, setChannelForm] = useState(initialChannelForm)
   const [loading, setLoading] = useState(true)
@@ -197,6 +199,26 @@ export function LaunchBayBoard() {
     } finally { setSaving('') }
   }
 
+  async function appendChannelEvidence(channel: Channel) {
+    const draft = evidenceDrafts[channel.id]
+    if (!draft) { setError('Complete the evidence fields first.'); return }
+    setSaving(`evidence:${channel.id}`); setError(''); setMessage('')
+    try {
+      const response = await fetch(`/api/channels/${channel.id}/evidence`, {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...draft, capturedAt: new Date().toISOString() }),
+      })
+      const payload = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!response.ok) throw new Error(payload.error?.message || 'Unable to append channel evidence.')
+      setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, sourceName: '', sourceUrl: '', summary: '', limitations: '' } }))
+      setMessage('Channel evidence appended to immutable history.')
+      await refresh()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to append channel evidence.')
+    } finally { setSaving('') }
+  }
+
   async function updateChannel(channel: Channel) {
     const draft = channelDrafts[channel.id]
     if (!draft) return
@@ -232,12 +254,13 @@ export function LaunchBayBoard() {
     try {
       const response = await fetch('/api/listings/packages', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
+        headers: { 'content-type': 'application/json', 'idempotency-key': packageKeys[product.id] ?? crypto.randomUUID() },
         body: JSON.stringify({ productId: product.id, productVersion: product.version, channelId: draft.channelId, disclosure: draft.disclosure }),
       })
       const payload = await response.json()
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to generate listing package.')
+      setPackageKeys((current) => { const next = { ...current }; delete next[product.id]; return next })
       setMessage(`Manual listing package generated · ${payload.data.status} · SHA-256 ${payload.data.packageHash}`)
       await refresh()
     } catch (cause) {
@@ -291,7 +314,17 @@ export function LaunchBayBoard() {
         return <article key={channel.id} className="space-y-3 border border-acid-lime/20 bg-panel-charcoal p-4">
           <div className="flex items-start justify-between gap-2"><div><h3 className="font-display text-xl uppercase">{channel.displayName}</h3><p className="font-mono text-[10px] text-muted-ink">{channel.channelKey} · {channel.countryCode} · revision {channel.revision}</p></div><span className="border border-acid-lime/30 px-2 py-1 font-mono text-[10px] uppercase">{channel.capability}</span></div>
           <div className="grid grid-cols-2 gap-2 text-xs"><p>Account: <strong>{channel.accountEligibility}</strong></p><p>Payout: <strong>{channel.payoutSetupStatus}</strong></p><p>Channel: <strong>{channel.channelStatus}</strong></p><p>Policy recheck: <strong>{channel.policyRecheckAt?.slice(0,10) ?? 'not set'}</strong></p></div>
-          <details className="border-t border-acid-lime/10 pt-2"><summary className="cursor-pointer font-mono text-[10px] uppercase text-acid-lime">Evidence history · {(channelEvidence[channel.id] ?? []).length} records</summary><div className="mt-3 space-y-2">{(channelEvidence[channel.id] ?? []).map((item) => <div key={item.id} className="border-l border-acid-lime/30 pl-3 text-xs"><p className="font-mono">{item.evidenceType} · {item.evidenceClass}</p><a className="break-all text-acid-lime underline" href={item.sourceUrl} target="_blank" rel="noreferrer">{item.sourceUrl}</a><p className="mt-1">{item.summary}</p><p className="text-muted-ink">Captured {new Date(item.capturedAt).toLocaleString()} · {item.limitations}</p></div>)}</div></details>
+          <details className="border-t border-acid-lime/10 pt-2"><summary className="cursor-pointer font-mono text-[10px] uppercase text-acid-lime">Evidence history · {(channelEvidence[channel.id] ?? []).length} records</summary><div className="mt-3 space-y-2">{(channelEvidence[channel.id] ?? []).map((item) => <div key={item.id} className="border-l border-acid-lime/30 pl-3 text-xs"><p className="font-mono">{item.evidenceType} · {item.evidenceClass}</p><a className="break-all text-acid-lime underline" href={item.sourceUrl} target="_blank" rel="noreferrer">{item.sourceUrl}</a><p className="mt-1">{item.summary}</p><p className="text-muted-ink">Captured {new Date(item.capturedAt).toLocaleString()} · {item.limitations}</p></div>)}
+            {(() => { const draft = evidenceDrafts[channel.id] ?? { evidenceType: 'other' as const, sourceName: '', sourceUrl: '', summary: '', limitations: 'Manual capture; recheck before use.', evidenceClass: 'observed-fact' as const }; return <div className="mt-3 grid gap-2 md:grid-cols-2">
+              <label className="text-[10px] font-mono uppercase">Evidence type<select value={draft.evidenceType} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, evidenceType: event.target.value as ChannelEvidence['evidenceType'] } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="official-policy">Official policy</option><option value="account-eligibility">Account eligibility</option><option value="payout-requirements">Payout requirements</option><option value="api-capability">API capability</option><option value="other">Other</option></select></label>
+              <label className="text-[10px] font-mono uppercase">Evidence class<select value={draft.evidenceClass} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, evidenceClass: event.target.value as ChannelEvidence['evidenceClass'] } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="observed-fact">Observed fact</option><option value="operator-attestation">Operator attestation</option><option value="inference">Inference</option><option value="unknown">Unknown</option></select></label>
+              <label className="text-[10px] font-mono uppercase">Source name<input value={draft.sourceName} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, sourceName: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
+              <label className="text-[10px] font-mono uppercase">Source URL<input value={draft.sourceUrl} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, sourceUrl: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
+              <label className="text-[10px] font-mono uppercase md:col-span-2">Summary<textarea value={draft.summary} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, summary: event.target.value } }))} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
+              <label className="text-[10px] font-mono uppercase md:col-span-2">Limitations<textarea value={draft.limitations} onChange={(event) => setEvidenceDrafts((current) => ({ ...current, [channel.id]: { ...draft, limitations: event.target.value } }))} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
+              <button type="button" disabled={saving === `evidence:${channel.id}`} onClick={() => void appendChannelEvidence(channel)} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase disabled:opacity-40 md:col-span-2">{saving === `evidence:${channel.id}` ? 'Appending…' : 'Append source evidence'}</button>
+            </div> })()}
+          </details>
           {draft && <details className="border-t border-acid-lime/10 pt-2"><summary className="cursor-pointer font-mono text-[10px] uppercase text-acid-lime">Update eligibility / capability</summary><div className="mt-3 grid gap-2 md:grid-cols-2">
             <label className="text-[10px] font-mono uppercase">Capability<select value={draft.capability} onChange={(event) => setChannelDrafts((current) => ({ ...current, [channel.id]: { ...draft, capability: event.target.value as ChannelDraft['capability'] } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="C0">C0 · Research only</option><option value="C1">C1 · Manual package</option></select></label>
             <label className="text-[10px] font-mono uppercase">Account eligibility<select value={draft.accountEligibility} onChange={(event) => setChannelDrafts((current) => ({ ...current, [channel.id]: { ...draft, accountEligibility: event.target.value as ChannelDraft['accountEligibility'] } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="unknown">Unknown</option><option value="eligible">Eligible · evidence required</option><option value="ineligible">Ineligible</option></select></label>
@@ -337,8 +370,8 @@ export function LaunchBayBoard() {
         return <article key={product.id} className="space-y-3 border border-acid-lime/20 bg-panel-charcoal p-4">
           <div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-display text-xl uppercase">{product.title}</h3><p className="text-xs text-muted-ink">{product.productFamily} · v{product.version} · {product.lifecycleState}</p></div></div>
           <div className="grid gap-2 md:grid-cols-2">
-            <label className="text-[10px] font-mono uppercase">Channel<select value={draft.channelId} onChange={(event) => setListingDrafts((current) => ({ ...current, [product.id]: { ...draft, channelId: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="">Select a registered channel</option>{channels.map((channel) => <option key={channel.id} value={channel.id}>{channel.displayName} · {channel.capability} · {channel.channelStatus}</option>)}</select></label>
-            <label className="text-[10px] font-mono uppercase">Listing disclosure<textarea value={draft.disclosure} onChange={(event) => setListingDrafts((current) => ({ ...current, [product.id]: { ...draft, disclosure: event.target.value } }))} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" placeholder="Disclose AI assistance, licenses, limitations or other channel-required statements." /></label>
+            <label className="text-[10px] font-mono uppercase">Channel<select value={draft.channelId} onChange={(event) => { setListingDrafts((current) => ({ ...current, [product.id]: { ...draft, channelId: event.target.value } })); setPackageKeys((current) => ({ ...current, [product.id]: crypto.randomUUID() })) }} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="">Select a registered channel</option>{channels.map((channel) => <option key={channel.id} value={channel.id}>{channel.displayName} · {channel.capability} · {channel.channelStatus}</option>)}</select></label>
+            <label className="text-[10px] font-mono uppercase">Listing disclosure<textarea value={draft.disclosure} onChange={(event) => { setListingDrafts((current) => ({ ...current, [product.id]: { ...draft, disclosure: event.target.value } })); setPackageKeys((current) => ({ ...current, [product.id]: crypto.randomUUID() })) }} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" placeholder="Disclose AI assistance, licenses, limitations or other channel-required statements." /></label>
           </div>
           <button type="button" disabled={saving === product.id || !draft.channelId || draft.disclosure.trim().length < 10} onClick={() => void createPackage(product)} className="border border-acid-lime/40 px-4 py-2 font-mono text-[10px] uppercase disabled:opacity-40">{saving === product.id ? 'Generating…' : 'Generate manual listing package'}</button>
         </article>
