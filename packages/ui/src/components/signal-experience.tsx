@@ -148,7 +148,7 @@ export interface RiotDecisionEvent {
   evidence?: string[]
 }
 
-export interface RiotDecisionTrailProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
+export interface RiotDecisionTrailProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title' | 'onSelect'> {
   events: RiotDecisionEvent[]
   selectedId?: string
   onSelect?: (event: RiotDecisionEvent) => void
