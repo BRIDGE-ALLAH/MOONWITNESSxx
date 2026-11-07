@@ -19,7 +19,8 @@
     "@riotworks/orm": "workspace:*",
     "@riotworks/orm-db-adaptor": "workspace:*",
     "@riotworks/orm-db": "workspace:*",
-    "@riotworks/arsy-system-store-sqlite": "workspace:*"
+    "@riotworks/arsy-system-store-sqlite": "workspace:*",
+    "@riotworks/orm-db-adaptor-sqlite": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2"
