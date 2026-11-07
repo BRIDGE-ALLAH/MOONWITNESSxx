@@ -100,3 +100,5 @@ export interface UpgradeHandler {
 }
 
 export { createUnitOfWorkFactory, withUnitOfWork } from "./runtime.js";
+
+export { DeterministicSchemaPlanner, schemaPlanner } from "./schema-planner.js";
