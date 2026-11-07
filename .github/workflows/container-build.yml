@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, feat/money-maker-mainline-20261108]
   push:
-    branches: [main]
+    branches: [main, "feat/**"]
   workflow_dispatch:
 
 permissions:

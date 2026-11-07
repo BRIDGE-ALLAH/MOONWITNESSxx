@@ -136,6 +136,30 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(product.version, 1)
     assert.equal(product.lifecycleState, 'brief')
 
+    // Product versions are append-only and lifecycle transitions are owner-scoped and audited.
+    const versionTwo = await products.createVersion(
+      ownerId, ownerId, product.id, 1,
+      { ...product.brief, productHypothesis: 'Version two adds reconciliation export requirements.' },
+      ['Imports source rows without loss', 'Exports a reconciliation report with stable row identifiers'],
+    )
+    assert.equal(versionTwo.conflict, false)
+    assert.equal(versionTwo.product?.version, 2)
+    assert.equal((await products.history(ownerId, product.id))?.length, 2)
+    const production = await products.transition(ownerId, ownerId, product.id, 2, 'production', 'The reviewed product brief is ready for production work.')
+    assert.equal(production.conflict, false)
+    assert.equal(production.product?.lifecycleState, 'production')
+    const versionThree = await products.createVersion(
+      ownerId, ownerId, product.id, 2,
+      { ...versionTwo.product.brief, productionNotes: 'Implementation checklist for the next iteration.' },
+      versionTwo.product.acceptanceCriteria,
+    )
+    assert.equal(versionThree.product?.version, 3)
+    const review = await products.transition(ownerId, ownerId, product.id, 3, 'review', 'The current production build is ready for internal quality review.')
+    assert.equal(review.product?.lifecycleState, 'review')
+    const retired = await products.transition(ownerId, ownerId, product.id, 3, 'retired', 'This isolated integration fixture is complete and is retired.')
+    assert.equal(retired.product?.lifecycleState, 'retired')
+    assert.equal((await products.history(ownerId, product.id))?.length, 3)
+
     const locked = await new OpportunityRepository(pool).update(
       ownerId,
       ownerId,
@@ -274,6 +298,9 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const reloadedProduct = await persistedProducts.get(ownerId, product.id)
     assert.ok(reloadedProduct)
     assert.equal(reloadedProduct.brief.buyerProblem, input.buyerProblem)
+    assert.equal(reloadedProduct.version, 3)
+    assert.equal(reloadedProduct.lifecycleState, 'retired')
+    assert.equal((await persistedProducts.history(ownerId, product.id))?.length, 3)
     const financialEvents = await persistedFinance.list(ownerId)
     assert.equal(financialEvents.length, 8)
     assert.equal(financialEvents.find((event) => event.id === gross.event.id)?.amountMinor, '5000')
@@ -306,6 +333,8 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
       'created',
       'content-updated',
       'created-from-opportunity',
+      'version-created',
+      'lifecycle-transition',
       'recorded-pending-reconciliation',
       'reconciled',
       'decision-changed',
