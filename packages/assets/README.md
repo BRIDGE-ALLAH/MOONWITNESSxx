@@ -1,12 +1,12 @@
 # @riotworks/assets
 
-The source-controlled visual asset library for MOONWITNESS applications and the separately governed RIOTWORKS studio identity.
+The source-controlled visual asset library for MOONWITNESS applications and its RIOTWORKS product division.
 
 ## Brand ownership
 
 **MOONWITNESS is the master product brand.** Its canonical identity, brand DNA, and usage rules are documented in [docs/10-design-dna.md](../../docs/10-design-dna.md), [docs/12-brand-architecture.md](../../docs/12-brand-architecture.md), and [BRAND.md](./BRAND.md).
 
-RIOTWORKS is an independent creative/engineering studio identity. It is not the MOONWITNESS master brand and must not appear in MOONWITNESS product lockups by default. Keep studio marks, artwork, and tokens separately governed.
+RIOTWORKS is the product and operating division within MOONWITNESS, not an independent studio or competing master brand. Division-specific artwork and tokens may be used on RIOTWORKS-owned product surfaces; the MOONWITNESS master identity remains authoritative.
 
 ## Responsibilities
 
