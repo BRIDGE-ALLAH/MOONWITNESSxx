@@ -15,6 +15,7 @@ export interface OpportunityRecord {
   candidateChannels: string[]
   evidence: OpportunityInput['evidence']
   scores: OpportunityInput['scores']
+  scoreDetails: OpportunityInput['scoreDetails']
   hardGates: OpportunityInput['hardGates']
   evaluation: OpportunityEvaluation
   decisionRationale: string | null
@@ -33,7 +34,9 @@ interface OpportunityRow {
   candidate_channels: string[]
   evidence: OpportunityInput['evidence']
   scores: OpportunityInput['scores']
+  score_details: OpportunityInput['scoreDetails']
   hard_gates: OpportunityInput['hardGates']
+  hard_gate_details: OpportunityInput['hardGateDetails']
   score: string | null
   decision: OpportunityEvaluation['decision']
   decision_rationale: string | null
@@ -57,7 +60,9 @@ function mapOpportunity(row: OpportunityRow): OpportunityRecord {
     candidateChannels: row.candidate_channels,
     evidence: row.evidence,
     scores: row.scores,
+    scoreDetails: row.score_details,
     hardGates: row.hard_gates,
+    hardGateDetails: row.hard_gate_details,
     evaluation: {
       score: row.score === null ? null : Number(row.score),
       decision: row.decision,
@@ -72,7 +77,7 @@ function mapOpportunity(row: OpportunityRow): OpportunityRecord {
 }
 
 const SELECT_COLUMNS = `id, title, buyer_problem, buyer_segment, job_to_be_done,
-  product_hypothesis, product_family, candidate_channels, evidence, scores, hard_gates,
+  product_hypothesis, product_family, candidate_channels, evidence, scores, score_details, hard_gates, hard_gate_details,
   score::text AS score, decision, decision_rationale, created_at, updated_at`
 
 export class OpportunityRepository {
@@ -83,10 +88,10 @@ export class OpportunityRepository {
       `WITH created AS (
        INSERT INTO arsy_opportunities
         (id, owner_id, title, buyer_problem, buyer_segment, job_to_be_done, product_hypothesis,
-         product_family, candidate_channels, evidence, scores, hard_gates, score, decision,
+         product_family, candidate_channels, evidence, scores, score_details, hard_gates, hard_gate_details, score, decision,
          created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb,
-         $12::jsonb, $13, $14, $15, $15)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb, $12::jsonb,
+         $13::jsonb, $14::jsonb, $15, $16, $17, $17)
        RETURNING *
      ), audited AS (
        INSERT INTO arsy_commerce_audit_events
@@ -98,8 +103,9 @@ export class OpportunityRepository {
      SELECT ${SELECT_COLUMNS} FROM created`,
       [randomUUID(), ownerId, input.title, input.buyerProblem, input.buyerSegment, input.jobToBeDone,
         input.productHypothesis, input.productFamily, JSON.stringify(input.candidateChannels),
-        JSON.stringify(input.evidence), JSON.stringify(input.scores), JSON.stringify(input.hardGates),
-        evaluation.score, evaluation.decision, actorId, randomUUID()],
+        JSON.stringify(input.evidence), JSON.stringify(input.scores), JSON.stringify(input.scoreDetails),
+        JSON.stringify(input.hardGates), JSON.stringify(input.hardGateDetails), evaluation.score,
+        evaluation.decision, actorId, randomUUID()],
     )
     return mapOpportunity(rows<OpportunityRow>(result)[0])
   }
