@@ -49,6 +49,16 @@ function rows<T>(result: unknown): T[] {
   return (result as QueryResult<T>).rows
 }
 
+const SCORE_DIMENSIONS = [
+  'demandEvidence',
+  'competitionGap',
+  'usefulnessDifferentiation',
+  'marketplaceFit',
+  'productionFeasibility',
+  'durability',
+  'distributionReadiness',
+] as const
+
 function mapOpportunity(row: OpportunityRow): OpportunityRecord {
   return {
     id: row.id,
@@ -69,7 +79,7 @@ function mapOpportunity(row: OpportunityRow): OpportunityRecord {
       decision: row.decision,
       blockedGates: Object.entries(row.hard_gates).filter(([, value]) => value === 'blocked').map(([key]) => key),
       unknownGates: Object.entries(row.hard_gates).filter(([, value]) => value === 'unknown').map(([key]) => key),
-      missingScoreDimensions: [],
+      missingScoreDimensions: SCORE_DIMENSIONS.filter((dimension) => row.scores[dimension] === undefined),
     },
     decisionRationale: row.decision_rationale,
     createdAt: new Date(row.created_at).toISOString(),
