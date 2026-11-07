@@ -36,3 +36,8 @@ test('rejects unknown metrics, missing rationale, and non-finite outputs', () =>
   assert.throws(() => runScenario(baseline, { ...scenario, operations: [{ ...scenario.operations[0], rationale: ' ' }] }), ScenarioValidationError)
   assert.throws(() => runScenario(baseline, { ...scenario, operations: [{ ...scenario.operations[0], operand: Number.MAX_VALUE, operation: 'multiply' }] }), ScenarioValidationError)
 })
+
+test('rejects empty scenario identity and unsupported operations', () => {
+  assert.throws(() => runScenario(baseline, { ...scenario, id: ' ' }), ScenarioValidationError)
+  assert.throws(() => runScenario(baseline, { ...scenario, operations: [{ ...scenario.operations[0], operation: 'divide' }] }), ScenarioValidationError)
+})
