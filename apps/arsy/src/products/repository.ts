@@ -61,11 +61,12 @@ export class ProductRepository {
     const versionId = randomUUID()
     const auditId = randomUUID()
     const result = await this.db.query(
-      `WITH eligible AS (
+      `WITH eligible AS MATERIALIZED (
         SELECT * FROM arsy_opportunities
         WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
           AND decision = 'prototype-candidate' AND score >= 80
           AND hard_gates @> '{"rights":"pass","countryEligibility":"pass","channelPolicy":"pass","payoutFeasibility":"pass"}'::jsonb
+        FOR UPDATE
       ), created AS (
         INSERT INTO arsy_products
           (id, owner_id, opportunity_id, title, product_family, lifecycle_state, created_by, updated_by)
@@ -89,6 +90,21 @@ export class ProductRepository {
           $6::jsonb, $4
         FROM created JOIN eligible ON eligible.id = created.opportunity_id
         RETURNING *
+      ), opportunity_updated AS (
+        UPDATE arsy_opportunities AS opportunity
+        SET version = opportunity.version + 1,
+            updated_at = now(),
+            updated_by = $4
+        FROM created
+        WHERE opportunity.owner_id = $1
+          AND opportunity.id = created.opportunity_id
+        RETURNING opportunity.id, opportunity.version
+      ), opportunity_audited AS (
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $8, $1, 'opportunity', opportunity_updated.id, 'promoted-to-product-brief', $4,
+          jsonb_build_object('version', opportunity_updated.version)
+        FROM opportunity_updated
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
@@ -97,7 +113,7 @@ export class ProductRepository {
         FROM created
       )
       SELECT ${columns} FROM created p JOIN versioned v ON v.product_id = p.id`,
-      [ownerId, opportunityId, productId, actorId, versionId, JSON.stringify(acceptanceCriteria), auditId],
+      [ownerId, opportunityId, productId, actorId, versionId, JSON.stringify(acceptanceCriteria), auditId, randomUUID()],
     )
     const row = rows<ProductRow>(result)[0]
     return row ? mapProduct(row) : null
