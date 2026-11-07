@@ -920,3 +920,19 @@ See `docs/28-phase-4-environment-recordset.md`. This is an initial runtime slice
 - [ ] Integrate UnitOfWork into Environment and model services.
 
 See docs/30-phase-5-unit-of-work.md. No test or build result is claimed yet.
+
+
+## Phase 6 execution log — Deterministic schema planner
+
+- [x] Derive persistent table/column plans from registry metadata.
+- [x] Map field kinds to PostgreSQL and SQLite storage types.
+- [x] Plan create-table, add-column and index operations.
+- [x] Classify safe, review and destructive schema changes.
+- [x] Generate deterministic operation and plan IDs.
+- [x] Prevent automatic drop-table/drop-column planning.
+- [x] Add planner test source for additive changes, review gates and destructive type changes.
+- [ ] Run test/typecheck/lint gates in CI.
+- [ ] Implement concrete database adapters and provider introspection.
+- [ ] Implement approval-bound reconciler, receipt store and atomic System Mode activation.
+
+See docs/31-phase-6-schema-planner.md. Planning is implemented as an initial source slice; DDL execution is not claimed.
