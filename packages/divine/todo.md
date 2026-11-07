@@ -636,15 +636,15 @@ Adoption policy:
 
 ### Tasks
 - [ ] DIV-P9-001 Reuse Corpus source/artifact/provenance contracts and avoid duplicate artifact storage.
-- [ ] DIV-P9-002 Define preservation manifest for each research release and derived projection.
-- [ ] DIV-P9-003 Record hashes, algorithm identifiers, source release and derivation method.
-- [ ] DIV-P9-004 Define append-only research decision history for promotion, rejection, correction and supersession.
-- [ ] DIV-P9-005 Ensure correction creates a new trace and does not erase the prior decision.
-- [ ] DIV-P9-006 Define rights checks at ingestion, query, display, export and AI processing.
-- [ ] DIV-P9-007 Define restricted-content behavior and metadata-only fallback.
-- [ ] DIV-P9-008 Define human reviewer role, review method and review timestamp attribution.
+- [x] DIV-P9-002 Define preservation manifest for each research release and derived projection.
+- [x] DIV-P9-003 Record hashes, algorithm identifiers, source release and derivation method.
+- [x] DIV-P9-004 Define append-only research decision history for promotion, rejection, correction and supersession.
+- [x] DIV-P9-005 Ensure correction creates a new trace and does not erase the prior decision.
+- [x] DIV-P9-006 Define rights checks at ingestion, query, display, export and AI processing.
+- [x] DIV-P9-007 Define restricted-content behavior and metadata-only fallback.
+- [x] DIV-P9-008 Define human reviewer role, review method and review timestamp attribution.
 - [ ] DIV-P9-009 Define retention and deletion rules compatible with legal obligations and source rights.
-- [ ] DIV-P9-010 Define tamper-evidence verification and integrity report.
+- [x] DIV-P9-010 Define tamper-evidence verification and integrity report.
 - [ ] DIV-P9-011 Define signed release manifests only if key management and signing infrastructure exist.
 - [ ] DIV-P9-012 Integrate ZILL policy and platform audit interfaces when available.
 
@@ -663,19 +663,19 @@ Adoption policy:
 
 ### Tasks
 - [ ] DIV-P10-001 Define AI provider-neutral interfaces; no provider lock-in in core.
-- [ ] DIV-P10-002 Define candidate extraction tasks for entities, claims, evidence selectors, relations and mappings.
-- [ ] DIV-P10-003 Require exact source spans or selectors for extracted claims whenever the source supports them.
-- [ ] DIV-P10-004 Attach model/provider/version, task prompt version, input release and pipeline provenance.
+- [x] DIV-P10-002 Define candidate extraction tasks for entities, claims, evidence selectors, relations and mappings.
+- [x] DIV-P10-003 Require exact source spans or selectors for extracted claims whenever the source supports them.
+- [x] DIV-P10-004 Attach model/provider/version, task prompt version, input release and pipeline provenance.
 - [ ] DIV-P10-005 Store AI outputs in candidate/review queues, not canonical Corpus records.
-- [ ] DIV-P10-006 Require human review and explicit promotion authority.
-- [ ] DIV-P10-007 Record edits, rejection reasons and reviewer decisions.
+- [x] DIV-P10-006 Require human review and explicit promotion authority.
+- [x] DIV-P10-007 Record edits, rejection reasons and reviewer decisions.
 - [ ] DIV-P10-008 Prevent AI-generated scripture, quotation or source text from being treated as source content.
 - [ ] DIV-P10-009 Define hallucination, citation integrity and unsupported-answer evaluations.
-- [ ] DIV-P10-010 Define abstention and safe response for metaphysical/unobservable questions.
+- [x] DIV-P10-010 Define abstention and safe response for metaphysical/unobservable questions.
 - [ ] DIV-P10-011 Define language-specific evaluation, especially Arabic and other source languages.
 - [ ] DIV-P10-012 Evaluate model performance separately by task, language, tradition, source type and scope.
 - [ ] DIV-P10-013 Add prompt injection and untrusted-source tests.
-- [ ] DIV-P10-014 Add disclosure contract distinguishing human-authored, machine-suggested, machine-derived and human-reviewed material.
+- [x] DIV-P10-014 Add disclosure contract distinguishing human-authored, machine-suggested, machine-derived and human-reviewed material.
 
 ### Acceptance
 - AI cannot write directly into canonical Corpus storage.
@@ -692,18 +692,18 @@ Adoption policy:
 **Priority:** P2/P3.
 
 ### Tasks
-- [ ] DIV-P11-001 Implement PROV-O mapping for supported agents, activities, entities and derivations.
+- [x] DIV-P11-001 Implement PROV-O mapping for supported agents, activities, entities and derivations.
 - [ ] DIV-P11-002 Implement SKOS mapping for concept schemes and mappings.
 - [ ] DIV-P11-003 Evaluate SHACL validation bridge for exported RDF graphs.
 - [ ] DIV-P11-004 Map textual/manuscript structures to TEI where semantics align.
 - [ ] DIV-P11-005 Map digital manuscript/media references to IIIF Presentation API 3.
 - [ ] DIV-P11-006 Evaluate CIDOC CRM mapping for cultural heritage and historical event contexts.
 - [ ] DIV-P11-007 Evaluate LRMoo mapping for bibliographic/work/expression semantics.
-- [ ] DIV-P11-008 Map selectors to W3C Web Annotation where supported.
-- [ ] DIV-P11-009 Preserve original IDs, namespaces, language/script and source metadata.
-- [ ] DIV-P11-010 Produce machine-readable loss report for every export/import.
+- [x] DIV-P11-008 Map selectors to W3C Web Annotation where supported.
+- [x] DIV-P11-009 Preserve original IDs, namespaces, language/script and source metadata.
+- [x] DIV-P11-010 Produce machine-readable loss report for every export/import.
 - [ ] DIV-P11-011 Add round-trip tests for supported subsets.
-- [ ] DIV-P11-012 Document partial compliance and unsupported constructs.
+- [x] DIV-P11-012 Document partial compliance and unsupported constructs.
 
 ### Acceptance
 - Standards exports are deterministic and versioned.
@@ -914,3 +914,19 @@ Phases may be parallelized only when their dependency contracts are stable. Do n
 - [ ] Add fuzz/property tests and full workspace CI verification before marking these phases production-ready.
 
 See `PHASE-6-8-EXECUTION.md` and `docs/PHASE-6-8-RESEARCH.md`. This is an initial implementation slice, not completion of every roadmap task or a production release.
+
+
+## Phase 9–11 execution update (2026-11-08)
+
+Initial pure-domain implementation slices added on branch feat/divine-phases-9-11-preservation-ai-standards:
+- Phase 9: release-pinned preservation manifest, SHA-256 integrity verification, deny-by-default per-action rights gates, append-only hash-chained decision history, correction/supersession references.
+- Phase 10: provider-neutral extraction candidate/task contracts, exact source-span verification, model/prompt/release lineage, human-only approval gate, untrusted-instruction signal detector, explicit abstention contract.
+- Phase 11: versioned JSON-LD export subset for PROV-O, SKOS and Web Annotation selectors; deterministic digest, loss report and supported-ID round-trip check.
+- Added synthetic tests and PHASE-9-11-EXECUTION.md plus docs/PHASE-9-11-RESEARCH.md.
+
+Remaining: legal retention/deletion implementation, key-backed signing and trusted timestamps, ZILL/Corpus rights contracts, real AI provider execution, multilingual/adversarial benchmarks, full RDF canonicalization/import, SHACL/TEI/IIIF/CIDOC CRM/LRMoo conformance, and independent rights-cleared evaluation. These phases are not production complete. See execution record for exact boundaries.
+
+
+Implementation accuracy note: Phase 10 source-span provenance and abstention are implemented, but prevention of generated sacred/source text from canonical source treatment and task/language-specific hallucination/citation evaluation remain open. Candidate state is an in-memory contract, not a persistent review queue. Phase 9 rights gates are reusable policy guards; enforcement in every live ingestion/display/export/AI adapter remains blocked on platform contracts.
+
+Accuracy correction: Phase 11 currently emits SKOS Concept nodes with scheme references, but does not serialize ConceptScheme nodes or ontology mappings; DIV-P11-002 therefore remains open. The current round-trip check verifies supported identifier preservation only, not full semantic import/export; DIV-P11-011 remains open. Phase 10 currently defines candidate status and review contracts, not a durable queue or a provider adapter; DIV-P10-001 and DIV-P10-005 remain open.
