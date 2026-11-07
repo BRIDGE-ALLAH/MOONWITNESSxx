@@ -20,7 +20,7 @@ test('all commerce endpoints require the operator token, not only opportunities'
 })
 
 test('all commerce endpoints fail closed when operator identity is missing', async () => {
-  const app = await createApp({ databasePool: pool(), logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
+  const app = await createApp({ databasePool: pool(), logger: false, env: { ARSY_OPERATOR_ID: 'operator-test', ARSY_OPERATOR_TOKEN: token } })
   try {
     for (const url of ['/api/v1/opportunities', '/api/v1/products', '/api/v1/financial-events', '/api/v1/financial-summary']) {
       const response = await app.inject({ method: 'GET', url, headers: { 'x-arsy-operator-token': token } })
