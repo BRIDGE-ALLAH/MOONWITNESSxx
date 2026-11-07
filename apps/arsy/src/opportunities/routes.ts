@@ -5,6 +5,7 @@ import { evaluateOpportunity, opportunityInputSchema } from './domain.ts'
 import { OpportunityRepository } from './repository.ts'
 
 const idSchema = z.string().uuid()
+const updateSchema = opportunityInputSchema.extend({ expectedRevision: z.number().int().positive() })
 const decisionSchema = z.object({
   decision: z.enum(['blocked', 'research-more', 'prototype-candidate', 'park']),
   rationale: z.string().trim().min(10).max(2000),
@@ -50,6 +51,23 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
     const record = await repository.get(ownerId, params.data.id)
     if (!record) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
     return { data: record }
+  })
+
+  app.patch('/api/v1/opportunities/:id', async (request, reply) => {
+    const params = z.object({ id: idSchema }).safeParse(request.params)
+    const body = updateSchema.safeParse(request.body)
+    if (!params.success || !body.success) {
+      return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Opportunity update input is invalid.', details: body.success ? undefined : body.error.flatten() } })
+    }
+    const { expectedRevision, ...input } = body.data
+    const evaluation = evaluateOpportunity(input)
+    const result = await repository.update(ownerId, actorId, params.data.id, input, evaluation, expectedRevision)
+    if (!result.record) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
+    if (result.conflict) return reply.code(409).send({
+      error: { code: 'REVISION_CONFLICT', message: 'This opportunity changed since it was loaded. Refresh and review the latest record before retrying.' },
+      data: result.record,
+    })
+    return { data: result.record }
   })
 
   app.patch('/api/v1/opportunities/:id/decision', async (request, reply) => {
