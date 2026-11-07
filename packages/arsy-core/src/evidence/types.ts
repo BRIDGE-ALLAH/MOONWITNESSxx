@@ -76,8 +76,11 @@ function hashEvent(event: Omit<EvidenceEvent, 'hash'>): string {
 /** Append-only, per-aggregate evidence history with a tamper-evident hash chain. */
 export class EvidenceLedger {
   private readonly locks = new Map<string, Promise<void>>()
+  private readonly store: EvidenceStore
 
-  constructor(private readonly store: EvidenceStore) {}
+  constructor(store: EvidenceStore) {
+    this.store = store
+  }
 
   async append(input: EvidenceEventInput): Promise<EvidenceEvent> {
     if (!input.id.trim() || !input.aggregateId.trim() || !input.actorId.trim()) {
