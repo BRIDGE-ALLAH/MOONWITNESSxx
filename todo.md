@@ -1036,3 +1036,21 @@ Evidence: https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42395999916
 - [!] First Phase 9 CI run 541 reached repository lint and failed on one unused destructuring binding in the snapshot digest helper; that binding was removed in commit `c932363ebc08c6e0c97ac38ef7c152f9be4c11ab`.
 - [!] Follow-up PR workflow run 554 was cancelled before checkout/validation completed; it provides no verification evidence.
 - [ ] Obtain a fresh successful repository-integrity and full-workspace CI run for the latest Phase 9 head before treating the store package as verified.
+
+
+## Phase 10 — System Mode Orchestrator
+
+**Branch:** feat/phase-10-system-mode-orchestrator
+
+- [x] Add explicit System Mode lifecycle orchestration: recovery, discovery, trust validation, registry composition, persistence preflight, approval, reconciliation, verification, activation, and runtime handoff.
+- [x] Require actor identity and fenced deployment lease.
+- [x] Persist plan and verified receipt before activation.
+- [x] Keep readiness false until runtime handoff succeeds.
+- [x] Add SQLite-backed deployment journal with optimistic stage transitions and incomplete-run discovery.
+- [x] Add test source for lifecycle ordering, journal recovery listing, stale transition rejection, and handoff failure.
+- [ ] Integrate orchestrator and journal into ARSY Core and an explicit deployment/admin command.
+- [ ] Implement recovery policy per interrupted stage, idempotency keys, heartbeat/abort, and shutdown safety.
+- [ ] Add process contention, file-backed restart, crash recovery, and CI verification.
+
+See docs/35-phase-10-system-mode-orchestrator.md. Runtime handoff failure after activation leaves readiness false and requires journal-driven recovery; automatic database rollback is intentionally not attempted.
+
