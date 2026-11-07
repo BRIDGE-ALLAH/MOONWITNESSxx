@@ -19,9 +19,16 @@ Make installation and synchronization an explicit deployment lifecycle, never an
 5. Lease renewal: ownership is renewed before expensive reconciliation and activation; long DDL still needs heartbeat/abort integration.
 
 ## Remaining gates
-- Implement a SQLite-backed run journal and connect it to the Phase 9 store.
+- [x] Implement SQLite-backed run journal with optimistic stage transitions and incomplete-run discovery.
 - Add recovery behavior and idempotency semantics for every stage.
 - Add long-operation heartbeat, abort handling, and shutdown safety.
 - Integrate into ARSY Core and expose an explicit deployment/admin command, not an HTTP route.
 - Add file-backed restart, process contention, and injected-failure tests.
 - Run typecheck, lint, tests, and CI.
+
+
+## SQLite journal implementation
+
+The package now exports `SqliteSystemRunJournal`. It enforces SQLite/System adapter identity, persists run identity/actor/stage/status/fingerprint/plan/error/timestamps, uses compare-and-set stage transitions, rejects stale transitions, and returns interrupted running records for an explicit recovery handler. Initialize the journal during controlled startup before invoking the orchestrator.
+
+Important failure boundary: if runtime handoff fails after atomic activation, the candidate pointer has already been committed. Readiness remains false and recovery must inspect the journal; automatic pointer rollback is intentionally not attempted because PostgreSQL schema rollback may be unsafe. The prior snapshot remains stored for an operator-directed rollback only when compatibility is established.
