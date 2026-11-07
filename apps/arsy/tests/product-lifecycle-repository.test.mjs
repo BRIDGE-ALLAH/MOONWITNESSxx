@@ -29,21 +29,28 @@ test('product lifecycle update is owner- and expected-state-scoped and writes an
     'owner-a', 'owner-a', row.id, 'brief', 'production',
   )
   assert.equal(product?.lifecycleState, 'production')
-  assert.deepEqual(product?.allowedNextLifecycleStates, ['review'])
+  assert.deepEqual(product?.allowedNextLifecycleStates, ['review', 'retired'])
   assert.match(captured.sql, /WHERE owner_id = \$1 AND id = \$2 AND lifecycle_state = \$5/)
   assert.match(captured.sql, /lifecycle-changed/)
   assert.deepEqual(captured.values.slice(0, 5), ['owner-a', row.id, 'owner-a', 'production', 'brief'])
 })
 
-test('repository rejects an invalid lifecycle transition before database access', async () => {
+test('repository rejects inspection and publication gate bypasses before database access', async () => {
   let calls = 0
   const repository = new ProductRepository({
     query: async () => { calls += 1; return { rows: [] } },
     end: async () => undefined,
   })
-  const result = await repository.transitionLifecycle('owner-a', 'owner-a', row.id, 'brief', 'listed')
-  const readyToListed = await repository.transitionLifecycle('owner-a', 'owner-a', row.id, 'ready', 'listed')
-  assert.equal(result, null)
-  assert.equal(readyToListed, null)
+  const invalidTransitions = [
+    ['brief', 'ready'],
+    ['review', 'ready'],
+    ['ready', 'listed'],
+    ['production', 'listed'],
+    ['listed', 'production'],
+    ['retired', 'production'],
+  ]
+  for (const [from, to] of invalidTransitions) {
+    assert.equal(await repository.transitionLifecycle('owner-a', 'owner-a', row.id, from, to), null)
+  }
   assert.equal(calls, 0)
 })
