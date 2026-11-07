@@ -179,7 +179,7 @@ export class ProductRepository {
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
         SELECT $8, $1, 'product', updated.id, 'version-created', $7,
-          jsonb_build_object('version', inserted.version, 'previousVersion', $3)
+          jsonb_build_object('version', inserted.version, 'previousVersion', $3::integer)
         FROM updated JOIN inserted ON inserted.product_id = updated.id
       )
       SELECT ${columns} FROM updated p JOIN inserted v ON v.product_id = p.id`,
@@ -227,7 +227,7 @@ export class ProductRepository {
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
         SELECT $6, $1, 'product', updated.id, 'lifecycle-changed', $3,
-          jsonb_build_object('from', $5, 'to', $4)
+          jsonb_build_object('from', $5::text, 'to', $4::text)
         FROM updated
       )
       SELECT ${columns}
