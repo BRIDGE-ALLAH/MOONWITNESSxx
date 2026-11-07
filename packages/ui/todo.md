@@ -367,3 +367,5 @@ A component is not complete until all applicable checks pass:
 - The next CI pass resolved the missing pg declarations and Zod compiler registration, then found a PostgreSQL pool option mismatch (`idleTimeout` vs the driver's `idleTimeoutMillis`). The app now uses the driver's typed option; rerun workspace validation.
 
 - Workspace type-check now passes ARSY and reaches Headquarter, where TypeScript could not resolve `@riotworks/ui` because the package export intentionally points at generated `dist/index.d.ts`. Turbo's `type-check` task now depends on upstream `build` tasks as well as upstream `type-check`, so workspace packages are emitted before their consumers are checked.
+
+- Workspace type-check and the UI ESM build now pass in CI. The next lint gate exposed that `@riotworks/lint` is a source-free shared-config package but incorrectly ran ESLint against a nonexistent `src` directory. It now exports a shared flat TypeScript config, and ARSY Core invokes that config against its own source tree.
