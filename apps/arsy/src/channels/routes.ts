@@ -36,6 +36,10 @@ const reviewSchema = z.object({
   if (input.policyStatus !== 'unknown' && (!input.policyUrl || !input.policyCheckedAt)) {
     context.addIssue({ code: 'custom', path: ['policyUrl'], message: 'A non-unknown policy decision requires a source URL and review time.' })
   }
+  const countries = input.countryEligibility.map((item) => item.country)
+  if (new Set(countries).size !== countries.length) {
+    context.addIssue({ code: 'custom', path: ['countryEligibility'], message: 'Each country may appear only once in a channel review.' })
+  }
   if (Boolean(input.policyUrl) !== Boolean(input.policyCheckedAt)) {
     context.addIssue({ code: 'custom', path: ['policyUrl'], message: 'Policy URL and review time must be supplied together.' })
   }
@@ -44,7 +48,7 @@ const idSchema = z.string().uuid()
 
 export function registerChannelRoutes(app: FastifyInstance, db: DatabasePool, env: NodeJS.ProcessEnv = process.env): void {
   const repository = new ChannelRepository(db)
-  const reviewerId = env.ARSY_OPERATOR_ID?.trim() || 'primary-owner'
+  const reviewerId = env.ARSY_OPERATOR_ID?.trim() ?? ''
 
   app.get('/api/v1/channels', async () => ({ data: await repository.list() }))
 
