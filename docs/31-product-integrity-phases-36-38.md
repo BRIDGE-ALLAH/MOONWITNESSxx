@@ -1,7 +1,7 @@
 # MOONWITNESS Product Integrity — Phases 36–38
 
 **Date:** 2026-11-08  
-**Branch:** `feat/moonwitness-product-integrity-phases-36-38`  
+**Branch:** `feat/moonwitness-product-integrity-phases-36-38-rebased`  
 **Scope:** ARSY runtime ownership, Headquarter data-truth UX, and machine-checkable release readiness.
 
 ## Phase 36 — ARSY Runtime Ownership & Container Correctness
