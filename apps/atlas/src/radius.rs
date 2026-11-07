@@ -275,7 +275,6 @@ pub async fn delete_subscriber(username: &str) -> Result<bool, sqlx::Error> {
     Ok(changed > 0)
 }
 
-
 #[derive(Debug, Serialize, FromRow)]
 pub struct GroupPolicy {
     pub groupname: String,
@@ -346,9 +345,7 @@ pub async fn list_group_policies() -> Result<Vec<GroupPolicy>, sqlx::Error> {
     .await
 }
 
-pub async fn replace_group_policy(
-    input: &GroupPolicyWriteRequest,
-) -> Result<(), sqlx::Error> {
+pub async fn replace_group_policy(input: &GroupPolicyWriteRequest) -> Result<(), sqlx::Error> {
     let pool = radius_db::pool().await?;
     let mut tx = pool.begin().await?;
     sqlx::query("DELETE FROM radgroupreply WHERE groupname = ?")

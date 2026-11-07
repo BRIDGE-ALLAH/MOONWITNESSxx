@@ -14,9 +14,7 @@ use crate::{
     database::{self, DatabaseStatus},
     dns::{self, PowerDnsClient, RrsetPatchRequest, ZoneCreateRequest},
     engine::{self, EngineWriteRequest},
-    radius::{
-        self, GroupPolicyWriteRequest, NasWriteRequest, SubscriberWriteRequest,
-    },
+    radius::{self, GroupPolicyWriteRequest, NasWriteRequest, SubscriberWriteRequest},
     radius_db,
 };
 
@@ -698,7 +696,6 @@ async fn patch_dns_rrsets(
     }
 }
 
-
 async fn list_radius_group_policies(headers: HeaderMap) -> impl IntoResponse {
     if let Err(error) = authorized(&headers) {
         return error.into_response();
@@ -748,8 +745,11 @@ async fn delete_radius_group_policy(
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => (
             StatusCode::NOT_FOUND,
-            Json(ApiError { error: "RADIUS group policy not found" }),
-        ).into_response(),
+            Json(ApiError {
+                error: "RADIUS group policy not found",
+            }),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to delete RADIUS group policy");
             database_error().into_response()
@@ -789,7 +789,10 @@ pub fn routes() -> Routes {
         .add("/radius/subscribers/{username}", delete(delete_subscriber))
         .add("/radius/groups/policies", get(list_radius_group_policies))
         .add("/radius/groups/policy", put(replace_radius_group_policy))
-        .add("/radius/groups/{groupname}/policy", delete(delete_radius_group_policy))
+        .add(
+            "/radius/groups/{groupname}/policy",
+            delete(delete_radius_group_policy),
+        )
         .add("/radius/sessions/active", get(active_sessions))
         .add("/radius/accounting/summary", get(accounting_summary))
 }
