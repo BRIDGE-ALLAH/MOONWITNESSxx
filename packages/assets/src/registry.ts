@@ -66,6 +66,14 @@ export const assetRegistry = {
     width: 128, height: 128, mimeType: "image/svg+xml",
     src: new URL("../assets/brand/moonwitness-symbol-small.svg", import.meta.url).href,
   },
+  "brand.monogram": {
+    id: "brand.monogram", category: "brand",
+    description: "Original outlined MW monogram for compact MOONWITNESS identity placements.",
+    alt: "MOONWITNESS MW monogram.", decorative: false, theme: "universal",
+    source: repositoryAsset, license: internalLicense, tags: ["logo", "monogram", "master-brand", "original-lettering"],
+    width: 128, height: 128, mimeType: "image/svg+xml",
+    src: new URL("../assets/brand/moonwitness-monogram.svg", import.meta.url).href,
+  },
   "brand.archive-seal": {
     id: "brand.archive-seal", category: "brand",
     description: "Circular archive seal for approved archival and editorial contexts.",
