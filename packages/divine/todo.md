@@ -476,11 +476,11 @@ Adoption policy:
 - [x] DIV-P3-008 Support scoped ontology profiles by tradition, community, school, period, research method or project.
 - [x] DIV-P3-009 Define mapping relation vocabulary: exact, close, broader, narrower, partial, related, disputed, none.
 - [x] DIV-P3-010 Require evidence/method/reviewer for promoted cross-ontology mappings.
-- [ ] DIV-P3-011 Implement candidate generation interface without automatic identity/equivalence promotion.
+- [x] DIV-P3-011 Implement candidate generation interface without automatic identity/equivalence promotion.
 - [x] DIV-P3-012 Implement ontology validation and unresolved-reference reports.
 - [x] DIV-P3-013 Implement ontology diff and impact analysis.
-- [ ] DIV-P3-014 Implement deprecation/replacement and migration plans.
-- [ ] DIV-P3-015 Add SKOS export/import adapter with mapping fidelity report.
+- [x] DIV-P3-014 Implement deprecation/replacement and migration plans.
+- [x] DIV-P3-015 Add SKOS export/import adapter with mapping fidelity report.
 - [x] DIV-P3-016 Add tests for multilingual concepts, ambiguous labels, conflicting mappings and deprecated concepts.
 
 ### Acceptance
@@ -896,9 +896,9 @@ Phases may be parallelized only when their dependency contracts are stable. Do n
 - [x] Phase 0 architecture baseline and ADRs committed; repository-audit re-read, non-Corpus adapter ports and license governance follow-ups remain.
 - [x] Phase 1 foundational core, addon registry, lifecycle and tests implemented; example/clean-runtime proof and CI verification remain.
 - [x] Phase 2 read-only Corpus adapter and migration runbook implemented; profile-specific mapping, round-trip tests and stale-projection invalidation remain.
-- [x] Phase 3 ontology intelligence core implemented (candidate generator and full standards interchange deferred).
-- [x] Phase 4 scoped revelation/theology research profiles implemented.
-- [x] Phase 5 SIDRAT epistemic boundary engine implemented.
+- [x] Phase 3 ontology intelligence core implemented, including candidate-only generation, deprecation plans, ontology diffs and a scoped SKOS subset adapter with fidelity reports; SHACL validation remains deferred.
+- [x] Phase 4 scoped revelation/theology research profiles implemented with attributed Corpus assertion/evidence/provenance references and bounded expert-review authority.
+- [x] Phase 5 SIDRAT epistemic boundary engine implemented with explicit knowledge states, method-bound sufficiency, non-widening scope rules and hard abstention for metaphysical/normative queries.
 - [ ] Remaining profile-specific and external interoperability tasks.
 
-**Execution update (2026-11-08):** Phase 0–2 merged to `main`; Phases 3–5 foundational domain modules are implemented on `feat/divine-phases-3-5`, pending CI/review. Not a production release. The full Corpus repository has NOT been migrated: this connection has read-only access. See `docs/CORPUS-MIGRATION.md`.
+**Execution update (2026-11-08):** Phase 0–2 merged to `main`; Phases 3–5 domain modules are implemented on `feat/divine-phases-3-5`; CI verification and review are pending. P5 property-based tests and external standards conformance remain open. Not a production release. The full Corpus repository has NOT been migrated: this connection has read-only access. See `docs/CORPUS-MIGRATION.md`.
