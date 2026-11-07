@@ -92,7 +92,7 @@ test('opportunity routes fail closed when operator auth is not configured', asyn
 })
 
 test('opportunity routes require a valid operator token', async () => {
-  const app = createApp({ databasePool: fakePool(), logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
+  const app = await createApp({ databasePool: fakePool(), logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
   try {
     const missing = await app.inject({ method: 'GET', url: '/api/v1/opportunities' })
     const invalid = await app.inject({ method: 'GET', url: '/api/v1/opportunities', headers: { 'x-arsy-operator-token': 'wrong' } })
@@ -104,7 +104,7 @@ test('opportunity routes require a valid operator token', async () => {
 })
 
 test('authenticated operator can create and list a persisted opportunity', async () => {
-  const app = createApp({ databasePool: fakePool(), logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
+  const app = await createApp({ databasePool: fakePool(), logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
   try {
     const created = await app.inject({
       method: 'POST',
