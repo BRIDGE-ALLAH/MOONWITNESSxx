@@ -5,7 +5,7 @@ import { createApp } from './app.ts'
 export { createApp }
 
 export function getListenConfig(
-  env: NodeJS.ProcessEnv = process.env,
+  env: NodeJS.ProcessEnv = process.env
 ): { host: string; port: number } {
   const port = Number(env.PORT ?? '3001')
   if (!Number.isInteger(port) || port < 1 || port > 65_535) {
