@@ -1,6 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { assetRegistry } from "../src/registry.ts";
+import { inspectSvgSafety } from "../src/svg-safety.ts";
 
 const MAX_SVG_BYTES = 100 * 1024;
 const errors = [];
@@ -50,11 +51,8 @@ for (const [key, asset] of Object.entries(assetRegistry)) {
         errors.push(asset.id + ": SVG viewBox ratio " + sourceRatio.toFixed(4) + " does not match registry ratio " + registryRatio.toFixed(4));
       }
     }
-    if (/<script\b|<foreignObject\b|\bon[a-z]+\s*=|javascript:/i.test(svg)) {
-      errors.push(`${asset.id}: unsafe SVG markup detected`);
-    }
-    if (/(?:href|xlink:href)\s*=\s*["']https?:/i.test(svg)) {
-      errors.push(`${asset.id}: external SVG references are not allowed`);
+    for (const issue of inspectSvgSafety(svg)) {
+      errors.push(`${asset.id}: ${issue}`);
     }
   } catch (error) {
     errors.push(`${asset.id}: unable to read asset (${error.message})`);
