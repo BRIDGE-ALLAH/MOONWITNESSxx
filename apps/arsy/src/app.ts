@@ -8,11 +8,14 @@ import { registerOpportunityRoutes } from './opportunities/routes.ts'
 import { registerProductRoutes } from './products/routes.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { registerFinancialRoutes } from './finance/routes.ts'
+import { registerAssetRoutes } from './assets/routes.ts'
+import type { AssetStorage } from './assets/storage.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
   logger?: boolean
   env?: NodeJS.ProcessEnv
+  assetStorage?: AssetStorage
 }
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -66,6 +69,7 @@ export function createApp(options: CreateAppOptions = {}) {
     registerOpportunityRoutes(instance, databasePool, env)
     registerProductRoutes(instance, databasePool, env)
     registerFinancialRoutes(instance, databasePool, env)
+    registerAssetRoutes(instance, databasePool, env, options.assetStorage)
   })
 
   return app
