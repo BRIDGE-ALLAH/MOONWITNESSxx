@@ -53,7 +53,7 @@
 - [ ] Full workspace type-check/build only after package scripts/entrypoints are real.
 - [ ] Review diff, secrets, changed-file scope; record CI SHA/URL.
 
-**Status:** implementation started; lockfile refresh, local execution, CI verification, and admin rules remain open.
+**Status:** implementation started. First CI run exposed two baseline issues: lockfile drift (apps/arsy adds pg) and planning-only packages/assets folder without a manifest. The audit now treats a TODO-only folder as planning material and pre-indexes workspace package names. Lockfile refresh, rerun, local execution, and admin rules remain open.
 
 ## Phase 1 — Governance authority and rule contracts
 **Goal:** one authority; every hard rule has an owner and enforcement path. **Dependencies:** Phase 0 identity/commands. **Exit:** owner-reviewed contracts and rule-to-enforcement map.
