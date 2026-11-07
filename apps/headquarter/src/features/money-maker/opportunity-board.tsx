@@ -55,7 +55,8 @@ export function OpportunityBoard() {
   async function createOpportunity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSaving(true); setError(''); setMessage('')
-    const data = new FormData(event.currentTarget)
+    const form = event.currentTarget
+    const data = new FormData(form)
     const evidenceId = 'operator-source-1'
     const scoreValues: Record<string, number> = {}
     const scoreDetails: Record<string, { rationale: string; confidence: string; evidenceIds: string[] }> = {}
