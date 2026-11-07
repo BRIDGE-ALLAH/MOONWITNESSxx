@@ -99,6 +99,30 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.ok(product)
     assert.equal(product.version, 1)
     assert.equal(product.lifecycleState, 'brief')
+
+    const otherOwnerId = randomUUID()
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO arsy_products
+          (id, owner_id, opportunity_id, title, product_family, lifecycle_state, created_by, updated_by)
+         VALUES ($1, $2, $3, 'Cross-owner product', 'digital-utility', 'brief', $2, $2)`,
+        [randomUUID(), otherOwnerId, created.id],
+      ),
+      (error) => error.code === '23503',
+      'database must reject linking a product to another operator opportunity',
+    )
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO arsy_financial_events
+          (id, owner_id, product_id, event_type, amount_minor, currency, occurred_at,
+           source, idempotency_key, request_hash, reconciliation_state, created_by)
+         VALUES ($1, $2, $3, 'gross-receipt', 100, 'IDR', now(),
+           'tenant isolation test', $4, $5, 'pending', $2)`,
+        [randomUUID(), otherOwnerId, product.id, `cross-owner-${randomUUID()}`, 'a'.repeat(64)],
+      ),
+      (error) => error.code === '23503',
+      'database must reject financial events linked to another operator product',
+    )
     assert.equal(await products.createFromOpportunity(ownerId, ownerId, created.id, ['Duplicate must be blocked']), null)
 
     const finance = new FinancialRepository(pool)
