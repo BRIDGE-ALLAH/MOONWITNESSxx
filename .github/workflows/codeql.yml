@@ -39,6 +39,6 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: codeql-sarif
-          path: results/javascript.sarif
+          path: ../results/javascript.sarif
           if-no-files-found: warn
           retention-days: 3
