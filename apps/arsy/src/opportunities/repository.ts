@@ -255,7 +255,7 @@ export class OpportunityRepository {
     const result = await this.db.query(
       `WITH changed AS (
        UPDATE arsy_opportunities SET decision = $3, decision_rationale = $4,
-         updated_at = now(), updated_by = $5
+         version = version + 1, updated_at = now(), updated_by = $5
        WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
        RETURNING *
      ), audited AS (
