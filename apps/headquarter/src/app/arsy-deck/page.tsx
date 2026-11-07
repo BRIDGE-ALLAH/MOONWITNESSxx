@@ -45,7 +45,7 @@ const aftershockInsights = [
 
 export default function ARSYDeck() {
   return (
-    <main className="min-h-screen bg-obsidian p-8 text-paper-bone">
+    <main className="theme-observatory min-h-screen bg-background p-8 text-foreground">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8 border-b border-signal-gold/30 pb-8">
           <Badge variant="outline">MOONWITNESS OBSERVATORY · DEMO DATA</Badge>
