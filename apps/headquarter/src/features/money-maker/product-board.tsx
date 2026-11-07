@@ -1,6 +1,7 @@
 'use client'
 
 import { OperatorLogoutButton } from './operator-logout-button'
+import { AssetManager } from './asset-manager'
 import { useCallback, useEffect, useState } from 'react'
 
 type Opportunity = {

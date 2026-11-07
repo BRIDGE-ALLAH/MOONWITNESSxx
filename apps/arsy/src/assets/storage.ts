@@ -89,7 +89,6 @@ export class S3CompatibleAssetStorage implements AssetStorageAdapter {
         ...(this.config.sessionToken ? { 'x-amz-security-token': this.config.sessionToken } : {}),
       },
       ...(method === 'PUT' ? { body: content } : {}),
-      cache: 'no-store',
       redirect: 'error',
       signal: AbortSignal.timeout(15_000),
     })
