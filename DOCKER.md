@@ -19,10 +19,7 @@ docker-compose up -d
 # View logs
 docker-compose logs -f
 
-# Stop services
-docker-compose down
-
-# Stop containers while preserving named database/cache volumes
+# Stop containers without deleting named database/cache volumes
 docker-compose down
 ```
 
