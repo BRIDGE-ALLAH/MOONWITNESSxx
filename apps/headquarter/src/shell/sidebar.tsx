@@ -47,7 +47,7 @@ export function Sidebar({ isOpen, demoLabel, onNavigate }: SidebarProps) {
                 )
               })}
             </ul>
-          </nav>
+          </section>
         ))}
       </nav>
     </aside>
