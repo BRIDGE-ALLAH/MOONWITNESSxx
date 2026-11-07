@@ -1,0 +1,24 @@
+# Git and local tooling
+.git
+.github
+.husky
+.plan
+.artifacts
+reports
+
+# Dependencies and generated output
+node_modules
+**/node_modules
+.next
+**/.next
+.turbo
+dist
+**/dist
+coverage
+**/coverage
+
+# Local secrets/configuration
+.env
+.env.*
+!.env.example
+*.local
