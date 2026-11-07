@@ -29,7 +29,8 @@
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist",
     "smoke-test": "pnpm run build && node ./scripts/smoke-test.mjs",
-    "test": "pnpm run smoke-test"
+    "test": "pnpm run theme:check && pnpm run smoke-test",
+    "theme:check": "node ./scripts/check-theme-tokens.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.2",
