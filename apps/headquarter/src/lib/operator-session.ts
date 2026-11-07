@@ -13,6 +13,7 @@ export interface OperatorSessionConfig {
   password: string
   secret: string
   publicOrigin: string
+  trustedProxyHops: number
 }
 
 export function getOperatorSessionConfig(env: NodeJS.ProcessEnv = process.env): OperatorSessionConfig | null {
@@ -20,9 +21,14 @@ export function getOperatorSessionConfig(env: NodeJS.ProcessEnv = process.env): 
   const password = env.HEADQUARTER_OPERATOR_PASSWORD?.trim()
   const secret = env.HEADQUARTER_SESSION_SECRET?.trim()
   const publicOrigin = env.HEADQUARTER_PUBLIC_ORIGIN?.trim()
+  const trustedProxyHops = env.HEADQUARTER_TRUSTED_PROXY_HOPS?.trim()
+    ? Number(env.HEADQUARTER_TRUSTED_PROXY_HOPS)
+    : 0
 
   if (!operatorId || operatorId.length > 128 || !password || password.length < 16 ||
-      !secret || Buffer.byteLength(secret, 'utf8') < 32 || !publicOrigin) return null
+      !secret || Buffer.byteLength(secret, 'utf8') < 32 || !publicOrigin ||
+      !Number.isSafeInteger(trustedProxyHops) || trustedProxyHops < 0 || trustedProxyHops > 8 ||
+      (env.NODE_ENV === 'production' && trustedProxyHops < 1)) return null
 
   try {
     const parsedOrigin = new URL(publicOrigin)
@@ -32,7 +38,7 @@ export function getOperatorSessionConfig(env: NodeJS.ProcessEnv = process.env): 
     return null
   }
 
-  return { operatorId, password, secret, publicOrigin }
+  return { operatorId, password, secret, publicOrigin, trustedProxyHops }
 }
 
 function signature(payload: string, secret: string): Buffer {
