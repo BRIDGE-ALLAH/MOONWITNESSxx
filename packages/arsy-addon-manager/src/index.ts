@@ -125,6 +125,29 @@ function orderModules(modules: readonly ModuleManifest[]): ModuleManifest[] {
   for (const module of [...modules].sort((a, b) => a.id.localeCompare(b.id))) visit(module, []);
   return ordered;
 }
+function orderAddons(candidates: readonly AddonCandidate[]): AddonCandidate[] {
+  const byId = new Map(candidates.map((candidate) => [candidate.manifest.id, candidate]));
+  if (byId.size !== candidates.length) throw new Error("Duplicate addon identity prevents deterministic planning.");
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const ordered: AddonCandidate[] = [];
+  const visit = (candidate: AddonCandidate, trail: readonly string[]) => {
+    const id = candidate.manifest.id;
+    if (visited.has(id)) return;
+    if (visiting.has(id)) throw new Error("Addon dependency cycle: " + [...trail, id].join(" -> "));
+    visiting.add(id);
+    for (const dep of [...(candidate.manifest.dependencies ?? [])].sort((a, b) => a.addon.localeCompare(b.addon))) {
+      const target = byId.get(dep.addon);
+      if (target) visit(target, [...trail, id]);
+    }
+    visiting.delete(id);
+    visited.add(id);
+    ordered.push(candidate);
+  };
+  for (const candidate of [...candidates].sort((a, b) => a.manifest.id.localeCompare(b.manifest.id))) visit(candidate, []);
+  return ordered;
+}
+
 function manifestIssues(candidate: AddonCandidate): string[] {
   const { manifest, modules, trust } = candidate;
   const issues: string[] = [];
@@ -158,7 +181,13 @@ export class AddonInstallPlanner {
       if (candidateById.has(id)) blocked.push({ addon: id, reason: "Duplicate addon candidate." });
       else candidateById.set(id, candidate);
     }
-    for (const candidate of candidates) {
+    let orderedCandidates: AddonCandidate[];
+    try { orderedCandidates = orderAddons([...candidateById.values()]); }
+    catch (error) {
+      for (const candidate of candidates) blocked.push({ addon: candidate.manifest.id, reason: error instanceof Error ? error.message : String(error) });
+      orderedCandidates = [];
+    }
+    for (const candidate of orderedCandidates) {
       const manifest = candidate.manifest;
       const issues = manifestIssues(candidate);
       if (issues.length) { blocked.push({ addon: manifest.id, reason: issues.join(" ") }); continue; }
@@ -188,7 +217,6 @@ export class AddonInstallPlanner {
       }));
     }
     const requiredApprovals = [...new Set(operations.flatMap((operation) => operation.capabilities.approvalRequired))].sort();
-    operations.sort((a, b) => a.addon.localeCompare(b.addon));
     blocked.sort((a, b) => a.addon.localeCompare(b.addon));
     const payload = JSON.stringify({
       operations: operations.map(({ addon, fromVersion, toVersion, action, moduleOrder, capabilities, trustDigest }) =>
