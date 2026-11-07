@@ -204,7 +204,7 @@ export class AddonInstallPlanner {
       const issues = manifestIssues(candidate, this.#options.runtimeVersions);
       if (issues.length) { block(manifest.id, issues.join(" ")); continue; }
       const conflicts = (manifest.conflicts ?? []).filter((id) => candidateById.has(id) || installedById.has(id));
-      if (conflicts.length) { blocked.push({ addon: manifest.id, reason: "Conflicts with " + conflicts.join(", ") + "."); continue; }
+      if (conflicts.length) { block(manifest.id, "Conflicts with " + conflicts.join(", ") + "."); continue; }
       let dependencyFailure = false;
       for (const dep of manifest.dependencies ?? []) {
         if (blockedIds.has(dep.addon)) { block(manifest.id, "Dependency " + dep.addon + " is blocked."); dependencyFailure = true; continue; }
