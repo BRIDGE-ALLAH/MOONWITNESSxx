@@ -8,12 +8,12 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-moonwitness}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=en_US.UTF-8'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - '${POSTGRES_PORT:-5432}:5432'
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-moonwitness}']
       interval: 10s
@@ -28,7 +28,7 @@ services:
     image: redis:7-alpine
     container_name: moonwitness-redis
     ports:
-      - '${REDIS_PORT:-6379}:6379'
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
     volumes:
       - redis_data:/data
     healthcheck:
@@ -49,8 +49,9 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${ARSY_PORT:-3001}
+      HOST: 0.0.0.0
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-moonwitness}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-moonwitness}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     ports:
       - '${ARSY_PORT:-3001}:3001'
@@ -67,7 +68,7 @@ services:
       - moonwitness
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3001/']
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3001/health/ready').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
