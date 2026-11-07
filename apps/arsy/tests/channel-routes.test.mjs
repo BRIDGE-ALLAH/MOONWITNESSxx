@@ -122,7 +122,7 @@ test('C1 channel registration requires policy, account and payout evidence', asy
       headers: { 'x-arsy-operator-token': token },
     })
     assert.equal(evidenceResponse.statusCode, 200)
-    assert.equal(evidenceResponse.json().data.length, 3)
+    assert.equal(evidenceResponse.json().data.length, 4)
   } finally { await app.close() }
 })
 
@@ -148,7 +148,7 @@ test('channel optimistic updates reject stale revisions', async () => {
     const response = await app.inject({
       method: 'PATCH', url: `/api/v1/channels/${channelId}`,
       headers: { 'x-arsy-operator-token': token },
-      payload: { ...body, expectedRevision: 1 },
+      payload: { ...body, evidence: [], expectedRevision: 1 },
     })
     assert.equal(response.statusCode, 409)
   } finally { await app.close() }
