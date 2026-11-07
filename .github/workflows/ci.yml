@@ -152,6 +152,21 @@ jobs:
           node --input-type=module -e "import {writeFileSync,readFileSync} from 'node:fs'; const escrow=JSON.parse(readFileSync('/tmp/moonwitness-escrow.json')); const input={commitSha:'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',objectives:[{id:'release',acceptanceCriteria:[{id:'tests'}]}],observations:[{objectiveId:'release',criterionId:'tests',status:'passed',verified:true,evidenceId:'ci',recordedAt:new Date().toISOString()}],interfaceEscrow:escrow,agents:[{id:'api',resources:{ports:[3101]}},{id:'web',resources:{ports:[3102]}}],checks:['repository-integrity','asset-integrity','developer-experience','full-workspace-quality'].map(name=>({name,status:'success',runId:1})),evidence:[{id:'ci',sha256:'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'}],rollback:{strategy:'revert',owner:'release-agent',verified:true}}; writeFileSync('/tmp/moonwitness-merge.json',JSON.stringify(input));"
           pnpm devx merge-proof --input=/tmp/moonwitness-merge.json
 
+      - name: Smoke test adaptive swarm topology
+        run: |
+          printf '%s\n' '{"agents":[{"id":"api","provides":["User.v2"]},{"id":"web","consumes":["User.v2"]}]}' > /tmp/moonwitness-swarm.json
+          pnpm devx swarm-plan --input=/tmp/moonwitness-swarm.json
+
+      - name: Smoke test autonomy budget
+        run: |
+          printf '%s\n' '{"risk":"high","signals":{"collisions":1}}' > /tmp/moonwitness-autonomy.json
+          pnpm devx autonomy-budget --input=/tmp/moonwitness-autonomy.json
+
+      - name: Smoke test incident replay compiler
+        run: |
+          printf '%s\n' '{"incident":{"id":"ci-incident","selectedOperationIds":["notify"],"operations":[{"id":"write","action":"write","invariants":["record-exists"]},{"id":"notify","action":"webhook","dependsOn":["write"],"invariants":["single-delivery"]}]}}' > /tmp/moonwitness-incident.json
+          pnpm devx incident-compile --input=/tmp/moonwitness-incident.json
+
   asset-integrity:
     name: Asset integrity
     runs-on: ubuntu-latest
