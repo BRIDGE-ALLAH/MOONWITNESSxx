@@ -17,7 +17,8 @@
 - [x] M4 neutral empty-search and recoverable-error illustrations implemented; character library remains blocked on approved original character artwork.
 - [x] M5 local integrity validation, registry tests, isolated CI validation, and package/UI/Headquarter type-checks implemented and passing; raster optimization and external license confirmation remain outstanding.
 - [x] M6 Headquarter and shared UI integration implemented; Headquarter production bundling passes. ARSY is a Fastify backend service in this repository and is intentionally not coupled to a visual asset package.
-- [ ] Run `pnpm install --frozen-lockfile`, package tests/type-check, Headquarter type-check, and production build in a full checkout.
+- [x] Run focused asset/UI/Headquarter verification in GitHub Actions: package type-check, UI type-check, Headquarter type-check, production bundle, registry validation, and tests all pass.
+- [ ] Restore the repository-wide CI gate: its existing audit step stops on the pre-existing `apps/arsy` `pg` lockfile mismatch and root `lockfile:check` script invocation; this is outside the asset package implementation.
 
 ## 1. Product Intent
 
