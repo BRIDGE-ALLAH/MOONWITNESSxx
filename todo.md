@@ -297,7 +297,7 @@ Create only packages with real ownership and entrypoints. Avoid empty placeholde
 
 ### 5.1 Environment (`env`)
 
-- [ ] Implement immutable/scoped `Environment`.
+- [~] Implement immutable/scoped `Environment` with server-trusted context snapshot and guarded derivation; UnitOfWork/permission service integration remains.
 - [ ] Include transaction/unit-of-work handle.
 - [ ] Include authenticated principal/service identity.
 - [ ] Include trusted workspace/tenant context.
@@ -306,13 +306,13 @@ Create only packages with real ownership and entrypoints. Avoid empty placeholde
 - [ ] Include permission evaluator and field-policy context.
 - [ ] Include request/trace/correlation metadata.
 - [ ] Include access to approved ARSY services/providers through capability interfaces.
-- [ ] Implement safe environment derivation (for example with user/context/tenant) without mutating the parent environment.
-- [ ] Prevent user-controlled context from escalating principal, tenant, company, or permissions.
+- [~] Implement safe locale/timezone/company derivation without changing principal, tenant or allowed-company grants.
+- [~] Prevent principal, tenant and allowed-company escalation through `env.derive()`; trusted construction and permission-provider enforcement remain.
 - [ ] Ensure nested environment changes cannot silently escape transaction boundaries.
 
 ### 5.2 Recordset
 
-- [ ] Implement typed recordset identity: model + environment + ordered record identities.
+- [~] Implement typed recordset identity: model + environment + ordered identities; CRUD identity map and policy-aware loader remain.
 - [ ] Define stable behavior for empty, one-record, and multi-record recordsets.
 - [ ] Implement iteration and explicit conversion to plain DTOs.
 - [ ] Implement field reads and writes with access checks.
@@ -892,3 +892,17 @@ Use these labels consistently when updating this file:
 - [ ] Complete Phase 1 database adapter and ARSY Core integration gates.
 
 See `docs/27-phase-2-model-field-engine.md`. Source code has been authored through GitHub operations; no local execution or CI result is claimed.
+
+
+## Phase 4 execution log — Environment and Recordset foundation
+
+- [x] Add immutable Environment context and controlled derivation.
+- [x] Bind Environment to registry, transaction handle and model collection.
+- [x] Add lazy Recordset with stable empty/first/multiple behavior and async iteration.
+- [x] Reject unknown model names, duplicate/empty IDs and use after transaction closure.
+- [x] Add runtime test source for environment isolation and recordset lifecycle.
+- [ ] Run test/typecheck/lint/format gates in clean CI.
+- [ ] Integrate an authorized loader with UnitOfWork and real PostgreSQL adapter.
+- [ ] Implement ACL, record rules, CRUD, domain compiler and identity map.
+
+See `docs/28-phase-4-environment-recordset.md`. This is an initial runtime slice, not a complete CRUD engine.
