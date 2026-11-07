@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "description": "RIOTWORKS shared TypeScript configuration and utility types",
-  "private": true,
   "scripts": {
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "pnpm --filter @riotworks/lint exec eslint ../types/src --config eslint.config.mjs --max-warnings 0"
   },
   "dependencies": {
     "zod": "^3.23.8"
