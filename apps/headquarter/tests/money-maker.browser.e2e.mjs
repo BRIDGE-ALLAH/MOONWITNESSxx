@@ -228,7 +228,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await page.getByRole('heading', { name: 'AFTERSHOCK' }).waitFor()
     await page.getByText('Net contribution · before tax reserve and payouts', { exact: true }).waitFor()
     await page.getByText('Tax reserve · verified', { exact: true }).waitFor()
-    await page.getByText('5000', { exact: true }).waitFor()
+    await page.getByText('5000', { exact: true }).first().waitFor()
     await page.getByText('300', { exact: true }).waitFor()
 
     const anonymousPage = await browser.newPage()
