@@ -335,3 +335,54 @@ These are documentation/governance corrections only. No application runtime, pac
 ## 11. Audit limitations
 
 This audit uses the tracked GitHub tree and file contents at the stated commit. It does not have the user's local uncommitted files, secrets, runtime environment, or CI execution results. If the local machine has additional unpushed changes, push them before asking for a new audit. Never infer a successful build from the presence of package manifests or lockfiles.
+
+
+---
+
+## 12. Remote revalidation addendum — 2026-11-08
+
+**Verified default branch:** `main`  
+**Verified HEAD:** `5a996dd546f06591405569f9cf0ca19f66f8f5ee`  
+**HEAD message:** Merge PR #71: objective control plane, interface escrow and proof-carrying merge.
+
+This addendum supersedes the older repository/PR counts above wherever they conflict. The earlier sections remain historical audit evidence for their stated commit.
+
+### 12.1 Confirmed mainline deliveries
+
+- PR #56 — Repository Doctor, Change Planner and Agent Context Compiler: merged.
+- PR #61 — Repository Flight Recorder, Parallel Collision Forecast and Context Leases: merged.
+- PR #66 — Objective Delta Watchdog, Interface Treaties and Resource Passports: merged.
+- PR #72 — Divine Phases 12–14: merged.
+- PR #74 — Divine Phases 15–17: merged.
+- PR #50 — consolidated governance/installer/runtime phases 0–5: merged.
+- PR #49 is closed as superseded; canonical ARSY Phase 18–20 hardening is tracked in PR #79.
+
+### 12.2 Active integration queue
+
+- PR #71 — DX Phases 30–32; draft and stacked on the now-merged #66 branch. Re-target to main and revalidate the unique diff before review.
+- PR #59 — Headquarter Sentinel Fabric Phases 14–16: merged at `bc60664e6f94e633aa645274e4ba9f8189940aba`; Repository CI and CodeQL passed.
+- PR #55 — closed/deferred because its standalone package-graph CLI overlaps the merged DevX planner and Headquarter blast-radius kernel; revisit only as a measured DevX subcommand gap.
+- PR #53 — closed as superseded after the canonical DevX doctor, planner, format check and CI feedback loop entered main.
+- PR #49 — closed as superseded; its alternative Phase 18–20 numbering conflicted with the canonical ARSY roadmap.
+- Earlier ARSY ORM/database PRs (#15–#41) are still represented as open stacked PRs. They must be evaluated as a dependency chain, not merged individually into main out of order.
+
+### 12.3 Current quality evidence
+
+- Main HEAD `5a996dd546f06591405569f9cf0ca19f66f8f5ee`: Repository CI and CodeQL passed.
+- PR #80's first CI run found an implicit-any type error in runtime validation of untrusted parent references. The callback is now explicitly typed `unknown`; refreshed CI and CodeQL are pending.
+- PR #79's prior Repository CI and CodeQL passed; its branch was refreshed against the latest main and requires revalidation.
+- PR #78's CI and CodeQL are running. No queued or in-progress result is treated as a pass.
+
+### 12.4 New implementation under review
+
+PR #80, `feat/divine-phases-18-20-provenance-assurance-v2`, adds:
+- transitive source-lineage closure and conservative independence classification;
+- a deterministic provenance red-team mutation suite;
+- a claim/scope/method/Corpus-release-bound assurance capsule;
+- Divine tests and an explicit CI step to execute the Divine test suite.
+
+The branch is not merged. Its implementation status remains pending refreshed CI and review. SHA-256 fingerprints are integrity checks only, not signatures, trusted timestamps, source-authenticity proofs, or authorization tokens.
+
+### 12.5 Execution correction
+
+PR #56, #61, #66, #71 and #59 are merged. PR #49, #53 and #55 are closed as superseded/deferred. Canonical ARSY hardening is tracked in #79; Divine provenance assurance is tracked in #80; the new ARSY trust-boundary Phases 33–35 are tracked in #78. Do not use the older PR snapshot as current state.
