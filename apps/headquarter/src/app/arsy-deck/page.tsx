@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@riotworks/ui'
+import { Badge, Card, CardHeader, CardTitle, CardContent } from '@riotworks/ui'
 
 const metrics = [
   { label: 'Active Products', value: 12, subtitle: 'Live now', icon: '📦' },
