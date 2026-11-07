@@ -25,10 +25,16 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-                node-version: 22
+          node-version: 22
 
       - name: Generate audit report
         run: node scripts/repo-audit.mjs --write-report
+
+      - name: Run governance checks
+        run: node scripts/governance.mjs check
+
+      - name: Generate governance coverage report
+        run: node scripts/governance.mjs report > .artifacts/governance-report.json
 
       - name: Run automation tests
         run: node --test

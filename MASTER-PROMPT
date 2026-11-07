@@ -1,13 +1,15 @@
 # MASTER PROMPT v3.4 — MOONWITNESS // RIOTWORKS
 ## Full-Stack Headquarter + ARSY + Modular ORM/Addons
 
-**Specification baseline:** README.md and docs/01–24; docs/23 is the current-state and execution-order authority, while docs/24 governs repository engineering and automation  
+**Specification baseline:** README.md and docs/01–24; docs/23 is the current-state/execution-order authority, governance/README.md is canonical for governance precedence and contracts, and docs/24 contains detailed repository automation guidance  
 **Primary outcome:** Build a modular monorepo with apps/headquarter, apps/arsy, and the packages defined below.  
 **Product tagline:** MAKE WORK THAT OUTLIVES THE FEED.
 
 ---
 
 # 1. Mission and execution discipline
+
+Before execution, read `governance/README.md` and the applicable contract. This prompt governs product mission and execution behavior only; it cannot override security, governance contracts, or canonical architecture decisions. Use docs/23 for current-state truth and docs/24 for detailed repository automation guidance. Record conflicting sources for explicit reconciliation.
 
 Build RIOTWORKS as the creative commerce business division of MOONWITNESS.
 

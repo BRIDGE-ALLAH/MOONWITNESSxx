@@ -3,6 +3,10 @@ name: Refresh pnpm lockfile
 on:
   workflow_dispatch:
 
+concurrency:
+  group: refresh-pnpm-lockfile
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write

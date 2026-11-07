@@ -8,6 +8,10 @@ on:
       - synchronize
       - edited
 
+concurrency:
+  group: pr-labeler-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write

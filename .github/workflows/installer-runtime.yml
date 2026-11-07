@@ -1,0 +1,74 @@
+name: Installer and Runtime Safety
+
+on:
+  pull_request:
+    paths:
+      - 'install.sh'
+      - 'install.ps1'
+      - 'scripts/moonwitness.mjs'
+      - 'scripts/moonwitness.test.mjs'
+      - 'scripts/runtime.mjs'
+      - 'scripts/runtime.test.mjs'
+      - 'apps/arsy/src/**'
+      - 'docker-compose.yml'
+      - '.env.example'
+      - 'package.json'
+      - '.github/workflows/installer-runtime.yml'
+  push:
+    branches:
+      - main
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+    paths:
+      - 'install.sh'
+      - 'install.ps1'
+      - 'scripts/moonwitness.mjs'
+      - 'scripts/moonwitness.test.mjs'
+      - 'scripts/runtime.mjs'
+      - 'scripts/runtime.test.mjs'
+      - 'apps/arsy/src/**'
+      - 'docker-compose.yml'
+      - '.env.example'
+      - 'package.json'
+      - '.github/workflows/installer-runtime.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: installer-runtime-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cross-platform:
+    name: Node installer/runtime tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        run: node --test scripts/moonwitness.test.mjs scripts/runtime.test.mjs
+      - name: Installer dry run
+        run: node scripts/moonwitness.mjs install --profile minimal --dry-run
+      - name: POSIX launcher syntax
+        if: runner.os != 'Windows'
+        run: sh -n install.sh
+      - name: PowerShell launcher syntax
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path $PWD 'install.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) { throw ($errors | Out-String) }

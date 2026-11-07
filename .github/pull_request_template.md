@@ -1,24 +1,46 @@
-## Summary
+## Problem and intended outcome
 
-<!-- What changed and why? -->
+<!-- What problem does this change solve? Link the issue or decision record. -->
 
-## Scope and ownership
+## Ownership and boundaries
 
-- [ ] Changes stay within the canonical app/package owner.
-- [ ] No duplicate service, queue, database, or schema authority was introduced.
-- [ ] Any public API or data-model change is documented.
+- Owning app/package:
+- Contract or architecture boundary affected:
+- Cross-package/API impact:
 
-## Validation
+## Acceptance criteria
 
-- [ ] `pnpm run validate:repo`
-- [ ] `pnpm run type-check` (when affected packages support it)
-- [ ] `pnpm run build` (when affected apps/packages support it)
-- [ ] Manual verification is described below when automated coverage is not available.
+- [ ] Observable acceptance criteria are stated.
+- [ ] No unrelated scope is included.
 
-## Risk and recovery
+## Validation evidence
 
-<!-- Migration, data-loss, security, rollback, or deployment notes. Write "None" when not applicable. -->
+- [ ] Relevant tests added/updated.
+- [ ] `pnpm run check:repo`
+- [ ] `pnpm run format:check`
+- [ ] `pnpm test`
+- [ ] Relevant package type-check/build completed.
+- [ ] CI results linked; skipped checks are explicitly identified.
 
-## Linked work
+## Security, data, and privacy
 
-<!-- Closes #123 -->
+- [ ] Permissions and trust boundaries reviewed.
+- [ ] No secrets or sensitive data added to source, logs, fixtures, or artifacts.
+- [ ] Data retention, provenance, and audit behavior considered.
+- [ ] External side effects are idempotent or receipt-protected.
+
+## Migration and recovery
+
+- [ ] Migration/deployment impact described, or marked not applicable.
+- [ ] Rollback/forward-fix and recovery path documented for risky changes.
+- [ ] No production migration, destructive action, or deployment is hidden in setup scripts.
+
+## Governance
+
+- [ ] Canonical contract/docs updated where required.
+- [ ] Exceptions name approver, reason, scope, compensating control, and expiry.
+- [ ] Human/administrator gates are not represented as automated passes.
+
+## Reviewer notes
+
+<!-- Call out trade-offs, known gaps, and decisions needed. -->

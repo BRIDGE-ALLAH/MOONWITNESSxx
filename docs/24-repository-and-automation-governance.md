@@ -3,7 +3,8 @@
 **Status:** Engineering baseline and operational contract  
 **Canonical repository:** `BRIDGE-ALLAH/MOONWITNESS`  
 **Supersedes:** older hook, local issue-creation, and ad hoc weekly-detection behavior  
-**Related authority:** [docs/23 — Repository Audit and Current Execution Plan](./23-repository-audit-and-current-execution-plan.md)
+**Canonical governance index:** [governance/README.md](../governance/README.md)  
+**Current-state authority:** [docs/23 — Repository Audit and Current Execution Plan](./23-repository-audit-and-current-execution-plan.md)
 
 ## 1. Why this document exists
 
@@ -32,12 +33,12 @@ This document gives every responsibility one owner. Automation must be observabl
 
 ### Canonical workspace
 
-| Path | Ownership |
-|---|---|
-| `apps/headquarter` | Human-facing web application |
-| `apps/arsy` | Backend HTTP API and orchestration runtime |
-| `packages/*` | Reusable contracts, libraries, adapters, and addon modules |
-| `services/*` | Legacy prototypes, excluded from pnpm workspace and runtime ownership |
+| Path               | Ownership                                                             |
+| ------------------ | --------------------------------------------------------------------- |
+| `apps/headquarter` | Human-facing web application                                          |
+| `apps/arsy`        | Backend HTTP API and orchestration runtime                            |
+| `packages/*`       | Reusable contracts, libraries, adapters, and addon modules            |
+| `services/*`       | Legacy prototypes, excluded from pnpm workspace and runtime ownership |
 
 The pnpm workspace intentionally includes only `apps/*` and `packages/*`. Do not add `services/*` to the workspace as a shortcut. First identify unique behavior, move it to the canonical owner, add tests, and then retire/archive the duplicate implementation.
 
@@ -53,19 +54,19 @@ The pnpm workspace intentionally includes only `apps/*` and `packages/*`. Do not
 
 ## 3. Toolchain and package-manager policy
 
-| Tool | Baseline |
-|---|---|
-| Node.js | 22+ locally; Node.js 24 in CI |
-| pnpm | 12.16.1, pinned in root `package.json` |
-| Workspace orchestration | Turborepo |
-| Formatting | Prettier 3 |
-| Unit tests for repository automation | Node.js built-in test runner |
+| Tool                                 | Baseline                               |
+| ------------------------------------ | -------------------------------------- |
+| Node.js                              | 22+ locally; Node.js 24 in CI          |
+| pnpm                                 | 12.16.1, pinned in root `package.json` |
+| Workspace orchestration              | Turborepo                              |
+| Formatting                           | Prettier 3                             |
+| Unit tests for repository automation | Node.js built-in test runner           |
 
 Do not silently upgrade the package manager or lockfile format. A package-manager upgrade is a deliberate toolchain change that includes the manifest, lockfile, CI setup, local instructions, and validation evidence.
 
 ### Lockfile integrity
 
-The current audit found that `pnpm-lock.yaml` does not contain importer entries for the workspace package manifests. This is a concrete lockfile drift defect, not a harmless warning.
+The prior audit found that `pnpm-lock.yaml` lacked importer entries for the workspace package manifests, including `apps/arsy`'s `pg` dependency. The governance Phase 0 branch has regenerated the lockfile with pinned pnpm 12.16.1; frozen-check and clean-install CI evidence are still required before merge.
 
 The supported workflow is:
 
@@ -78,22 +79,22 @@ The check script refuses to regenerate the lockfile when it already has staged o
 
 ## 4. Command contract
 
-| Command | Sole responsibility |
-|---|---|
-| `pnpm dev` | Start workspace packages that define a persistent dev task |
-| `pnpm dev:headquarter` | Start Headquarter |
-| `pnpm dev:arsy` | Start ARSY |
-| `pnpm check:repo` | Read-only workspace and automation audit |
-| `pnpm audit:repo` | Write ignored audit artifacts under `.artifacts/` |
-| `pnpm format` | Format repository files |
-| `pnpm format:check` | Verify formatting |
-| `pnpm lint` | Repository structure and formatting gate |
-| `pnpm type-check` | Run package-level Turbo type-check tasks |
-| `pnpm test` | Run Node.js automation tests |
-| `pnpm lockfile:check` | Verify lockfile is reproducible from workspace manifests |
-| `pnpm lockfile:refresh` | Deliberately regenerate the pnpm lockfile |
-| `pnpm validate:repo` | Run repository integrity, formatting, and automation tests |
-| `pnpm validate` | Run repository validation, package type-checks, and builds |
+| Command                 | Sole responsibility                                        |
+| ----------------------- | ---------------------------------------------------------- |
+| `pnpm dev`              | Start workspace packages that define a persistent dev task |
+| `pnpm dev:headquarter`  | Start Headquarter                                          |
+| `pnpm dev:arsy`         | Start ARSY                                                 |
+| `pnpm check:repo`       | Read-only workspace and automation audit                   |
+| `pnpm audit:repo`       | Write ignored audit artifacts under `.artifacts/`          |
+| `pnpm format`           | Format repository files                                    |
+| `pnpm format:check`     | Verify formatting                                          |
+| `pnpm lint`             | Repository structure and formatting gate                   |
+| `pnpm type-check`       | Run package-level Turbo type-check tasks                   |
+| `pnpm test`             | Run Node.js automation tests                               |
+| `pnpm lockfile:check`   | Verify lockfile is reproducible from workspace manifests   |
+| `pnpm lockfile:refresh` | Deliberately regenerate the pnpm lockfile                  |
+| `pnpm validate:repo`    | Run repository integrity, formatting, and automation tests |
+| `pnpm validate`         | Run repository validation, package type-checks, and builds |
 
 A package-level task must be backed by an actual implementation and test target. Do not add scripts that only print success, delegate unrelated work, or swallow failures. Root scripts must not use uncontrolled shell backgrounding (`&`) to simulate parallel execution; Turbo owns workspace parallelism and exit-code propagation.
 
@@ -136,14 +137,14 @@ A normal commit must not bump versions, update release notes, create tags, gener
 
 ## 6. GitHub Actions ownership
 
-| Workflow | Trigger | Responsibility | Permissions |
-|---|---|---|---|
-| `ci.yml` | Push, PR, manual | Lockfile integrity and repository validation; optional full workspace gate | `contents: read` |
-| `weekly-detection.yml` | Weekly, manual | Read-only audit report and automation tests | `contents: read` |
-| `codeql.yml` | Push, PR, weekly | Static security analysis | `contents: read`, `security-events: write`, `actions: read` |
-| `pr-labeler.yml` | PR updates | Apply path-based labels | `contents: read`, `pull-requests: write` |
-| `refresh-lockfile.yml` | Manual | Regenerate lockfile and open/update a reviewable PR | `contents: write`, `pull-requests: write` |
-| Dependabot | Weekly | Propose dependency and Actions updates | Managed by GitHub |
+| Workflow               | Trigger          | Responsibility                                                             | Permissions                                                 |
+| ---------------------- | ---------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `ci.yml`               | Push, PR, manual | Lockfile integrity and repository validation; optional full workspace gate | `contents: read`                                            |
+| `weekly-detection.yml` | Weekly, manual   | Read-only audit report and automation tests                                | `contents: read`                                            |
+| `codeql.yml`           | Push, PR, weekly | Static security analysis                                                   | `contents: read`, `security-events: write`, `actions: read` |
+| `pr-labeler.yml`       | PR updates       | Apply path-based labels                                                    | `contents: read`, `pull-requests: write`                    |
+| `refresh-lockfile.yml` | Manual           | Regenerate lockfile and open/update a reviewable PR                        | `contents: write`, `pull-requests: write`                   |
+| Dependabot             | Weekly           | Propose dependency and Actions updates                                     | Managed by GitHub                                           |
 
 ### CI staging
 
@@ -178,7 +179,7 @@ The weekly audit writes artifacts and a GitHub Actions summary. It does not crea
 - Merge only after all required checks pass and the diff is reviewed.
 - Do not claim an issue is resolved merely because code was committed; verify the acceptance criteria and merge state.
 
-Suggested branch names are `feat-*`, `fix-*`, and `chore-*`. The current default PR target is `main`; a future `dev → main` promotion flow requires an actual `dev` branch and matching branch protection before it becomes policy.
+Suggested branch names are `feat/*`, `fix/*`, `chore/*`, `docs/*`, and `refactor/*`; CI push filters must match these slash-based prefixes. The current default PR target is `main`; a future `dev → main` promotion flow requires an actual `dev` branch and matching branch protection before it becomes policy.
 
 ## 8. Release, changelog, Wiki, and Pages
 

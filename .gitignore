@@ -14,3 +14,6 @@ reports/
 
 # Generated local AI assistance artifacts (never commit these).
 scripts/ai/.ai-*.txt
+
+# Generated local installer metadata and runtime evidence.
+.moonwitness/

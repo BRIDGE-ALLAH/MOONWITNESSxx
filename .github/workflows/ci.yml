@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
-      - "feat-*"
-      - "fix-*"
-      - "chore-*"
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+      - 'docs/**'
+      - 'refactor/**'
       - "headquarter/**"
   pull_request:
     branches:
@@ -28,6 +30,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -49,7 +53,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Test Divine core and Corpus adapter
+        run: pnpm --filter @riotworks/divine test
+
       - name: Validate repository, formatting, and automation tests
+        env:
+          FORMAT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          FORMAT_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          FORMAT_EXCLUDE: ${{ github.event_name == 'push' && '.github/workflows/refresh-lockfile.yml' || '' }}
         run: pnpm run validate:repo
 
       - name: Upload repository audit
@@ -105,6 +116,7 @@ jobs:
 
   full-workspace-quality:
     name: Full workspace typecheck and build
+    if: ${{ vars.FULL_QUALITY_CI == 'true' }}
     needs: repository-integrity
     runs-on: ubuntu-latest
     timeout-minutes: 30

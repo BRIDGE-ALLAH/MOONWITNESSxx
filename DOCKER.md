@@ -12,24 +12,24 @@
 
 ```bash
 # Start all services (Headquarter, ARSY, PostgreSQL, Redis)
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Remove volumes (destructive — deletes database)
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Environment variables
 
-Copy `.env.docker` to `.env` and adjust as needed:
+The installer creates `.env` from `.env.example` without overwriting an existing file. If setting up manually, copy the shared template and set local values:
 
 ```bash
-cp .env.docker .env
+cp .env.example .env
 ```
 
 Key variables:
@@ -90,7 +90,7 @@ Edit files in `apps/headquarter`, `apps/arsy`, or `packages/`. Changes are immed
 After changing package.json or dependencies:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ### View service logs
@@ -104,7 +104,7 @@ docker-compose logs -f postgres
 ### Access container shell
 
 ```bash
-docker-compose exec arsy sh
+docker compose exec arsy sh
 docker-compose exec headquarter sh
 docker-compose exec postgres psql -U postgres -d moonwitness
 ```

@@ -1,5 +1,5 @@
 {
-  "name": "riotworks",
+  "name": "moonwitness",
   "version": "1.0.11",
   "private": true,
   "scripts": {
@@ -20,7 +20,25 @@
     "validate": "pnpm run validate:repo && pnpm run build",
     "lockfile:check": "node scripts/check-lockfile.mjs",
     "lockfile:refresh": "node scripts/check-lockfile.mjs --lockfile-only",
-    "type-check": "pnpm run typecheck"
+    "type-check": "pnpm run typecheck",
+    "format": "node scripts/format-changed.mjs --write",
+    "test": "node --test",
+    "check:commit": "node scripts/check-commit-message.mjs",
+    "check:staged": "node scripts/check-staged.mjs",
+    "governance:check": "node scripts/governance.mjs check",
+    "governance:doctor": "node scripts/governance.mjs doctor",
+    "governance:report": "node scripts/governance.mjs report",
+    "setup:install": "node scripts/moonwitness.mjs install",
+    "setup:doctor": "node scripts/moonwitness.mjs doctor",
+    "setup:repair": "node scripts/moonwitness.mjs repair",
+    "setup:update": "node scripts/moonwitness.mjs update",
+    "setup:verify": "node scripts/moonwitness.mjs verify",
+    "setup:uninstall": "node scripts/moonwitness.mjs uninstall",
+    "runtime:doctor": "node scripts/runtime.mjs doctor",
+    "runtime:preflight": "node scripts/runtime.mjs preflight",
+    "runtime:health": "node scripts/runtime.mjs health",
+    "runtime:passport": "node scripts/runtime.mjs passport",
+    "test:installer-runtime": "node --test scripts/moonwitness.test.mjs scripts/runtime.test.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
@@ -29,8 +47,8 @@
     "typescript": "^5.7.2"
   },
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9"
+    "node": ">=22",
+    "pnpm": ">=12.16.1"
   },
   "packageManager": "pnpm@12.16.1"
 }
