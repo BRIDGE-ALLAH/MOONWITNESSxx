@@ -59,3 +59,17 @@ The release preflight deliberately distinguishes local repository evidence from 
 - **Rejected:** declaring a stable production release from a successful build alone. Current workflows do not include a release publisher or production deployment job.
 
 No world-first claim is made. The value is the integration of repository ownership, user-facing truth signals and fail-closed release readiness into one verifiable workflow.
+
+
+## Next high-value research experiments (proposed, not implemented)
+
+### A. Provenance-closure retrieval gate
+For each derived memory or decision, persist the source lineage graph and the policy-relevant attributes of every ancestor. Before retrieval, require that every ancestor remains current, permitted for the requesting principal/tenant, and non-revoked. If lineage is incomplete, quarantine or return the item as unverified rather than treating it as authoritative. Benchmark lineage completeness, false denials, leakage, retrieval latency and policy coverage; the IEEE result is conditional on complete lineage and should not be copied as a universal threshold.
+
+### B. Durable revocation and restore-resurrection benchmark
+Keep revocation/tombstone state in a monotonic ledger whose head is anchored outside the content database. Add backup/restore tests that restore an older full-store snapshot after a revocation or erasure and verify that the deleted record cannot become authoritative again. Include the IETF draft's rollback and erasure-resurrection cases as a test design reference, not as a normative standard. Measure detection at read time separately from later audit-only detection.
+
+### C. Negative-decision receipts and proof-bound release
+Persist a compact receipt for meaningful no-op decisions: candidate, evidence checked, reason code (insufficient evidence, duplicate, stale context, policy conflict), owner, expiry, and invalidation trigger. This prevents repeated research without turning a past no-op into permanent truth. Separately bind each release claim to the exact commit SHA, CI check-run IDs, artifact digest, deployment receipt and post-deploy smoke result. A successful build alone must never produce a production-success state.
+
+These are proposals. They require threat modelling, privacy/retention review, benchmark fixtures and an owner before implementation.
