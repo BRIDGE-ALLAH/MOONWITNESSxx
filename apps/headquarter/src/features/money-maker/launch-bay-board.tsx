@@ -81,8 +81,8 @@ const initialChannelForm = {
   payoutSetupStatus: 'unknown' as Channel['payoutSetupStatus'], capability: 'C0' as Channel['capability'],
   grantedScopes: '', quotaNotes: '{}', policySummary: '', accountEvidenceUrl: '', payoutEvidenceUrl: '', formatEvidenceUrl: '',
 }
-const isoDate = (value: string) => value ? new Date(`${value}T00:00:00.000Z`).toISOString() : null
-const isoDateEnd = (value: string) => value ? new Date(`${value}T23:59:59.999Z`).toISOString() : null
+const isoDate = (value: string) => value ? new Date(`${value}T00:00:00`).toISOString() : null
+const isoDateEnd = (value: string) => value ? new Date(`${value}T23:59:59.999`).toISOString() : null
 
 export function LaunchBayBoard() {
   const [channels, setChannels] = useState<Channel[]>([])
