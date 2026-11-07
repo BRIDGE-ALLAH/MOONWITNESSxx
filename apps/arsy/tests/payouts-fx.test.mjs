@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import {
   calculateConvertedMinor,
   FxConversionRepository,
@@ -23,6 +24,7 @@ const payoutRow = {
     summary: 'Pending payout listed in a provider statement.',
   },
   reconciliation_evidence: {},
+  request_hash: 'a'.repeat(64),
   created_at: '2026-11-08T00:00:00Z',
   updated_at: '2026-11-08T00:00:00Z',
   history: [],
@@ -79,6 +81,34 @@ test('payout creation is persisted as pending and includes source evidence', asy
   assert.match(captured.sql, /capability IN \('C1', 'C2', 'C3', 'C4'\)/)
   assert.match(captured.sql, /arsy_payout_events/)
   assert.equal(captured.values[3], '5000')
+})
+
+test('payout idempotency replay compares the persisted request hash', async () => {
+  const input = {
+    channelId: payoutRow.channel_id,
+    amountMinor: '5000',
+    currency: 'IDR',
+    expectedAt: '2026-11-08T00:00:00Z',
+    providerReference: 'statement-001',
+    source: 'Manual provider statement',
+    idempotencyKey: 'payout-statement-001',
+    evidenceUrl: 'https://example.com/statement',
+    evidenceCapturedAt: '2026-11-08T00:00:00Z',
+    evidenceSummary: 'Pending payout listed in a provider statement.',
+  }
+  const requestHash = createHash('sha256').update(JSON.stringify(input)).digest('hex')
+  let calls = 0
+  const repository = new PayoutRepository({
+    query: async () => {
+      calls += 1
+      return calls === 1 ? { rows: [] } : { rows: [{ ...payoutRow, request_hash: requestHash }] }
+    },
+    end: async () => undefined,
+  })
+  const result = await repository.create('owner-a', 'owner-a', input)
+  assert.equal(calls, 2)
+  assert.equal(result?.replayed, true)
+  assert.equal(result?.payout.id, payoutRow.id)
 })
 
 test('payout transitions append evidence and create only explicit paid/reversal ledger movements', async () => {
