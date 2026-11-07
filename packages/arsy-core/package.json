@@ -9,7 +9,7 @@
     "start": "fastify start --listen 0.0.0.0:3000",
     "dev": "fastify dev",
     "build": "fastify build",
-    "lint": "pnpm --filter @riotworks/lint run lint",
+    "lint": "pnpm --filter @riotworks/lint exec eslint ../arsy-core/src --config ./eslint.config.mjs --ext .ts,.tsx",
     "type-check": "pnpm --filter @riotworks/types run type-check"
   },
   "dependencies": {
