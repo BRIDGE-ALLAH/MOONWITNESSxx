@@ -4,39 +4,41 @@ Shared React + TypeScript component foundation for RIOTWORKS and MOONWITNESS.
 
 ## Workspace usage
 
-The package is consumed by workspace applications through `workspace:*`. Its JavaScript entry point is ESM; the Tailwind preset remains an explicit `.cjs` subpath for compatibility with the existing Tailwind configuration:
-
 ```tsx
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@riotworks/ui'
+import { Button, Input, Dialog, DataTable, FormField } from '@riotworks/ui'
 import '@riotworks/ui/styles'
 ```
 
-The stylesheet defines the shared semantic CSS variables and Night Riot / Paper Riot color modes. See [TOKENS.md](./TOKENS.md) for the token contract, semantic usage, Tailwind aliases, and verification requirements. The consuming application owns the theme provider and decides when to apply the `.dark` class.
+The ESM package exports accessible primitives and data-in/data-out operational composites. The host application owns theme selection and applies `.dark` for Night Riot; the default theme is Paper Riot. See [TOKENS.md](./TOKENS.md).
 
-## Tailwind
+## Component groups
 
-Extend the package preset from the consuming app's Tailwind configuration:
+- **Actions:** Button, IconButton.
+- **Forms and selection:** Input, Textarea, Checkbox, CheckboxGroup, RadioGroup, Switch, Select, FormField.
+- **Navigation:** Tabs, Breadcrumb, Pagination.
+- **Overlays:** Dialog, Popover, Tooltip.
+- **Feedback:** Alert, Progress, Spinner, Skeleton, Avatar, Badge.
+- **Operational:** DataTable, FilterBar, BulkActions, EmptyState, ErrorState, MetricCard, ActivityTimeline.
 
-```ts
-import uiConfig from '@riotworks/ui/tailwind.config'
+## FormField
+
+FormField uses a render-prop contract so generated IDs and ARIA relationships are forwarded to the control:
+
+```tsx
+<FormField label="Workspace name" required description="Shown to workspace members." error={error}>
+  {(control) => <Input {...control} value={name} onChange={(event) => setName(event.target.value)} />}
+</FormField>
 ```
 
-The consumer must include `packages/ui/src/**/*.{ts,tsx}` in its Tailwind content paths so utility classes used by shared components are generated.
+## DataTable
+
+DataTable accepts rows, columns, and a stable row-key function. Sorting and pagination are local presentation behavior; fetching, filtering, authorization, and server-side pagination remain consumer-owned. Pass `selectedRowIds` and `onSelectionChange` to enable controlled row selection.
 
 ## Development
 
-From the repository root:
+- `pnpm --filter @riotworks/ui run type-check`
+- `pnpm --filter @riotworks/ui run lint`
+- `pnpm --filter @riotworks/ui run test`
+- `pnpm --filter @riotworks/headquarter run build`
 
-- `pnpm --filter @riotworks/ui run type-check` — type-check source files without emitting output.
-- `pnpm --filter @riotworks/ui run lint` — run the package-scoped TypeScript ESLint rules.
-- `pnpm --filter @riotworks/ui run theme:check` — assert that required semantic tokens exist in both themes.
-- `pnpm --filter @riotworks/ui run test` — run the theme contract check, build the package, and verify consumer exports.
-- `pnpm --filter @riotworks/ui run build` — emit ESM JavaScript and TypeScript declarations to `dist/`.
-- `pnpm --filter @riotworks/ui run smoke-test` — build the package and verify its public exports through the package name.
-- `pnpm --filter @riotworks/ui run clean` — remove generated output.
-
-React and React DOM are peer dependencies and must be supplied by the consuming application. Tailwind CSS is also a peer dependency because it processes the exported stylesheet and utility classes.
-
-## Package boundaries
-
-This package owns reusable presentation, component composition, and interaction primitives. Applications own data fetching, persistence, authorization, business rules, and workflow execution. Components should receive data and callbacks rather than importing application or backend clients.
+React/React DOM are peer dependencies. Components use Radix primitives for focus management, keyboard navigation, and accessible interaction semantics where appropriate.

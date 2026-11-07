@@ -1,26 +1,23 @@
 // Public API for @riotworks/ui. Keep implementation modules private.
 export { Button, buttonVariants } from './components/button'
 export type { ButtonProps } from './components/button'
-
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from './components/card'
-export type {
-  CardProps,
-  CardHeaderProps,
-  CardFooterProps,
-  CardTitleProps,
-  CardDescriptionProps,
-  CardContentProps,
-} from './components/card'
-
+export { IconButton } from './components/icon-button'
+export type { IconButtonProps } from './components/icon-button'
+export { Input, Textarea, Checkbox, RadioGroup, RadioGroupItem, Switch, FormField } from './components/inputs'
+export type { InputProps, TextareaProps, CheckboxProps, FormFieldProps, FormFieldControlProps } from './components/inputs'
+export { CheckboxGroup } from './components/checkbox-group'
+export type { CheckboxGroupProps } from './components/checkbox-group'
+export { Select, SelectGroup, SelectValue, SelectTrigger, SelectContent, SelectItem } from './components/select'
+export { Dialog, DialogTrigger, DialogClose, DialogPortal, DialogOverlay, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription, Popover, PopoverTrigger, PopoverAnchor, PopoverContent, TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from './components/overlays'
+export { Tabs, TabsList, TabsTrigger, TabsContent, Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, Pagination } from './components/navigation'
+export type { PaginationProps } from './components/navigation'
+export { Alert, AlertTitle, AlertDescription, Progress, Skeleton, Avatar, AvatarImage, AvatarFallback, Spinner } from './components/feedback'
+export type { AlertProps } from './components/feedback'
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './components/card'
+export type { CardProps, CardHeaderProps, CardFooterProps, CardTitleProps, CardDescriptionProps, CardContentProps } from './components/card'
 export { Badge } from './components/badge'
 export type { BadgeProps } from './components/badge'
-
 export { Separator } from './components/separator'
+export { DataTable, FilterBar, BulkActions, EmptyState, ErrorState, MetricCard, ActivityTimeline } from './components/operational'
+export type { DataTableColumn, DataTableProps, FilterBarProps, BulkActionsProps, EmptyStateProps, ErrorStateProps, MetricCardProps, ActivityTimelineItem, ActivityTimelineProps } from './components/operational'
 export { cn } from './lib/utils'
