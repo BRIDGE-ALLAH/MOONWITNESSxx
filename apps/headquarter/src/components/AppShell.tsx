@@ -2,15 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
+import { Texture } from '@riotworks/assets'
 import { CommandPalette } from '../shell/command-palette'
 import { NAVIGATION_ITEMS } from '../shell/navigation'
 import { Sidebar } from '../shell/sidebar'
 import { Topbar } from '../shell/topbar'
-import { Texture } from '@riotworks/assets'
 
 const STRINGS = {
-  en: { search: 'Search / Command Palette', workspace: 'Workspace: Demo', notifications: 'Notifications', locale: 'EN', theme: 'Theme', profile: 'Operator', demo: 'Prototype // Demo Data Only' },
-  id: { search: 'Cari / Palet Perintah', workspace: 'Ruang Kerja: Demo', notifications: 'Notifikasi', locale: 'ID', theme: 'Tema', profile: 'Operator', demo: 'Prototipe // Data Demo Saja' },
+  en: { search: 'Search / Command Palette', workspace: 'Workspace: Observatory', notifications: 'Notifications', locale: 'EN', theme: 'Theme', profile: 'Witness', demo: 'Prototype // Demo Data Only' },
+  id: { search: 'Cari / Palet Perintah', workspace: 'Ruang Observasi', notifications: 'Notifikasi', locale: 'ID', theme: 'Tema', profile: 'Witness', demo: 'Prototipe // Data Demo Saja' },
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -49,32 +49,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative isolate min-h-screen bg-background text-foreground">
-      <Texture name="texture.halftone" opacity={0.035} className="pointer-events-none absolute inset-0 z-0" />
+      <Texture name="texture.lunar-contours" opacity={0.025} className="pointer-events-none absolute inset-0 z-0" />
       <div className="relative z-10 min-h-screen">
-      <div className="flex min-h-screen">
-        <Sidebar isOpen={navOpen} demoLabel={labels.demo} onNavigate={() => setNavOpen(false)} />
-        <div className="min-w-0 flex-1">
-          <Topbar
-            locale={locale}
-            navOpen={navOpen}
-            labels={labels}
-            onToggleNavigation={() => setNavOpen((current) => !current)}
-            onOpenPalette={openPalette}
-            onNotify={() => notify(`Prototype: ${labels.notifications}`)}
-            onToggleLocale={() => {
-              setLocale((current) => (current === 'en' ? 'id' : 'en'))
-              notify('Prototype: locale toggled')
-            }}
-            onToggleTheme={() => {
-              setTheme(isDark ? 'light' : 'dark')
-              notify('Prototype: theme toggled')
-            }}
-          />
-          <div>{children}</div>
+        <div className="flex min-h-screen">
+          <Sidebar isOpen={navOpen} demoLabel={labels.demo} onNavigate={() => setNavOpen(false)} />
+          <div className="min-w-0 flex-1">
+            <Topbar
+              locale={locale}
+              navOpen={navOpen}
+              labels={labels}
+              onToggleNavigation={() => setNavOpen((current) => !current)}
+              onOpenPalette={openPalette}
+              onNotify={() => notify(`Prototype: ${labels.notifications}`)}
+              onToggleLocale={() => {
+                setLocale((current) => (current === 'en' ? 'id' : 'en'))
+                notify('Prototype: locale toggled')
+              }}
+              onToggleTheme={() => {
+                setTheme(isDark ? 'light' : 'dark')
+                notify('Prototype: theme toggled')
+              }}
+            />
+            <div>{children}</div>
+          </div>
         </div>
-      </div>
-      <CommandPalette open={paletteOpen} items={NAVIGATION_ITEMS} onClose={closePalette} />
-      {notice ? <div role="status" aria-live="polite" className="fixed bottom-4 right-4 z-50 border-2 border-acid-lime bg-background px-4 py-2 font-mono text-xs uppercase text-acid-lime shadow-lg">{notice}</div> : null}
+        <CommandPalette open={paletteOpen} items={NAVIGATION_ITEMS} onClose={closePalette} />
+        {notice ? <div role="status" aria-live="polite" className="fixed bottom-4 right-4 z-50 border border-signal-gold bg-background px-4 py-2 font-mono text-xs uppercase text-signal-gold shadow-lg">{notice}</div> : null}
       </div>
     </div>
   )

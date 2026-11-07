@@ -7,13 +7,13 @@ const agents = [
   { name: 'THE KEEPER', status: 'SCHEDULED (DEMO)', task: 'Asset/version audit', budget: '$5 cap', approval: 'Auto for metadata' },
 ]
 
-export default function RiotEngine() {
+export default function WorkflowEngine() {
   return (
     <main className="min-h-screen bg-obsidian p-8 text-paper-bone">
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="border-b border-acid-lime/30 pb-6">
           <Badge variant="lime">Prototype // Demo Data Only</Badge>
-          <h1 className="mt-3 font-display text-5xl uppercase">RIOT ENGINE</h1>
+          <h1 className="mt-3 font-display text-5xl uppercase">WORKFLOW ENGINE</h1>
           <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">Specialist agents, runs, schedules, budgets, queue, approvals, logs.</p>
         </header>
         <div className="grid gap-4 md:grid-cols-2">

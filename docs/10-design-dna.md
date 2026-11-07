@@ -1,132 +1,114 @@
-# 10 — RIOTWORKS Design DNA
+# MOONWITNESS Design DNA
 
-**Status:** Approved brand direction  
-**Version:** 1.0  
-**Updated:** 2026-11-07
+**Status:** Approved direction — brand architecture v1.0
+**Updated:** 2026-11-08
 
 ## 1. Creative thesis
 
-RIOTWORKS must look like the creative operations wing of MoonWitness: a place where underground art culture meets a serious, futuristic production system.
+MOONWITNESS is an evidence-first observatory and a human knowledge-sharing movement: observe the world, record what matters, verify what can be known, connect discoveries, and share meaning with others.
 
-**Art direction:** EXTREME RIOT + ORIGINAL MOONWITNESS COMIC + INDUSTRIAL BRUTALISM + PREMIUM GAME HUD + PUNK ZINE.
+**Art direction:** MOONPUNK EDITORIAL + CINEMATIC OBSERVATORY + EVIDENCE ARCHIVE + INSTRUMENT BRUTALISM.
 
-Reference the visual languages of punk photocopy zines, underground comics, street graphics, editorial brutalism, and industrial control rooms. Do not copy any specific artist, comic franchise, game UI, or protected artwork.
+The identity combines lunar symbolism, archival credibility, cinematic observatory atmosphere, precise research instruments, and human warmth. It must feel curious, intelligent, accountable, humane, and quietly unconventional—not like a generic AI product, crypto project, game HUD, or sci-fi dashboard.
 
-## 2. The five visual forces
+## 2. Brand messaging hierarchy
 
-### PUNK ZINE
-Photocopy grain, torn paper, imperfect ink, collage, cutout type, visible print texture.
+### Core Promise
+**SEE MORE. KNOW MORE.**
 
-### UNDERGROUND COMIC
-Original characters, bold outlines, halftone, panel composition, expressive scenes, action marks.
+The enduring product promise: help people observe more carefully and understand more deeply. Use as the primary tagline on the master logo lockup, product entry points, and concise brand signatures.
 
-### NEO-BRUTALISM
-Strong geometry, hard borders, deliberate asymmetry, graphic hierarchy, confident negative space.
+### Brand Manifesto
+**WHEN THE MOON RISES, WE SHARE MESSAGES.**
 
-### PREMIUM GAME HUD
-Operational status, contextual panels, crisp metrics, focused motion, tactical information density.
+The poetic and communal expression of the brand: discoveries, knowledge, stories, and messages should be shared with care. Use in campaign/editorial contexts, About pages, launch narratives, community communications, and selected onboarding moments. It is not a replacement for the Core Promise and should not crowd compact UI.
 
-### INDUSTRIAL FUTURISM
-Technical labels, mechanical details, diagrammatic marks, workshop surfaces, engineered precision.
+### Operational verbs
+**OBSERVE · RECORD · VERIFY · CONNECT · UNDERSTAND · SHARE**
 
-Street/Pop Art is the expressive accent layer.
+The first five describe the product's knowledge practice; SHARE expresses the outward-facing human purpose.
 
-## 3. Design tension
+## 3. Brand architecture
 
-RIOTWORKS must balance two modes:
-- **Riot mode:** expressive artwork, campaign headers, discovery, storytelling, product creation.
-- **Control mode:** readable data, finance, tables, forms, approvals, policy, errors, and audit trails.
+- **MOONWITNESS** — master brand and public-facing identity. Owns the promise, name, primary symbol, wordmark, voice, and visual grammar.
+- **MOONWITNESS Observatory** — research and evidence experience. Uses instrument-like layouts, source trails, timelines, maps, and observation records.
+- **MOONWITNESS Archive** — durable knowledge, records, provenance, and retrieval. Uses editorial and archival patterns.
+- **MOONWITNESS XV** — a program/release expression within the master brand, not a separate master identity.
+- **RIOTWORKS** — independent creative/engineering studio or delivery partner. It is not the master brand, must not appear in MOONWITNESS product lockups by default, and must not donate its Acid Lime/punk-comic identity to core MoonWitness surfaces. Credit it only where an explicit studio credit is appropriate.
 
-Do not make every screen loud. Use high-energy compositions for focal zones and calm operational surfaces for work that demands accuracy.
+Product names may use a descriptive descriptor lockup, but the master symbol and wordmark remain stable. Do not create a new logo for every module.
 
-## 4. Core palette
+## 4. Brand idea and voice
+
+**Promise:** A bridge between human curiosity, evidence, and a clearer view of the world.
+**Manifesto:** When the Moon rises, we share messages.
+
+Voice: precise, curious, calm, accountable, and humane. Avoid grandiose claims, fake certainty, mystical authority, or decorative pseudo-technical copy. Distinguish facts, interpretations, hypotheses, and unknowns. Sharing must preserve source context and provenance.
+
+## 5. Visual principles
+
+1. **Lunar geometry:** crescents, orbital paths, phases, horizons, star points, and calibrated rings.
+2. **Witness symbolism:** a considered aperture, a record marker, or a star used as a point of attention—not a literal surveillance eye.
+3. **Evidence editorial:** index numbers, captions, source labels, dates, citations, marginal notes, ruled paper, and document-like composition.
+4. **Instrument precision:** fine lines, measured grids, coordinates, restrained ticks, and clear information hierarchy.
+5. **Human warmth:** warm paper, tactile grain, imperfect print details, original human-centered illustration, and a sense of shared discovery.
+
+## 6. Core palette
 
 | Token | Value | Role |
 |---|---|---|
-| Obsidian | #111315 | Main dark canvas |
-| Deep Industrial | #191C1E | Dark secondary surface |
-| Panel Charcoal | #24282A | Dark panel |
-| Paper Bone | #F3EBDD | Light canvas |
-| Acid Lime | #D2FF38 | Signature accent |
-| Riot Orange | #FF542D | Action and creative energy |
-| Electric Blue | #40D9FF | Informational accent |
-| Riot Pink | #F047A4 | Expressive accent |
-| Muted Ink | #777A76 | Supporting text / markings |
+| Void | #090A0F | Primary dark canvas |
+| Observatory | #121521 | Elevated dark surface |
+| Slate | #242A38 | Secondary surface |
+| Moonlight | #F4F1E8 | Primary light surface / text |
+| Lunar Silver | #AEB6C6 | Secondary text and linework |
+| Signal Gold | #E8BD62 | Primary identity accent / focus |
+| Eclipse Violet | #7664A8 | Secondary atmospheric accent |
+| Signal Red | #C95B5B | Caution / exceptional signal only |
+| Deep Ink | #171923 | Light-theme text |
 
-Use semantic colors separately for success, warning, danger, and neutral. Brand color is not a substitute for semantic status.
+Use semantic colors independently from brand colors. Gold is not a success state; red is not decoration. Maintain WCAG 2.2 AA contrast for interface text and controls.
 
-## 5. Typography DNA
+## 7. Typography
 
-- Display: heavy condensed, uppercase, oversized editorial titles.
-- Interface: geometric sans with excellent readability.
-- Technical: monospace for IDs, run states, dates, source metadata, and financial values.
+- **Display:** Space Grotesk 600–700; compact editorial headlines.
+- **Interface/body:** Space Grotesk 400–600; readable at operational sizes.
+- **Technical/data:** IBM Plex Mono 400–500 for identifiers, timestamps, coordinates, evidence IDs, and provenance.
+- **Long-form reading:** system serif or a licensed editorial serif where appropriate.
 
-Suggested families: Archivo Black or Anton; Space Grotesk; IBM Plex Mono. Use fallback stacks and verify licensing/hosting before shipping font files.
+Use system fallbacks. Do not commit or redistribute font binaries until license and hosting rights are explicitly verified. Fonts are typography recommendations, not bundled assets.
 
-## 6. Composition
+## 8. Composition and surfaces
 
-- Use asymmetrical grids selectively.
-- Mix large title blocks with compact operational information.
-- Use comic panels for narrative or production previews.
-- Use hard-edged cards and borders where hierarchy benefits.
-- Use deliberate whitespace to prevent visual fatigue.
-- Use small annotation marks, index numbers, labels, and stamps as a coherent graphic vocabulary.
-- Never place important information on noisy textures without a solid readable backing.
+- Prefer deliberate grids, generous whitespace, and asymmetry only where it improves storytelling.
+- Use editorial title + metadata + content structures for research.
+- Use instrument panels for live observation and monitoring; avoid decorative HUD noise.
+- Keep evidence, source provenance, timestamps, and confidence legible and close to the claim they qualify.
+- Use warm paper and dark observatory themes as intentionally designed themes, not simple inversions.
 
-## 7. Texture rules
+## 9. Texture and illustration
 
-- Grain and halftone are low-opacity surface layers.
-- Torn edges and distressed ink belong to decorative regions, not dense tables or form controls.
-- Avoid full-screen noise and high-frequency animation.
-- Use CSS patterns or original SVGs where practical.
-- Texture must not reduce contrast, focus visibility, or screenshot legibility.
+- Fine orbital grids, lunar topography contours, restrained halftone, paper grain, and archival rules.
+- Texture is decorative, low-opacity, and never placed behind dense data or essential text.
+- Illustrations are original, quiet, symbolic, and human-centered. Avoid stock AI imagery as the source of truth for evidence.
+- Never imply that generated artwork is documentary evidence or depicts a real person/place/event.
 
-## 8. Brand behaviors
+## 10. Accessibility and motion
 
-- Navigation feels like a compact creative command deck.
-- Research feels like an evidence wall / investigation room.
-- Product creation feels like a workshop.
-- ZILL Watch feels like an inspection station.
-- Finance feels like a precise ledger with restrained riot accents.
-- Aftershock feels like an editorial performance analysis.
+- Decorative SVGs must be hidden from assistive technology; meaningful images need useful alt text.
+- Respect reduced-motion preferences. Avoid continuous orbital animation by default.
+- Never encode meaning through color or texture alone.
+- Focus indicators, keyboard behavior, and readable contrast take priority over visual effects.
 
-## 9. Forbidden shortcuts
+## 11. Forbidden shortcuts
 
-- Generic blue-purple AI gradients.
-- Generic white SaaS card grid everywhere.
-- Random neon decoration.
-- Default shadcn styling with only color changes.
-- Random stock illustrations as core brand identity.
-- Emoji used as permanent character art.
-- Unreadable distressed fonts for operational labels.
-- Decorative "HUD text" that looks like information but has no meaning.
-- Copying a known game, comic, artist, or brand.
-- Sacred words or imagery used as gimmicks.
+- Generic blue-purple AI gradients and generic SaaS templates.
+- RIOTWORKS Acid Lime / punk-comic style as the default MoonWitness identity.
+- Generic surveillance-eye, all-seeing-eye, or occult-symbol clichés.
+- Fake data labels, fake coordinates, or pseudo-scientific ornament.
+- Unlicensed fonts, copied marks, stock character art, or artwork copied from XIV/XV reference repositories.
+- Sacred, religious, or cultural symbols used as decoration.
 
-## 10. Recognition test
+## 12. Recognition test
 
-A screenshot should be identifiable as RIOTWORKS from its typography, composition, texture, character language, palette, and panel design even if the logo is hidden.
-
-## 11. Motion and sound
-
-Motion:
-- Comic panel reveal for selected transitions.
-- Crisp panel slide and snap.
-- Short status pulse for active work.
-- Ink-stamp completion feedback.
-- Restrained glitch only for deliberate storytelling, never for routine critical errors.
-- Reduced-motion preference must be respected.
-
-Sound:
-- Optional mechanical click, paper impact, radio-static accent, short bass confirmation.
-- Off by default or governed by explicit user preference.
-- Never play automatically on page load.
-- Every sound must have a mute control.
-
-## 12. Theme direction
-
-Create two intentionally designed themes:
-- **Night Riot:** Obsidian, Deep Industrial, Acid Lime, high contrast.
-- **Paper Riot:** Paper Bone, dark ink, controlled orange/lime accents, print/editorial feel.
-
-Do not merely invert colors. Review component, chart, table, illustration, focus, hover, and disabled states in both themes.
+A MoonWitness screen should remain recognizable through lunar geometry, typography, editorial evidence hierarchy, warm/cool material palette, and restrained instrument language even when the logo is hidden. The Core Promise should explain what the product enables; the Manifesto should explain why discoveries are shared.
