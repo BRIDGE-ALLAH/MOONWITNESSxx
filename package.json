@@ -21,7 +21,9 @@
     "lockfile:check": "node scripts/check-lockfile.mjs",
     "lockfile:refresh": "node scripts/check-lockfile.mjs --lockfile-only",
     "type-check": "pnpm run typecheck",
-    "repo:lab": "node scripts/counterfactual-repo-lab.mjs"
+    "repo:lab": "node scripts/counterfactual-repo-lab.mjs",
+    "repo:lab:scenario": "node scripts/repo-lab-scenario.mjs scripts/fixtures/repo-lab-scenarios.example.json",
+    "test:repo-lab": "node --test scripts/tests/counterfactual-repo-lab.test.mjs scripts/tests/repo-lab-scenario.test.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
