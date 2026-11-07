@@ -42,7 +42,7 @@
 ### P0.4 CI/local
 - [x] Match push filters to slash branches: `feat/**`, `fix/**`, `chore/**`, `docs/**`, `refactor/**`.
 - [x] Keep audit, lockfile check, frozen install, validation observable.
-- [ ] Verify CI triggers on `chore/governance-phase-0-1`.
+- [x] Verify CI triggers on `chore/governance-phase-0-1` (push run observed).
 - [ ] Verify repository integrity job reaches all steps and passes.
 - [ ] Verify CodeQL/Dependabot remain healthy.
 - [ ] Administrator applies main ruleset/required checks. **Evidence:** ruleset readback + test PR.
@@ -62,7 +62,7 @@
 - [x] Create canonical `governance/README.md`.
 - [x] Define precedence: safety → governance/contracts → architecture docs → agent rules → mission prompts → contributor guide → enforcement.
 - [x] Keep this file as phase ledger, not second issue tracker.
-- [ ] Reconcile `AGENTS.md`, `GOAL.txt`, `MASTER-PROMPT`, Copilot and Codex instructions.
+- [x] Reconcile `AGENTS.md`, `GOAL.txt`, `MASTER-PROMPT`, and Copilot instructions; Codex plugin-specific instructions still require review.
 
 ### P1.2 Contract catalogue
 - [x] Define Owner, Scope, Rules, Allowed, Forbidden, Enforcement, Acceptance evidence, Exceptions.
@@ -78,9 +78,9 @@
 - [ ] Create decision records for unresolved architecture, automation, and deployment conflicts.
 
 ### P1.4 Documentation reconciliation
-- [ ] Align `AGENTS.md`, `GOAL.txt`, `MASTER-PROMPT`, Copilot/Codex instructions with hierarchy.
+- [x] Align `AGENTS.md`, `GOAL.txt`, `MASTER-PROMPT`, and Copilot instructions with hierarchy; Codex plugin-specific instructions still require review.
 - [ ] Remove stale duplicated governance claims without deleting historical architecture decisions.
-- [ ] Align docs/24 and CONTRIBUTING with this canonical index and slash branch convention.
+- [x] Link docs/24 to the canonical index and align CONTRIBUTING branch names with slash convention.
 - [ ] Verify links, command names, package names, and workflow triggers.
 
 ### P1.5 Acceptance
@@ -89,7 +89,7 @@
 - [ ] Verify no schema/manifest duplication.
 - [ ] Run audit, format, and automation tests; record exceptions and owners.
 
-**Status:** authority and initial contracts drafted; reconciliation, enforcement matrix, owner review, acceptance remain open.
+**Status:** authority, initial contracts, and core instruction reconciliation implemented. Codex plugin review, enforcement matrix, owner review, and acceptance remain open. CI audit passes; lockfile gate still fails due stale workspace importers and `pg`.
 
 ## Phase 2 — Programmatic Governance Engine
 **Goal:** deterministic objective enforcement, not a generic schema platform. **Dependencies:** Phase 0 + Phase 1.
