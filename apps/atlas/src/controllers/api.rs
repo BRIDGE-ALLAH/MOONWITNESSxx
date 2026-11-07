@@ -465,10 +465,7 @@ async fn accounting_summary(headers: HeaderMap) -> impl IntoResponse {
     }
 }
 
-async fn list_dns_zones(
-    headers: HeaderMap,
-    Path(engine_id): Path<String>,
-) -> impl IntoResponse {
+async fn list_dns_zones(headers: HeaderMap, Path(engine_id): Path<String>) -> impl IntoResponse {
     if let Err(error) = authorized(&headers) {
         return error.into_response();
     }
