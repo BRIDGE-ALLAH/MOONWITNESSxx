@@ -32,6 +32,7 @@ export interface ListingPackage {
     policyReviewedAt: string | null
     policyRecheckAt: string | null
     payoutRequirements: Record<string, unknown>
+    listingRequirements: Record<string, unknown>
   }
   assets: Array<{
     id: string
@@ -191,7 +192,11 @@ export class ListingRepository {
     const payoutEvidence = evidence.find((item) => item.evidenceType === 'payout-requirements' && item.evidenceClass !== 'unknown')
     const candidateChannels = Array.isArray(product.brief.candidateChannels) ? product.brief.candidateChannels.map((value) => String(value).toLowerCase()) : []
     const channelCandidate = candidateChannels.includes(channel.channelKey.toLowerCase()) || candidateChannels.includes(channel.displayName.toLowerCase())
-    const requiredBrief = ['buyerProblem', 'buyerSegment', 'jobToBeDone', 'productHypothesis']
+    const configuredMetadata = Array.isArray(channel.listingRequirements.requiredMetadata) ? channel.listingRequirements.requiredMetadata.map(String) : []
+    const requiredBrief = [...new Set(['buyerProblem', 'buyerSegment', 'jobToBeDone', 'productHypothesis', ...configuredMetadata])]
+    const titleMaxLength = typeof channel.listingRequirements.maxTitleLength === 'number' ? channel.listingRequirements.maxTitleLength : null
+    const descriptionMaxLength = typeof channel.listingRequirements.maxDescriptionLength === 'number' ? channel.listingRequirements.maxDescriptionLength : null
+    const metadataLengthExceeded = (titleMaxLength !== null && product.title.length > titleMaxLength) || (descriptionMaxLength !== null && String(product.brief.summary ?? '').length > descriptionMaxLength)
     const missingBrief = requiredBrief.filter((key) => typeof product.brief[key] !== 'string' || !String(product.brief[key]).trim())
     const allAssetChecksPass = assets.length > 0 && assetReadiness.every((item) => item?.ready === true)
     const hasBlockedAssetCheck = assetReadiness.some((item) => item && Object.values(item.inspections).some((inspection) => inspection.status === 'blocked'))
@@ -234,8 +239,8 @@ export class ListingRepository {
       },
       {
         key: 'product-metadata',
-        status: missingBrief.length === 0 && product.acceptance_criteria.length > 0 ? 'pass' : 'blocked',
-        rationale: missingBrief.length === 0 && product.acceptance_criteria.length > 0 ? 'Required buyer and product metadata is present.' : `Missing required brief fields: ${missingBrief.join(', ') || 'acceptance criteria'}.`,
+        status: missingBrief.length === 0 && product.acceptance_criteria.length > 0 && !metadataLengthExceeded ? 'pass' : 'blocked',
+        rationale: missingBrief.length === 0 && product.acceptance_criteria.length > 0 && !metadataLengthExceeded ? 'Required buyer and product metadata is present and within channel limits.' : `Missing fields: ${missingBrief.join(', ') || (metadataLengthExceeded ? 'channel title/description length limit' : 'acceptance criteria')}.`,
         evidence: [`product:${product.id}:version:${product.version}`],
       },
       {
@@ -243,6 +248,29 @@ export class ListingRepository {
         status: assets.length > 0 ? 'pass' : 'blocked',
         rationale: assets.length > 0 ? `${assets.length} version-bound asset(s) are attached.` : 'At least one asset for the selected product version is required.',
         evidence: assets.map((asset) => `asset:${asset.id}:sha256:${asset.sha256}`),
+      },
+      {
+        key: 'format-compatibility',
+        status: (() => {
+          const acceptedTypes = channel.listingRequirements.acceptedMediaTypes
+          const acceptedFamilies = channel.listingRequirements.acceptedProductFamilies
+          if (!Array.isArray(acceptedTypes) || acceptedTypes.length === 0 || !Array.isArray(acceptedFamilies) || acceptedFamilies.length === 0) return 'unknown'
+          if (!acceptedFamilies.map(String).includes(product.product_family)) return 'blocked'
+          const maxBytes = typeof channel.listingRequirements.maxAssetBytes === 'number' ? channel.listingRequirements.maxAssetBytes : null
+          return assets.length > 0 && assets.every((asset) =>
+            acceptedTypes.map(String).includes(asset.mediaType) && (maxBytes === null || Number(asset.byteSize) <= maxBytes),
+          ) ? 'pass' : assets.length === 0 ? 'blocked' : 'blocked'
+        })(),
+        rationale: (() => {
+          const acceptedTypes = channel.listingRequirements.acceptedMediaTypes
+          const acceptedFamilies = channel.listingRequirements.acceptedProductFamilies
+          if (!Array.isArray(acceptedTypes) || acceptedTypes.length === 0 || !Array.isArray(acceptedFamilies) || acceptedFamilies.length === 0) return 'Channel format requirements are not documented.'
+          if (!acceptedFamilies.map(String).includes(product.product_family)) return 'This product family is not accepted by the channel.'
+          const maxBytes = typeof channel.listingRequirements.maxAssetBytes === 'number' ? channel.listingRequirements.maxAssetBytes : null
+          const incompatible = assets.filter((asset) => !acceptedTypes.map(String).includes(asset.mediaType) || (maxBytes !== null && Number(asset.byteSize) > maxBytes))
+          return assets.length === 0 ? 'No assets exist to validate against channel format requirements.' : incompatible.length ? `${incompatible.length} asset(s) do not meet accepted media/size requirements.` : 'All version-bound assets meet the recorded channel format requirements.'
+        })(),
+        evidence: [`channel:${channel.id}:format-requirements`, ...assets.map((asset) => `asset:${asset.id}:${asset.mediaType}:${asset.byteSize}`)],
       },
       {
         key: 'asset-inspections',
@@ -278,6 +306,7 @@ export class ListingRepository {
         policyReviewedAt: channel.policyReviewedAt,
         policyRecheckAt: channel.policyRecheckAt,
         payoutRequirements: channel.payoutRequirements,
+        listingRequirements: channel.listingRequirements,
       },
       assets: assets.map((asset) => ({
         id: asset.id,
