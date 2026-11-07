@@ -109,7 +109,7 @@ This addendum supersedes the earlier HEAD and open-PR snapshots above. It is bas
 - Default branch remains `main`.
 - Verified current HEAD: `8621f861e5e544d8059e5216cc44b550e7077d90`.
 - HEAD merges PR #99, the Counterfactual Repository Lab (read-only workspace graph, dependency impact, cycle detection and scenario replay).
-- The repository tree contains 429 entries, including 429? [Correction: the API tree reports 429 total entries; this is not a count of source files alone.]
+- The recursive Git tree contains 429 entries in total (files and directories combined).
 - Root package version remains `1.0.11`.
 - CHANGELOG.md still documents only `1.0.0`; the available published GitHub Release is `v1.0.0`.
 - The prior audit's HEAD `090c6f0` is historical, not current.
