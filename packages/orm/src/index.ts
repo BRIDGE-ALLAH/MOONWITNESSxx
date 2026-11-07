@@ -38,6 +38,7 @@ export interface FieldDefinition<TValue = unknown> {
   readonly readonly?: boolean;
   readonly index?: boolean;
   readonly unique?: boolean;
+  readonly override?: boolean;
   readonly default?: FieldDefault<TValue>;
   readonly label?: string;
   readonly description?: string;
@@ -150,6 +151,7 @@ export interface RegistryModelEntry {
   readonly kind: ModelKind;
   readonly fields: Readonly<Record<string, FieldDefinition>>;
   readonly sourceAddon: string;
+  readonly inherits?: readonly string[];
   readonly extensions: readonly string[];
 }
 
