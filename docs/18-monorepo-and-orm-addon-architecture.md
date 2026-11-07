@@ -103,3 +103,7 @@ SQLite is the ARSY System Database for control-plane state: installed plugin/mod
 Redis is runtime infrastructure, not authoritative business storage. Disk/S3-compatible storage owns file bytes; business records own attachment metadata. Telegram is a connector, not a database provider. libSQL may be evaluated as an optional lightweight business-data profile, but it does not replace the SQLite System Database role or PostgreSQL production business role.
 
 These provider roles supersede older shorthand in this document that grouped PostgreSQL/libSQL as interchangeable database profiles.
+
+
+## 20. Decision record
+Accepted foundation decisions are recorded in `docs/24-architecture-decision-records.md` (ADR-001–ADR-012). When this document and an ADR diverge, update the relevant ADR and this architecture contract together; do not leave competing provider or ORM definitions.
