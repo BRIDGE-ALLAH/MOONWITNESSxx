@@ -34,7 +34,7 @@ The first five describe the product's knowledge practice; SHARE expresses the ou
 - **MOONWITNESS Observatory** — research and evidence experience. Uses instrument-like layouts, source trails, timelines, maps, and observation records.
 - **MOONWITNESS Archive** — durable knowledge, records, provenance, and retrieval. Uses editorial and archival patterns.
 - **MOONWITNESS XV** — a program/release expression within the master brand, not a separate master identity.
-- **RIOTWORKS** — independent creative/engineering studio or delivery partner. It is not the master brand, must not appear in MOONWITNESS product lockups by default, and must not donate its Acid Lime/punk-comic identity to core MoonWitness surfaces. Credit it only where an explicit studio credit is appropriate.
+- **RIOTWORKS** — product division within MOONWITNESS. It owns division-level products and operating workflows under the master brand; it is not a separate studio or competing master identity. Its own visual expression may be used on explicitly RIOTWORKS-owned surfaces, while MOONWITNESS remains the parent identity.
 
 Product names may use a descriptive descriptor lockup, but the master symbol and wordmark remain stable. Do not create a new logo for every module.
 
