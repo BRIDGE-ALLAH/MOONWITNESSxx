@@ -46,6 +46,7 @@ services:
       context: .
       dockerfile: Dockerfile.arsy
     container_name: moonwitness-arsy
+    command: ['pnpm', 'dev']
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${ARSY_PORT:-3001}
@@ -79,6 +80,7 @@ services:
       context: .
       dockerfile: Dockerfile.headquarter
     container_name: moonwitness-headquarter
+    command: ['pnpm', 'dev']
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${HEADQUARTER_PORT:-3000}
