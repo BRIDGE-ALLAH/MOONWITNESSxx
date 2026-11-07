@@ -75,18 +75,18 @@ Implemented in the current development branch (implementation presence is not eq
 - server-side Headquarter signed sessions, same-origin mutation checks, and server-only ARSY service credentials;
 - eligible opportunity → version-1 product brief creation, product list/detail API, append-only version history, audited lifecycle transitions and The Forge editing controls;
 - financial event ingestion with idempotency, event listing, currency-grouped verified summaries, and evidence-backed reconciliation;
-- version-bound asset binary storage, server-computed SHA-256, upload idempotency, provenance, private attachment downloads, append-only inspections, and fail-closed inspection readiness; the current operator API cannot impersonate a trusted reviewer or automated inspection principal;
-- audit events for opportunity, product, and financial operations;
+- version-bound asset binary storage, server-computed SHA-256, upload idempotency, provenance and derivative links, private attachment downloads, append-only inspections, and fail-closed inspection readiness;
+- audit events for opportunity, product, financial and asset operations;
 - explicit PostgreSQL migrations for opportunity/product/version/financial-event/audit/asset/provenance/inspection tables, checksum runner, and isolated integration-test coverage for migration reruns, lifecycle, idempotency, reconciliation, audit events and persistence after reconnect;
-- Playwright browser E2E coverage configured for login → opportunity capture/review/edit/decision → product brief/version/lifecycle → asset upload/provenance/inspection → financial event/reconciliation → Aftershock metrics → archive → logout. The current-head workflow result is pending.
+- Playwright browser E2E coverage configured for login → opportunity capture/review/edit/decision → product brief/version/lifecycle → asset upload/provenance/inspection → financial event/reconciliation → Aftershock metrics → archive → logout. Exact-head workflow result is pending.
 
 Not yet implemented or verified:
-- generic opportunity editing and operator-facing detail/evidence-history UI; decision and archive actions are implemented. Product detail UI and version editing beyond version 1 remain incomplete;
-- asset binary storage, rights/inspection workflows, channel/listing integrations, payout lifecycle, and external provider webhooks;
+- trusted reviewer and automated-inspection authentication; the public operator API cannot create a qualifying non-owner inspection actor, so asset channel readiness remains blocked even when an operator reports a pass;
+- channel/listing integrations, publication receipts, payout lifecycle and external provider webhooks;
 - shared/distributed login-attempt throttling (the current login throttle is process-local and must be paired with an ingress limiter before scaling);
 - current-head CI, CodeQL, container build, PostgreSQL integration and Playwright E2E execution evidence;
 - production deployment, managed secrets, HTTPS ingress, backups, restore drills, rollback and live smoke tests;
 - search/filter/cursor pagination and complete lifetime counts; current portfolio counts are explicitly bounded to the latest 100 records;
-- channel listing/publication receipts, payout provider integrations and verified FX conversion.
+- payout provider integrations and verified FX conversion.
 
 No sample transaction, revenue figure, payout, market trend or publication is created by this workflow.
