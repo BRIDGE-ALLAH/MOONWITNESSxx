@@ -19,7 +19,7 @@ type Asset = {
 }
 type Readiness = {
   ready: boolean
-  inspections: Record<'rights' | 'policy' | 'technical-qa' | 'creative-qa', 'pass' | 'blocked' | 'unknown'>
+  inspections: Record<'rights' | 'policy' | 'technical-qa' | 'creative-qa', { status: 'pass' | 'blocked' | 'unknown'; source: 'operator-attestation' | 'automated-check' | 'independent-review' | null; reviewedAt: string | null }>
 }
 type Props = { productId: string; productVersion: number }
 const inspectionTypes = [
@@ -50,6 +50,7 @@ export function AssetManager({ productId, productVersion }: Props) {
   const [disclosure, setDisclosure] = useState('')
   const [inspectionType, setInspectionType] = useState<(typeof inspectionTypes)[number][0]>('rights')
   const [inspectionStatus, setInspectionStatus] = useState<'pass' | 'blocked' | 'unknown'>('unknown')
+  const [inspectionSource, setInspectionSource] = useState<'operator-attestation' | 'automated-check' | 'independent-review'>('operator-attestation')
   const [inspectionRationale, setInspectionRationale] = useState('')
   const [inspectionEvidence, setInspectionEvidence] = useState('')
   const [activeInspection, setActiveInspection] = useState('')
@@ -134,7 +135,7 @@ export function AssetManager({ productId, productVersion }: Props) {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          inspectionType, status: inspectionStatus, inspectionSource: 'operator-attestation',
+          inspectionType, status: inspectionStatus, inspectionSource,
           rationale: inspectionRationale.trim(), findings: [], evidence,
         }),
       })
@@ -142,7 +143,7 @@ export function AssetManager({ productId, productVersion }: Props) {
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to record inspection.')
       setInspectionRationale(''); setInspectionEvidence('')
-      setMessage('Operator inspection attestation appended. It is not an independent rights or policy verification.')
+      setMessage('Inspection record appended with its declared source type. Source labels are recorded claims; the platform does not authenticate an external reviewer.')
       await refresh()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to record inspection.')
@@ -161,11 +162,12 @@ export function AssetManager({ productId, productVersion }: Props) {
         <p className="text-xs text-muted-ink">Creator: {asset.provenance.creator} · License: {asset.provenance.license}</p>
         <p className="text-xs text-muted-ink">Permission basis: {asset.provenance.permissionBasis}</p>
         <p className="text-xs text-muted-ink">Disclosure: {asset.provenance.disclosure}</p>
-        <div className="grid grid-cols-2 gap-2 text-[10px] font-mono uppercase md:grid-cols-4">{inspectionTypes.map(([key, label]) => <div key={key} className="border border-acid-lime/15 p-2"><p className="text-muted-ink">{label}</p><p className={gate?.inspections[key] === 'pass' ? 'mt-1 text-acid-lime' : gate?.inspections[key] === 'blocked' ? 'mt-1 text-red-300' : 'mt-1 text-orange-200'}>{gate?.inspections[key] ?? 'unknown'}</p></div>)}</div>
-        <p className={gate?.ready ? 'text-xs text-acid-lime' : 'text-xs text-orange-200'}>{gate?.ready ? 'All required inspection statuses are pass.' : 'Not channel-ready: one or more inspections are unknown or blocked.'}</p>
+        <div className="grid grid-cols-2 gap-2 text-[10px] font-mono uppercase md:grid-cols-4">{inspectionTypes.map(([key, label]) => <div key={key} className="border border-acid-lime/15 p-2"><p className="text-muted-ink">{label}</p><p className={gate?.inspections[key]?.status === 'pass' ? 'mt-1 text-acid-lime' : gate?.inspections[key]?.status === 'blocked' ? 'mt-1 text-red-300' : 'mt-1 text-orange-200'}>{gate?.inspections[key]?.status ?? 'unknown'}</p><p className="mt-1 break-words text-[9px] text-muted-ink">{gate?.inspections[key]?.source ?? 'no source'}</p></div>)}</div>
+        <p className={gate?.ready ? 'text-xs text-acid-lime' : 'text-xs text-orange-200'}>{gate?.ready ? 'All required inspection statuses and source qualifications are satisfied.' : 'Not channel-ready: missing/blocked checks or insufficiently qualified inspection sources.'}</p>
         <details className="border-t border-acid-lime/10 pt-2">
           <summary className="cursor-pointer font-mono text-[10px] uppercase text-muted-ink">Append operator inspection attestation</summary>
           <div className="mt-3 grid gap-2 md:grid-cols-2">
+            <label className="text-[10px] font-mono uppercase">Inspection source<select value={inspectionSource} onChange={(event) => setInspectionSource(event.target.value as typeof inspectionSource)} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="operator-attestation">Operator attestation</option><option value="automated-check">Automated check</option><option value="independent-review">Independent review (reported)</option></select></label>
             <label className="text-[10px] font-mono uppercase">Inspection type<select value={inspectionType} onChange={(event) => setInspectionType(event.target.value as typeof inspectionType)} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case">{inspectionTypes.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
             <label className="text-[10px] font-mono uppercase">Status<select value={inspectionStatus} onChange={(event) => setInspectionStatus(event.target.value as typeof inspectionStatus)} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case"><option value="unknown">Unknown</option><option value="pass">Pass · operator attestation</option><option value="blocked">Blocked</option></select></label>
             <label className="text-[10px] font-mono uppercase md:col-span-2">Rationale<textarea value={inspectionRationale} onChange={(event) => setInspectionRationale(event.target.value)} rows={2} maxLength={2000} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
