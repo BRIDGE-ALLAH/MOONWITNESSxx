@@ -6,18 +6,22 @@
 
 ## 1. Role in the wider universe
 
-MOONWITNESS is the master ecosystem and product identity. It exists within the broader EMPIRE OF THE LIGHT — A-L-L-A-H narrative universe. This is a product and story relationship, not a claim that software has divine authority or supernatural capability.
+MOONWITNESS is the master ecosystem and product identity within the wider GODPROMISE → EMPIRE OF THE LIGHT narrative universe. This is a product and story relationship, not a claim that software has divine authority or supernatural capability.
 
-- **EMPIRE OF THE LIGHT** is the overarching vision and values narrative.
-- **MOONWITNESS** is the master brand: observe, record, verify, connect, understand, and share.
+- **GODPROMISE** is the vision, promise, and ethical commitment narrative.
+- **EMPIRE OF THE LIGHT** is the overarching institutional, enterprise, knowledge, creative, and community universe.
+- **MOONWITNESS** is the master product and technology identity: observe, record, verify, connect, understand, and share.
+- **A-L-L-A-H.COM** is the intended unified public home and gateway to the wider universe.
 - **MOONWITNESS Observatory** is the research and evidence experience.
 - **MOONWITNESS Archive** is the durable knowledge, records, provenance, and retrieval experience.
-- **RIOTWORKS** is an independent creative/engineering studio identity and possible delivery partner. It is not the MOONWITNESS product brand.
-- **ARSY** is the backend command/orchestration runtime.
-- **ZILL** represents guardianship, integrity, and protection.
+- **ROCKSOUL** is a distinct creative/narrative identity and technical runtime direction; ROCKSOUL DNA and ROCKSOUL Runtime are separate concerns.
+- **E-ISP.ID** is the connectivity business identity and service ecosystem.
+- **RIOTWORKS** is the product and operating division within MOONWITNESS, initially owning the creative-commerce workflow. It is not a competing master brand.
+- **ARSY** is the backend application authority and orchestration runtime.
+- **ZILL** represents guardianship, integrity, rights, quality, and protection.
 - **MIZAN** represents balance, accounting, and accountability.
 
-RIOTWORKS may retain its own studio identity in its own portfolio and attribution. It must not appear in MOONWITNESS product lockups or be used as the default visual language of MoonWitness applications.
+RIOTWORKS may use a distinct division-level visual expression on RIOTWORKS-owned products and workflows. It remains subordinate to the MOONWITNESS master brand and must not replace the master identity across the wider ecosystem.
 
 ## 2. The world MOONWITNESS responds to
 
@@ -62,7 +66,9 @@ We correct the record when evidence changes.
 - **Brand Manifesto:** WHEN THE MOON RISES, WE SHARE MESSAGES.
 - **Category:** Evidence-first observatory and human knowledge-sharing ecosystem.
 - **Experience families:** Observatory and Archive.
-- **Studio attribution:** RIOTWORKS, only where a studio credit is appropriate.
+- **Division attribution:** RIOTWORKS, where the product or workflow is owned by the division.
+
+The wider product catalog and its application/module/platform boundaries are recorded in [docs/32 — Universe & Product Architecture Registry](./32-universe-and-product-architecture-registry.md). Its additional product experiences are targets, not claims of current implementation.
 
 ## 7. Tone of voice
 
@@ -90,4 +96,4 @@ These values are ethical design principles, not claims that the product represen
 - Do not imply divine endorsement, guaranteed blessing, guaranteed earnings, or religious authority.
 - Character art must not trivialize sacred figures or religious symbols.
 - MoonWitness lore must not obscure the product's actual function.
-- RIOTWORKS studio identity remains distinct from MOONWITNESS product identity.
+- RIOTWORKS division identity remains subordinate to and consistent with the MOONWITNESS master brand.
