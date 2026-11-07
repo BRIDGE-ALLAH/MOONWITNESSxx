@@ -1,0 +1,10 @@
+logger:
+  enable: true
+  pretty_backtrace: false
+  level: <%= get_env(name="LOG_LEVEL", default="info") %>
+  format: json
+
+server:
+  port: <%= get_env(name="PORT", default="5150") %>
+  binding: <%= get_env(name="BINDING", default="0.0.0.0") %>
+  host: <%= get_env(name="ATLAS_PUBLIC_URL") %>
