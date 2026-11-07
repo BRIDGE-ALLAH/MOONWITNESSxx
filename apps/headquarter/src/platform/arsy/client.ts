@@ -39,9 +39,14 @@ function makeUrl(path: string): string {
 
 async function wait(ms: number, signal?: AbortSignal): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(resolve, ms)
+    const cleanup = () => signal?.removeEventListener('abort', abort)
+    const timer = setTimeout(() => {
+      cleanup()
+      resolve()
+    }, ms)
     const abort = () => {
       clearTimeout(timer)
+      cleanup()
       reject(signal?.reason ?? new DOMException('Request aborted', 'AbortError'))
     }
     if (signal?.aborted) return abort()
@@ -90,8 +95,15 @@ export async function arsyRequest<T>(path: string, options: ArsyRequestOptions =
 
   let attempt = 0
   while (true) {
+    if (externalSignal?.aborted) {
+      throw externalSignal.reason ?? new DOMException('Request aborted', 'AbortError')
+    }
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), timeoutMs)
+    let timedOut = false
+    const timeout = setTimeout(() => {
+      timedOut = true
+      controller.abort(new DOMException('Request timed out', 'TimeoutError'))
+    }, timeoutMs)
     const abortFromCaller = () => controller.abort(externalSignal?.reason)
     externalSignal?.addEventListener('abort', abortFromCaller, { once: true })
 
@@ -118,10 +130,19 @@ export async function arsyRequest<T>(path: string, options: ArsyRequestOptions =
       if (response.status === 204) return undefined as T
       return await response.json() as T
     } catch (error) {
-      const aborted = controller.signal.aborted || (error instanceof DOMException && error.name === 'AbortError')
       if (error instanceof ArsyApiError) throw error
-      if (aborted) throw error
-      if (attempt >= retryLimit) {
+      if (externalSignal?.aborted) throw externalSignal.reason ?? error
+      if (timedOut) {
+        if (attempt >= retryLimit) {
+          throw new ArsyApiError('ARSY request timed out. Please try again.', {
+            status: 0,
+            code: 'TIMEOUT',
+            requestId,
+          })
+        }
+      } else if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error
+      } else if (attempt >= retryLimit) {
         throw new ArsyApiError('ARSY is currently unreachable. Please try again.', {
           status: 0,
           code: 'NETWORK_ERROR',
