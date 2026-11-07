@@ -29,7 +29,8 @@ export default function UiLabPage() {
           className="mt-8"
           eyebrow="Moonwitness // Signal observatory"
           index="MW—007"
-          state="live"
+          state="idle"
+          statusLabel="Workbench demo"
           title="See the signal. Shape what follows."
           description="A living interface for teams that turn emerging signals into work with consequence. Cinematic at first glance. Precise under pressure."
           actions={<Button variant="electric">Explore the system</Button>}
