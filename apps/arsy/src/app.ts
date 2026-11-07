@@ -10,7 +10,7 @@ export interface CreateAppOptions {
   logger?: boolean
 }
 
-export function createApp(options: CreateAppOptions = {}) {
+export async function createApp(options: CreateAppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? true })
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
