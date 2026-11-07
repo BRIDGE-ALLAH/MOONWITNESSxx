@@ -90,3 +90,29 @@ test('channel creation starts at C0 and review requires explicit evidence-backed
     assert.match(pool.calls[1].sql, /capability = \$2/)
   } finally { await app.close() }
 })
+
+ 
+test('channel review rejects duplicate country entries rather than accepting conflicting states', async () => {
+  const pool = fakePool()
+  const app = await createApp({ databasePool: pool, logger: false, env })
+  try {
+    const response = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/channels/11111111-1111-4111-8111-111111111111/review',
+      headers: { 'x-arsy-operator-token': token },
+      payload: {
+        countryEligibility: [
+          { country: 'ID', status: 'blocked', sourceUrl: 'https://example.com/no', checkedAt: '2026-11-08T00:00:00Z' },
+          { country: 'ID', status: 'pass', sourceUrl: 'https://example.com/yes', checkedAt: '2026-11-08T00:00:00Z' },
+        ],
+        payoutRequirements: { status: 'unknown', notes: 'Not checked yet.' },
+        policyStatus: 'unknown',
+        manualFallback: 'The owner manually uploads the package and records the receipt.',
+      },
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(pool.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
