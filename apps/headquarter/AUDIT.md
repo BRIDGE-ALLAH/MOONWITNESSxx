@@ -130,6 +130,6 @@ The separate full-workspace typecheck/build workflow was skipped by workflow con
 - Added fixture invariants for ARSY DECK: explicit demo disclosure, unique IDs, bounded confidence, and sample-only agent states.
 - Hardened the ARSY client URL boundary: absolute/protocol-relative URLs, backslashes, and literal or percent-encoded parent-directory segments are rejected before fetch; regression tests cover these cases.
 - Wired the Headquarter test command into the Asset Integrity CI job without introducing a new test framework dependency.
-- CI execution is pending PR validation. No test pass is claimed before Actions reports success.
+- PR #38 head `431720caf3ecdfe7266971c6803922c1cd48a2e7`: Repository CI and CodeQL passed. The Headquarter API/fixture tests, asset/UI/Headquarter type-checks, production build, asset validation, and asset registry tests all passed. Full-workspace quality remains skipped because `FULL_QUALITY_CI` is not enabled.
 - Browser E2E, keyboard/screen-reader audit, WCAG contrast verification, responsive checks, visual regression, performance budgets, dependency/license review, and ARSY contract tests remain open.
 - Production promotion remains blocked on approved ARSY identity/session, workspace, permission, and feature API contracts.
