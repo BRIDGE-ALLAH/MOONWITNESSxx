@@ -8,7 +8,7 @@ const password = process.env.HEADQUARTER_OPERATOR_PASSWORD
 if (!password) throw new Error('HEADQUARTER_OPERATOR_PASSWORD is required for the isolated E2E environment.')
 
 const browser = await chromium.launch({ headless: true })
-const context = await browser.newContext()
+const context = await browser.newContext({ ignoreHTTPSErrors: true })
 const page = await context.newPage()
 const runId = `e2e-${Date.now()}`
 const title = `Persisted commerce workflow ${runId}`
