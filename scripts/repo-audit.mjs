@@ -114,19 +114,23 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
         }
       }
 
-      for (const [scriptName, command] of Object.entries(manifest.scripts ?? {})) {
-        const matches = String(command).matchAll(/--filter\s+(@[a-zA-Z0-9._/-]+)/g)
-        for (const match of matches) {
-          if (!packageNames.has(match[1]) && !workspacePackages.some((item) => item.manifest.name === match[1])) {
-            warnings.push(`${manifest.name} script "${scriptName}" targets unknown workspace package ${match[1]}.`)
-          }
+  }
+
+  for (const { manifest } of workspacePackages) {
+    for (const [scriptName, command] of Object.entries(manifest.scripts ?? {})) {
+      const matches = String(command).matchAll(/--filter\s+(@[a-zA-Z0-9._/-]+)/g)
+      for (const match of matches) {
+        if (!packageNames.has(match[1])) {
+          warnings.push(`${manifest.name} script "${scriptName}" targets unknown workspace package ${match[1]}.`)
         }
       }
     }
   }
 
   const lockfile = await readText('pnpm-lock.yaml')
-  const importerSection = lockfile.split(/\npackages:\s*\n/, 1)[0]
+  const lockfileDocuments = lockfile.split(/^---\s*$/m).filter((document) => document.trim().length > 0)
+  const activeLockfile = lockfileDocuments.at(-1) ?? lockfile
+  const importerSection = activeLockfile.split(/\npackages:\s*\n/, 1)[0]
   const missingImporters = workspacePackages
     .map((item) => item.path.split(sep).join('/'))
     .filter((path) => !new RegExp(`^  ${escapeRegExp(path)}:\\s*$`, 'm').test(importerSection))
