@@ -139,12 +139,24 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
   try {
     rootManifest = JSON.parse(rootManifestText ?? '')
   } catch {
-    add(findings, 'error', 'GOV-ROOT-MANIFEST', 'Root package.json is missing or invalid.', 'package.json')
+    add(
+      findings,
+      'error',
+      'GOV-ROOT-MANIFEST',
+      'Root package.json is missing or invalid.',
+      'package.json'
+    )
   }
 
   if (rootManifest) {
     if (rootManifest.name !== 'moonwitness') {
-      add(findings, 'error', 'GOV-ROOT-IDENTITY', 'Root package name must be moonwitness.', 'package.json')
+      add(
+        findings,
+        'error',
+        'GOV-ROOT-IDENTITY',
+        'Root package name must be moonwitness.',
+        'package.json'
+      )
     }
     if (rootManifest.engines?.node !== '>=22') {
       add(findings, 'error', 'GOV-NODE-ENGINE', 'Node engine must be >=22.', 'package.json')
@@ -163,7 +175,13 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
   const workspaceText = (await read(root, 'pnpm-workspace.yaml')) ?? ''
   const roots = workspaceRoots(workspaceText)
   if (!roots.includes('apps/*') || !roots.includes('packages/*')) {
-    add(findings, 'error', 'GOV-WORKSPACE-ROOTS', 'Workspace must include apps/* and packages/*.', 'pnpm-workspace.yaml')
+    add(
+      findings,
+      'error',
+      'GOV-WORKSPACE-ROOTS',
+      'Workspace must include apps/* and packages/*.',
+      'pnpm-workspace.yaml'
+    )
   }
   if (roots.includes('services/*')) {
     add(
@@ -198,7 +216,13 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
       try {
         manifest = JSON.parse(manifestText)
       } catch {
-        add(findings, 'error', 'GOV-PACKAGE-MANIFEST', `Invalid package manifest: ${path}/package.json`, path)
+        add(
+          findings,
+          'error',
+          'GOV-PACKAGE-MANIFEST',
+          `Invalid package manifest: ${path}/package.json`,
+          path
+        )
         continue
       }
 
@@ -272,12 +296,27 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
         continue
       }
       if (!isApp && target.path.startsWith('apps/')) {
-        add(findings, 'error', 'GOV-PACKAGE-TO-APP', `Reusable package depends on application ${name}.`, item.path)
+        add(
+          findings,
+          'error',
+          'GOV-PACKAGE-TO-APP',
+          `Reusable package depends on application ${name}.`,
+          item.path
+        )
       }
       if (isApp && target.path.startsWith('apps/')) {
-        add(findings, 'error', 'GOV-APP-TO-APP', `Application depends directly on application ${name}.`, item.path)
+        add(
+          findings,
+          'error',
+          'GOV-APP-TO-APP',
+          `Application depends directly on application ${name}.`,
+          item.path
+        )
       }
-      if (item.path === 'apps/headquarter' && /(orm-db|postgres|sqlite|kysely|database-adapter)/i.test(name)) {
+      if (
+        item.path === 'apps/headquarter' &&
+        /(orm-db|postgres|sqlite|kysely|database-adapter)/i.test(name)
+      ) {
         add(
           findings,
           'error',
@@ -287,7 +326,13 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
         )
       }
       if (item.path === 'apps/arsy' && /(^|\/)(ui|headquarter)(\/|$)/i.test(name)) {
-        add(findings, 'error', 'GOV-ARSY-UI', `ARSY must not depend on UI package ${name}.`, item.path)
+        add(
+          findings,
+          'error',
+          'GOV-ARSY-UI',
+          `ARSY must not depend on UI package ${name}.`,
+          item.path
+        )
       }
     }
   }
@@ -306,12 +351,27 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
       const target = packageMap.get(imported)
       if (!target) continue
       if (owner.startsWith('packages/') && target.path.startsWith('apps/')) {
-        add(findings, 'error', 'GOV-SOURCE-PACKAGE-TO-APP', `Package source imports application package ${imported}.`, path)
+        add(
+          findings,
+          'error',
+          'GOV-SOURCE-PACKAGE-TO-APP',
+          `Package source imports application package ${imported}.`,
+          path
+        )
       }
       if (owner.startsWith('apps/') && target.path.startsWith('apps/') && owner !== target.path) {
-        add(findings, 'error', 'GOV-SOURCE-APP-TO-APP', `Application source imports another application package ${imported}.`, path)
+        add(
+          findings,
+          'error',
+          'GOV-SOURCE-APP-TO-APP',
+          `Application source imports another application package ${imported}.`,
+          path
+        )
       }
-      if (owner === 'apps/headquarter' && /(orm-db|postgres|sqlite|kysely|database-adapter)/i.test(imported)) {
+      if (
+        owner === 'apps/headquarter' &&
+        /(orm-db|postgres|sqlite|kysely|database-adapter)/i.test(imported)
+      ) {
         add(
           findings,
           'error',
@@ -321,20 +381,35 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
         )
       }
       if (owner === 'apps/arsy' && /(^|\/)(ui|headquarter)(\/|$)/i.test(imported)) {
-        add(findings, 'error', 'GOV-SOURCE-ARSY-UI', `ARSY source imports UI package ${imported}.`, path)
+        add(
+          findings,
+          'error',
+          'GOV-SOURCE-ARSY-UI',
+          `ARSY source imports UI package ${imported}.`,
+          path
+        )
       }
     }
   }
 
   if (!(await exists(root, 'governance/README.md'))) {
-    add(findings, 'error', 'GOV-AUTHORITY-MISSING', 'Canonical governance index is missing.', 'governance/README.md')
+    add(
+      findings,
+      'error',
+      'GOV-AUTHORITY-MISSING',
+      'Canonical governance index is missing.',
+      'governance/README.md'
+    )
   }
   if (!(await exists(root, 'AGENTS.md'))) {
     add(findings, 'warning', 'GOV-AGENTS-MISSING', 'Root AGENTS.md is missing.', 'AGENTS.md')
   }
 
   const authority = (await read(root, 'governance/README.md')) ?? ''
-  if (!/Approved security and safety constraints/i.test(authority) || !/governance\/contracts/i.test(authority)) {
+  if (
+    !/Approved security and safety constraints/i.test(authority) ||
+    !/governance\\/contracts/i.test(authority)
+  ) {
     add(
       findings,
       'error',
@@ -347,14 +422,26 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
   const enforcement = await read(root, 'governance/enforcement.md')
   let rows = []
   if (!enforcement) {
-    add(findings, 'error', 'GOV-ENFORCEMENT-MISSING', 'Rule enforcement register is missing.', 'governance/enforcement.md')
+    add(
+      findings,
+      'error',
+      'GOV-ENFORCEMENT-MISSING',
+      'Rule enforcement register is missing.',
+      'governance/enforcement.md'
+    )
   } else {
     rows = ruleRows(enforcement)
     const ids = new Set()
 
     for (const row of rows) {
       if (ids.has(row.id)) {
-        add(findings, 'error', 'GOV-DUPLICATE-RULE-ID', `Duplicate governance rule ID ${row.id}.`, 'governance/enforcement.md')
+        add(
+          findings,
+          'error',
+          'GOV-DUPLICATE-RULE-ID',
+          `Duplicate governance rule ID ${row.id}.`,
+          'governance/enforcement.md'
+        )
       }
       ids.add(row.id)
       if (!row.hasEnforcement || !row.hasState) {
@@ -368,12 +455,20 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
       }
     }
     if (rows.length === 0) {
-      add(findings, 'error', 'GOV-RULES-NOT-FOUND', 'No rule IDs were found in the enforcement register.', 'governance/enforcement.md')
+      add(
+        findings,
+        'error',
+        'GOV-RULES-NOT-FOUND',
+        'No rule IDs were found in the enforcement register.',
+        'governance/enforcement.md'
+      )
     }
   }
 
   const workflowFiles = await walk(root, '.github/workflows')
-  for (const path of workflowFiles.filter((file) => file.endsWith('.yml') || file.endsWith('.yaml'))) {
+  for (const path of workflowFiles.filter(
+    (file) => file.endsWith('.yml') || file.endsWith('.yaml')
+  )) {
     const yaml = (await read(root, path)) ?? ''
     const hasPermissions = /^permissions\s*:/m.test(yaml) || /^\s{2,}permissions\s*:/m.test(yaml)
 
@@ -387,7 +482,13 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
       )
     }
     if (/permissions\s*:\s*write-all/i.test(yaml)) {
-      add(findings, 'error', 'GOV-WORKFLOW-WRITE-ALL', 'Workflow must not grant write-all permissions.', path)
+      add(
+        findings,
+        'error',
+        'GOV-WORKFLOW-WRITE-ALL',
+        'Workflow must not grant write-all permissions.',
+        path
+      )
     }
     if (/pull_request_target:/m.test(yaml) && /\b(?:npm|pnpm|yarn)\s+(?:install|run)|\bnode\s+.*scripts\//i.test(yaml)) {
       add(
@@ -486,7 +587,9 @@ export async function runGovernance({
   if (command === 'doctor') {
     const result = doctor(root)
     console.log(JSON.stringify(result, null, 2))
-    if (!result.nodeSupported || !result.pnpmSupported || !result.gitRepository) process.exitCode = 1
+    if (!result.nodeSupported || !result.pnpmSupported || !result.gitRepository) {
+      process.exitCode = 1
+    }
     return result
   }
 
