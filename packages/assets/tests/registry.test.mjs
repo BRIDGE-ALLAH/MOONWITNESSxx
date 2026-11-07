@@ -42,7 +42,8 @@ test("registered dimensions match every SVG viewBox aspect ratio", async () => {
     const root = source.match(/<svg\b[^>]*>/i)?.[0];
     assert.ok(root, asset.id + ": missing SVG root");
 
-    const viewBox = root.match(/\bviewBox="([^"]+)"/i)?.[1];
+    const viewBoxMatch = root.match(/\bviewBox\s*=\s*(?:"([^"]+)"|'([^']+)')/i);
+    const viewBox = viewBoxMatch?.[1] ?? viewBoxMatch?.[2];
     assert.ok(viewBox, asset.id + ": missing viewBox");
     const values = viewBox.trim().split(/[\s,]+/).map(Number);
     assert.equal(values.length, 4, asset.id + ": viewBox requires four numbers");
