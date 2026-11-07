@@ -8,7 +8,7 @@ export function compileEvidenceExpiryBudget(records: EvidenceRecord[], now: Date
   const invalidOptions = !Number.isFinite(warningDays) || !Number.isFinite(criticalDays) || warningDays < criticalDays || criticalDays < 0
   const invalidNow = !Number.isFinite(now.getTime())
   const seen = new Set<string>()
-  const items: EvidenceExpiryItem[] = records.map((record) => {
+  const items: EvidenceExpiryItem[] = records.map((record): EvidenceExpiryItem => {
     const captured = Date.parse(record.capturedAt), expiry = Date.parse(record.validUntil)
     const malformed = invalidOptions || invalidNow || !record.id.trim() || seen.has(record.id)
       || !Number.isFinite(captured) || !Number.isFinite(expiry) || expiry < captured
