@@ -188,8 +188,8 @@ export class ListingRepository {
       item.sourceUrl === channel.officialPolicyUrl &&
       item.evidenceClass === 'observed-fact',
     )
-    const accountEvidence = evidence.find((item) => item.evidenceType === 'account-eligibility' && item.evidenceClass !== 'unknown')
-    const payoutEvidence = evidence.find((item) => item.evidenceType === 'payout-requirements' && item.evidenceClass !== 'unknown')
+    const accountEvidence = evidence.find((item) => item.evidenceType === 'account-eligibility' && item.evidenceClass === 'observed-fact')
+    const payoutEvidence = evidence.find((item) => item.evidenceType === 'payout-requirements' && item.evidenceClass === 'observed-fact')
     const candidateChannels = Array.isArray(product.brief.candidateChannels) ? product.brief.candidateChannels.map((value) => String(value).toLowerCase()) : []
     const channelCandidate = candidateChannels.includes(channel.channelKey.toLowerCase()) || candidateChannels.includes(channel.displayName.toLowerCase())
     const configuredMetadata = Array.isArray(channel.listingRequirements.requiredMetadata) ? channel.listingRequirements.requiredMetadata.map(String) : []
@@ -216,7 +216,7 @@ export class ListingRepository {
       {
         key: 'country-eligibility',
         status: channel.accountEligibility === 'eligible' && accountEvidence ? 'pass' : channel.accountEligibility === 'ineligible' ? 'blocked' : 'unknown',
-        rationale: channel.accountEligibility === 'eligible' && accountEvidence ? 'Account eligibility is recorded with dated evidence.' : 'Country/account eligibility is not verified by current evidence.',
+        rationale: channel.accountEligibility === 'eligible' && accountEvidence ? 'Account eligibility is supported by dated observed evidence.' : 'Country/account eligibility is not verified by current evidence.',
         evidence: accountEvidence ? [accountEvidence.sourceUrl] : [],
       },
       {
@@ -228,7 +228,7 @@ export class ListingRepository {
       {
         key: 'payout-setup',
         status: channel.payoutSetupStatus === 'unavailable' ? 'blocked' : channel.payoutSetupStatus === 'configured' && payoutEvidence ? 'pass' : 'unknown',
-        rationale: channel.payoutSetupStatus === 'configured' && payoutEvidence ? 'Payout setup is recorded with evidence.' : 'Payout requirements or account payout setup remain unverified.',
+        rationale: channel.payoutSetupStatus === 'configured' && payoutEvidence ? 'Payout setup is supported by dated observed evidence.' : 'Payout requirements or account payout setup remain unverified.',
         evidence: payoutEvidence ? [payoutEvidence.sourceUrl] : [],
       },
       {
