@@ -93,9 +93,15 @@ export function assessSourceLineageIndependence(input: { records: readonly Sourc
     const left = closures.get(selected[i])!; const right = closures.get(selected[j])!;
     for (const ref of left) if (right.has(ref)) shared.add(ref);
   }
-  const familyIds: string[] = selected.map((ref) => {\n    const familyId: unknown = byRef.get(ref)?.familyId;\n    return typeof familyId === "string" ? familyId.trim() : "";\n  });
+  const familyIds: string[] = selected.map((ref) => {
+    const familyId: unknown = byRef.get(ref)?.familyId;
+    return typeof familyId === "string" ? familyId.trim() : "";
+  });
   const duplicateFamilies = familyIds.some((family, index) => family !== "" && familyIds.indexOf(family) !== index);
-  const missingFamilies = selected.some((ref) => {\n    const familyId: unknown = byRef.get(ref)?.familyId;\n    return typeof familyId !== "string" || !familyId.trim();\n  });
+  const missingFamilies = selected.some((ref) => {
+    const familyId: unknown = byRef.get(ref)?.familyId;
+    return typeof familyId !== "string" || !familyId.trim();
+  });
   const reasonCodes: string[] = [];
   if (shared.size) reasonCodes.push("shared-lineage-ancestor");
   if (duplicateFamilies) reasonCodes.push("shared-witness-family");
