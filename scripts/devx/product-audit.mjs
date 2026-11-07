@@ -1,6 +1,9 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 
+const WORKSPACE_ROOTS = ['apps', 'packages']
+const WORKSPACE_PATTERNS = new Set(WORKSPACE_ROOTS.map((root) => root + '/*'))
+
 const readText = async (path, fallback = '') => {
   try { return await readFile(path, 'utf8') } catch { return fallback }
 }
@@ -9,16 +12,18 @@ const finding = (id, severity, message) => ({ id, severity, message })
 
 async function workspacePackages(root, patterns) {
   const packages = []
-  for (const pattern of patterns) {
-    const [base, wildcard] = pattern.split('/')
-    if (wildcard !== '*') continue
+  // Never use a workspace glob from repository content as a filesystem path.
+  // Only the two repository-owned workspace roots are traversed.
+  for (const base of WORKSPACE_ROOTS) {
+    if (!patterns.includes(base + '/*')) continue
+    const directory = join(root, base)
     let entries = []
-    try { entries = await readdir(join(root, base), { withFileTypes: true }) } catch { continue }
+    try { entries = await readdir(directory, { withFileTypes: true }) } catch { continue }
     for (const entry of entries.filter((item) => item.isDirectory())) {
-      const directory = join(root, base, entry.name)
+      const packageDirectory = join(directory, entry.name)
       try {
-        const manifest = await readJson(join(directory, 'package.json'))
-        packages.push({ directory, path: relative(root, directory).replaceAll('\\', '/'), manifest })
+        const manifest = await readJson(join(packageDirectory, 'package.json'))
+        packages.push({ directory: packageDirectory, path: relative(root, packageDirectory).replaceAll('\\\\', '/'), manifest })
       } catch { /* directories without package manifests are not workspace packages */ }
     }
   }
@@ -31,8 +36,7 @@ export async function auditWorkspaceContracts({ root } = {}) {
   const workspaceText = await readText(join(root, 'pnpm-workspace.yaml'))
   const patterns = [...workspaceText.matchAll(/^\s*-\s*["']([^"']+)["']/gm)].map((match) => match[1])
   if (!patterns.length) findings.push(finding('workspace-patterns-missing', 'error', 'pnpm-workspace.yaml declares no package globs.'))
-  if (patterns.includes('services/*')) findings.push(finding('legacy-services-in-workspace', 'error', 'services/* is excluded by the repository ownership contract.'))
-
+  for (const pattern of patterns) {\n    if (!WORKSPACE_PATTERNS.has(pattern)) {\n      const id = pattern === 'services/*' ? 'legacy-services-in-workspace' : 'unsupported-workspace-pattern'\n      findings.push(finding(id, 'error', 'Workspace pattern is not an approved repository root: ' + pattern))\n    }\n  }\n
   const packages = await workspacePackages(root, patterns)
   const byName = new Map()
   for (const item of packages) {
