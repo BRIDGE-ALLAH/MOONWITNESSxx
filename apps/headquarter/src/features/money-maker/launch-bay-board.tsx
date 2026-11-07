@@ -202,11 +202,6 @@ export function LaunchBayBoard() {
     if (!draft) return
     setSaving(channel.id); setError(''); setMessage('')
     try {
-      const evidence = (channelEvidence[channel.id] ?? []).map((item) => ({
-        evidenceType: item.evidenceType, sourceName: item.sourceName, sourceUrl: item.sourceUrl,
-        capturedAt: item.capturedAt, reviewedAt: item.reviewedAt, evidenceClass: item.evidenceClass,
-        summary: item.summary, limitations: item.limitations,
-      }))
       const response = await fetch(`/api/channels/${channel.id}`, {
         method: 'PATCH', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -216,7 +211,7 @@ export function LaunchBayBoard() {
           policyRecheckAt: isoDate(draft.policyRecheckAt),
           payoutRequirements: JSON.parse(draft.payoutRequirements),
           grantedScopes: draft.grantedScopes.split(',').map((item) => item.trim()).filter(Boolean),
-          quotaNotes: JSON.parse(draft.quotaNotes), evidence,
+          quotaNotes: JSON.parse(draft.quotaNotes), evidence: [],
         }),
       })
       const payload = await response.json()
