@@ -9,7 +9,6 @@ const types = [['rights', 'Rights & licensing'], ['policy', 'Marketplace policy'
 export function ZillWatchBoard() {
   const [products, setProducts] = useState<Product[]>([])
   const [inspections, setInspections] = useState<Inspection[]>([])
-  const [drafts, setDrafts] = useState<Record<string, { type: string; status: string; description: string; evidenceUrl: string }>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState('')
   const [error, setError] = useState('')
