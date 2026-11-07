@@ -4,7 +4,8 @@ packages:
 
 # services/* is intentionally excluded from the workspace.
 # It contains legacy prototypes; do not add it until ownership and runtime boundaries are reconciled.
-onlyBuiltDependencies:
-  - esbuild
-  - msgpackr-extract
-  - sharp
+# pnpm 11+ removed onlyBuiltDependencies; explicitly approve reviewed native build scripts.
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: true
+  sharp: true

@@ -1,5 +1,5 @@
 {
-  "name": "riotworks",
+  "name": "moonwitness",
   "version": "1.0.11",
   "private": true,
   "scripts": {
@@ -15,11 +15,13 @@
     "clean": "turbo run clean",
     "check:repo": "pnpm run lockfile:check && pnpm run validate:repo",
     "audit:repo": "pnpm run lockfile:check && pnpm run validate:repo",
-    "format:check": "pnpm run format && pnpm run format:check",
-    "validate:repo": "pnpm run lockfile:check && pnpm run type-check && pnpm run lint",
+    "format:check": "prettier --check \"scripts/**/*.mjs\" \"packages/witness-fabric/**/*.{ts,mjs,md,json}\"",
+    "validate:repo": "pnpm run lockfile:check && pnpm run type-check && pnpm run lint:all && pnpm run test",
     "validate": "pnpm run validate:repo && pnpm run build",
     "lockfile:check": "node scripts/check-lockfile.mjs",
-    "lockfile:refresh": "node scripts/check-lockfile.mjs"
+    "lockfile:refresh": "node scripts/check-lockfile.mjs",
+    "test": "node --test scripts/*.test.mjs",
+    "type-check": "pnpm run typecheck:all"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
