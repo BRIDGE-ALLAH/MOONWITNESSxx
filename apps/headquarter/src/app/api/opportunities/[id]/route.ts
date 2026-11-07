@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server'
-import { proxyArsyRequest } from '../../../../lib/arsy-proxy'
+import { proxyArsyRequest } from '../../../../lib/arsy-proxy.ts'
 
 export const runtime = 'nodejs'
 
@@ -13,18 +12,18 @@ async function getOpportunityId(context: RouteContext): Promise<string | null> {
 
 export async function GET(request: Request, context: RouteContext) {
   const id = await getOpportunityId(context)
-  if (!id) return NextResponse.json({ error: { code: 'INVALID_ID' } }, { status: 400 })
+  if (!id) return Response.json({ error: { code: 'INVALID_ID' } }, { status: 400 })
   return proxyArsyRequest(request, `/api/v1/opportunities/${encodeURIComponent(id)}`, 'GET')
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
   const id = await getOpportunityId(context)
-  if (!id) return NextResponse.json({ error: { code: 'INVALID_ID' } }, { status: 400 })
+  if (!id) return Response.json({ error: { code: 'INVALID_ID' } }, { status: 400 })
   return proxyArsyRequest(request, `/api/v1/opportunities/${encodeURIComponent(id)}`, 'PATCH')
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
   const id = await getOpportunityId(context)
-  if (!id) return NextResponse.json({ error: { code: 'INVALID_ID' } }, { status: 400 })
+  if (!id) return Response.json({ error: { code: 'INVALID_ID' } }, { status: 400 })
   return proxyArsyRequest(request, `/api/v1/opportunities/${encodeURIComponent(id)}`, 'DELETE')
 }
