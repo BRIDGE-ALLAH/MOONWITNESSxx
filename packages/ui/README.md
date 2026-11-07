@@ -37,23 +37,34 @@ Current Headquarter integration:
 
 ```ts
 // apps/headquarter/tailwind.config.ts
+import type { Config } from 'tailwindcss'
 import uiConfig from '@riotworks/ui/tailwind.config'
 
-const config = {
+const config: Config = {
   darkMode: ['class'],
   content: [
     './src/**/*.{ts,tsx}',
     '../../packages/ui/src/**/*.{ts,tsx}',
   ],
   presets: [uiConfig],
+  theme: {
+    extend: {},
+  },
+  plugins: [require('tailwindcss-animate')],
 }
+
+export default config
 ```
 
 ```ts
 // apps/headquarter/next.config.ts
-const nextConfig = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   transpilePackages: ['@riotworks/ui', '@riotworks/assets'],
 }
+
+export default nextConfig
 ```
 
 These snippets describe the current Headquarter setup; use the actual application configuration as the source of truth when integrating another consumer.
