@@ -59,3 +59,9 @@ The shell does not own routing, identity, workspace selection, or authorization.
 ## Platform integration
 
 See PLATFORM.md for action/command registry contracts, plugin slot lifecycle, approval callbacks, job status presentation, and record inspection. Registry factories are in-memory helpers only: they do not persist definitions, grant capabilities, authorize users, or invoke backend services.
+
+## MOONWITNESS visual language
+
+The shared brand signatures are exported as `RiotSignalHeader`, `RiotLiveIndicator`, and `RiotAtmosphere`. They provide editorial page hierarchy, explicit live/standby/attention states, and a restrained ambient hero surface. All decorative motion respects `prefers-reduced-motion`.
+
+See [VISUAL-DNA.md](./VISUAL-DNA.md) for the composition and motion contract, and [WORKBENCH.md](./WORKBENCH.md) for the live Headquarter component workbench at `/ui-lab`.
