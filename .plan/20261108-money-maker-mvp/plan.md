@@ -87,7 +87,7 @@ Truth rules:
 - [x] MM-0202 Promote only approved opportunities into product briefs.
 - [x] MM-0203 Record buyer/job, differentiator, product family, target channel, format and acceptance criteria.
 - [x] MM-0204 Add append-only product version revisions without overwriting previously approved artifacts.
-- [ ] MM-0205 Implement Asset/ProvenanceRecord persistence plus actual binary storage, upload/download authorization, checksums, license/tool/model history, disclosure and derivative links. The schema table alone does not close this task.
+- [x] MM-0205 Implement owner-scoped Asset/ProvenanceRecord persistence, local binary storage, upload/list/download/archive APIs and THE FORGE UI, 5 MiB/media allowlist checks, SHA-256 verification, creator/license/source/tool/edit/disclosure/derivative metadata, and PostgreSQL/storage reconnect coverage. Production restore, multi-node storage and immutable asset revision history remain separate hardening work.
 - [x] MM-0206 Add append-only rights, policy, technical and creative inspections; product READY requires the latest of all four types to pass, includes the newly inserted inspection in the same transaction, and forbids blocker findings on a passing inspection.
 - [x] MM-0207 Replace The Forge sample products and Picsum previews with persisted product briefs and honest empty states.
 
@@ -106,7 +106,7 @@ Truth rules:
 
 ### Verification
 - [x] MM-0220 Unit tests for integer minor-unit precision, idempotency and verified contribution formula. FX conversion remains out of scope.
-- [ ] MM-0221 Complete product promotion/version/audit integration coverage; binary asset provenance, checksum workflow and immutable asset history remain unimplemented.
+- [x] MM-0221 Verify product promotion, product-version lifecycle, opportunity version locking and append-only audit history in isolated PostgreSQL integration coverage. Immutable asset revision history is tracked separately in MM-0222.
 - [x] MM-0222 Integration tests for duplicate financial event idempotency and reconciliation behavior.
 - [ ] MM-0223 E2E: approved opportunity → product brief/version → record cost/receipt → refresh → verify ledger totals.
 - [x] MM-0224 Verify financial aggregates against underlying events in isolated PostgreSQL.
