@@ -112,7 +112,7 @@ export class EvidenceLedger {
         id: input.id,
         kind: input.kind,
         aggregateId: input.aggregateId,
-        occurredAt: input.occurredAt,
+        occurredAt: new Date(input.occurredAt).toISOString(),
         recordedAt: new Date().toISOString(),
         actorId: input.actorId,
         payload: input.payload,
