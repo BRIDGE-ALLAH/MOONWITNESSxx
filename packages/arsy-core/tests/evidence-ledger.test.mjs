@@ -25,8 +25,8 @@ test('makes identical retries idempotent and rejects id collisions', async () =>
   const first = await ledger.append(input)
   const retry = await ledger.append(input)
   assert.equal(retry.hash, first.hash)
-  const equivalentInstantRetry = await ledger.append({ ...input, occurredAt: '2026-11-08T07:00:00+07:00' })
-  assert.equal(equivalentInstantRetry.hash, first.hash)
+  const equivalentTimestampRetry = await ledger.append({ ...input, occurredAt: '2026-11-08T01:00:00+01:00' })
+  assert.equal(equivalentTimestampRetry.hash, first.hash)
   await assert.rejects(
     () => ledger.append({ ...input, payload: { value: 2 } }),
     /Event id collision/,
