@@ -80,15 +80,15 @@ export class SystemModeOrchestrator {
     try {
       lease = await this.#ports.store.acquireLease(leaseName, ttl);
       if (!lease) throw new Error("Another System Mode process owns the deployment lease.");
+      const incomplete = (await this.#ports.journal.incomplete()).filter((run) => run.runId !== runId);
       await this.#ports.journal.begin(runId, actorId, now().toISOString());
       journalStarted = true;
       await this.#ports.store.appendAudit("system-mode.started", actorId, { runId, fencingGeneration: lease.fencingGeneration });
       await this.#ports.setReadiness(false, "System Mode synchronization is in progress.");
 
-      const incomplete = await this.#ports.journal.incomplete();
       await this.#ports.journal.transition(runId, stage, "recovery-check"); stage = "recovery-check";
       await this.#ports.recover(incomplete);
-      await this.#ports.store.renewLease(lease, ttl);
+      lease = await this.#ports.store.renewLease(lease, ttl);
 
       await this.#ports.journal.transition(runId, stage, "package-discovery"); stage = "package-discovery";
       const discovered = await this.#ports.discover();
@@ -127,7 +127,7 @@ export class SystemModeOrchestrator {
       await this.#ports.setReadiness(true);
       return Object.freeze({ runId, registry, generation: activation.generation, activatedAt: activation.activatedAt, receipt });
     } catch (cause) {
-      await this.#ports.setReadiness(false, "System Mode failed; the last verified active registry remains authoritative.").catch(() => undefined);
+      await this.#ports.setReadiness(false, "System Mode failed; readiness remains disabled and the deployment journal requires recovery.").catch(() => undefined);
       if (journalStarted) {
         await this.#ports.journal.finish(runId, "failed", cause instanceof Error ? cause.message : String(cause)).catch(() => undefined);
         await this.#ports.store.appendAudit("system-mode.failed", actorId, {
@@ -161,7 +161,7 @@ export class SqliteSystemRunJournal implements SystemRunJournal {
   }
   async initialize(): Promise<void> {
     if (this.#initialized) return;
-    await journalQuery(this.#adapter, \`CREATE TABLE IF NOT EXISTS mw_system_runs (
+    await journalQuery(this.#adapter, `CREATE TABLE IF NOT EXISTS mw_system_runs (
       run_id TEXT PRIMARY KEY,
       actor_id TEXT NOT NULL,
       stage TEXT NOT NULL,
@@ -171,7 +171,7 @@ export class SqliteSystemRunJournal implements SystemRunJournal {
       error TEXT,
       started_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
-    )\`, [], "schema");
+    )`, [], "schema");
     await journalQuery(this.#adapter, "CREATE INDEX IF NOT EXISTS idx_mw_system_runs_status ON mw_system_runs(status, updated_at)", [], "schema");
     this.#initialized = true;
   }
