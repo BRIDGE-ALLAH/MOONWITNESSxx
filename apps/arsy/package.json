@@ -2,12 +2,12 @@
   "name": "@riotworks/arsy",
   "version": "0.0.0",
   "private": true,
-  "description": "RIOTWORKS ARSY — Command Center (wraps @riotworks/arsy-core)",
+  "description": "MOONWITNESS ARSY — Fastify API application",
   "main": "src/index.ts",
   "scripts": {
     "dev": "fastify dev",
-    "build": "pnpm --filter @riotworks/arsy-core run build",
-    "start": "pnpm --filter @riotworks/arsy-core run start",
+    "build": "fastify build",
+    "start": "fastify start --listen 0.0.0.0:3000",
     "type-check": "tsc --noEmit",
     "lint": "pnpm --filter @riotworks/lint exec eslint ../../apps/arsy/src --config eslint.config.mjs --max-warnings 0"
   },
