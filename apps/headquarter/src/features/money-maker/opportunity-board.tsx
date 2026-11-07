@@ -148,11 +148,23 @@ export function OpportunityBoard() {
     for (const [key] of dimensions) {
       if (scores[key] !== '') {
         scoreValues[key] = Number(scores[key])
-        scoreDetails[key] = { rationale: scoreRationales[key].trim(), confidence: String(data.get(`confidence-${key}`) || 'unknown'), evidenceIds: [evidenceId] }
+        const retainedEvidenceIds = editingOpportunity?.scoreDetails[key]?.evidenceIds
+          .filter((id) => previousEvidence.some((entry) => entry.evidenceId === id)) ?? []
+        scoreDetails[key] = {
+          rationale: scoreRationales[key].trim(),
+          confidence: String(data.get(`confidence-${key}`) || 'unknown'),
+          evidenceIds: retainedEvidenceIds.length ? retainedEvidenceIds : [evidenceId],
+        }
       }
     }
     const hardGateDetails = Object.fromEntries(gates.map(([key]) => [key, {
-      status: hardGates[key], rationale: gateRationales[key].trim(), evidenceIds: hardGates[key] === 'unknown' ? [] : [evidenceId],
+      status: hardGates[key],
+      rationale: gateRationales[key].trim(),
+      evidenceIds: hardGates[key] === 'unknown' ? [] : (
+        editingOpportunity?.hardGateDetails[key]?.evidenceIds.filter((id) => previousEvidence.some((entry) => entry.evidenceId === id)).length
+          ? editingOpportunity.hardGateDetails[key].evidenceIds
+          : [evidenceId]
+      ),
     }]))
     const payload = {
       title: String(data.get('title') || ''), buyerProblem: String(data.get('buyerProblem') || ''),
@@ -184,6 +196,8 @@ export function OpportunityBoard() {
       scores: scoreValues, scoreDetails, hardGates, hardGateDetails,
     }
     try {
+      const stableIdempotencyKey = opportunityIdempotencyKey || `opportunity-${crypto.randomUUID()}`
+      if (!editingOpportunity && !opportunityIdempotencyKey) setOpportunityIdempotencyKey(stableIdempotencyKey)
       const response = editingOpportunity
         ? await fetch(`/api/opportunities/${editingOpportunity.id}`, {
           method: 'PATCH',
@@ -194,7 +208,7 @@ export function OpportunityBoard() {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
-            'idempotency-key': opportunityIdempotencyKey || `opportunity-${crypto.randomUUID()}`,
+            'idempotency-key': stableIdempotencyKey,
           },
           body: JSON.stringify(payload),
         })
