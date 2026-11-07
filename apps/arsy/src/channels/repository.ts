@@ -37,10 +37,10 @@ export interface ChannelRecord {
 }
 
 export interface ChannelReviewInput {
-  countryEligibility: Array<{ country: string; status: 'pass' | 'blocked' | 'unknown'; sourceUrl: string; checkedAt: string }>
+  countryEligibility: Array<{ country: string; status: 'pass' | 'blocked' | 'unknown'; sourceUrl?: string; checkedAt?: string }>
   payoutRequirements: { status: 'pass' | 'blocked' | 'unknown'; sourceUrl?: string; checkedAt?: string; notes: string }
-  policyUrl: string
-  policyCheckedAt: string
+  policyUrl?: string
+  policyCheckedAt?: string
   manualFallback: string
 }
 
