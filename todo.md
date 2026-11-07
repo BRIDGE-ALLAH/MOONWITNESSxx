@@ -910,8 +910,6 @@ Use these labels consistently when updating this file:
 
 **Exit gate:** Each release runs a versioned adversarial suite; policy regressions are detected before deployment; metrics and false positives are reported with the exact corpus version.
 
-
-
 ## Phase 21 — Developer Environment Doctor
 
 **Status:** [~] Read-only Node/pnpm/workspace/lockfile/dependency readiness diagnostics authored in `scripts/devx/cli.mjs`; clean-machine validation, platform matrix and setup automation remain.
