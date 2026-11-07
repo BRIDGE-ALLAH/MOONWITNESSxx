@@ -1,0 +1,15 @@
+export type OntologyRelationKind="broader"|"narrower"|"related"|"part-of"|"instance-of"|"domain-specific";
+export type RelationSemantics="structural"|"asserted"|"derived"|"mapping-only";
+export type MappingRelation="exact"|"close"|"broader"|"narrower"|"partial"|"related"|"disputed"|"none";
+export type MappingStatus="candidate"|"proposed"|"accepted"|"rejected"|"deprecated";
+export interface OntologyScope {readonly tradition?:string;readonly community?:string;readonly school?:string;readonly period?:string;readonly method?:string;readonly project?:string}
+export interface OntologyProfile {readonly id:string;readonly scope:OntologyScope;readonly description?:string}
+export interface ConceptScheme {readonly id:string;readonly namespace:string;readonly corpusProfile?: "lexicon";readonly description?:string}
+export interface ConceptReference {readonly id:string;readonly schemeId:string;readonly corpusId:string;readonly externalUri?:string}
+export interface OntologyRelation {readonly id:string;readonly kind:OntologyRelationKind;readonly semantics:RelationSemantics;readonly domain:readonly string[];readonly range:readonly string[];readonly inverseOf?:string;readonly transitive?:boolean;readonly symmetric?:boolean;readonly note:string}
+export interface OntologyMapping {readonly id:string;readonly sourceConceptId:string;readonly targetConceptId:string;readonly relation:MappingRelation;readonly status:MappingStatus;readonly method:string;readonly evidenceRefs:readonly string[];readonly scope:OntologyScope;readonly reviewer?:string;readonly rationale:string}
+export interface OntologyVersion {readonly id:string;readonly namespace:string;readonly version:string;readonly profile:OntologyProfile;readonly schemes:readonly ConceptScheme[];readonly concepts:readonly ConceptReference[];readonly relations:readonly OntologyRelation[];readonly mappings:readonly OntologyMapping[];readonly deprecatedConceptIds?:readonly string[]}
+export interface OntologyDiagnostic {readonly code:"DUPLICATE_ID"|"INVALID_NAMESPACE"|"INVALID_VERSION"|"UNKNOWN_SCHEME"|"UNKNOWN_CONCEPT"|"INVALID_RELATION"|"UNREVIEWED_MAPPING"|"DUPLICATE_MAPPING"|"DEPRECATED_REFERENCE";readonly severity:"error"|"warning";readonly path:string;readonly message:string}
+export interface OntologyDiff {readonly from:string;readonly to:string;readonly addedConceptIds:readonly string[];readonly removedConceptIds:readonly string[];readonly changedRelationIds:readonly string[];readonly addedMappingIds:readonly string[];readonly removedMappingIds:readonly string[];readonly impactedConceptIds:readonly string[];readonly requiresReview:boolean}
+export interface OntologyMappingCandidate {readonly sourceConceptId:string;readonly targetConceptId:string;readonly relation:MappingRelation;readonly method:string;readonly rationale:string}
+export interface OntologyCandidateGenerator {generate(input:{readonly source:ConceptReference;readonly targets:readonly ConceptReference[];readonly scope:OntologyScope}):Promise<readonly OntologyMappingCandidate[]>}

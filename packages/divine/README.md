@@ -21,4 +21,4 @@ Divine does not mint replacement Corpus IDs, duplicate canonical records, genera
 pnpm --filter @riotworks/divine type-check
 pnpm --filter @riotworks/divine test
 ```
-Node 22+ is required for native TypeScript tests. No database, ORM, ARSY, Python, RDF store, AI provider or network service is a runtime dependency. See docs/architecture and docs/CORPUS-MIGRATION.md.
+Node 22+ is required for native TypeScript tests. No database, ORM, ARSY, Python, RDF store, AI provider or network service is a runtime dependency. See docs/architecture and docs/CORPUS-MIGRATION.md.\n## Phase 3–5 modules\n- `./ontology`: versioned, scoped ontology registry, concept references to Corpus lexicon IDs, typed relations, reviewed mapping validation and ontology impact diffs.\n- `./theology`: attributed revelation research profiles, scoped positions, domain review and explicit incomparable comparisons.\n- `./epistemology`: SIDRAT knowledge states, method-specific evidence sufficiency, scope boundaries and explainable abstention.\n\nThese modules are deterministic domain contracts. They do not claim theological authority, infer metaphysical truth, or write into canonical Corpus.
