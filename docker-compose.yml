@@ -63,7 +63,10 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/arsy:/app/apps/arsy
+      # The source mount hides node_modules created in the image; preserve package-local pnpm links.
+      - /app/apps/arsy/node_modules
       - ./packages:/app/packages
+      - /app/packages/arsy-core/node_modules
       - /app/node_modules
     networks:
       - moonwitness
@@ -92,7 +95,11 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/headquarter:/app/apps/headquarter
+      # Preserve app and shared-package dependencies hidden by the source mounts.
+      - /app/apps/headquarter/node_modules
       - ./packages:/app/packages
+      - /app/packages/ui/node_modules
+      - /app/packages/assets/node_modules
       - /app/node_modules
     networks:
       - moonwitness
