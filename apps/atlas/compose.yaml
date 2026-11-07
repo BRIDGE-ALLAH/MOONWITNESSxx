@@ -6,8 +6,10 @@ services:
       MARIADB_USER: atlas
       MARIADB_PASSWORD: ${ATLAS_DB_PASSWORD:?Set ATLAS_DB_PASSWORD in the environment}
       MARIADB_ROOT_PASSWORD: ${ATLAS_DB_ROOT_PASSWORD:?Set ATLAS_DB_ROOT_PASSWORD in the environment}
+      RADIUS_DB_PASSWORD: ${RADIUS_DB_PASSWORD:?Set RADIUS_DB_PASSWORD in the environment}
     volumes:
       - atlas_mariadb_data:/var/lib/mysql
+      - ./docker/mariadb/init/20-radius-db.sh:/docker-entrypoint-initdb.d/20-radius-db.sh:ro
     healthcheck:
       test: ["CMD-SHELL", 'mariadb-admin ping -h 127.0.0.1 -u root -p"$${MARIADB_ROOT_PASSWORD}" --silent']
       interval: 10s
