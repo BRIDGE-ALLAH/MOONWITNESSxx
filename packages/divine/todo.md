@@ -662,11 +662,11 @@ Adoption policy:
 **Priority:** P2/P3; only after deterministic foundations.
 
 ### Tasks
-- [x] DIV-P10-001 Define AI provider-neutral interfaces; no provider lock-in in core.
+- [ ] DIV-P10-001 Define AI provider-neutral interfaces; no provider lock-in in core.
 - [x] DIV-P10-002 Define candidate extraction tasks for entities, claims, evidence selectors, relations and mappings.
 - [x] DIV-P10-003 Require exact source spans or selectors for extracted claims whenever the source supports them.
 - [x] DIV-P10-004 Attach model/provider/version, task prompt version, input release and pipeline provenance.
-- [x] DIV-P10-005 Store AI outputs in candidate/review queues, not canonical Corpus records.
+- [ ] DIV-P10-005 Store AI outputs in candidate/review queues, not canonical Corpus records.
 - [x] DIV-P10-006 Require human review and explicit promotion authority.
 - [x] DIV-P10-007 Record edits, rejection reasons and reviewer decisions.
 - [ ] DIV-P10-008 Prevent AI-generated scripture, quotation or source text from being treated as source content.
@@ -693,7 +693,7 @@ Adoption policy:
 
 ### Tasks
 - [x] DIV-P11-001 Implement PROV-O mapping for supported agents, activities, entities and derivations.
-- [x] DIV-P11-002 Implement SKOS mapping for concept schemes and mappings.
+- [ ] DIV-P11-002 Implement SKOS mapping for concept schemes and mappings.
 - [ ] DIV-P11-003 Evaluate SHACL validation bridge for exported RDF graphs.
 - [ ] DIV-P11-004 Map textual/manuscript structures to TEI where semantics align.
 - [ ] DIV-P11-005 Map digital manuscript/media references to IIIF Presentation API 3.
@@ -928,3 +928,5 @@ Remaining: legal retention/deletion implementation, key-backed signing and trust
 
 
 Implementation accuracy note: Phase 10 source-span provenance and abstention are implemented, but prevention of generated sacred/source text from canonical source treatment and task/language-specific hallucination/citation evaluation remain open. Candidate state is an in-memory contract, not a persistent review queue. Phase 9 rights gates are reusable policy guards; enforcement in every live ingestion/display/export/AI adapter remains blocked on platform contracts.
+
+Accuracy correction: Phase 11 currently emits SKOS Concept nodes with scheme references, but does not serialize ConceptScheme nodes or ontology mappings; DIV-P11-002 therefore remains open. The current round-trip check verifies supported identifier preservation only, not full semantic import/export; DIV-P11-011 remains open. Phase 10 currently defines candidate status and review contracts, not a durable queue or a provider adapter; DIV-P10-001 and DIV-P10-005 remain open.
