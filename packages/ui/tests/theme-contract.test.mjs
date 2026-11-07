@@ -33,6 +33,7 @@ const requiredSemanticTokens = [
 
 function readVariable(rule, name) {
   const declaration = rule
+    .replace(/\/\*[\s\S]*?\*\//g, "")
     .split(";")
     .map((part) => part.trim())
     .find((part) => part.startsWith("--" + name + ":"));
