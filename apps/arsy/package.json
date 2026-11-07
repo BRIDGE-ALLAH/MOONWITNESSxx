@@ -2,14 +2,16 @@
   "name": "@riotworks/arsy",
   "version": "0.0.0",
   "private": true,
-  "description": "RIOTWORKS ARSY — Command Center (wraps @riotworks/arsy-core)",
+  "type": "module",
+  "description": "RIOTWORKS ARSY application runtime",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "fastify dev",
-    "build": "pnpm --filter @riotworks/arsy-core run build",
-    "start": "pnpm --filter @riotworks/arsy-core run start",
-    "lint": "echo lint-skip",
-    "type-check": "tsc --noEmit"
+    "dev": "node --watch --experimental-strip-types src/index.ts",
+    "build": "pnpm run type-check",
+    "start": "node --experimental-strip-types src/index.ts",
+    "lint": "pnpm exec prettier --check src/app.ts src/db.ts src/index.ts tests/runtime.test.mjs",
+    "type-check": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "@riotworks/arsy-core": "workspace:*",

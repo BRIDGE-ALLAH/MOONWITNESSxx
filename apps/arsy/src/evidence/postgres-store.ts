@@ -57,8 +57,17 @@ export class PostgresEvidenceStore implements EvidenceStore {
           (aggregate_id, stream_position, id, kind, occurred_at, recorded_at, actor_id, payload, evidence_ids, previous_hash, event_hash)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10, $11)`,
         [
-          event.aggregateId, nextPosition, event.id, event.kind, event.occurredAt, event.recordedAt,
-          event.actorId, JSON.stringify(event.payload), JSON.stringify(event.evidenceIds), event.previousHash, event.hash,
+          event.aggregateId,
+          nextPosition,
+          event.id,
+          event.kind,
+          event.occurredAt,
+          event.recordedAt,
+          event.actorId,
+          JSON.stringify(event.payload),
+          JSON.stringify(event.evidenceIds),
+          event.previousHash,
+          event.hash,
         ],
       )
       await client.query('COMMIT')

@@ -1,3 +1,5 @@
+> **Superseding update (2026-11-08):** The original verified HEAD and PR queue below are historical. The latest mainline and current PR dispositions are recorded in the final addendum at the end of this document.
+
 # Repository Revalidation — 2026-11-08
 
 **Repository:** BRIDGE-ALLAH/MOONWITNESS  
@@ -90,3 +92,30 @@ Preserve existing URLs and shared UI tokens. Prioritize demo/data truth, accessi
 ## Audit limitations
 
 This revalidation used the GitHub repository/API surfaces and CI evidence available in this session. It did not perform a local full clone, run Docker, access production credentials/infrastructure, inspect a live deployed application, or perform manual browser/screen-reader testing. Those checks remain explicitly unverified.
+
+
+## 8. Revalidation after Divine and ARSY Phase 18–20 merges
+
+**Current main at revalidation:** `50e89ae3d440500b001af924b1c363c63b5a78e2` (PR #83 documentation merge; it includes the preceding mainline merges).
+
+### Merged since the earlier snapshot
+- PR #78 — ARSY Core trust-boundary Phases 33–35: merged as `ecb4faf2b85a24f07db2c2a5685ca04d627254f8`.
+- PR #79 — ARSY Phases 18–20 security hardening: merged as `3e9db048eef0698f56c14543dbf2afc83a534247`.
+- PR #82 — Divine provenance assurance Phases 18–20: merged as `41b0a04a643a9185544fdbd885f9fe73ab4b8d94` after current-head Repository CI, workspace typecheck/build and CodeQL passed.
+- PR #83 — this repository revalidation record: merged.
+
+### Current open integration gates
+- PR #88 — ARSY runtime lifecycle/container remediation: in progress; current-head CI must pass before merge. It addresses the port mismatch, incorrect app start delegation, untyped database lifecycle, lint skip, weak Compose password default and exposed local data-service ports.
+- PR #55 — Counterfactual Repo Lab: do not merge as-is. Current-main review found missing CLI imports for cycle/changed-file commands, recursive discovery inconsistent with workspace globs, and silent skipping of malformed package manifests. A focused repair/rebase is required.
+- Older ORM/database PRs (#15–#41) remain a dependency-ordered review queue; compare each current head to main and validate migrations/adapters before integration.
+
+### Closed or superseded branches
+- PR #49 closed: stale, conflicting ARSY Phase 18–20 numbering; unique review-routing and outcome-reconciliation ideas are deferred, not discarded.
+- PR #53 closed: its dev-doctor/format-gate changes are already covered by main.
+- PR #75 closed and replaced by #82 after isolating the six unique Divine files.
+- PR #76, #77, #80 and #86 were unmerged rebase attempts; their replacement PRs are #79, #82 and #88 as applicable.
+
+### Release readiness remains NO-GO
+The runtime work in PR #88 is a local development hardening change, not a production deployment. Production remains blocked on secret management, TLS ingress, private database/cache networking, backup/restore, rollback, managed service configuration, a real deployment target, and production smoke/readiness verification. Headquarter authentication/authorization, live data integration, accessibility, responsive and screen-reader testing also remain unverified.
+
+**Audit boundary:** GitHub/API and CI inspection only. No local full clone, Docker daemon, production credentials, live deployment, manual browser testing or screen-reader testing was available in this session.

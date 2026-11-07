@@ -1051,3 +1051,12 @@ Use these labels consistently when updating this file:
 - [x] Phase 20: detect empty traces, malformed context, duplicate policy decisions and cross-tenant terminal receipts; mark undefined benchmark metrics as null rather than perfect.
 - [ ] Authenticated issuer registry, signed attestation envelope/KMS, actual tool-gateway enforcement, licensed benchmark import and calibrated CI thresholds remain open.
 See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract checks, not production security enforcement.
+
+
+## ARSY runtime contract remediation (2026-11-08)
+- [x] Align app composition root, start/dev commands, HOST/PORT and Compose service port.
+- [x] Move database pool cleanup to Fastify onClose and add live/ready/database health semantics.
+- [x] Replace ARSY lint skip with Prettier checks and add runtime contract tests to CI.
+- [x] Remove weak PostgreSQL password default, require local password configuration, and bind local data-service ports to loopback.
+- [ ] Production deployment remains NO-GO pending secrets, TLS, private networking, backup/restore, rollback, managed data services and production smoke tests.
+See `docs/29-arsy-runtime-contract-and-local-container-hardening.md`.
