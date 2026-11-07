@@ -1065,3 +1065,23 @@ See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract c
 - [x] Fail closed on malformed manifests, invalid dependency fields and duplicate workspace package names.
 - [x] Add reverse-dependency impact, changed-path ownership, cycle radar and scenario replay CLI paths.
 - [x] Add unit, fixture and CLI smoke tests; preserve mandatory CI as advisory-only.
+
+
+---
+
+## Phases 36–38 — Product integrity, UX truth and release readiness
+
+**Status:** implementation is in branch fix/arsy-product-integrity-current-main; final CI and release verification remain pending.
+
+- [x] ARSY application owns its build/type-check contract; framework-neutral arsy-core no longer owns HTTP lifecycle scripts.
+- [x] Keep the current Fastify application factory and idempotent graceful-shutdown implementation.
+- [x] Inject database pools, close them through Fastify lifecycle hooks, and return 503 when PostgreSQL is unavailable.
+- [x] Rate-limit database readiness and health endpoints; add HTTP 429 tests.
+- [x] Reject workspace globs that can traverse outside approved apps/ and packages/ roots.
+- [x] Keep Headquarter prototype/demo status visible and accessible.
+- [x] Add DevX product-integrity audit and tests for workspace contracts and navigation truth.
+- [x] Add CI verification for both production container images.
+- [ ] Pass final CI, CodeQL, typecheck, formatting, runtime tests, and both container builds on the rebased branch.
+- [ ] Configure approved stable-release and production-deployment workflows, credentials, migrations, backups, rollback, health checks, and smoke tests.
+
+**Release boundary:** successful tests and image builds are not evidence of a published stable release or live production deployment.
