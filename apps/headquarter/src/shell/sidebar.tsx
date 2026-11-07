@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { AssetImage } from '@riotworks/assets'
 import { Badge, cn } from '@riotworks/ui'
 import { NAVIGATION_ITEMS } from './navigation'
 
@@ -18,14 +19,13 @@ export function Sidebar({ isOpen, demoLabel, onNavigate }: SidebarProps) {
   return (
     <aside
       id="headquarter-sidebar"
-      aria-label="Headquarter sidebar"
-      className={cn('w-72 shrink-0 border-r border-acid-lime/20 bg-panel-charcoal/40 p-4', !isOpen && 'hidden md:block')}
+      aria-label="MOONWITNESS navigation"
+      className={cn('w-72 shrink-0 border-r border-signal-gold/20 bg-card/70 p-4', !isOpen && 'hidden md:block')}
     >
-      <Link href="/" onClick={onNavigate} className="block border-2 border-acid-lime/40 p-3">
-        <div className="font-display text-xl uppercase leading-none">MOONWITNESS</div>
-        <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">// RIOTWORKS</div>
+      <Link href="/" onClick={onNavigate} aria-label="MOONWITNESS home" className="block border border-signal-gold/35 bg-background p-3">
+        <AssetImage name="brand.lockup" alt="MOONWITNESS — See more. Know more." className="h-auto w-full" />
       </Link>
-      <div className="mt-4"><Badge variant="lime">{demoLabel}</Badge></div>
+      <div className="mt-4"><Badge variant="outline">{demoLabel}</Badge></div>
       <nav aria-label="Main navigation" className="mt-6 space-y-5">
         {groups.map((group) => (
           <section key={group} aria-labelledby={`nav-group-${group.toLowerCase()}`}>
@@ -39,7 +39,7 @@ export function Sidebar({ isOpen, demoLabel, onNavigate }: SidebarProps) {
                       href={item.href}
                       onClick={onNavigate}
                       aria-current={active ? 'page' : undefined}
-                      className={cn('block border px-3 py-2 font-mono text-xs uppercase tracking-wide', active ? 'border-acid-lime bg-acid-lime/10 text-acid-lime' : 'border-transparent hover:border-acid-lime/30')}
+                      className={cn('block border px-3 py-2 font-mono text-xs uppercase tracking-wide', active ? 'border-signal-gold bg-signal-gold/10 text-signal-gold' : 'border-transparent hover:border-signal-gold/30')}
                     >
                       {item.label}
                     </Link>
@@ -47,7 +47,7 @@ export function Sidebar({ isOpen, demoLabel, onNavigate }: SidebarProps) {
                 )
               })}
             </ul>
-          </section>
+          </nav>
         ))}
       </nav>
     </aside>

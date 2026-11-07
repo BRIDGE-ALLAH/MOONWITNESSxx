@@ -1,5 +1,5 @@
 :root {
-  /* MOONWITNESS master identity — use semantic UI tokens in application themes. */
+  /* MOONWITNESS master identity — map these primitives into semantic UI tokens. */
   --mw-void: #090a0f;
   --mw-observatory: #121521;
   --mw-slate: #242a38;

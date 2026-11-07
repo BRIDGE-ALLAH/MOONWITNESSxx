@@ -4,8 +4,9 @@ import './globals.css'
 import { AppShell } from '../components/AppShell'
 
 export const metadata: Metadata = {
-  title: 'MOONWITNESS // RIOTWORKS',
-  description: 'Creative Commerce Engine — MAKE WORK THAT OUTLIVES THE FEED.',
+  title: 'MOONWITNESS — See More. Know More.',
+  description: 'When the Moon rises, we share what matters. An evidence-first observatory for discovery, knowledge, and human understanding.',
+  applicationName: 'MOONWITNESS',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,4 +20,3 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   )
 }
-

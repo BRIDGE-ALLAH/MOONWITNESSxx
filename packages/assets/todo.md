@@ -2,10 +2,10 @@
 
 ## Phase 0 — Brand governance
 - [x] Establish MOONWITNESS as the master brand.
-- [x] Define Observatory and Archive as experience families, not separate master brands.
-- [x] Define MOONWITNESS XV as a program/release descriptor.
-- [x] Separate RIOTWORKS as an independent studio identity.
-- [x] Define brand promise, core line, verbal principles, and forbidden shortcuts.
+- [x] Define Observatory and Archive as experience families, XV as a program descriptor, and RIOTWORKS as a separate studio identity.
+- [x] Define Core Promise: SEE MORE. KNOW MORE.
+- [x] Define Brand Manifesto: WHEN THE MOON RISES, WE SHARE WHAT MATTERS.
+- [x] Define operational verbs and messaging hierarchy.
 - [x] Record asset ownership, provenance, and licensing constraints.
 
 ## Phase 1 — Identity foundation
@@ -20,6 +20,7 @@
 - [x] Define core palette and typography roles.
 - [x] Define editorial, observatory, and evidence visual principles.
 - [x] Define texture, illustration, accessibility, and motion rules.
+- [x] Define Core Promise and Manifesto placement rules.
 - [ ] Map brand primitives to semantic tokens in all app themes.
 - [ ] Run contrast audit for all foreground/background combinations.
 
@@ -37,9 +38,11 @@
 - [ ] Bundle only fonts with approved licenses and documented provenance.
 
 ## Phase 5 — Product integration
-- [ ] Replace RIOTWORKS visual branding in MOONWITNESS Headquarter surfaces with approved master identity.
-- [ ] Create Observatory and Archive theme mappings.
-- [ ] Review app icon, login, navigation, empty states, errors, and docs.
+- [x] Replace RIOTWORKS master-brand lockup in Headquarter shell and metadata.
+- [x] Add Core Promise and Brand Manifesto to Headquarter landing experience.
+- [x] Map primary UI colors and typography to MoonWitness design tokens.
+- [ ] Review all product screens for residual RIOTWORKS visual identity.
+- [ ] Create dedicated Observatory and Archive theme mappings.
 - [ ] Run visual regression and accessibility review.
 
 ## Phase 6 — Release

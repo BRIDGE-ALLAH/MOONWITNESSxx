@@ -2,7 +2,7 @@
   "name": "@riotworks/headquarter",
   "version": "0.0.0",
   "private": true,
-  "description": "RIOTWORKS Headquarter — Next.js frontend application",
+  "description": "MOONWITNESS Observatory — human-facing research and evidence interface",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
