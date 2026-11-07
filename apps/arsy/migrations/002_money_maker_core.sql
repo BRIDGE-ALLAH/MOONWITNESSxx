@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS arsy_assets (
   checksum_sha256 char(64),
   provenance jsonb NOT NULL,
   rights_state text NOT NULL CHECK (rights_state IN ('pass', 'blocked', 'unknown')),
+  archived_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   created_by text NOT NULL
 );
