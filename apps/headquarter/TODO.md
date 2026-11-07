@@ -414,5 +414,5 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Tambahkan `apps/headquarter/tests/arsy-deck.test.mjs` untuk menjaga demo disclosure, uniqueness, confidence bounds, dan sample-only agent states.
 - [x] Tambahkan script `pnpm --filter @riotworks/headquarter test` tanpa dependency framework tambahan.
 - [x] Tambahkan test command ke Asset Integrity CI; branch `headquarter/phase-6-testing-foundation` juga dimasukkan ke trigger push CI.
-- [ ] Menunggu hasil GitHub Actions pada PR sebelum mengklaim test suite lulus.
+- [x] GitHub Actions pada PR #38 lulus: Headquarter tests, type-check assets/UI/Headquarter, production build, asset validation/tests, Repository Integrity, dan CodeQL. Full-workspace quality tetap skipped oleh konfigurasi `FULL_QUALITY_CI`.
 - [ ] Browser E2E, accessibility automation/manual review, visual regression, performance budgets, dan backend contract tests tetap terbuka.
