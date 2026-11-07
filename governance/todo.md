@@ -133,18 +133,20 @@
 
 ## Phase 3 — GitHub governance and automation
 
-- [ ] Protect `main`: PR required, required CI, conversation resolution, stale approval dismissal, no force-push/deletion.
-- [ ] Set review policy for collaborator/access model.
-- [ ] Require only stable status checks that actually run.
-- [ ] Align PR/issue templates, labels, branch names.
-- [ ] Add changed-package validation after dependency graph is proven.
-- [ ] Review trigger, permission, secret, concurrency, artifact retention for every workflow.
-- [ ] Add deduplication and bounded retries to state-writing automation.
-- [ ] Keep scheduled detection read-only; reviewed issue creation only.
-- [ ] Require approval for dependency refresh, releases, migrations, deployment.
-- [ ] Test push, PR, manual, scheduled, cancel, failure paths.
+- [ ] Protect `main`: PR required, required CI, conversation resolution, stale approval dismissal, no force-push/deletion. **Blocked:** repository administrator must configure and read back ruleset/branch protection.
+- [ ] Set review policy for collaborator/access model. **Blocked:** requires owner/admin confirmation of collaborator model and independent reviewer roles.
+- [ ] Require only stable status checks that actually run. **Blocked:** capture actual check names from a clean PR run, then configure ruleset.
+- [x] Align PR/issue templates, labels, and branch naming; expand PR template to cover ownership, acceptance, validation, security/data, and recovery.
+- [ ] Add changed-package validation after dependency graph is proven; current Phase 2 graph checks boundaries but does not yet select affected package tasks.
+- [x] Review existing CI, CodeQL, PR labeler, lockfile refresh, and weekly detection workflow triggers/permissions; add concurrency bounds to state-writing lockfile refresh and labeler, plus CodeQL.
+- [x] Keep scheduled detection read-only; add Governance Engine check and coverage report to the weekly audit.
+- [ ] Add bounded retry policy to any future state-writing automation; current scheduled detector remains read-only and lockfile PR action deduplicates its fixed branch.
+- [ ] Require approval for dependency refresh, releases, migrations, and deployment; release/deployment gates still need owner/admin configuration.
+- [ ] Test push, PR, manual, scheduled, cancel, and failure paths on the final rebased branch.
 
 **Acceptance:** main blocks invalid changes; scheduled jobs are idempotent; writes are least-privilege and reviewable.
+
+**Status:** Phase 3 intake templates and workflow hardening are implemented in the governance branch. Server-side main protection, reviewer policy, required-check readback, and end-to-end event-path tests remain administrator/review gates.
 
 ## Phase 4 — Automatic developer installer
 
