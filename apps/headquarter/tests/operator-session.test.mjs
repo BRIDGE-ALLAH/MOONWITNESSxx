@@ -10,6 +10,7 @@ import {
 } from '../src/lib/operator-session.ts'
 
 const secret = 'test-session-secret-that-is-at-least-32-bytes-long'
+const proxySecret = 'test-proxy-identity-secret-that-is-at-least-32-bytes'
 const operatorId = 'operator-test'
 const password = 'strong-test-password-at-least-16'
 
@@ -81,7 +82,7 @@ test('production session configuration requires HTTPS', () => {
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
     HEADQUARTER_TRUSTED_PROXY_HOPS: '1',
-    HEADQUARTER_PROXY_IDENTITY_SECRET: secret,
+    HEADQUARTER_PROXY_IDENTITY_SECRET: proxySecret,
   }), null)
 })
 
@@ -119,7 +120,7 @@ test('production login identity requires a signed assertion from the configured 
   const now = Date.parse('2026-11-08T00:00:00.000Z')
   const ip = '198.51.100.42'
   const timestamp = String(Math.floor(now / 1000))
-  const signature = createHmac('sha256', secret).update(`${ip}.${timestamp}.1`).digest('hex')
+  const signature = createHmac('sha256', proxySecret).update(`${ip}.${timestamp}.1`).digest('hex')
   const signed = new Request('https://hq.example/login', {
     headers: {
       'x-forwarded-for': '203.0.113.99',
@@ -129,15 +130,15 @@ test('production login identity requires a signed assertion from the configured 
       'x-mw-client-signature': signature,
     },
   })
-  assert.equal(resolveTrustedClientNetworkIdentity(signed, 1, secret, 'production', now), ip)
-  assert.equal(resolveTrustedClientNetworkIdentity(signed, 0, secret, 'production', now), null)
+  assert.equal(resolveTrustedClientNetworkIdentity(signed, 1, proxySecret, 'production', now), ip)
+  assert.equal(resolveTrustedClientNetworkIdentity(signed, 0, proxySecret, 'production', now), null)
   const spoofed = new Request('https://hq.example/login', {
     headers: { 'x-forwarded-for': ip, 'x-mw-client-ip': ip, 'x-mw-client-timestamp': timestamp, 'x-mw-proxy-hops': '1', 'x-mw-client-signature': '0'.repeat(64) },
   })
-  assert.equal(resolveTrustedClientNetworkIdentity(spoofed, 1, secret, 'production', now), null)
+  assert.equal(resolveTrustedClientNetworkIdentity(spoofed, 1, proxySecret, 'production', now), null)
   assert.equal(resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
     headers: { 'x-forwarded-for': ip },
-  }), 1, secret, 'production', now), null)
+  }), 1, proxySecret, 'production', now), null)
 })
 
 test('untrusted client-supplied forwarding headers never select a network bucket in local mode', () => {
