@@ -30,7 +30,7 @@ export default async function RIOTRadarPage() {
   const session = verifyOperatorSession(token, config.secret)
 
   if (!session || session.operatorId !== config.operatorId) {
-    return <OperatorLoginForm />
+    return <OperatorLoginForm returnTo="/riot-radar" />
   }
 
   return <OpportunityBoard />
