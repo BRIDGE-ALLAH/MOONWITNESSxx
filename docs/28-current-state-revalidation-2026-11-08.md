@@ -195,3 +195,14 @@ The following check-run states were fetched directly from GitHub after the prece
 
 These are point-in-time states, not final outcomes. A queued or in-progress check is not a pass. Re-fetch the exact head's checks before merge.
 
+
+## 10. Post-remediation update — 2026-11-08
+
+- PR #107 was marked ready and squash-merged after its exact head passed Repository Integrity, Asset Integrity, WITNESS FABRIC, Developer Experience, full workspace typecheck/build, CodeQL and label checks.
+- Merge commit: `2c2604799bee3ecb0caa41369e92db3e964acbcc`. It is now the latest verified `main` HEAD at the time of this update.
+- The merge commit's own post-merge checks were still queued/in progress when queried: container image build in progress; Repository Integrity in progress; WITNESS FABRIC, Asset Integrity, Developer Experience and CodeQL queued. Do not report post-merge CI as green until these exact checks finish.
+- PR #109 remains draft. CodeQL, Repository Integrity, Asset Integrity, WITNESS FABRIC, Developer Experience and label checks passed; full workspace typecheck/build was still in progress. It remains unmerged and should not be treated as complete.
+- PR #108 is the audit documentation PR. Its current head checks were still queued/in progress; it remains open.
+- PR #102 has a green check set on its recorded head, but that head is based on older main `8621f86`. It must be rebased/revalidated against current main before merge. PR #106 remains dependent on #102 and has not completed its checks.
+- Current release status remains **NO-GO**. The only verified production release is still `v1.0.0`; no production deployment, live health check, backup/restore or rollback validation was performed in this session.
+
