@@ -410,7 +410,7 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
   const authority = (await read(root, 'governance/README.md')) ?? ''
   if (
     !/Approved security and safety constraints/i.test(authority) ||
-    !/governance\\/contracts/i.test(authority)
+    !/governance\/contracts/i.test(authority)
   ) {
     add(
       findings,
