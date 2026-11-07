@@ -71,9 +71,9 @@ Run this first against an isolated development/staging database and verify backu
 
 Implemented in the current development branch (implementation presence is not equivalent to verified production readiness):
 - evidence-backed opportunity input validation, weighted scoring, hard-gate precedence, and missing-dimension preservation;
-- owner-scoped opportunity create/list/read/decision/archive API with owner-scoped idempotent create and operator-facing decision/archive actions;
+- owner-scoped opportunity create/list/read/content-update/decision/archive API with idempotent create, optimistic revision conflicts, and evidence/score/hard-gate review and edit UI;
 - server-side Headquarter signed sessions, same-origin mutation checks, and server-only ARSY service credentials;
-- eligible opportunity → version-1 product brief creation, product list/detail API, and acceptance criteria;
+- eligible opportunity → version-1 product brief creation, product list/detail API, append-only version history, audited lifecycle transitions and The Forge editing controls;
 - financial event ingestion with idempotency, event listing, currency-grouped verified summaries, and evidence-backed reconciliation;
 - version-bound asset binary storage, server-computed SHA-256, upload idempotency, provenance, private attachment downloads, append-only inspections, and fail-closed inspection readiness; the current operator API cannot impersonate a trusted reviewer or automated inspection principal;
 - audit events for opportunity, product, and financial operations;
