@@ -18,9 +18,9 @@ concurrency:
 
 jobs:
   postgres-integration:
-    name: ARSY PostgreSQL persistence
+    name: ARSY PostgreSQL and Headquarter browser E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17-alpine
@@ -37,6 +37,13 @@ jobs:
           --health-retries 12
     env:
       DATABASE_URL: postgres://arsy:arsy_test_password@localhost:5432/arsy_test
+      ARSY_OPERATOR_TOKEN: ci-arsy-operator-token-with-32-characters
+      ARSY_OPERATOR_ID: ci-operator
+      ARSY_API_BASE_URL: http://127.0.0.1:3001
+      HEADQUARTER_OPERATOR_PASSWORD: ci-operator-password-with-strong-entropy
+      HEADQUARTER_SESSION_SECRET: ci-headquarter-session-secret-at-least-32-bytes
+      HEADQUARTER_PUBLIC_ORIGIN: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: '1'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -62,3 +69,49 @@ jobs:
 
       - name: Verify persistence across database reconnects
         run: pnpm --filter @riotworks/arsy test:integration
+
+      - name: Build Headquarter for browser E2E
+        run: pnpm --filter @riotworks/headquarter build
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --prefix /tmp/mw-playwright --no-save --no-package-lock playwright@1.56.1
+          /tmp/mw-playwright/node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Start ARSY API
+        env:
+          HOST: 127.0.0.1
+          PORT: 3001
+        run: nohup pnpm --filter @riotworks/arsy start > /tmp/arsy.log 2>&1 &
+
+      - name: Start Headquarter
+        env:
+          PORT: 3000
+          HOSTNAME: 127.0.0.1
+        run: nohup pnpm --filter @riotworks/headquarter start > /tmp/headquarter.log 2>&1 &
+
+      - name: Wait for application readiness
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3001/health/ready >/dev/null && curl --fail --silent http://127.0.0.1:3000/login >/dev/null; then
+              echo "ARSY and Headquarter are ready."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Application readiness timed out."
+          cat /tmp/arsy.log || true
+          cat /tmp/headquarter.log || true
+          exit 1
+
+      - name: Run browser end-to-end commerce workflow
+        env:
+          PLAYWRIGHT_MODULE: /tmp/mw-playwright/node_modules/playwright/index.mjs
+          BASE_URL: http://localhost:3000
+        run: node apps/headquarter/tests/money-maker.e2e.mjs
+
+      - name: Print application logs on failure
+        if: failure()
+        run: |
+          cat /tmp/arsy.log || true
+          cat /tmp/headquarter.log || true
