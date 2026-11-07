@@ -15,6 +15,10 @@ on:
       - main
       - "feat-*"
       - "feat/**"
+      - "fix-*"
+      - "fix/**"
+      - "chore-*"
+      - "headquarter/**"
   workflow_dispatch:
 
 concurrency:
