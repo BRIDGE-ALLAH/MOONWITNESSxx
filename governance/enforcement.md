@@ -195,28 +195,28 @@ A document stating a rule is not enforcement. A check that covers only part of a
 
 - **INS-01** — Installer is idempotent, version-aware, observable, safe to rerun
   - Enforcement: Installer integration/idempotency tests
-  - State: Phase 4 planned
+  - State: Partial: implementation and cross-platform CI active / full rerun idempotency test open
 - **INS-02** — Shell entrypoints delegate shared behavior to one Node implementation
   - Enforcement: Installer architecture review and shell smoke tests
-  - State: Phase 4 planned
+  - State: CI active
 - **INS-03** — Detect OS/architecture, Node, pnpm, Git, profile services
   - Enforcement: Preflight unit tests and OS matrix
-  - State: Phase 4 planned
+  - State: Partial: Node/Git/pnpm and OS detection active / ARM and profile-service coverage open
 - **INS-04** — Separate preflight, dependencies, environment, hooks, validation, startup
   - Enforcement: Installer lifecycle tests
-  - State: Phase 4 planned
+  - State: Partial: dependency and environment lifecycle active / hooks and startup intentionally deferred
 - **INS-05** — Preserve user files/secrets; copy .env.example only if .env absent
   - Enforcement: Filesystem fixture tests
-  - State: Phase 4 planned
+  - State: CI active
 - **INS-06** — Never print secrets or run unverified curl
   - Enforcement: Static script checks and secret-redaction tests
-  - State: Phase 4 planned
+  - State: CI active
 - **INS-07** — Provide install, doctor, repair, update, verify, uninstall
   - Enforcement: CLI command/exit-code tests
-  - State: Phase 4 planned
+  - State: CI active
 - **INS-08** — Production migrations/deletion/deployment/DNS/firewall/secret rotation require approval and recovery
   - Enforcement: Explicit approval gates and deployment audit
-  - State: Phase 4/5 planned
+  - State: Partial: installer forbids production/destructive actions / production approval gates open
 
 ## Security contract
 
