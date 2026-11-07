@@ -18,6 +18,7 @@ type FinancialSummary = {
   currency: string
   gross_receipts_minor: string
   deductions_minor: string
+  tax_reserve_minor: string
   payout_movements_minor: string
   pending_minor: string
   pending_count: string
@@ -147,7 +148,7 @@ export function FinancialLedger() {
       <div className="flex items-end justify-between gap-4"><div><h2 className="font-display text-2xl uppercase">Verified summary</h2><p className="text-xs text-muted-ink">Calculated from persisted events only · amounts remain in currency minor units</p></div><button type="button" onClick={() => void refresh()} className="border border-acid-lime/40 px-4 py-2 font-mono text-xs uppercase">Refresh</button></div>
       {loading ? <p className="border border-acid-lime/20 p-5 text-sm text-muted-ink">Loading financial records…</p>
         : summary.length === 0 ? <p className="border border-dashed border-acid-lime/30 p-5 text-sm text-muted-ink">No financial events have been recorded. No revenue or balance is assumed.</p>
-        : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{summary.map((row) => <article key={row.currency} className="border border-acid-lime/20 bg-panel-charcoal p-4"><h3 className="font-display text-xl uppercase">{row.currency}</h3><dl className="mt-3 grid grid-cols-2 gap-3 text-xs"><div><dt className="text-muted-ink">Gross receipts · verified</dt><dd className="mt-1 font-mono">{row.gross_receipts_minor}</dd></div><div><dt className="text-muted-ink">Deductions · verified</dt><dd className="mt-1 font-mono">{row.deductions_minor}</dd></div><div><dt className="text-muted-ink">Net contribution · verified</dt><dd className="mt-1 font-mono text-acid-lime">{row.net_contribution_minor}</dd></div><div><dt className="text-muted-ink">Pending events</dt><dd className="mt-1 font-mono">{row.pending_count} · {row.pending_minor}</dd></div><div><dt className="text-muted-ink">Payout movements</dt><dd className="mt-1 font-mono">{row.payout_movements_minor}</dd></div></dl></article>)}</div>}
+        : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{summary.map((row) => <article key={row.currency} className="border border-acid-lime/20 bg-panel-charcoal p-4"><h3 className="font-display text-xl uppercase">{row.currency}</h3><dl className="mt-3 grid grid-cols-2 gap-3 text-xs"><div><dt className="text-muted-ink">Gross receipts · verified</dt><dd className="mt-1 font-mono">{row.gross_receipts_minor}</dd></div><div><dt className="text-muted-ink">Deductions · verified</dt><dd className="mt-1 font-mono">{row.deductions_minor}</dd></div><div><dt className="text-muted-ink">Net contribution · before tax reserve and payouts</dt><dd className="mt-1 font-mono text-acid-lime">{row.net_contribution_minor}</dd></div><div><dt className="text-muted-ink">Tax reserve · verified</dt><dd className="mt-1 font-mono">{row.tax_reserve_minor}</dd></div><div><dt className="text-muted-ink">Pending events</dt><dd className="mt-1 font-mono">{row.pending_count} · {row.pending_minor}</dd></div><div><dt className="text-muted-ink">Payout movements</dt><dd className="mt-1 font-mono">{row.payout_movements_minor}</dd></div></dl></article>)}</div>}
     </section>
 
     <section className="space-y-3">
