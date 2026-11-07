@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFile, readdir, access } from 'node:fs/promises'
-import { resolve, relative, sep } from 'node:path'
+import { resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
