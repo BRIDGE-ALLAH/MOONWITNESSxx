@@ -785,7 +785,7 @@ Use these labels consistently when updating this file:
 - [x] Aligned root package identity and replaced recursive/missing root script references.
 - [x] Replaced pnpm-workspace allowBuilds placeholders with explicit booleans.
 - [x] Removed Headquarter lint success masking and added its Next lint config.
-- [x] Removed the ARSY app's placeholder lint-success script.
+- [x] Replaced the ARSY app's placeholder lint-success script with the shared ESLint command.
 - [x] Routed UI, types and ARSY Core lint through the shared flat ESLint config; removed the no-source lint task from the config-only package.
 - [x] Added root .dockerignore.
 - [x] Added a Node test for the repository governance audit.
