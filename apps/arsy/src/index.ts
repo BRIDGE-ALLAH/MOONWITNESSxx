@@ -1,13 +1,18 @@
 import Fastify from 'fastify'
 import Zod from 'zod'
-import fastifyTypeProviderZod from 'fastify-type-provider-zod'
-// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
+import {
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from 'fastify-type-provider-zod'
 
+// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
 const app = Fastify({
   logger: true,
-})
+}).withTypeProvider<ZodTypeProvider>()
 
-app.register(fastifyTypeProviderZod)
+app.setValidatorCompiler(validatorCompiler)
+app.setSerializerCompiler(serializerCompiler)
 
 // Example route
 app.get(
@@ -22,12 +27,10 @@ app.get(
       },
     },
   },
-  async (request, reply) => {
-    return {
-      status: 'ok',
-      message: 'ARSY Command Center is running',
-    }
-  }
+  async () => ({
+    status: 'ok',
+    message: 'ARSY Command Center is running',
+  })
 )
 
 // Database connector setup
