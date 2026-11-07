@@ -33,7 +33,7 @@ The world moves quickly. Stories emerge, signals cross, and useful discoveries c
 
 MOONWITNESS chooses to observe before acting. It listens for meaningful signals, studies patterns, and distinguishes evidence from assumption. It records what was seen, verifies what can be checked, connects related knowledge, and shares discoveries with context.
 
-The ambition is not to flood the world with generated material. It is to help people build understanding and share what matters—carefully, transparently, and with respect for provenance.
+The ambition is not to flood the world with generated material. It is to help people build understanding and share messages—carefully, transparently, and with respect for provenance.
 
 ## 4. Core Promise
 
@@ -43,7 +43,7 @@ MOONWITNESS helps people observe more carefully and understand more deeply.
 
 ## 5. Brand Manifesto
 
-> WHEN THE MOON RISES, WE SHARE WHAT MATTERS.
+> WHEN THE MOON RISES, WE SHARE MESSAGES.
 
 Every observation can become understanding. Every verified discovery deserves its context. We bring evidence and human curiosity together, then share what we learn.
 
@@ -59,7 +59,7 @@ We correct the record when evidence changes.
 
 - **Master brand:** MOONWITNESS
 - **Core Promise:** SEE MORE. KNOW MORE.
-- **Brand Manifesto:** WHEN THE MOON RISES, WE SHARE WHAT MATTERS.
+- **Brand Manifesto:** WHEN THE MOON RISES, WE SHARE MESSAGES.
 - **Category:** Evidence-first observatory and human knowledge-sharing ecosystem.
 - **Experience families:** Observatory and Archive.
 - **Studio attribution:** RIOTWORKS, only where a studio credit is appropriate.
