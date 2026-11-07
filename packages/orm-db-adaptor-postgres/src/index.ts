@@ -55,8 +55,11 @@ function columnDefinition(value: unknown): string {
 class PostgresTransaction implements DatabaseTransaction {
   readonly id = randomUUID();
   #active = true;
+  readonly #client: PoolClient;
 
-  constructor(private readonly client: PoolClient) {}
+  constructor(client: PoolClient) {
+    this.#client = client;
+  }
 
   get isActive(): boolean {
     return this.#active;
@@ -64,7 +67,7 @@ class PostgresTransaction implements DatabaseTransaction {
 
   async query<TRow = Readonly<Record<string, unknown>>>(request: QueryRequest): Promise<QueryResult<TRow>> {
     this.#assertActive();
-    const result = await this.client.query(request.text, (request.parameters ?? []).map((item) => item.value) as never[]);
+    const result = await this.#client.query(request.text, (request.parameters ?? []).map((item) => item.value) as never[]);
     return {
       rows: result.rows as TRow[],
       rowCount: result.rowCount ?? result.rows.length,
@@ -75,23 +78,23 @@ class PostgresTransaction implements DatabaseTransaction {
   async commit(): Promise<void> {
     this.#assertActive();
     try {
-      await this.client.query("COMMIT");
+      await this.#client.query("COMMIT");
     } catch (error) {
-      await this.client.query("ROLLBACK").catch(() => undefined);
+      await this.#client.query("ROLLBACK").catch(() => undefined);
       throw error;
     } finally {
       this.#active = false;
-      this.client.release();
+      this.#client.release();
     }
   }
 
   async rollback(): Promise<void> {
     if (!this.#active) return;
     try {
-      await this.client.query("ROLLBACK");
+      await this.#client.query("ROLLBACK");
     } finally {
       this.#active = false;
-      this.client.release();
+      this.#client.release();
     }
   }
 
