@@ -77,6 +77,17 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await page.getByRole('heading', { name: 'RIOT RADAR' }).waitFor()
     await page.getByRole('heading', { name: title, exact: true }).waitFor()
 
+    // The operator decision is a persisted, audited override, separate from the calculated score.
+    const opportunityCard = page.locator('article').filter({ hasText: title }).first()
+    await opportunityCard.getByLabel(`Decision for ${title}`).selectOption('research-more')
+    await opportunityCard.getByLabel(`Decision rationale for ${title}`).fill('Wait for a second independent source before promotion.')
+    await opportunityCard.getByRole('button', { name: 'Save decision' }).click()
+    await page.getByRole('status').filter({ hasText: 'Decision updated and recorded in the audit trail.' }).waitFor()
+    await opportunityCard.getByLabel(`Decision for ${title}`).selectOption('prototype-candidate')
+    await opportunityCard.getByLabel(`Decision rationale for ${title}`).fill('The isolated fixture meets the configured test promotion gate.')
+    await opportunityCard.getByRole('button', { name: 'Save decision' }).click()
+    await page.getByRole('status').filter({ hasText: 'Decision updated and recorded in the audit trail.' }).waitFor()
+
     // Promotion writes a real versioned Product/ProductVersion record.
     await page.goto(`${baseUrl}/the-forge`, { waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'THE FORGE' }).waitFor()
