@@ -91,7 +91,7 @@ jobs:
       - name: Type-check Headquarter application
         run: pnpm --filter @riotworks/headquarter type-check
 
-      - name: Test Headquarter API boundary and demo fixture
+      - name: Test Headquarter API boundary, fixtures, and domain engines
         run: pnpm --filter @riotworks/headquarter test
 
       - name: Build Headquarter production bundle (lint checked separately)
