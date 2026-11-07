@@ -55,19 +55,43 @@ export class AssetRepository {
     rightsState: 'pass' | 'blocked' | 'unknown'
   }): Promise<AssetRecord | null> {
     const result = await this.db.query(
-      `WITH created AS (
-        INSERT INTO arsy_assets
-          (id, product_version_id, owner_id, filename, media_type, storage_key, checksum_sha256, provenance, rights_state, created_by)
-        SELECT $1, pv.id, $2, $4, $5, $6, $7, $8::jsonb, $9, $10
+      `WITH eligible AS MATERIALIZED (
+        SELECT pv.id AS product_version_id, p.id AS product_id
         FROM arsy_product_versions pv
         JOIN arsy_products p ON p.id = pv.product_id
         WHERE p.owner_id = $2 AND pv.id = $3
+          AND pv.version = (SELECT MAX(latest.version) FROM arsy_product_versions latest WHERE latest.product_id = p.id)
+          AND p.lifecycle_state IN ('brief', 'production', 'review', 'ready')
+        FOR UPDATE OF p
+      ), created AS (
+        INSERT INTO arsy_assets
+          (id, product_version_id, owner_id, filename, media_type, storage_key, checksum_sha256, provenance, rights_state, created_by)
+        SELECT $1, eligible.product_version_id, $2, $4, $5, $6, $7, $8::jsonb, $9, $10
+        FROM eligible
         RETURNING *
+      ), invalidated AS (
+        INSERT INTO arsy_inspections
+          (id, product_version_id, inspection_type, status, findings, inspected_by)
+        SELECT gen_random_uuid(), created.product_version_id, required.inspection_type, 'needs-review',
+          jsonb_build_array(jsonb_build_object(
+            'severity', 'warning',
+            'description', 'The asset inventory changed. Recheck rights, policy, technical and creative readiness before listing.'
+          )), $10
+        FROM created
+        CROSS JOIN (VALUES ('rights'), ('policy'), ('technical'), ('creative')) AS required(inspection_type)
+        RETURNING id
+      ), product_reset AS (
+        UPDATE arsy_products p
+        SET lifecycle_state = 'production', updated_at = now(), updated_by = $10
+        FROM eligible, created
+        WHERE p.id = eligible.product_id AND p.owner_id = $2
+        RETURNING p.id
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
         SELECT $11, $2, 'asset', id, 'uploaded', $10,
-          jsonb_build_object('productVersionId', product_version_id, 'checksumSha256', checksum_sha256, 'rightsState', rights_state)
+          jsonb_build_object('productVersionId', product_version_id, 'checksumSha256', checksum_sha256,
+            'rightsState', rights_state, 'readinessReset', true)
         FROM created
       )
       SELECT ${columns} FROM created`,
@@ -100,17 +124,47 @@ export class AssetRepository {
 
   async archive(ownerId: string, actorId: string, id: string): Promise<boolean> {
     const result = await this.db.query(
-      `WITH changed AS (
-        UPDATE arsy_assets SET archived_at = now()
-        WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
-        RETURNING *
+      `WITH eligible AS MATERIALIZED (
+        SELECT pv.id AS product_version_id, p.id AS product_id
+        FROM arsy_assets asset
+        JOIN arsy_product_versions pv ON pv.id = asset.product_version_id
+        JOIN arsy_products p ON p.id = pv.product_id
+        WHERE asset.owner_id = $1 AND asset.id = $2 AND asset.archived_at IS NULL
+          AND pv.version = (SELECT MAX(latest.version) FROM arsy_product_versions latest WHERE latest.product_id = p.id)
+          AND p.lifecycle_state IN ('brief', 'production', 'review', 'ready')
+        FOR UPDATE OF p
+      ), changed AS (
+        UPDATE arsy_assets asset SET archived_at = now()
+        FROM eligible
+        WHERE asset.owner_id = $1 AND asset.id = $2 AND asset.archived_at IS NULL
+          AND asset.product_version_id = eligible.product_version_id
+        RETURNING asset.*
+      ), invalidated AS (
+        INSERT INTO arsy_inspections
+          (id, product_version_id, inspection_type, status, findings, inspected_by)
+        SELECT gen_random_uuid(), changed.product_version_id, required.inspection_type, 'needs-review',
+          jsonb_build_array(jsonb_build_object(
+            'severity', 'warning',
+            'description', 'The asset inventory changed. Recheck rights, policy, technical and creative readiness before listing.'
+          )), $3
+        FROM changed
+        CROSS JOIN (VALUES ('rights'), ('policy'), ('technical'), ('creative')) AS required(inspection_type)
+        RETURNING id
+      ), product_reset AS (
+        UPDATE arsy_products p
+        SET lifecycle_state = 'production', updated_at = now(), updated_by = $3
+        FROM eligible, changed
+        WHERE p.id = eligible.product_id AND p.owner_id = $1
+        RETURNING p.id
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
-          (id, owner_id, aggregate_type, aggregate_id, action, actor_id)
-        SELECT $3, $1, 'asset', id, 'archived', $4 FROM changed
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $4, $1, 'asset', id, 'archived', $3,
+          jsonb_build_object('productVersionId', product_version_id, 'readinessReset', true)
+        FROM changed
       )
       SELECT id FROM changed`,
-      [ownerId, id, randomUUID(), actorId],
+      [ownerId, id, actorId, randomUUID()],
     )
     return rows<{ id: string }>(result).length > 0
   }
