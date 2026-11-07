@@ -92,13 +92,12 @@ export function requestHasTrustedOrigin(request: Request, publicOrigin: string):
   }
 }
 
-const PASSWORD_KDF_SALT = 'moonwitness:headquarter:operator-password:v1'
 const PASSWORD_KDF_OPTIONS = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }
 const PASSWORD_DERIVED_KEY_LENGTH = 64
 
-function deriveOperatorPassword(password: string): Promise<Buffer> {
+function deriveOperatorPassword(password: string, salt: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    scrypt(password, PASSWORD_KDF_SALT, PASSWORD_DERIVED_KEY_LENGTH, PASSWORD_KDF_OPTIONS, (error, derivedKey) => {
+    scrypt(password, salt, PASSWORD_DERIVED_KEY_LENGTH, PASSWORD_KDF_OPTIONS, (error, derivedKey) => {
       if (error) reject(error)
       else resolve(derivedKey)
     })
@@ -106,10 +105,9 @@ function deriveOperatorPassword(password: string): Promise<Buffer> {
 }
 
 /** Memory-hard password verification; never use a fast general-purpose hash for login secrets. */
-export async function operatorPasswordMatches(supplied: string, expected: string): Promise<boolean> {
-  const [actualDigest, expectedDigest] = await Promise.all([
-    deriveOperatorPassword(supplied),
-    deriveOperatorPassword(expected),
-  ])
+export async function operatorPasswordMatches(supplied: string, expected: string, salt: string): Promise<boolean> {
+  if (!supplied || supplied.length > 1024 || !salt || Buffer.byteLength(salt, 'utf8') < 32) return false
+  const actualDigest = await deriveOperatorPassword(supplied, salt)
+  const expectedDigest = await deriveOperatorPassword(expected, salt)
   return timingSafeEqual(actualDigest, expectedDigest)
 }
