@@ -109,3 +109,8 @@ test('post-login return path cannot escape the configured origin', () => {
   assert.equal(safeOperatorReturnTo('https://attacker.example/path', origin), '/riot-radar')
   assert.equal(safeOperatorReturnTo(undefined, origin), '/riot-radar')
 })
+test('operator password verification uses a memory-hard KDF and rejects oversized input', async () => {
+  assert.equal(await operatorPasswordMatches(password, password, secret), true)
+  assert.equal(await operatorPasswordMatches('incorrect-password', password, secret), false)
+  assert.equal(await operatorPasswordMatches('x'.repeat(1025), password, secret), false)
+})
