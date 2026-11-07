@@ -56,7 +56,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Format changed files only
-        run: pnpm run format
+        run: pnpm run format -- --all
 
       - name: Validate formatter output
         run: git diff --check
@@ -74,9 +74,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -u
-          git commit -m "style: format changed files"
+          git commit -m "style: format repository"
 
-          # No force-push: fail safely if main has moved.
+          # Rebase the formatting-only commit onto the latest main without force-pushing.
+          git fetch origin main
+          git rebase origin/main
           git push origin HEAD:main
 
           echo "changed=true" >> "$GITHUB_OUTPUT"

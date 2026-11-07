@@ -78,7 +78,12 @@ async function getCiChangedFiles() {
 }
 
 export async function getChangedFiles() {
-  const files = process.env.CI === 'true' ? await getCiChangedFiles() : getLocalChangedFiles()
+  const files = process.argv.includes('--all')
+    ? splitNullSeparatedPaths(runGit(['ls-tree', '-r', '--name-only', '-z', 'HEAD']).stdout)
+    : process.env.CI === 'true'
+      ? await getCiChangedFiles()
+      : getLocalChangedFiles()
+
   return uniqueFilePaths(files).filter(isPrettierSupportedFile)
 }
 
