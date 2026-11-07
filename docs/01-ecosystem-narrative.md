@@ -12,7 +12,7 @@ MOONWITNESS is the master ecosystem and product identity. It exists within the b
 - **MOONWITNESS** is the master brand: observe, record, verify, connect, understand, and share.
 - **MOONWITNESS Observatory** is the research and evidence experience.
 - **MOONWITNESS Archive** is the durable knowledge, records, provenance, and retrieval experience.
-- **RIOTWORKS** is an independent creative/engineering studio identity and possible delivery partner. It is not the MOONWITNESS product brand.
+- **RIOTWORKS** is the product and operating division within MOONWITNESS. It owns its commercial and execution products under the MOONWITNESS master brand.
 - **ARSY** is the backend command/orchestration runtime.
 - **ZILL** represents guardianship, integrity, and protection.
 - **MIZAN** represents balance, accounting, and accountability.
@@ -90,4 +90,4 @@ These values are ethical design principles, not claims that the product represen
 - Do not imply divine endorsement, guaranteed blessing, guaranteed earnings, or religious authority.
 - Character art must not trivialize sacred figures or religious symbols.
 - MoonWitness lore must not obscure the product's actual function.
-- RIOTWORKS studio identity remains distinct from MOONWITNESS product identity.
+- RIOTWORKS division identity remains subordinate to and consistent with the MOONWITNESS master brand.
