@@ -2,7 +2,7 @@ import { Pool } from 'pg'
 import type { FastifyInstance } from 'fastify'
 
 export interface DatabasePool {
-  query: (statement: string) => Promise<unknown>
+  query: (statement: string, values?: unknown[]) => Promise<unknown>
   end: () => Promise<void>
 }
 
