@@ -15,6 +15,14 @@ type ProductRow = {
   created_at: Date | string
   updated_at: Date | string
 }
+type VersionRow = {
+  id: string
+  version: number
+  brief: Record<string, unknown>
+  acceptance_criteria: string[]
+  created_at: Date | string
+  created_by: string
+}
 
 export interface ProductRecord {
   id: string
@@ -28,11 +36,19 @@ export interface ProductRecord {
   createdAt: string
   updatedAt: string
 }
+export interface ProductVersionRecord {
+  id: string
+  version: number
+  brief: Record<string, unknown>
+  acceptanceCriteria: string[]
+  createdAt: string
+  createdBy: string
+}
+export type ProductLifecycleState = 'brief' | 'production' | 'review' | 'retired'
 
 function rows<T>(result: unknown): T[] {
   return (result as QueryResult<T>).rows
 }
-
 function mapProduct(row: ProductRow): ProductRecord {
   return {
     id: row.id,
@@ -47,9 +63,19 @@ function mapProduct(row: ProductRow): ProductRecord {
     updatedAt: new Date(row.updated_at).toISOString(),
   }
 }
-
+function mapVersion(row: VersionRow): ProductVersionRecord {
+  return {
+    id: row.id,
+    version: row.version,
+    brief: row.brief,
+    acceptanceCriteria: row.acceptance_criteria,
+    createdAt: new Date(row.created_at).toISOString(),
+    createdBy: row.created_by,
+  }
+}
 const columns = `p.id, p.opportunity_id, p.title, p.product_family, p.lifecycle_state,
   v.id AS version_id, v.version, v.brief, v.acceptance_criteria, p.created_at, p.updated_at`
+const versionColumns = 'id, version, brief, acceptance_criteria, created_at, created_by'
 
 export class ProductRepository {
   constructor(private readonly db: DatabasePool) {}
@@ -124,6 +150,103 @@ export class ProductRepository {
     )
     const row = rows<ProductRow>(result)[0]
     return row ? mapProduct(row) : null
+  }
+
+  async history(ownerId: string, id: string): Promise<ProductVersionRecord[] | null> {
+    const exists = await this.db.query(
+      'SELECT id FROM arsy_products WHERE owner_id = $1 AND id = $2',
+      [ownerId, id],
+    )
+    if (!rows<{ id: string }>(exists)[0]) return null
+    const result = await this.db.query(
+      `SELECT ${versionColumns} FROM arsy_product_versions v
+       JOIN arsy_products p ON p.id = v.product_id
+       WHERE p.owner_id = $1 AND p.id = $2 ORDER BY v.version DESC`,
+      [ownerId, id],
+    )
+    return rows<VersionRow>(result).map(mapVersion)
+  }
+
+  async createVersion(
+    ownerId: string,
+    actorId: string,
+    id: string,
+    expectedVersion: number,
+    brief: Record<string, unknown>,
+    acceptanceCriteria: string[],
+  ): Promise<{ product: ProductRecord | null; conflict: boolean }> {
+    const result = await this.db.query(
+      `WITH locked AS (
+        SELECT p.* FROM arsy_products p
+        WHERE p.owner_id = $1 AND p.id = $2
+          AND p.lifecycle_state IN ('brief', 'production', 'review')
+          AND (SELECT COALESCE(MAX(version), 0) FROM arsy_product_versions WHERE product_id = p.id) = $3
+        FOR UPDATE
+      ), versioned AS (
+        INSERT INTO arsy_product_versions (id, product_id, version, brief, acceptance_criteria, created_by)
+        SELECT $4, locked.id, $3 + 1, $5::jsonb, $6::jsonb, $7 FROM locked
+        RETURNING *
+      ), changed AS (
+        UPDATE arsy_products p SET updated_at = now(), updated_by = $7
+        FROM versioned v WHERE p.id = v.product_id AND p.owner_id = $1
+        RETURNING p.*
+      ), audited AS (
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $8, $1, 'product', changed.id, 'version-created', $7,
+          jsonb_build_object('version', versioned.version, 'previousVersion', $3)
+        FROM changed JOIN versioned ON versioned.product_id = changed.id
+      )
+      SELECT ${columns} FROM changed p JOIN versioned v ON v.product_id = p.id`,
+      [ownerId, id, expectedVersion, randomUUID(), JSON.stringify(brief), JSON.stringify(acceptanceCriteria), actorId, randomUUID()],
+    )
+    const row = rows<ProductRow>(result)[0]
+    if (row) return { product: mapProduct(row), conflict: false }
+    const current = await this.get(ownerId, id)
+    return { product: current, conflict: Boolean(current) }
+  }
+
+  async transition(
+    ownerId: string,
+    actorId: string,
+    id: string,
+    fromVersion: number,
+    nextState: ProductLifecycleState,
+    rationale: string,
+  ): Promise<{ product: ProductRecord | null; conflict: boolean }> {
+    const allowed: Record<string, ProductLifecycleState[]> = {
+      brief: ['production', 'retired'],
+      production: ['review', 'retired'],
+      review: ['production', 'retired'],
+    }
+    const current = await this.get(ownerId, id)
+    if (!current) return { product: null, conflict: false }
+    if (current.version !== fromVersion || !allowed[current.lifecycleState]?.includes(nextState)) {
+      return { product: current, conflict: true }
+    }
+    const result = await this.db.query(
+      `WITH changed AS (
+        UPDATE arsy_products SET lifecycle_state = $4, updated_at = now(), updated_by = $5
+        WHERE owner_id = $1 AND id = $2 AND lifecycle_state = $3
+          AND (SELECT COALESCE(MAX(version), 0) FROM arsy_product_versions WHERE product_id = $2) = $6
+        RETURNING *
+      ), latest AS (
+        SELECT DISTINCT ON (product_id) * FROM arsy_product_versions
+        WHERE product_id = $2 ORDER BY product_id, version DESC
+      ), audited AS (
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $7, $1, 'product', changed.id, 'lifecycle-transition', $5,
+          jsonb_build_object('from', $3, 'to', $4, 'rationale', $8, 'version', $6)
+        FROM changed
+      )
+      SELECT ${columns} FROM changed p JOIN latest v ON v.product_id = p.id`,
+      [ownerId, id, current.lifecycleState, nextState, actorId, fromVersion, randomUUID(), rationale],
+    )
+    const row = rows<ProductRow>(result)[0]
+    if (row) return { product: mapProduct(row), conflict: false }
+    const latest = await this.get(ownerId, id)
+    return { product: latest, conflict: Boolean(latest) }
   }
 
   async findByOpportunity(ownerId: string, opportunityId: string): Promise<ProductRecord | null> {
