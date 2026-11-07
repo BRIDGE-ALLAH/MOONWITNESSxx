@@ -1,5 +1,6 @@
 'use client'
 
+import { OperatorLogoutButton } from './operator-logout-button'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 
 type FinancialEvent = {
@@ -141,6 +142,7 @@ export function FinancialLedger() {
   }
 
   return <div className="space-y-8">
+    <div className="flex justify-end"><OperatorLogoutButton /></div>
     {error && <div role="alert" className="border border-red-500/50 bg-red-950/20 p-4 text-sm">{error}</div>}
     {message && <div role="status" className="border border-acid-lime/40 p-4 text-sm">{message}</div>}
     <section className="space-y-3">
