@@ -28,17 +28,23 @@ export function createApp(options: CreateAppOptions) {
     }
   }
 
-  app.addHook('onReady', async () => {
-    await refreshDatabaseReadiness()
-    readinessTimer = setInterval(() => {
-      void refreshDatabaseReadiness()
-    }, 5_000)
-    readinessTimer.unref()
-  })
+  app.addHook(
+    'onReady',
+    async () => {
+      await refreshDatabaseReadiness()
+      readinessTimer = setInterval(() => {
+        void refreshDatabaseReadiness()
+      }, 5_000)
+      readinessTimer.unref()
+    },
+  )
 
-  app.addHook('onClose', async () => {
-    if (readinessTimer) clearInterval(readinessTimer)
-  })
+  app.addHook(
+    'onClose',
+    async () => {
+      if (readinessTimer) clearInterval(readinessTimer)
+    },
+  )
 
   typedApp.get(
     '/',
@@ -60,10 +66,15 @@ export function createApp(options: CreateAppOptions) {
 
   typedApp.get('/health/live', async () => ({ status: 'alive' }))
 
-  typedApp.get('/health/ready', async (_request, reply) => {
-    if (!databaseReady) return reply.code(503).send({ status: 'not-ready' })
-    return { status: 'ready' }
-  })
+  typedApp.get(
+    '/health/ready',
+    async (_request, reply) => {
+      if (!databaseReady) {
+        return reply.code(503).send({ status: 'not-ready' })
+      }
+      return { status: 'ready' }
+    },
+  )
 
   setupDatabase(app, databasePool, () => databaseReady)
   return app
