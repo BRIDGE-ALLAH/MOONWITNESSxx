@@ -1,4 +1,4 @@
-import { runScenario } from '../scenario-forge/engine'
+import { runScenario } from '../scenario-forge/engine.ts'
 import type { ScenarioDefinition, ScenarioMetric, ScenarioResult } from '../scenario-forge/types'
 import type { ReplayCapsule, ReplayCapsulePayload, ReplayVerification } from './types'
 
