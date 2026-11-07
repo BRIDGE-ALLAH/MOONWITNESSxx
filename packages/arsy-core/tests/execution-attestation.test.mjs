@@ -40,3 +40,24 @@ test('rejects tenant switching and actor substitution in an otherwise valid trac
   actorSwitch[0].actorId = 'other-agent'
   assert.throws(() => createExecutionAttestation(contract, actorSwitch, '2026-11-08T00:00:03Z'), ExecutionProofError)
 })
+
+
+test('rejects approvals recorded before the policy allow decision', () => {
+  const approvalBeforeAllow = [
+    { id: 'approval', sequence: 0, kind: 'approval.recorded', actionId: 'a1', actorId: 'approver', tenantId: 'tenant-a', occurredAt: '2026-11-08T00:00:00Z', approved: true },
+    { ...events[0], sequence: 1, occurredAt: '2026-11-08T00:00:01Z', approvalRequired: true },
+    { ...events[1], sequence: 2, occurredAt: '2026-11-08T00:00:02Z' },
+    { ...events[2], sequence: 3, occurredAt: '2026-11-08T00:00:03Z' },
+  ]
+  assert.throws(() => createExecutionAttestation(contract, approvalBeforeAllow, '2026-11-08T00:00:04Z'), ExecutionProofError)
+})
+
+test('attestation issuance cannot predate the final trace event', () => {
+  assert.throws(() => createExecutionAttestation(contract, events, '2026-11-08T00:00:01Z'), /attestation_issued_before_trace_end/)
+})
+
+test('trace digest is bound to the execution contract identity', () => {
+  const first = createExecutionAttestation(contract, events, '2026-11-08T00:00:03Z')
+  const second = createExecutionAttestation({ ...contract, id: 'exec-2' }, events, '2026-11-08T00:00:03Z')
+  assert.notEqual(first.traceDigest, second.traceDigest)
+})

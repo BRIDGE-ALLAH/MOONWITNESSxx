@@ -1015,3 +1015,11 @@ Use these labels consistently when updating this file:
 - [ ] Add runtime reservation/release with leases, crash cleanup and cross-host coordination.
 - [ ] Benchmark startup latency and isolation leakage against worktree-only and VM-per-agent baselines.
 **Exit gate:** advisory until a runtime adapter reserves and enforces each resource; no claim of actual database, volume, secret or network isolation.
+
+
+## Phase 18–20 hardening update (2026-11-08)
+- [x] Phase 18: reject malformed/blank capability context and fail closed on verifier outages.
+- [x] Phase 19: enforce approval-after-allow ordering, reject duplicate approvals, bind trace digest to contract identity and prevent pre-trace attestation issuance.
+- [x] Phase 20: detect empty traces, malformed context, duplicate policy decisions and cross-tenant terminal receipts; mark undefined benchmark metrics as null rather than perfect.
+- [ ] Authenticated issuer registry, signed attestation envelope/KMS, actual tool-gateway enforcement, licensed benchmark import and calibrated CI thresholds remain open.
+See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract checks, not production security enforcement.

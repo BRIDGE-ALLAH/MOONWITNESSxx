@@ -65,3 +65,17 @@ test('binds a capability to its task session and normalized argument hash', asyn
   }, [parent, child], verifier)
   assert.equal(wrongArgs.reasonCodes[0], 'arguments_outside_capability')
 })
+
+
+test('fails closed when the trusted verifier is unavailable', async () => {
+  const result = await authorizeCapability({ actorId: 'agent-1', tenantId: 'tenant-a', action: 'invoice:read', resource: 'invoice/123', purpose: 'invoice-review', sessionId: 'session-1', argumentHash: 'sha256:invoice-123-read', now: '2026-11-08T00:00:00Z' }, [parent, child], { verify: async () => { throw new Error('key registry unavailable') } })
+  assert.equal(result.allowed, false)
+  assert.equal(result.reasonCodes[0], 'capability_verifier_unavailable')
+})
+
+test('rejects whitespace-only context and malformed scope declarations', async () => {
+  const request = await authorizeCapability({ actorId: ' ', tenantId: 'tenant-a', action: 'invoice:read', resource: 'invoice/123', purpose: 'invoice-review', sessionId: 'session-1', argumentHash: 'sha256:invoice-123-read', now: '2026-11-08T00:00:00Z' }, [parent, child], verifier)
+  assert.equal(request.reasonCodes[0], 'request_context_incomplete')
+  const malformed = await authorizeCapability({ actorId: 'agent-1', tenantId: 'tenant-a', action: 'invoice:read', resource: 'invoice/123', purpose: 'invoice-review', sessionId: 'session-1', argumentHash: 'sha256:invoice-123-read', now: '2026-11-08T00:00:00Z' }, [{ ...parent, actions: ['invoice:*:delete'] }, child], verifier)
+  assert.equal(malformed.reasonCodes[0], 'capability_grant_invalid')
+})

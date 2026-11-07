@@ -38,6 +38,15 @@ export interface CapabilityDecision {
   grantId?: string
 }
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+function isValidScopeList(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => isNonEmptyString(item)
+    && (item === '*' || !item.includes('*') || item.endsWith('/*')))
+}
+
 function matchesScope(patterns: readonly string[], value: string): boolean {
   return patterns.some((pattern) => {
     if (pattern === '*') return true
@@ -57,7 +66,7 @@ export async function authorizeCapability(
 ): Promise<CapabilityDecision> {
   const deny = (reason: string): CapabilityDecision => ({ allowed: false, reasonCodes: [reason] })
   if (!chain.length) return deny('capability_chain_missing')
-  if (!request.actorId || !request.tenantId || !request.action || !request.resource || !request.purpose || !request.sessionId || !request.argumentHash) {
+  if (![request.actorId, request.tenantId, request.action, request.resource, request.purpose, request.sessionId, request.argumentHash].every(isNonEmptyString)) {
     return deny('request_context_incomplete')
   }
   const now = Date.parse(request.now ?? new Date().toISOString())
@@ -66,9 +75,15 @@ export async function authorizeCapability(
   const seen = new Set<string>()
   for (let index = 0; index < chain.length; index += 1) {
     const grant = chain[index]
-    if (!grant.id || seen.has(grant.id)) return deny('capability_chain_cycle_or_duplicate')
+    if (!isNonEmptyString(grant.id) || seen.has(grant.id)) return deny('capability_chain_cycle_or_duplicate')
     seen.add(grant.id)
-    if (!grant.signature || !(await verifier.verify(grant))) return deny('capability_signature_invalid')
+    if (![grant.issuerId, grant.subjectId, grant.tenantId, grant.purpose, grant.sessionId, grant.issuedAt, grant.expiresAt, grant.signature].every(isNonEmptyString)
+      || !isValidScopeList(grant.actions) || !isValidScopeList(grant.resources) || !isValidScopeList(grant.argumentHashes)) {
+      return deny('capability_grant_invalid')
+    }
+    let signatureValid = false
+    try { signatureValid = await verifier.verify(grant) } catch { return deny('capability_verifier_unavailable') }
+    if (!signatureValid) return deny('capability_signature_invalid')
     const issuedAt = Date.parse(grant.issuedAt)
     const expiresAt = Date.parse(grant.expiresAt)
     if (!Number.isFinite(issuedAt) || !Number.isFinite(expiresAt) || issuedAt > now || expiresAt <= now || expiresAt <= issuedAt) {
