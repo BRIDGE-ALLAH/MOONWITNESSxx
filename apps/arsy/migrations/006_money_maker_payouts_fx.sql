@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS arsy_fx_conversions (
   created_at timestamptz NOT NULL DEFAULT now(),
   created_by text NOT NULL,
   CHECK (base_currency <> quote_currency),
-  CHECK ((source_financial_event_id IS NOT NULL)::integer + (source_payout_id IS NOT NULL)::integer = 1),
+  CHECK (num_nonnulls(source_financial_event_id, source_payout_id) = 1),
   UNIQUE (owner_id, id),
   UNIQUE (owner_id, idempotency_key),
   FOREIGN KEY (owner_id, source_financial_event_id) REFERENCES arsy_financial_events (owner_id, id),
