@@ -18,7 +18,7 @@ Implemented deterministic bounded exports:
 - IIIF Presentation API 3 minimal Manifest/Canvas/painting annotation shape.
 - W3C Web Annotation with text position and quote selectors.
 
-Every exporter returns a report. The TEI profile does not encode manuscript hands, variants, apparatus, layout or critical apparatus. IIIF canvas dimensions are placeholders (1×1) until supplied by a trusted media adapter; do not publish this output as a production manifest without real dimensions and rights/access metadata. No SHACL validator or round-trip parser is claimed.
+Every exporter returns a report. The `evaluateInteropLossBudget` policy gate checks the target standard, allowed loss codes and maximum omitted items; unapproved losses can block export. The TEI profile does not encode manuscript hands, variants, apparatus, layout or critical apparatus. IIIF canvas dimensions are placeholders (1×1) until supplied by a trusted media adapter; do not publish this output as a production manifest without real dimensions and rights/access metadata. No SHACL validator or round-trip parser is claimed.
 
 ## Research and design signals
 - F(AI)2R (2026) proposes machine-readable provenance for AI-assisted research artifacts and a human-only verification rung: https://arxiv.org/abs/2607.25637
