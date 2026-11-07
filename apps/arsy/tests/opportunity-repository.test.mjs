@@ -36,6 +36,7 @@ const row = {
   decision_rationale: null,
   created_at: '2026-11-08T00:00:00.000Z',
   updated_at: '2026-11-08T00:00:00.000Z',
+  version: 1,
 }
 
 const input = {
@@ -132,4 +133,36 @@ test('archive is a reversible soft-state operation and owner scoped', async () =
   assert.equal(await repository.archive('owner-a', 'owner-a', row.id), true)
   assert.match(fake.calls[0].sql, /archived_at = now\(\)/)
   assert.deepEqual(fake.calls[0].values.slice(0, 3), ['owner-a', row.id, 'owner-a'])
+})
+
+ 
+test('updates an opportunity with owner and optimistic version scope, then requires fresh review', async () => {
+  const updatedRow = {
+    ...row,
+    title: 'Updated localized inventory utility',
+    score: '80.00',
+    decision: 'research-more',
+    decision_rationale: 'Opportunity details changed; a fresh review is required before promotion.',
+    updated_at: '2026-11-08T01:00:00.000Z',
+    version: 2,
+  }
+  const fake = createDatabase([[updatedRow]])
+  const repository = new OpportunityRepository(fake.db)
+  const result = await repository.update('owner-a', 'owner-a', row.id, input, evaluation, 1)
+
+  assert.equal(result?.version, 2)
+  assert.equal(result?.evaluation.decision, 'research-more')
+  assert.match(fake.calls[0].sql, /WHERE owner_id = \$1 AND id = \$2 AND version = \$19/)
+  assert.match(fake.calls[0].sql, /NOT EXISTS \([\s\S]*FROM arsy_products/)
+  assert.match(fake.calls[0].sql, /action, actor_id, metadata[\s\S]*'updated'/)
+  assert.equal(fake.calls[0].values[0], 'owner-a')
+  assert.equal(fake.calls[0].values[1], row.id)
+  assert.equal(fake.calls[0].values[18], 1)
+})
+
+test('checks product promotion before allowing an opportunity revision', async () => {
+  const fake = createDatabase([[{ exists: 1 }]])
+  const repository = new OpportunityRepository(fake.db)
+  assert.equal(await repository.hasProduct('owner-a', row.id), true)
+  assert.match(fake.calls[0].sql, /WHERE owner_id = \$1 AND opportunity_id = \$2/)
 })
