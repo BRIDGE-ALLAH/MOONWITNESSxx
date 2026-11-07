@@ -2,7 +2,7 @@
 
 **Repository:** BRIDGE-ALLAH/MOONWITNESS  
 **Default branch:** main  
-**Verified HEAD:** 1bfbae285c2871985487882b4c4ec42915bf422b  
+**Verified HEAD:** ecb4faf2b85a24f07db2c2a5685ca04d627254f8  
 **Purpose:** Replace stale repository-state assumptions with a current, evidence-based baseline. This is a point-in-time audit, not a claim that all roadmap items are complete.
 
 ## 1. Mainline and merged work
@@ -10,15 +10,13 @@
 - PR #79 merged as 3e9db048eef0698f56c14543dbf2afc83a534247: ARSY Phases 18–20 security hardening.
 - PR #81 merged as 1bfbae285c2871985487882b4c4ec42915bf422b: Developer Experience Phases 33–35.
 - PR #81 pre-merge CI: Repository Integrity, Asset Integrity, WITNESS FABRIC, Developer Experience, Full Workspace Typecheck/Build, and CodeQL all succeeded. Its three new CLI smoke tests succeeded.
-- PR #75 is closed and unmerged. PR #80 was closed and unmerged; PR #82 is its current Divine Phases 18–20 successor.
-- PR #78 is the ARSY Core trust-boundary Phases 33–35 stack. It remains separate from DX Phases 33–35; these phase numbers are scoped per subsystem, not globally unique.
+- PR #75 and PR #80 are closed and unmerged; PR #82 superseded #80 and is now merged.
+- PR #78 is merged. Its first CI attempt exposed a missing blockedWithoutSignal metric; the metric and regression assertion were fixed, then current-head Repository CI, full workspace typecheck/build, and CodeQL passed before merge.
+- Phase numbers are scoped per subsystem, not globally unique; ARSY Core Phases 33–35 and DX Phases 33–35 are separate implementations.
 
 ## 2. Current open PR gate
 
-At audit time:
-- **#78 — ARSY Core trust boundary:** current branch had recent changes after a typecheck failure in the memory-integrity report (blockedWithoutSignal was required but missing). The missing field and regression assertion were added; fresh Repository CI and CodeQL were running. Do not merge until both finish successfully and the current branch remains mergeable.
-- **#82 — Divine provenance assurance:** successor to failed/closed #80. The initial Repository CI failure was TS7006 in source-lineage parent-reference validation. A typed validation fix was added; current Repository CI and CodeQL were running. Do not merge until both finish successfully and current branch remains mergeable.
-- Older ORM/database PRs (#15–#41) and Dependabot PRs remain a dependency-ordered review queue. Their titles or historical green checks are not proof that their current diffs are safe against present main.
+At audit time, PRs #78 and #82 have both been merged after resolving their integration/typecheck issues. Older ORM/database PRs (#15–#41) and Dependabot PRs remain a dependency-ordered review queue. Their titles or historical green checks are not proof that their current diffs are safe against present main.
 
 PR state changes quickly; always re-fetch head SHA, current-base diff, mergeability, reviews, and current CI before integration.
 
@@ -83,12 +81,11 @@ Preserve existing URLs and shared UI tokens. Prioritize demo/data truth, accessi
 
 ## 7. Next safe execution order
 
-1. Finish CI on PRs #78 and #82; merge only after current-head CI and CodeQL succeed.
-2. Fix ARSY runtime port/start/lint contract and Docker Compose development-vs-production safety.
-3. Add ARSY health/readiness and Headquarter browser accessibility/responsive checks.
-4. Reconcile ORM/database PR ancestry and run compatibility tests against current main.
-5. Reconcile version/tag history and changelog, then establish a real production target, secrets, backups, rollback, deployment workflow, and smoke tests.
-6. Only then declare a stable release candidate.
+1. Fix ARSY runtime port/start/lint contract and Docker Compose development-vs-production safety.
+2. Add ARSY health/readiness and Headquarter browser accessibility/responsive checks.
+3. Reconcile ORM/database PR ancestry and run compatibility tests against current main.
+4. Reconcile version/tag history and changelog, then establish a real production target, secrets, backups, rollback, deployment workflow, and smoke tests.
+5. Only then declare a stable release candidate.
 
 ## Audit limitations
 
