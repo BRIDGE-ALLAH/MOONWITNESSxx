@@ -40,9 +40,14 @@ export const arsyCorePlugin: FastifyPluginAsync = async (app) => {
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error({ err: error }, "Unhandled request error");
-    reply.code(error.statusCode && error.statusCode < 500 ? error.statusCode : 500).send({
-      error: error.name || "Internal Server Error",
-      message: error.statusCode && error.statusCode < 500 ? error.message : "Internal Server Error",
+    const errorValue = error instanceof Error ? error : new Error("Unknown request error");
+    const statusValue = (error as { statusCode?: unknown }).statusCode;
+    const statusCode = typeof statusValue === "number" && statusValue >= 400 && statusValue < 500
+      ? statusValue
+      : 500;
+    reply.code(statusCode).send({
+      error: errorValue.name || "Internal Server Error",
+      message: statusCode < 500 ? errorValue.message : "Internal Server Error",
       path: request.url,
     });
   });
