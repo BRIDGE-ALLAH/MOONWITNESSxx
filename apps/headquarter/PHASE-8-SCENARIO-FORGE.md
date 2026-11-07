@@ -26,10 +26,11 @@ Dashboards show current conditions. Workflow engines execute commands. Few opera
 - [x] Pure deterministic shadow calculation kernel.
 - [x] Validation for duplicate IDs, unknown metrics, missing rationale, and non-finite values/results.
 - [x] Tests for deterministic replay, baseline immutability, and shadow-only output.
-- [ ] Multi-scenario comparison and sensitivity analysis.
+- [x] Read-only Scenario Arena compares conservative, expected, and stress cases with descriptive sensitivity ranking (synthetic fixture only).
 - [ ] Versioned ARSY read-only snapshot contract with scope and freshness metadata.
 - [ ] Scenario history, persistence, and workspace authorization.
-- [ ] Accessible Scenario Arena UI and explicit human approval flow for any future production change.
+- [x] Initial interactive Scenario Arena UI with explicit shadow-only disclosure.
+- [ ] Browser accessibility verification and any future separate human approval flow (never a direct simulation execution).
 
 ### Non-negotiable guardrails
 
