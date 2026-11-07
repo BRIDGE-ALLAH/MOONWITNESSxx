@@ -14,7 +14,7 @@ This document records implementation scope for the installer and runtime lifecyc
 - [x] Restrict permissions on generated `.env` and state metadata where supported.
 - [x] Uninstall removes only installer-owned metadata; dependencies, secrets, source, and volumes are preserved.
 - [x] Unit tests for parsing, profile plans, secret-name inventory, dry-run, and safe uninstall.
-- [ ] Cross-platform CI on Linux/macOS/Windows must pass before acceptance.
+- [x] Cross-platform CI on Linux/macOS/Windows passed on pre-sync commit `9269bcb716390f9e9ff30a98260d0658d47c354c` in [run 42399313514](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42399313514). Re-run on the latest merge-synced head before final acceptance.
 - [ ] Maintainer review of supported Node/pnpm versions and Windows behavior.
 
 ## Phase 5 — Runtime and deployment lifecycle
