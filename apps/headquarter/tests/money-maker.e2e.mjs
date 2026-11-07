@@ -153,7 +153,7 @@ try {
     productHypothesis: 'A versioned reconciliation utility flags discrepancies and exports a reviewable audit report.',
   }
   await page.getByLabel(`Product brief JSON for ${title}`).fill(JSON.stringify(revisedBrief, null, 2))
-  await page.getByLabel(`Version acceptance criteria for ${title}`).fill('Imports source rows without loss.\\nExports a reconciliation report with stable row identifiers.\\nPreserves an immutable version history.')
+  await page.getByLabel(`Version acceptance criteria for ${title}`).fill('Imports source rows without loss.\nExports a reconciliation report with stable row identifiers.\nPreserves an immutable version history.')
   await page.getByRole('button', { name: 'Save new product version' }).click()
   await page.getByRole('status').filter({ hasText: `Product version created: ${title} · v2` }).waitFor({ state: 'visible', timeout: 30_000 })
   await page.getByRole('button', { name: `Load version history for ${title}` }).click()
