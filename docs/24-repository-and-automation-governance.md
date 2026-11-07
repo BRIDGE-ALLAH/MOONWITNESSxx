@@ -3,7 +3,8 @@
 **Status:** Engineering baseline and operational contract  
 **Canonical repository:** `BRIDGE-ALLAH/MOONWITNESS`  
 **Supersedes:** older hook, local issue-creation, and ad hoc weekly-detection behavior  
-**Related authority:** [docs/23 — Repository Audit and Current Execution Plan](./23-repository-audit-and-current-execution-plan.md)
+**Canonical governance index:** [governance/README.md](../governance/README.md)  
+**Current-state authority:** [docs/23 — Repository Audit and Current Execution Plan](./23-repository-audit-and-current-execution-plan.md)
 
 ## 1. Why this document exists
 
@@ -178,7 +179,7 @@ The weekly audit writes artifacts and a GitHub Actions summary. It does not crea
 - Merge only after all required checks pass and the diff is reviewed.
 - Do not claim an issue is resolved merely because code was committed; verify the acceptance criteria and merge state.
 
-Suggested branch names are `feat-*`, `fix-*`, and `chore-*`. The current default PR target is `main`; a future `dev → main` promotion flow requires an actual `dev` branch and matching branch protection before it becomes policy.
+Suggested branch names are `feat/*`, `fix/*`, `chore/*`, `docs/*`, and `refactor/*`; CI push filters must match these slash-based prefixes. The current default PR target is `main`; a future `dev → main` promotion flow requires an actual `dev` branch and matching branch protection before it becomes policy.
 
 ## 8. Release, changelog, Wiki, and Pages
 
