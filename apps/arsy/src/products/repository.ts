@@ -231,6 +231,8 @@ export class ProductRepository {
       brief: ['production', 'retired'],
       production: ['review', 'retired'],
       review: ['production', 'retired'],
+      ready: ['retired'],
+      listed: ['retired'],
     }
     const current = await this.get(ownerId, id)
     if (!current) return { product: null, conflict: false }
