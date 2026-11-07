@@ -38,7 +38,7 @@ function fakePool() {
       if (sql.includes('INSERT INTO arsy_financial_events')) return { rows: [event] }
       if (sql.includes('FROM arsy_financial_events') && sql.includes('GROUP BY currency')) return { rows: [{
         currency: 'IDR', gross_receipts_minor: '0', deductions_minor: '0',
-        payout_movements_minor: '0', pending_minor: input.amountMinor, pending_count: '1',
+        tax_reserve_minor: '0', payout_movements_minor: '0', pending_minor: input.amountMinor, pending_count: '1',
       }] }
       return { rows: [] }
     },
@@ -78,6 +78,7 @@ test('financial event API records exact amount as pending and returns exact summ
     assert.equal(summary.statusCode, 200)
     assert.equal(summary.json().data[0].pending_minor, '9007199254740993')
     assert.equal(summary.json().data[0].net_contribution_minor, '0')
+    assert.equal(summary.json().data[0].tax_reserve_minor, '0')
   } finally { await app.close() }
 })
 
