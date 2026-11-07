@@ -118,7 +118,7 @@ Formatting checks use a changed-files policy:
 - The lockfile is excluded from Prettier because pnpm owns its serialization.
 - Pre-commit separately checks staged text/config files, so malformed formatting cannot be committed accidentally.
 
-This avoids turning a new gate into a mass-formatting rewrite of historical prototype code. Existing files become compliant as they are changed or through a separately reviewed formatting-only cleanup. Do not claim the entire historical tree is already formatted.
+This avoids turning a new gate into a mass-formatting rewrite of historical prototype code. On `main`, `format-changed.yml` runs the same changed-files formatter and, when necessary, creates a separate formatting-only bot commit and dispatches CI. It never changes application behavior, versions, or changelog content. Existing files become compliant as they are changed or through a separately reviewed cleanup. Do not claim the entire historical tree is already formatted.
 
 The current `lint` command is the repository hygiene/format gate. A full source-code ESLint configuration is not yet established across the workspace; do not describe this command as comprehensive TypeScript linting until that capability is implemented and verified.
 
@@ -163,6 +163,7 @@ A normal commit must not bump versions, update release notes, create tags, gener
 |---|---|---|---|
 | `ci.yml` | Push, PR, manual | Lockfile integrity and repository validation; optional full workspace gate | `contents: read` |
 | `weekly-detection.yml` | Weekly, manual | Read-only audit report and automation tests | `contents: read` |
+| `format-changed.yml` | Push to `main`, manual | Format only changed supported files, push a formatting-only commit when required, then dispatch CI | `contents: write`, `actions: write` |
 | `codeql.yml` | Push, PR, weekly | Static security analysis | `contents: read`, `security-events: write`, `actions: read` |
 | `pr-labeler.yml` | PR updates | Apply path-based labels | `contents: read`, `pull-requests: write` |
 | `refresh-lockfile.yml` | Manifest/workspace/lockfile changes on `main`, manual | Regenerate, frozen-verify, commit a lockfile-only bot change to `main`, then dispatch CI | `contents: write`, `actions: write` |

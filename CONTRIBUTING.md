@@ -35,7 +35,11 @@ pnpm install --frozen-lockfile
 
 Do not use `--no-frozen-lockfile` as a routine CI or deployment workaround. The **Refresh pnpm lockfile** workflow runs after manifest/workspace changes on `main` and can also be triggered manually. After a regenerated lockfile passes a frozen install, it pushes a lockfile-only bot commit without force-pushing and dispatches CI for the new commit.
 
-## Local Git hooks\n\nAfter `pnpm install`, the root `prepare` script configures `core.hooksPath=.husky` for the local checkout. It does not run in CI. A pre-existing custom `core.hooksPath` is preserved rather than overwritten.\n\n## Common commands
+## Local Git hooks
+
+After `pnpm install`, the root `prepare` script configures `core.hooksPath=.husky` for the local checkout. It does not run in CI. A pre-existing custom `core.hooksPath` is preserved rather than overwritten.
+
+## Common commands
 
 | Command | Purpose |
 |---|---|

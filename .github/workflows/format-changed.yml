@@ -1,0 +1,107 @@
+name: Format changed files
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/**"
+      - "apps/**"
+      - "packages/**"
+      - "scripts/**"
+      - "docs/**"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "SECURITY.md"
+      - "MASTER-PROMPT"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - ".prettierrc"
+      - ".prettierignore"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: format-changed-files
+  cancel-in-progress: false
+
+jobs:
+  format:
+    name: Format only files changed by this push
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format changed files only
+        run: pnpm run format
+
+      - name: Validate formatter output
+        run: git diff --check
+
+      - name: Commit formatting-only changes when needed
+        id: commit
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Changed files already satisfy Prettier."
+            exit 0
+          fi
+
+          git add -u
+          git commit -m "style: format changed files"
+
+          # No force-push: fail safely if main has moved.
+          git push origin HEAD:main
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # A GITHUB_TOKEN push does not start ordinary push workflows.
+      - name: Dispatch CI after formatting commit
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run ci.yml --ref main
+
+      - name: Summarize formatting result
+        if: always()
+        env:
+          CHANGED: ${{ steps.commit.outputs.changed }}
+          COMMIT_SHA: ${{ steps.commit.outputs.commit_sha }}
+        run: |
+          {
+            echo "## Changed-file formatting"
+            echo
+            if [ "$CHANGED" = "true" ]; then
+              echo "- Result: formatting-only commit pushed to main."
+              echo "- Commit: `$COMMIT_SHA`"
+              echo "- CI: dispatched on main."
+            else
+              echo "- Result: no formatting changes were needed."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

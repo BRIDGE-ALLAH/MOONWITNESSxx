@@ -44,7 +44,7 @@ export function findMissingWorkspaceImporters(lockfileContent, workspacePaths) {
   const projectLockfile = getProjectLockfileDocument(lockfileContent)
   const importerSection = projectLockfile.split(/\npackages:\s*\n/, 1)[0]
   const importerPaths = new Set(
-    [...importerSection.matchAll(/^  ([^ \r\n][^:\r\n]*):\s*$/gm)].map((match) => match[1])
+    [...importerSection.matchAll(/^  ([^ \r\n][^:\r\n]*):(?:\s*\{\})?\s*$/gm)].map((match) => match[1])
   )
 
   return workspacePaths.filter((path) => !importerPaths.has(path))

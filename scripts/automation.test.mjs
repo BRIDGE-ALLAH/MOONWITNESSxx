@@ -89,3 +89,33 @@ snapshots: {}
 `
   assert.deepEqual(findMissingWorkspaceImporters(lockfile, ['apps/arsy']), [])
 })
+
+test('recognizes empty workspace importers in pnpm lockfiles', () => {
+  const lockfile = `---
+lockfileVersion: '9.0'
+importers:
+  .:
+    configDependencies: {}
+packages:
+  pnpm@12.16.1: {}
+snapshots:
+  pnpm@12.16.1: {}
+---
+lockfileVersion: '9.0'
+importers:
+  packages/arsy-core: {}
+  packages/contract: {}
+  packages/lint: {}
+packages: {}
+snapshots: {}
+`
+
+  assert.deepEqual(
+    findMissingWorkspaceImporters(lockfile, [
+      'packages/arsy-core',
+      'packages/contract',
+      'packages/lint'
+    ]),
+    []
+  )
+})
