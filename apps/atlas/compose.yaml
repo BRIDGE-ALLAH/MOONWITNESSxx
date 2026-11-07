@@ -1,0 +1,38 @@
+services:
+  mariadb:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: atlas
+      MARIADB_USER: atlas
+      MARIADB_PASSWORD: ${ATLAS_DB_PASSWORD:?Set ATLAS_DB_PASSWORD in the environment}
+      MARIADB_ROOT_PASSWORD: ${ATLAS_DB_ROOT_PASSWORD:?Set ATLAS_DB_ROOT_PASSWORD in the environment}
+    volumes:
+      - atlas_mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", 'mariadb-admin ping -h 127.0.0.1 -u root -p"$${MARIADB_ROOT_PASSWORD}" --silent']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  atlas:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      LOCO_ENV: production
+      PORT: 5150
+      BINDING: 0.0.0.0
+      ATLAS_PUBLIC_URL: ${ATLAS_PUBLIC_URL:-http://localhost:5150}
+      DATABASE_URL: mysql://atlas:${ATLAS_DB_PASSWORD}@mariadb:3306/atlas
+      DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-10}
+    ports:
+      - "127.0.0.1:${ATLAS_PORT:-5150}:5150"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  atlas_mariadb_data:
+    driver: local

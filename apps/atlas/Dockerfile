@@ -6,7 +6,7 @@ COPY config config
 COPY assets assets
 COPY migrations migrations
 COPY src src
-RUN cargo build --release --locked
+RUN cargo build --release
 
 FROM debian:bookworm-slim AS runtime
 RUN apt-get update \

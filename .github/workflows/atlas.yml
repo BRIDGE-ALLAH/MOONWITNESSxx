@@ -41,6 +41,9 @@ jobs:
         with:
           workspaces: apps/atlas
 
+      - name: Resolve dependencies and generate lockfile
+        run: cargo generate-lockfile
+
       - name: Check formatting
         run: cargo fmt --all -- --check
 
