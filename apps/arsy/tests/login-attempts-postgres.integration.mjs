@@ -68,7 +68,9 @@ test('shared login throttle is visible across independent ARSY instances and res
     await poolC.query('DELETE FROM arsy_login_attempt_buckets WHERE owner_id = $1', [ownerId])
   } finally {
     if (appA) await appA.close()
+    else if (poolA) await poolA.end().catch(() => undefined)
     if (appC) await appC.close()
+    else if (poolC) await poolC.end().catch(() => undefined)
     if (appB) {
       await poolB.query('DELETE FROM arsy_login_attempt_buckets WHERE owner_id = $1', [ownerId]).catch(() => undefined)
       await appB.close()
