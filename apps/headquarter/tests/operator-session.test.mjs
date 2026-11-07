@@ -11,6 +11,7 @@ import {
 
 const secret = 'test-session-secret-that-is-at-least-32-bytes-long'
 const operatorId = 'operator-test'
+const password = 'strong-test-password-at-least-16'
 
 test('signed operator sessions round-trip and expire', () => {
   const now = Date.parse('2026-11-08T00:00:00.000Z')
@@ -31,22 +32,47 @@ test('signed operator sessions reject tampering and wrong secrets', () => {
   assert.equal(verifyOperatorSession(undefined, secret), null)
 })
 
-test('operator session configuration fails closed without all required secrets and origin', () => {
+test('operator session configuration requires explicit owner and strong secrets', () => {
   assert.equal(getOperatorSessionConfig({}), null)
   assert.equal(getOperatorSessionConfig({
-    HEADQUARTER_OPERATOR_PASSWORD: 'strong-test-password-at-least-16',
+    HEADQUARTER_OPERATOR_PASSWORD: password,
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
-  })?.operatorId, 'primary-owner')
+  }), null)
   assert.equal(getOperatorSessionConfig({
-    HEADQUARTER_OPERATOR_PASSWORD: 'strong-test-password-at-least-16',
+    ARSY_OPERATOR_ID: operatorId,
+    HEADQUARTER_OPERATOR_PASSWORD: password,
+    HEADQUARTER_SESSION_SECRET: secret,
+    HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
+  })?.operatorId, operatorId)
+  assert.equal(getOperatorSessionConfig({
+    ARSY_OPERATOR_ID: operatorId,
+    HEADQUARTER_OPERATOR_PASSWORD: password,
     HEADQUARTER_SESSION_SECRET: 'short',
     HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
   }), null)
   assert.equal(getOperatorSessionConfig({
-    HEADQUARTER_OPERATOR_PASSWORD: 'strong-test-password-at-least-16',
+    ARSY_OPERATOR_ID: operatorId,
+    HEADQUARTER_OPERATOR_PASSWORD: password,
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example/path',
+  }), null)
+})
+
+test('production session configuration requires HTTPS', () => {
+  assert.equal(getOperatorSessionConfig({
+    NODE_ENV: 'production',
+    ARSY_OPERATOR_ID: operatorId,
+    HEADQUARTER_OPERATOR_PASSWORD: password,
+    HEADQUARTER_SESSION_SECRET: secret,
+    HEADQUARTER_PUBLIC_ORIGIN: 'http://hq.example',
+  }), null)
+  assert.notEqual(getOperatorSessionConfig({
+    NODE_ENV: 'production',
+    ARSY_OPERATOR_ID: operatorId,
+    HEADQUARTER_OPERATOR_PASSWORD: password,
+    HEADQUARTER_SESSION_SECRET: secret,
+    HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
   }), null)
 })
 
