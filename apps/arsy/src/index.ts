@@ -2,6 +2,8 @@ import Fastify from 'fastify'
 import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
+import { pool, setupDatabase } from './db.ts'
+import { resolveServerConfig } from './config.ts'
 // ARSY application composition root. Core governance primitives live in @riotworks/arsy-core.
 
 const app = Fastify({
@@ -35,8 +37,6 @@ typedApp.get(
 )
 
 // Database connector setup
-import { pool, setupDatabase } from './db.ts'
-import { resolveServerConfig } from './config.ts'
 setupDatabase(app)
 
 typedApp.get('/health/live', async () => ({ status: 'alive' }))
