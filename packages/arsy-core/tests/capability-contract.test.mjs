@@ -35,3 +35,18 @@ test('rejects delegated privilege escalation and forged signatures', async () =>
   }, [{ ...parent, signature: 'forged' }, child], verifier)
   assert.equal(forged.reasonCodes[0], 'capability_signature_invalid')
 })
+
+test('rejects a child grant that outlives its parent or changes tenant', async () => {
+  const expiredDelegation = { ...child, expiresAt: '2026-12-15T00:00:00Z' }
+  const result = await authorizeCapability({
+    actorId: 'agent-1', tenantId: 'tenant-a', action: 'invoice:read',
+    resource: 'invoice/123', purpose: 'invoice-review', now: '2026-11-08T00:00:00Z',
+  }, [parent, expiredDelegation], verifier)
+  assert.equal(result.reasonCodes[0], 'delegation_lifetime_escalation')
+  const tenantEscalation = { ...child, tenantId: 'tenant-b' }
+  const tenantResult = await authorizeCapability({
+    actorId: 'agent-1', tenantId: 'tenant-b', action: 'invoice:read',
+    resource: 'invoice/123', purpose: 'invoice-review', now: '2026-11-08T00:00:00Z',
+  }, [parent, tenantEscalation], verifier)
+  assert.equal(tenantResult.reasonCodes[0], 'delegation_context_escalation')
+})
