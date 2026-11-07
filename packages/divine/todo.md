@@ -954,3 +954,18 @@ These implementations are not production completion. See `PHASE-12-14-EXECUTION.
 - [x] Phase 17: exact source-span citation mutation lab for offset drift, zero-width/bidi marks, whitespace, Unicode normalization, confusable substitutions and quote truncation.
 - [ ] Causal model validation, empirically calibrated provenance partitions, language-specific gold sets, comprehensive script-aware confusable catalogs and independent scholarly review remain open.
 See `PHASE-15-17-EXECUTION.md`. These are deterministic research tools, not truth or causal oracles.
+
+
+---
+
+## Phase 18–20 implementation update (2026-11-08)
+
+**Implementation branch:** `feat/divine-phases-18-20-provenance-assurance`  
+**Status:** source, tests and execution record added; full CI verification pending.
+
+- Phase 18: transitive source-lineage closure; independence requires complete acyclic ancestry, explicit witness-family attribution and disjoint ancestry.
+- Phase 19: deterministic red-team mutations for hidden shared ancestors, family collisions, incomplete lineage, missing family attribution and cycles.
+- Phase 20: claim/scope/method/Corpus-release-bound provenance assurance capsule with canonical SHA-256 integrity verification.
+- Public package export: `ProvenanceAssurance`.
+- Boundaries: declared metadata only; no truth score, source-authenticity claim, trusted timestamp, digital signature, Corpus mutation or production authorization.
+- Verification: `tests/phases-18-20.test.mjs`; pending GitHub Actions on the implementation PR.
