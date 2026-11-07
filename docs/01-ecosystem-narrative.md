@@ -62,7 +62,7 @@ We correct the record when evidence changes.
 - **Brand Manifesto:** WHEN THE MOON RISES, WE SHARE MESSAGES.
 - **Category:** Evidence-first observatory and human knowledge-sharing ecosystem.
 - **Experience families:** Observatory and Archive.
-- **Studio attribution:** RIOTWORKS, only where a studio credit is appropriate.
+- **Operating/studio attribution:** RIOTWORKS, only where its separately governed operating or studio role is relevant.\n\nThe wider product catalog and its application/module/platform boundaries are recorded in [docs/32 — Universe & Product Architecture Registry](./32-universe-and-product-architecture-registry.md). Its additional product experiences are targets, not claims of current implementation.
 
 ## 7. Tone of voice
 
