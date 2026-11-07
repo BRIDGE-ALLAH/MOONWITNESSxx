@@ -29,7 +29,7 @@ const eventTypes = [
   ['gross-receipt', 'Gross receipt'], ['platform-fee', 'Platform fee'],
   ['refund', 'Refund'], ['chargeback', 'Chargeback'], ['variable-cost', 'Variable cost'],
   ['production-cost', 'Production cost'], ['tax-reserve', 'Tax reserve'],
-  ['fx-adjustment', 'FX adjustment'], ['payout', 'Payout'], ['payout-reversal', 'Payout reversal'],
+  ['payout', 'Payout'], ['payout-reversal', 'Payout reversal'],
 ] as const
 
 export function FinancialLedger() {
