@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
 import { FinancialLedger } from '../../features/money-maker/financial-ledger'
+import { PayoutFxRegister } from '../../features/money-maker/payout-fx-register'
 import { OperatorLoginForm } from '../../features/money-maker/operator-login-form'
 import {
   getOperatorSessionConfig,
@@ -48,6 +49,7 @@ export default async function MizanLedgerPage() {
           </p>
         </header>
         <FinancialLedger />
+        <PayoutFxRegister />
       </div>
     </main>
   )
