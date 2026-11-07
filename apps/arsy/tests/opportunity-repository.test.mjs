@@ -19,6 +19,7 @@ function createDatabase(rows) {
 
 const row = {
   id: '11111111-1111-4111-8111-111111111111',
+  revision: 1,
   title: 'Localized inventory utility',
   buyer_problem: 'Small sellers struggle to reconcile stock across channels.',
   buyer_segment: 'Indonesian micro sellers',
@@ -132,4 +133,46 @@ test('archive is a reversible soft-state operation and owner scoped', async () =
   assert.equal(await repository.archive('owner-a', 'owner-a', row.id), true)
   assert.match(fake.calls[0].sql, /archived_at = now\(\)/)
   assert.deepEqual(fake.calls[0].values.slice(0, 3), ['owner-a', row.id, 'owner-a'])
+})
+
+
+test('updates an opportunity only when the expected revision matches and advances the revision', async () => {
+  const updatedRow = { ...row, revision: 2, title: 'Revised opportunity' }
+  const fake = createDatabase([[updatedRow]])
+  const repository = new OpportunityRepository(fake.db)
+  const result = await repository.update('owner-a', 'owner-a', row.id, 1, { ...input, title: 'Revised opportunity' }, evaluation)
+
+  assert.equal(result.status, 'updated')
+  assert.equal(result.opportunity.revision, 2)
+  assert.equal(result.opportunity.title, 'Revised opportunity')
+  assert.match(fake.calls[0].sql, /revision = revision \+ 1/)
+  assert.match(fake.calls[0].sql, /revision = \$3/)
+  assert.match(fake.calls[0].sql, /NOT EXISTS[\s\S]*FROM arsy_products/)
+  assert.equal(fake.calls[0].values[0], 'owner-a')
+  assert.equal(fake.calls[0].values[1], row.id)
+  assert.equal(fake.calls[0].values[2], 1)
+  assert.equal(fake.calls[0].values[3], 'Revised opportunity')
+})
+
+test('rejects a stale opportunity revision and returns the current record without overwriting it', async () => {
+  const latest = { ...row, revision: 2, title: 'Latest persisted title' }
+  const fake = createDatabase([[], [latest], []])
+  const repository = new OpportunityRepository(fake.db)
+  const result = await repository.update('owner-a', 'owner-a', row.id, 1, { ...input, title: 'Stale overwrite' }, evaluation)
+
+  assert.equal(result.status, 'stale')
+  assert.equal(result.opportunity.revision, 2)
+  assert.equal(result.opportunity.title, 'Latest persisted title')
+  assert.equal(fake.calls.length, 3)
+  assert.match(fake.calls[2].sql, /FROM arsy_products/)
+})
+
+test('prevents editing an opportunity after it has been promoted into a versioned product', async () => {
+  const latest = { ...row, revision: 2 }
+  const fake = createDatabase([[], [latest], [{ id: 'product-1' }]])
+  const repository = new OpportunityRepository(fake.db)
+  const result = await repository.update('owner-a', 'owner-a', row.id, 2, input, evaluation)
+
+  assert.equal(result.status, 'promoted')
+  assert.equal(fake.calls.length, 3)
 })

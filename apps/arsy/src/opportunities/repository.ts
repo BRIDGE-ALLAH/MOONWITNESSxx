@@ -6,6 +6,7 @@ type QueryResult<T> = { rows: T[] }
 
 export interface OpportunityRecord {
   id: string
+  revision: number
   title: string
   buyerProblem: string
   buyerSegment: string
@@ -43,6 +44,7 @@ interface OpportunityRow {
   decision_rationale: string | null
   created_at: Date | string
   updated_at: Date | string
+  revision: number
   request_hash?: string
 }
 
@@ -63,6 +65,7 @@ const SCORE_DIMENSIONS = [
 function mapOpportunity(row: OpportunityRow): OpportunityRecord {
   return {
     id: row.id,
+    revision: row.revision,
     title: row.title,
     buyerProblem: row.buyer_problem,
     buyerSegment: row.buyer_segment,
@@ -90,7 +93,7 @@ function mapOpportunity(row: OpportunityRow): OpportunityRecord {
 
 const SELECT_COLUMNS = `id, title, buyer_problem, buyer_segment, job_to_be_done,
   product_hypothesis, product_family, candidate_channels, evidence, scores, score_details, hard_gates, hard_gate_details,
-  score::text AS score, decision, decision_rationale, created_at, updated_at`
+  score::text AS score, decision, decision_rationale, created_at, updated_at, revision`
 
 export class OpportunityRepository {
   constructor(private readonly db: DatabasePool) {}
@@ -179,6 +182,102 @@ export class OpportunityRepository {
     )
     const row = rows<OpportunityRow>(result)[0]
     return row ? mapOpportunity(row) : null
+  }
+
+
+  async update(
+    ownerId: string,
+    actorId: string,
+    id: string,
+    expectedRevision: number,
+    input: OpportunityInput,
+    evaluation: OpportunityEvaluation,
+  ): Promise<
+    | { status: 'updated'; opportunity: OpportunityRecord }
+    | { status: 'not-found' }
+    | { status: 'stale'; opportunity: OpportunityRecord }
+    | { status: 'promoted' }
+    | { status: 'conflict' }
+  > {
+    const result = await this.db.query(
+      `WITH changed AS (
+        UPDATE arsy_opportunities
+        SET title = $4,
+          buyer_problem = $5,
+          buyer_segment = $6,
+          job_to_be_done = $7,
+          product_hypothesis = $8,
+          product_family = $9,
+          candidate_channels = $10::jsonb,
+          evidence = $11::jsonb,
+          scores = $12::jsonb,
+          score_details = $13::jsonb,
+          hard_gates = $14::jsonb,
+          hard_gate_details = $15::jsonb,
+          score = $16,
+          decision = $17,
+          decision_rationale = NULL,
+          revision = revision + 1,
+          updated_at = now(),
+          updated_by = $18
+        WHERE owner_id = $1
+          AND id = $2
+          AND revision = $3
+          AND archived_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM arsy_products
+            WHERE owner_id = $1 AND opportunity_id = $2
+          )
+        RETURNING *
+      ), audited AS (
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $19, owner_id, 'opportunity', id, 'content-updated', $18,
+          jsonb_build_object(
+            'previousRevision', $3,
+            'revision', revision,
+            'decision', decision,
+            'fields', ARRAY['title', 'buyer_problem', 'buyer_segment', 'job_to_be_done',
+              'product_hypothesis', 'product_family', 'candidate_channels', 'evidence',
+              'scores', 'score_details', 'hard_gates', 'hard_gate_details']
+          )
+        FROM changed
+      )
+      SELECT ${SELECT_COLUMNS} FROM changed`,
+      [
+        ownerId,
+        id,
+        expectedRevision,
+        input.title,
+        input.buyerProblem,
+        input.buyerSegment,
+        input.jobToBeDone,
+        input.productHypothesis,
+        input.productFamily,
+        JSON.stringify(input.candidateChannels),
+        JSON.stringify(input.evidence),
+        JSON.stringify(input.scores),
+        JSON.stringify(input.scoreDetails),
+        JSON.stringify(input.hardGates),
+        JSON.stringify(input.hardGateDetails),
+        evaluation.score,
+        evaluation.decision,
+        actorId,
+        randomUUID(),
+      ],
+    );
+    const updated = rows<OpportunityRow>(result)[0];
+    if (updated) return { status: 'updated', opportunity: mapOpportunity(updated) };
+
+    const existing = await this.get(ownerId, id);
+    if (!existing) return { status: 'not-found' };
+    const linkedProduct = await this.db.query(
+      'SELECT id FROM arsy_products WHERE owner_id = $1 AND opportunity_id = $2 LIMIT 1',
+      [ownerId, id],
+    );
+    if (rows<{ id: string }>(linkedProduct).length > 0) return { status: 'promoted' };
+    if (existing.revision !== expectedRevision) return { status: 'stale', opportunity: existing };
+    return { status: 'conflict' };
   }
 
   async archive(ownerId: string, actorId: string, id: string): Promise<boolean> {

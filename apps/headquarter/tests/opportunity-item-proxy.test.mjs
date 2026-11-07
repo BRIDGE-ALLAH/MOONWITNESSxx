@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { GET as getOpportunity, DELETE as archiveOpportunity } from '../src/app/api/opportunities/[id]/route.ts'
+import { GET as getOpportunity, PATCH as editOpportunity, DELETE as archiveOpportunity } from '../src/app/api/opportunities/[id]/route.ts'
 import { PATCH as updateDecision } from '../src/app/api/opportunities/[id]/decision/route.ts'
 import { createOperatorSession, OPERATOR_SESSION_COOKIE } from '../src/lib/operator-session.ts'
 
@@ -128,6 +128,49 @@ test('opportunity archive proxy rejects anonymous callers before contacting ARSY
     }), context())
     assert.equal(response.status, 401)
     assert.equal(fetchCalled, false)
+  } finally {
+    globalThis.fetch = originalFetch
+    restore()
+  }
+})
+
+
+test('opportunity content PATCH proxy requires an operator session and trusted origin', async () => {
+  const restore = configureEnvironment()
+  const originalFetch = globalThis.fetch
+  let upstreamUrl = ''
+  let upstreamBody = ''
+  globalThis.fetch = async (url, options) => {
+    upstreamUrl = String(url)
+    upstreamBody = options.body
+    assert.equal(options.method, 'PATCH')
+    assert.equal(options.headers['x-arsy-operator-token'], token)
+    return new Response(JSON.stringify({ data: { id, revision: 2 } }), { status: 200 })
+  }
+  try {
+    const body = JSON.stringify({ expectedRevision: 1, input: { title: 'Updated opportunity' } })
+    const anonymous = await editOpportunity(new Request(origin + '/api/opportunities/' + id, {
+      method: 'PATCH',
+      headers: { origin, 'content-type': 'application/json' },
+      body,
+    }), context())
+    assert.equal(anonymous.status, 401)
+
+    const badOrigin = await editOpportunity(new Request(origin + '/api/opportunities/' + id, {
+      method: 'PATCH',
+      headers: { origin: 'https://attacker.example', cookie: sessionCookie(), 'content-type': 'application/json' },
+      body,
+    }), context())
+    assert.equal(badOrigin.status, 403)
+
+    const response = await editOpportunity(new Request(origin + '/api/opportunities/' + id, {
+      method: 'PATCH',
+      headers: { origin, cookie: sessionCookie(), 'content-type': 'application/json' },
+      body,
+    }), context())
+    assert.equal(response.status, 200)
+    assert.equal(upstreamUrl, 'https://arsy.internal/api/v1/opportunities/' + id)
+    assert.equal(upstreamBody, body)
   } finally {
     globalThis.fetch = originalFetch
     restore()

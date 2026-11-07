@@ -58,11 +58,37 @@ function fakePool() {
     calls,
     query: async (sql, values) => {
       calls.push(sql)
+      if (sql.includes('UPDATE arsy_opportunities')) {
+        const current = records.find((record) => record.id === values[1])
+        if (!current || current.revision !== values[2]) return { rows: [] }
+        Object.assign(current, {
+          title: values[3],
+          buyer_problem: values[4],
+          buyer_segment: values[5],
+          job_to_be_done: values[6],
+          product_hypothesis: values[7],
+          product_family: values[8],
+          candidate_channels: JSON.parse(values[9]),
+          evidence: JSON.parse(values[10]),
+          scores: JSON.parse(values[11]),
+          score_details: JSON.parse(values[12]),
+          hard_gates: JSON.parse(values[13]),
+          hard_gate_details: JSON.parse(values[14]),
+          score: values[15] === null ? null : String(values[15]),
+          decision: values[16],
+          decision_rationale: null,
+          revision: current.revision + 1,
+          updated_at: '2026-11-08T01:00:00.000Z',
+        })
+        return { rows: [{ ...current }] }
+      }
+      if (sql.includes('SELECT id FROM arsy_products')) return { rows: [] }
       if (sql.includes('INSERT INTO arsy_opportunities')) {
         const key = values[16]
         if (records.some((record) => record.idempotency_key === key)) return { rows: [] }
         const record = {
           id: '11111111-1111-4111-8111-111111111111',
+          revision: 1,
           title: body.title,
           buyer_problem: body.buyerProblem,
           buyer_segment: body.buyerSegment,
@@ -212,6 +238,64 @@ test('all versioned business API groups reject anonymous requests before databas
       assert.equal(response.statusCode, 401, `Expected authentication for ${request.method} ${request.url}`)
     }
     assert.equal(pool.calls.length, 0, 'unauthorized business requests must not reach repositories')
+  } finally {
+    await app.close()
+  }
+})
+
+
+test('opportunity content updates validate input, increment revision and reject stale writes', async () => {
+  const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
+  const app = await createApp({ databasePool: fakePool(), logger: false, env })
+  try {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/v1/opportunities',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'revision-test-0001' },
+      payload: body,
+    })
+    assert.equal(created.statusCode, 201)
+    const id = created.json().data.id
+    assert.equal(created.json().data.revision, 1)
+
+    const revisedInput = { ...body, title: 'Revised localized inventory utility' }
+    const updated = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/opportunities/' + id,
+      headers: { 'x-arsy-operator-token': token },
+      payload: { expectedRevision: 1, input: revisedInput },
+    })
+    assert.equal(updated.statusCode, 200)
+    assert.equal(updated.json().data.revision, 2)
+    assert.equal(updated.json().data.title, revisedInput.title)
+
+    const stale = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/opportunities/' + id,
+      headers: { 'x-arsy-operator-token': token },
+      payload: { expectedRevision: 1, input: { ...revisedInput, title: 'Must not overwrite revision 2' } },
+    })
+    assert.equal(stale.statusCode, 409)
+    assert.equal(stale.json().error.code, 'STALE_WRITE')
+    assert.equal(stale.json().current.revision, 2)
+    assert.equal(stale.json().current.title, revisedInput.title)
+  } finally {
+    await app.close()
+  }
+})
+
+test('opportunity content update rejects malformed source data and missing revision', async () => {
+  const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
+  const app = await createApp({ databasePool: fakePool(), logger: false, env })
+  try {
+    const response = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/opportunities/11111111-1111-4111-8111-111111111111',
+      headers: { 'x-arsy-operator-token': token },
+      payload: { input: { ...body, evidence: [] } },
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(response.json().error.code, 'VALIDATION_ERROR')
   } finally {
     await app.close()
   }

@@ -9,6 +9,10 @@ const decisionSchema = z.object({
   decision: z.enum(['blocked', 'research-more', 'prototype-candidate', 'park']),
   rationale: z.string().trim().min(10).max(2000),
 })
+const updateSchema = z.object({
+  expectedRevision: z.number().int().positive(),
+  input: opportunityInputSchema,
+})
 const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 })
@@ -50,6 +54,52 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
     const record = await repository.get(ownerId, params.data.id)
     if (!record) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
     return { data: record }
+  })
+
+
+  app.patch('/api/v1/opportunities/:id', async (request, reply) => {
+    const params = z.object({ id: idSchema }).safeParse(request.params)
+    const body = updateSchema.safeParse(request.body)
+    if (!params.success || !body.success) {
+      return reply.code(400).send({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Opportunity update input is invalid.',
+          ...(body.success ? {} : { details: body.error.flatten() }),
+        },
+      })
+    }
+
+    const evaluation = evaluateOpportunity(body.data.input)
+    const result = await repository.update(
+      ownerId,
+      actorId,
+      params.data.id,
+      body.data.expectedRevision,
+      body.data.input,
+      evaluation,
+    )
+    if (result.status === 'not-found') {
+      return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Opportunity was not found.' } })
+    }
+    if (result.status === 'promoted') {
+      return reply.code(409).send({
+        error: {
+          code: 'OPPORTUNITY_VERSION_LOCKED',
+          message: 'This opportunity has an immutable product snapshot. Create a new product version to change the product brief.',
+        },
+      })
+    }
+    if (result.status === 'stale') {
+      return reply.code(409).send({
+        error: { code: 'STALE_WRITE', message: 'This opportunity changed after it was loaded. Reload the latest record before saving.' },
+        current: result.opportunity,
+      })
+    }
+    if (result.status === 'conflict') {
+      return reply.code(409).send({ error: { code: 'UPDATE_CONFLICT', message: 'The opportunity could not be updated. Reload and retry.' } })
+    }
+    return { data: result.opportunity }
   })
 
   app.patch('/api/v1/opportunities/:id/decision', async (request, reply) => {

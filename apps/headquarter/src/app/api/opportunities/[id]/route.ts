@@ -23,6 +23,12 @@ export async function GET(request: Request, context: RouteContext) {
   return proxyArsyRequest(request, path, 'GET')
 }
 
+export async function PATCH(request: Request, context: RouteContext) {
+  const path = await opportunityPath(context)
+  if (path instanceof NextResponse) return path
+  return proxyArsyRequest(request, path, 'PATCH')
+}
+
 export async function DELETE(request: Request, context: RouteContext) {
   const path = await opportunityPath(context)
   if (path instanceof NextResponse) return path

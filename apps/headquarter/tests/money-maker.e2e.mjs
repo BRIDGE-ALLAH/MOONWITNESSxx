@@ -14,6 +14,7 @@ const runId = `e2e-${Date.now()}`
 const title = `Persisted commerce workflow ${runId}`
 const source = `Isolated CI statement ${runId}`
 const pageErrors = []
+let reviewOpportunityId = ''
 page.on('pageerror', (error) => pageErrors.push(error.message))
 
 try {
@@ -64,6 +65,54 @@ try {
   await page.getByTestId('save-opportunity').click()
   const opportunityCard = page.getByTestId('opportunity-card').filter({ hasText: title })
   await opportunityCard.waitFor({ state: 'visible', timeout: 30_000 })
+
+  // Open the evidence review page, update the record and verify optimistic revision semantics.
+  const reviewLink = opportunityCard.getByRole('link', { name: 'Review evidence & edit' })
+  const reviewHref = await reviewLink.getAttribute('href')
+  assert.ok(reviewHref)
+  reviewOpportunityId = reviewHref.split('/').filter(Boolean).at(-1) || ''
+  await reviewLink.click()
+  await page.waitForURL((url) => url.pathname === reviewHref, { timeout: 15_000 })
+  await page.getByTestId('review-evidence').waitFor({ state: 'visible' })
+  await page.getByText('official-documentation', { exact: true }).waitFor({ state: 'visible' })
+  const revisedBuyerProblem = 'Inventory counts drift across channels and the operator needs a reviewable reconciliation workflow before orders fail.'
+  await page.getByLabel('Buyer problem').fill(revisedBuyerProblem)
+  await page.getByRole('button', { name: 'Save opportunity revision' }).click()
+  await page.getByRole('status').filter({ hasText: 'Saved revision 2' }).waitFor({ state: 'visible', timeout: 30_000 })
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  assert.equal(await page.getByLabel('Buyer problem').inputValue(), revisedBuyerProblem)
+
+  const currentOpportunityResponse = await context.request.get(baseUrl + '/api/opportunities/' + reviewOpportunityId)
+  assert.equal(currentOpportunityResponse.status(), 200)
+  const currentOpportunityPayload = await currentOpportunityResponse.json()
+  assert.equal(currentOpportunityPayload.data.revision, 2)
+  assert.equal(currentOpportunityPayload.data.buyerProblem, revisedBuyerProblem)
+
+  const staleWrite = await context.request.patch(baseUrl + '/api/opportunities/' + currentOpportunityPayload.data.id, {
+    headers: { origin: new URL(baseUrl).origin },
+    data: {
+      expectedRevision: 1,
+      input: {
+        title: currentOpportunityPayload.data.title,
+        buyerProblem: 'A stale revision must never overwrite the current opportunity.',
+        buyerSegment: currentOpportunityPayload.data.buyerSegment,
+        jobToBeDone: currentOpportunityPayload.data.jobToBeDone,
+        productHypothesis: currentOpportunityPayload.data.productHypothesis,
+        productFamily: currentOpportunityPayload.data.productFamily,
+        candidateChannels: currentOpportunityPayload.data.candidateChannels,
+        evidence: currentOpportunityPayload.data.evidence,
+        scores: currentOpportunityPayload.data.scores,
+        scoreDetails: currentOpportunityPayload.data.scoreDetails,
+        hardGates: currentOpportunityPayload.data.hardGates,
+        hardGateDetails: currentOpportunityPayload.data.hardGateDetails,
+      },
+    },
+  })
+  assert.equal(staleWrite.status(), 409)
+  assert.equal((await staleWrite.json()).error.code, 'STALE_WRITE')
+
+  await page.goto(baseUrl + '/riot-radar', { waitUntil: 'domcontentloaded' })
+  await page.getByTestId('opportunity-card').filter({ hasText: title }).waitFor({ state: 'visible' })
 
   // Exercise the actual decision endpoint and its audit-producing workflow.
   await opportunityCard.getByLabel(`Decision for ${title}`).selectOption('research-more')
@@ -176,7 +225,7 @@ try {
   assert.equal(afterLogout.status(), 401)
 
   assert.deepEqual(pageErrors, [], `Unexpected browser page errors: ${pageErrors.join('; ')}`)
-  process.stdout.write('PASS: authenticated opportunity → decision → product brief → financial event → reconciliation → archive → logout workflow\n')
+  process.stdout.write('PASS: authenticated opportunity → evidence review/edit → stale-write protection → decision → product brief → financial event → reconciliation → archive → logout workflow\n')
 } finally {
   await browser.close()
 }

@@ -88,8 +88,24 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.deepEqual(loaded.evidence, evidence)
     assert.deepEqual(loaded.scoreDetails, input.scoreDetails)
     assert.equal(loaded.evaluation.score, 80)
+    assert.equal(loaded.revision, 1)
     assert.equal((await persistedOpportunities.list(ownerId)).length, 1)
     assert.equal((await persistedOpportunities.list(`${ownerId}-other`)).length, 0)
+
+    const revisedInput = { ...input, title: 'PostgreSQL commerce revision fixture' }
+    const revised = await persistedOpportunities.update(ownerId, ownerId, created.id, loaded.revision, revisedInput, evaluation)
+    assert.equal(revised.status, 'updated')
+    assert.equal(revised.opportunity.revision, 2)
+    assert.equal(revised.opportunity.title, revisedInput.title)
+
+    const stale = await persistedOpportunities.update(ownerId, ownerId, created.id, loaded.revision, input, evaluation)
+    assert.equal(stale.status, 'stale')
+    assert.equal(stale.opportunity.revision, 2)
+    assert.equal(stale.opportunity.title, revisedInput.title)
+
+    const afterRevision = await persistedOpportunities.get(ownerId, created.id)
+    assert.ok(afterRevision)
+    assert.equal(afterRevision.title, revisedInput.title)
 
     const products = new ProductRepository(pool)
     const product = await products.createFromOpportunity(ownerId, ownerId, created.id, [
@@ -99,6 +115,16 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.ok(product)
     assert.equal(product.version, 1)
     assert.equal(product.lifecycleState, 'brief')
+
+    const locked = await new OpportunityRepository(pool).update(
+      ownerId,
+      ownerId,
+      created.id,
+      afterRevision.revision,
+      revisedInput,
+      evaluation,
+    )
+    assert.equal(locked.status, 'promoted')
 
     const otherOwnerId = randomUUID()
     await assert.rejects(
@@ -228,6 +254,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const actions = audit.rows.map((row) => row.action)
     for (const expected of [
       'created',
+      'content-updated',
       'created-from-opportunity',
       'recorded-pending-reconciliation',
       'reconciled',
