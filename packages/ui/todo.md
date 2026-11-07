@@ -360,3 +360,6 @@ A component is not complete until all applicable checks pass:
 - CI run #100 identified a missing `@types/node` declaration in `apps/arsy`; it is now declared and added to the workspace lockfile. This is an application type dependency, not a UI runtime dependency.
 - Root `validate:repo` now includes `pnpm --filter @riotworks/ui run test`, so the UI theme-token contract and built-package consumer smoke test are part of the repository validation gate.
 - The latest observed CI run proved the UI package type-check passes, while workspace type-check was blocked by the ARSY Node types issue. Re-run CI after these changes before marking Milestone 1 complete.
+
+
+- Latest workspace CI passed the UI package type-check and lockfile/dependency checks, then exposed two existing ARSY typing issues: missing `@types/pg` declarations and registration of `fastify-type-provider-zod` as a Fastify plugin instead of installing its validator/serializer compilers. The app now declares `@types/pg` and configures the named Zod compilers; these fixes are workspace validation prerequisites, not UI package runtime dependencies.
