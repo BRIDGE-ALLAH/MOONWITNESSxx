@@ -395,11 +395,13 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Shared design-token contract documented in `packages/ui/DESIGN-TOKENS.md`.
 - [ ] Feature pages migrated to live ARSY endpoints; current module content remains demo/static and ARSY Deck now uses a domain-owned, explicitly demo-only repository.
 - [ ] Identity/session, authorization, workspace context, and route-aware localization implemented against approved backend contracts.
-- [ ] Complete primitive audit, responsive/contrast checks, and visual regression baseline verified.
-- [ ] Clean-checkout lint, type-check, tests, and Next.js build verified in CI or local environment.
-- [ ] Browser-level responsive and accessibility checks verified.
+- [ ] Complete primitive audit, responsive/contrast checks, and visual regression baseline verified; these require browser-level validation.
+- [x] Clean-checkout repository lint, workspace type-check, Headquarter production build, and asset registry tests verified in GitHub Actions (PR #35; repository integrity + asset integrity passed).
+- [ ] Browser-level responsive and accessibility checks verified; CI does not run a browser or screen-reader audit.
 - [ ] Route-aware `/id` and `/en` localization implemented; current locale toggle remains prototype-only.
 - [x] Phase 4 ARSY Deck reference-feature structure established without inventing unavailable backend contracts.
 - [x] Phase 5 navigation aligned with approved IA; unimplemented administration routes are disabled and marked planned.
 - [x] Feature rollout and production promotion gates documented in `FEATURE-ROLLOUT.md`.
 - [x] Administration information architecture, data boundaries, intended audiences, and backend gates documented in `ADMINISTRATION-IA.md`.
+- [x] Repository validation repaired and verified: lockfile, native build-script allowlist, root type-check alias, ARSY TypeScript types/config, shared lint config, and Headquarter lint.
+- [x] PR #35 merged to `main` as `51bfe984cde513f5190ab192491681fe41f96aab`; Repository CI and CodeQL passed on PR head.
