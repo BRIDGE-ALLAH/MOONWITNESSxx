@@ -1,4 +1,4 @@
-import { proxyArsyRequest } from '../../../../../../lib/arsy-proxy'
+import { proxyArsyRequest } from '../../../../../lib/arsy-proxy'
 
 export const runtime = 'nodejs'
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
