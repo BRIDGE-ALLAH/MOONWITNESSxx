@@ -237,7 +237,7 @@
 - [ ] Implementasikan detail view/drawer dan action confirmation bila relevan.
 - [ ] Untuk tindakan berisiko, tampilkan impact, confirmation, progress, hasil, dan audit reference bila tersedia.
 - [x] Pastikan semua status sample diberi label eksplisit demo dan tidak mengklaim data aktual.
-- [ ] Tambahkan unit test untuk logic dan component behavior.
+- [x] Tambahkan unit test awal untuk ARSY API client dan integritas data fixture; component behavior masih menunggu test harness UI/browser.
 - [ ] Tambahkan integration test untuk API boundary dan permission behavior.
 - [ ] Tambahkan E2E untuk alur pengguna utama.
 - [x] Dokumentasikan pola reference implementation untuk direplikasi feature lain di `src/features/arsy-deck/README.md`.
@@ -292,7 +292,8 @@
 **Tujuan:** memastikan aplikasi dapat dikembangkan, dioperasikan, dan dirilis dengan kualitas terukur.
 
 ### 6.1 Testing
-- [ ] Unit test untuk utility, hooks, state logic, permission mapping, dan API adapters.
+- [x] Tambahkan Node built-in test runner untuk ARSY browser API client dan integritas fixture ARSY DECK (lihat `tests/`); mencakup request defaults, request ID, GET-only retry, mutation retry prohibition, safe gateway error, timeout, demo disclosure, ID uniqueness, dan bounded confidence.
+- [ ] Perluas unit test untuk utility, hooks, state logic, permission mapping, dan seluruh API adapter behavior.
 - [ ] Component/integration test untuk shell, forms, dialogs, tables, dan feature flows.
 - [ ] E2E test untuk login/session, workspace switch, navigation, critical workflows, dan forbidden access.
 - [ ] Accessibility automated checks ditambah manual keyboard/screen reader review.
@@ -405,3 +406,13 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Administration information architecture, data boundaries, intended audiences, and backend gates documented in `ADMINISTRATION-IA.md`.
 - [x] Repository validation repaired and verified: lockfile, native build-script allowlist, root type-check alias, ARSY TypeScript types/config, shared lint config, and Headquarter lint.
 - [x] PR #35 merged to `main` as `51bfe984cde513f5190ab192491681fe41f96aab`; Repository CI and CodeQL passed on PR head.
+
+
+## Phase 6 execution record — 2026-11-08
+
+- [x] Tambahkan `apps/headquarter/tests/arsy-client.test.mjs` menggunakan Node 24 built-in test runner dan native TypeScript stripping; termasuk guard terhadap absolute URL, backslash, dan parent-directory traversal.
+- [x] Tambahkan `apps/headquarter/tests/arsy-deck.test.mjs` untuk menjaga demo disclosure, uniqueness, confidence bounds, dan sample-only agent states.
+- [x] Tambahkan script `pnpm --filter @riotworks/headquarter test` tanpa dependency framework tambahan.
+- [x] Tambahkan test command ke Asset Integrity CI; branch `headquarter/phase-6-testing-foundation` juga dimasukkan ke trigger push CI.
+- [x] GitHub Actions pada PR #38 lulus: Headquarter tests, type-check assets/UI/Headquarter, production build, asset validation/tests, Repository Integrity, dan CodeQL. Full-workspace quality tetap skipped oleh konfigurasi `FULL_QUALITY_CI`.
+- [ ] Browser E2E, accessibility automation/manual review, visual regression, performance budgets, dan backend contract tests tetap terbuka.

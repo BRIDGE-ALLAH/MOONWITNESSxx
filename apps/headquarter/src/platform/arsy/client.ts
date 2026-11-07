@@ -32,9 +32,25 @@ function createRequestId(): string {
 
 function makeUrl(path: string): string {
   const normalizedPath = path.replace(/^\/+/, '')
+  const hasTraversalSegment = path.split(/[/?#]/).some((segment) => {
+    try {
+      return decodeURIComponent(segment) === '..'
+    } catch {
+      return true
+    }
+  })
+  if (
+    !normalizedPath ||
+    /^[a-z][a-z0-9+.-]*:/i.test(normalizedPath) ||
+    path.startsWith('//') ||
+    path.includes('\\') ||
+    hasTraversalSegment
+  ) {
+    throw new TypeError('ARSY request path must be a relative API path')
+  }
   const base = getBaseUrl()
-  if (/^https?:\/\//i.test(base)) return new URL(normalizedPath, `${base}/`).toString()
-  return `${base}/${normalizedPath}`
+  if (/^https?:\/\//i.test(base)) return new URL(normalizedPath, base + '/').toString()
+  return base + '/' + normalizedPath
 }
 
 async function wait(ms: number, signal?: AbortSignal | null): Promise<void> {
@@ -92,6 +108,7 @@ export async function arsyRequest<T>(path: string, options: ArsyRequestOptions =
   headers.set('accept', 'application/json')
   headers.set('x-request-id', requestId)
   if (init.body && !headers.has('content-type')) headers.set('content-type', 'application/json')
+  const url = makeUrl(path)
 
   let attempt = 0
   while (true) {
@@ -108,7 +125,7 @@ export async function arsyRequest<T>(path: string, options: ArsyRequestOptions =
     externalSignal?.addEventListener('abort', abortFromCaller, { once: true })
 
     try {
-      const response = await fetch(makeUrl(path), {
+      const response = await fetch(url, {
         ...init,
         method,
         headers,

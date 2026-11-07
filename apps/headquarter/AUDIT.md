@@ -120,3 +120,16 @@ The separate full-workspace typecheck/build workflow was skipped by workflow con
 - Complete route-aware localization and workspace persistence.
 - Verify focus containment, contrast, responsive behavior, theme behavior, and screen-reader announcements in a real browser.
 - Add feature-level contract/unit/E2E tests once the backend contract and test harness are available.
+
+
+## Phase 6 — Enterprise hardening progress
+
+**Status:** initial automated test foundation added; release readiness is not yet achieved.
+
+- Added native Node 24 tests for the ARSY browser client: safe request defaults, request ID propagation, GET-only transient retry, no mutation retry, non-JSON gateway error normalization, and timeout normalization.
+- Added fixture invariants for ARSY DECK: explicit demo disclosure, unique IDs, bounded confidence, and sample-only agent states.
+- Hardened the ARSY client URL boundary: absolute/protocol-relative URLs, backslashes, and literal or percent-encoded parent-directory segments are rejected before fetch; regression tests cover these cases.
+- Wired the Headquarter test command into the Asset Integrity CI job without introducing a new test framework dependency.
+- PR #38 head `431720caf3ecdfe7266971c6803922c1cd48a2e7`: Repository CI and CodeQL passed. The Headquarter API/fixture tests, asset/UI/Headquarter type-checks, production build, asset validation, and asset registry tests all passed. Full-workspace quality remains skipped because `FULL_QUALITY_CI` is not enabled.
+- Browser E2E, keyboard/screen-reader audit, WCAG contrast verification, responsive checks, visual regression, performance budgets, dependency/license review, and ARSY contract tests remain open.
+- Production promotion remains blocked on approved ARSY identity/session, workspace, permission, and feature API contracts.

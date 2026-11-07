@@ -21,7 +21,7 @@ type WorkspaceSummary = { id: string; name: string }
 const result = await arsyRequest<WorkspaceSummary[]>('workspaces')
 ```
 
-Pass `signal` for cancellation. The client adds an `x-request-id`, uses same-site credentials, disables implicit caching, and retries transient failures only for GET requests. Mutations are never retried automatically.
+Pass `signal` for cancellation. Paths must be relative to the configured API base; absolute URLs, protocol-relative URLs, backslashes, and literal or percent-encoded parent-directory segments are rejected before any network request. The client adds an `x-request-id`, uses same-site credentials, disables implicit caching, and retries transient failures only for GET requests. Mutations are never retried automatically.
 
 ## Security and contract status
 
