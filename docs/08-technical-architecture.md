@@ -1,132 +1,250 @@
-# 08 — Technical Architecture
+# 08 — Technical Architecture: Headquarter, ARSY, ORM, and Addons
 
-**Status:** Approved target architecture; implementation choices may be refined during engineering  
-**Version:** 1.0  
+**Status:** Approved target architecture  
+**Version:** 1.1  
 **Updated:** 2026-11-07
 
 ## 1. Architecture goals
 
-- Modular, maintainable, and testable.
-- Local-first friendly with optional cloud services.
-- Provider-agnostic AI model access.
-- Marketplace adapters isolated from domain logic.
-- Traceable asset provenance and financial events.
-- Background processing for generation and batch jobs.
-- Strong permission, audit, and cost controls.
-- No frontend access to marketplace secrets.
+- Modular TypeScript monorepo.
+- Headquarter is the frontend; ARSY is the Fastify backend.
+- Reusable Fastify platform core.
+- Custom Odoo-inspired metadata-driven ORM and addon registry.
+- Provider-neutral database contracts.
+- PocketBase adapter with truthful capability boundaries.
+- Shared base fields and audit trail.
+- Provider-agnostic AI runtime.
+- Secure asset provenance and financial history.
+- Local-first friendly, deployable with Docker Compose.
+- No cross-layer leakage or cyclic package dependencies.
 
-## 2. Logical layers
+## 2. Applications
 
-1. **Experience layer:** web app, responsive interface, design system.
-2. **Application layer:** use cases, commands, queries, approval flows.
-3. **Domain layer:** opportunities, products, assets, channels, listings, revenue, policies, workflow runs.
-4. **Intelligence layer:** retrieval, evidence evaluation, scoring, agent orchestration.
-5. **Production layer:** image, video, document, spreadsheet, game/workflow asset providers.
-6. **Integration layer:** marketplace adapters, official APIs, manual package exporters.
-7. **Infrastructure layer:** PostgreSQL, object storage, queue, secrets, telemetry, scheduler.
+### apps/headquarter
+User-facing frontend and RIOTWORKS command experience. It consumes typed API contracts and does not access ORM, database adapters, PocketBase superuser APIs, or provider secrets directly.
 
-## 3. Suggested initial stack
+Recommended direction: Next.js App Router, React, TypeScript, Tailwind CSS, and the RIOTWORKS design system.
 
-This is a recommendation, not a reason to over-engineer the prototype.
+### apps/arsy
+Fastify backend application and composition root. It loads configuration, arsy-core, infrastructure plugins, ORM/database, installed addons, and versioned API routes. It contains wiring and app-specific configuration, not reusable framework internals or duplicate domain models.
 
-| Concern | Candidate |
-|---|---|
-| Web application | Next.js, React, TypeScript |
-| Backend API | Fastify / TypeScript |
-| Database | PostgreSQL |
-| Job queue | Redis-backed queue or PostgreSQL-backed job pattern, selected after workload validation |
-| Object storage | S3-compatible storage |
-| Workflow automation | n8n as an optional external/private workflow tool, or native jobs |
-| Local image generation | ComfyUI through a controlled adapter |
-| AI providers | Provider abstraction for local and cloud models |
-| Search | PostgreSQL full-text first; separate search engine only when needed |
-| Deployment | Docker Compose; optional Coolify-managed deployment |
-| Observability | Structured logs, job traces, metrics, error reporting |
+## 3. Core package map
 
-Do not assume n8n can be embedded, white-labeled, or resold as part of RIOTWORKS. Review its current Sustainable Use License and obtain appropriate licensing for any restricted commercial use. Keep domain logic independent from n8n.
+### packages/arsy-core
+Fastify-based platform core:
+- Application factory and typed runtime context.
+- Plugin registration and dependency order.
+- Lifecycle and graceful shutdown.
+- Configuration validation.
+- Shared errors and response mapping.
+- Request correlation and structured logging.
+- Health/readiness support.
+- Security plugin extension points.
 
-## 4. Service boundaries
+It is not the business domain layer and does not own Project or Intelligent models.
 
-### Web App
-Owns user interaction, navigation, forms, dashboards, and client-side state. Never stores provider secrets or performs privileged external mutations directly.
+### packages/orm
+Custom TypeScript ORM:
+- Field and model metadata.
+- Model registry.
+- Declarative models and extensions.
+- Addon registry and dependency resolver.
+- Environment/context.
+- Domain/query AST.
+- Query capability validation.
+- Lifecycle hooks and unit-of-work integration.
+- Model-level validation and typed errors.
 
-### API / Application Service
-Authenticates users, authorizes actions, validates payloads, executes use cases, and returns stable domain responses.
+Inspired by Odoo's modular model/addon patterns; not a source-code fork or compatibility clone.
 
-### Domain Modules
-- Workspace and identity.
-- Market intelligence.
-- Opportunity management.
-- Product and production.
-- Asset and provenance.
-- QA and compliance.
-- Channel registry.
-- Publishing.
-- Finance and payout.
-- Analytics and portfolio.
-- Workflow and agent operations.
+### packages/orm-db
+Database runtime:
+- Adapter lifecycle.
+- Connection/client management.
+- Transaction abstraction.
+- Unit-of-work coordination.
+- Migration orchestration.
+- Health checks and provider error normalization.
 
-### Worker Runtime
-Processes generation, conversion, metadata preparation, QA, scheduled research, permitted API actions, and reconciliation.
+### packages/orm-db-adaptor
+Provider-neutral adapter contracts:
+- CRUD/query interfaces.
+- Adapter capabilities.
+- Transaction and migration capability declarations.
+- Adapter factory/registry.
+- Query and result contracts.
+- Typed unsupported-capability errors.
 
-### Provider Adapters
-Wrap models, media tools, marketplaces, payout data sources, and storage. Each adapter declares capabilities, scopes, rate limits, and failure modes.
+### packages/orm-db-adaptor-pocketbase
+First concrete PocketBase adapter. Uses the official PocketBase JS SDK or documented API from the server side. PocketBase is a separate Go service with collection APIs and SQLite-backed collections; it is not a Node SQL driver.
 
-## 5. Marketplace adapter contract
+The adapter must respect collection rules and limitations. It must not invent arbitrary SQL joins, general-purpose transactions, or automatic schema management. View collections are read-only. Relation expansion, filtering, realtime, and migrations must be capability-gated and tested. Schema changes use the supported PocketBase migration/deployment path, not direct mutation of internal SQLite tables.
 
-Every adapter must declare:
-- Provider ID and version.
-- Supported countries / account states.
-- Supported actions: read, prepare, create, update, publish, analytics.
-- Official API/documentation URL.
-- Required scopes.
-- Rate limits and quotas.
-- Product/file constraints.
-- AI disclosure requirements.
-- Known limitations.
-- Capability level C0-C4.
-- Test fixtures and health checks.
-- Manual fallback.
+### packages/orm-addon-base
+Automatically installed foundational addon:
+- BaseEntity metadata.
+- Common id, active, timestamps, and actor fields.
+- Active/archive/restore lifecycle.
+- Central AuditTrail model and service.
+- Shared base mixins and validation.
 
-An adapter cannot claim write support merely because browser automation is technically possible.
+Business addons must not repeat these fields or implement their own duplicate audit mechanism.
 
-## 6. AI architecture
+### packages/orm-addon-project
+Project domain models and services. Depends on base.
 
-Use a provider interface with:
-- Model capability declaration.
-- Context and token limits.
-- Structured output support.
-- Cost estimate and actual usage.
-- Timeout and retry policy.
-- Data handling classification.
-- Version and prompt provenance.
-- Evaluation and fallback behavior.
+### packages/orm-addon-intelligent
+AI/agent domain models and services: provider/model definitions, agents, tasks/runs, tools, prompts, knowledge sources, evaluations, and usage/cost. Depends on base. It should depend on project only where there is a real domain dependency.
 
-Use local models for appropriate routine work, and cloud models only when their benefit justifies cost and data exposure. Do not hardcode a single vendor.
+### packages/types
+Framework-agnostic TypeScript primitives, branded IDs, enums, and shared value types. No Fastify, database, or browser runtime.
 
-## 7. Data and event flow
+### packages/contract
+Runtime request/response/event schemas and API contracts. Infer static TypeScript types from the runtime schema source; avoid duplicated DTO definitions.
 
-- Store metadata and relational business records in PostgreSQL.
-- Store binaries and generated files in object storage.
-- Use immutable artifact versions with checksums.
-- Use a queue for long-running tasks.
-- Emit domain events for product, publication, and financial lifecycle changes.
-- Preserve external IDs and source receipts.
-- Make ingestion jobs idempotent.
-- Keep an append-only audit trail for material operations.
+### packages/lint
+Shared lint, format, TypeScript and import-boundary configuration. It is tooling, not a runtime dependency.
 
-## 8. Security boundaries
+## 4. Dependency direction
 
-- OAuth/API tokens are server-side secrets.
-- Encrypt stored credentials and restrict access by integration.
-- Redact secrets and personal data from logs.
-- Apply least privilege and per-action authorization.
-- Separate demo data from production data.
-- Isolate untrusted documents, listing descriptions, prompts, and imported content from system instructions.
-- Validate uploaded files and process them in constrained workers.
-- Protect internal APIs against CSRF, SSRF, injection, path traversal, and privilege escalation.
-- Back up database and asset metadata; test restore.
+apps/headquarter → packages/contract, packages/types, UI components only.
 
-## 9. Prototype boundary
+apps/arsy → packages/arsy-core, packages/contract, packages/types, ORM/database packages, installed addons.
 
-The v0 prototype is frontend-only with synthetic data. The production architecture must not be inferred from prototype mock state. No real OAuth, payment, API keys, generation worker, or publication capability is part of the first UI prototype.
+packages/arsy-core → neutral types and contracts where needed.
+
+packages/orm-addon-* → ORM and declared addon dependencies.
+
+packages/orm → framework-neutral types and neutral adapter capability interfaces.
+
+packages/orm-db → adapter contracts.
+
+packages/orm-db-adaptor-pocketbase → adapter contracts and PocketBase SDK.
+
+packages/contract → shared types.
+
+packages/lint → no runtime imports.
+
+Forbidden:
+- Headquarter importing database adapters or PocketBase superuser clients.
+- ORM importing business addons.
+- Base addon importing Project or Intelligent.
+- Addons importing another addon's private source.
+- Contracts importing Fastify or DB packages.
+- Types importing framework-specific packages.
+- Apps importing each other's source.
+- Circular package dependencies.
+
+## 5. Fastify runtime
+
+Use supported Fastify v5 APIs and plugin encapsulation. apps/arsy creates the root instance through arsy-core, then registers infrastructure, decorators, hooks, domain services, addon routes, and API routes in deterministic order.
+
+Use schema-based request validation and response serialization. Share request/response definitions through packages/contract. Route handlers should delegate to application services, not contain persistence logic or call provider SDKs directly.
+
+Provide:
+- /health/live
+- /health/ready
+- /api/v1/*
+- Central error mapping.
+- Request/trace correlation.
+- Structured logs.
+- Authentication and authorization plugin boundaries.
+- Rate limits and CORS/CSRF policies appropriate to deployment.
+- Graceful shutdown and resource disposal.
+
+## 6. ORM design
+
+The ORM must provide metadata-driven fields, models, relations, model registration, query/domain expressions, typed CRUD, lifecycle hooks, and addon model extension.
+
+Field families initially include string, text, boolean, integer, float, decimal, date, datetime, JSON, selection, ID, and relations. Decimal/money values must preserve precision.
+
+The ORM validates queries against field metadata and adapter capabilities. No unsafe dynamic query strings. Unsupported semantic operations fail explicitly.
+
+## 7. Database adapter capability model
+
+Each adapter declares support for:
+- CRUD and bulk operations.
+- Filtering and operators.
+- Pagination, sort, projection.
+- Relations and expansion.
+- Joins.
+- Transactions.
+- Schema introspection and migrations.
+- Unique constraints and indexes.
+- Realtime.
+- Soft delete.
+- Optimistic concurrency.
+- JSON queries.
+
+The ORM checks capabilities before running a feature. Adapter tests must verify both supported and rejected behavior.
+
+### PocketBase-specific boundary
+
+PocketBase collections use SQLite tables internally but expose PocketBase collection/record APIs. A remote Node adapter must not pretend it has direct SQL semantics. Do not expose arbitrary SQL, cross-collection joins, or transaction guarantees unless separately implemented through an official verified PocketBase mechanism. View collections are read-only. PocketBase schema/migration lifecycle is managed through supported PocketBase migrations/deployment tooling.
+
+For critical writes that require atomic mutation plus audit, require a transaction-capable path or use a documented durable outbox/reconciliation design. Never silently accept an audit gap.
+
+## 8. Addon runtime
+
+Addons declare manifest, technical name, version, dependencies, model definitions/extensions, migrations, services, permissions, and optional app integration points.
+
+Load sequence:
+DISCOVER → VALIDATE → RESOLVE DEPENDENCIES → REGISTER METADATA → APPLY MIGRATIONS → INITIALIZE SERVICES → READY.
+
+Reject missing/circular dependencies, duplicate model/field declarations, incompatible versions, unsafe extension collisions, and untrusted code. Do not dynamically execute downloaded addon code.
+
+## 9. Shared BaseEntity and audit
+
+The base addon centrally provides:
+- id.
+- active (boolean, default true).
+- createdAt.
+- updatedAt.
+- createdBy.
+- updatedBy.
+- version when supported.
+- optional archivedAt / archivedBy.
+
+active is independent from a model's business state. Ordinary listings exclude inactive records unless explicitly requested. Deactivation is not a hard delete.
+
+The central AuditTrail records create, update, archive, restore, permitted delete, and sensitive administrative changes. It includes model, record ID, action, actor, timestamp, request/trace ID, source, changed field names, safe before/after diff, and reason/metadata.
+
+The ORM/base addon must create audit records automatically; addons do not reimplement audit code. Redact secrets and sensitive data. Use adapter transactions where available; otherwise require an explicit consistency strategy or fail closed for operations requiring guaranteed audit atomicity.
+
+## 10. Addon responsibilities
+
+- orm-addon-base: shared base mixins/entities/audit.
+- orm-addon-project: Project, ProjectTask, milestones/labels/membership where required.
+- orm-addon-intelligent: AI provider/model, capability, agent, role, task, run, tool, prompt/version, knowledge source, evaluation, usage, and cost records.
+
+An addon only declares its business-specific fields. Base fields are inherited/composed automatically.
+
+## 11. Runtime and deployment
+
+Use pnpm workspaces and a simple monorepo build graph. A task runner is optional. Keep app and package versions aligned through workspace references and lockfile.
+
+Environment:
+- Validated config at startup.
+- .env.example contains names and safe placeholders only.
+- Secrets stay server-side.
+- No credentials in frontend bundles, source control, or logs.
+
+Deployment target is Docker Compose / Coolify-compatible. PocketBase may run as its own service and persistent volume. Ensure backups include PocketBase data, uploaded files, migrations, and required configuration. Verify restore procedures.
+
+## 12. Testing and observability
+
+- Package unit tests.
+- ORM registry/model/field/query tests.
+- Addon dependency and conflict tests.
+- BaseEntity automatic field tests.
+- Audit lifecycle/failure tests.
+- PocketBase adapter contract and capability tests.
+- Fastify injection tests.
+- Shared API contract tests.
+- Permission and workspace isolation tests.
+- Graceful shutdown tests.
+- Structured logs and trace IDs for API, jobs, adapter actions, and addon lifecycle.
+
+## 13. Implementation boundary
+
+Headquarter visual prototype can be built independently using mock data. Production backend work proceeds as separate milestones. Never claim a feature is integrated until Headquarter calls a real ARSY endpoint and an integration test proves it.

@@ -1,10 +1,18 @@
-# 09 — Information Architecture & User Workflows
+# 09 — Information Architecture: Headquarter
 
 **Status:** Approved baseline  
-**Version:** 1.0  
+**Version:** 1.1  
 **Updated:** 2026-11-07
 
-## 1. Navigation model
+## 1. Application naming
+
+The user-facing application is named **HEADQUARTER** and lives at apps/headquarter.
+
+The backend application is **ARSY**, located at apps/arsy. Do not use web as the frontend product or app name.
+
+Headquarter is the human-facing RIOTWORKS command center. ARSY supplies the backend API and orchestration runtime.
+
+## 2. Navigation model
 
 ### Main navigation
 - ARSY DECK
@@ -22,104 +30,95 @@
 - Policy Center
 - Marketplace Accounts
 - AI Providers
+- Addon Manager (admin/technical only)
+- ORM / Database Health (admin/technical only)
 - Workspace Settings
 - Security and Audit
 
-## 2. Primary user journeys
+## 3. Primary user journeys
 
 ### Journey A — Opportunity to product
-1. Open SIGNAL ROOM.
+1. Open SIGNAL ROOM in Headquarter.
 2. Review source-backed trend/problem signals.
 3. Create an opportunity in RIOT RADAR.
-4. Review evidence and assumptions.
-5. Run hard-gate checks for rights, policy, and channel eligibility.
-6. Approve or reject the opportunity.
+4. Review evidence, assumptions, and confidence.
+5. Run rights, policy, country, and payout hard gates.
+6. Approve, research further, or reject.
 7. Create a product brief in THE FORGE.
-8. Produce first version.
-9. Run ZILL WATCH.
-10. Prepare channel package in LAUNCH BAY.
+8. Produce a versioned product.
+9. Inspect it in ZILL WATCH.
+10. Prepare the listing package in LAUNCH BAY.
 
 ### Journey B — Product to marketplace
 1. Select a QA-approved product.
 2. Select a verified channel.
-3. Check country/account eligibility.
-4. Check supported integration capability.
-5. Generate listing metadata and previews.
-6. Review price and unit economics.
+3. Check account and country eligibility.
+4. Check channel capability and supported action.
+5. Create listing metadata and previews.
+6. Review price, fee, and unit-economics assumptions.
 7. Approve first publication.
 8. Publish only through an allowed method.
-9. Store platform receipt and external listing ID.
-10. Track results in AFTERSHOCK and MIZAN LEDGER.
+9. Store external receipt and listing ID.
+10. Track outcomes in AFTERSHOCK and MIZAN LEDGER.
 
 ### Journey C — Improve or retire
-1. Review product cohort in AFTERSHOCK.
-2. Compare discovery, clicks, conversions, refunds, support burden, and contribution.
-3. Inspect evidence and timeframe.
-4. Select improve, repackage, update, pause, or retire.
-5. Preserve version and publication history.
-6. Record the experiment and outcome.
+1. Review product cohorts in AFTERSHOCK.
+2. Compare discovery, clicks, conversion, refunds, support burden, and contribution.
+3. Inspect data source, timeframe, and sample size.
+4. Choose improve, repackage, update, pause, or retire.
+5. Preserve product version and publication history.
+6. Record the experiment and result.
 
-### Journey D — Weekly operator review
+### Journey D — Weekly owner review
 1. View ARSY DECK.
-2. Check exceptions and approvals.
+2. Resolve blocked jobs and approvals.
 3. Review top opportunities.
-4. Check failed or blocked production jobs.
+4. Check QA failures.
 5. Reconcile platform revenue and payouts.
 6. Review policy alerts.
 7. Approve a bounded next batch.
 
-## 3. Page responsibilities
+### Journey E — Platform operations
+Technical operators may inspect:
+- ARSY liveness/readiness.
+- Addon installation/version state.
+- ORM model registry.
+- Database adapter capabilities.
+- Migration status.
+- Workflow health.
+- Audit and security events.
 
-| Module | Primary object | Main actions |
+These technical diagnostics belong in restricted administration views, not the default business dashboard.
+
+## 4. Module responsibilities
+
+| Module | Main object | Primary actions |
 |---|---|---|
-| ARSY DECK | Workspace pulse | Review, prioritize, resolve exceptions |
-| SIGNAL ROOM | Evidence item / research run | Search, capture, classify, link evidence |
-| RIOT RADAR | Opportunity | Score, compare, go/research/reject |
-| THE FORGE | Product / production job | Brief, create, version, package |
-| ZILL WATCH | Inspection | Inspect, block, warn, approve for next gate |
-| LAUNCH BAY | Channel / listing | Verify, prepare, authorize, publish where permitted |
-| SIDRA ARCHIVE | Asset | Preview, version, license, trace |
-| AFTERSHOCK | Performance insight | Compare, experiment, improve, retire |
-| MIZAN LEDGER | Financial event | Reconcile, classify, export, review |
-| RIOT ENGINE | Workflow / run | Schedule, pause, execute, inspect logs |
+| ARSY DECK | Workspace pulse | Review, prioritize, resolve |
+| SIGNAL ROOM | Evidence / research run | Search, capture, classify |
+| RIOT RADAR | Opportunity | Score, compare, decide |
+| THE FORGE | Product / production job | Brief, produce, version |
+| ZILL WATCH | Inspection | Inspect, block, review |
+| LAUNCH BAY | Channel / listing | Verify, prepare, publish where permitted |
+| SIDRA ARCHIVE | Asset | Preview, version, trace |
+| AFTERSHOCK | Performance insight | Compare, improve, retire |
+| MIZAN LEDGER | Financial event | Reconcile, classify, export |
+| RIOT ENGINE | Workflow / run | Schedule, pause, inspect |
+| Addon Manager | Installed addon | Inspect, install/upgrade via controlled operator flow |
+| ORM/DB Health | Adapter/model registry | Diagnose, capability check |
 
-## 4. Global context
+## 5. Global context
 
-Every module should preserve:
-- Current workspace.
-- Selected product or opportunity when relevant.
-- Date range and timezone.
-- Currency display preference.
-- Data source / live vs demo status.
-- Approval status.
-- Relevant agent/run context.
+Preserve workspace, selected product/opportunity, date range, timezone, currency, live/demo status, approval state, and relevant agent/run context.
 
-## 5. Dashboard hierarchy
+## 6. Responsive behavior
 
-ARSY DECK should answer, in order:
-1. Is anything blocked or waiting for approval?
-2. What is currently producing, ready, or published?
-3. What opportunities deserve attention?
-4. What is the real financial position?
-5. What has changed since the last review?
-6. What should happen next?
+Desktop: expanded navigation, primary workspace, optional context/agent panel.
 
-## 6. Responsive information architecture
+Tablet: collapsible navigation and context drawer.
 
-Desktop:
-- Expanded navigation.
-- Main work canvas.
-- Optional context/agent panel.
+Mobile: prioritized cards, stacked tables, critical approvals and alerts accessible without horizontal scrolling.
 
-Tablet:
-- Collapsible navigation.
-- Context panel becomes a drawer or tab.
+## 7. API boundary
 
-Mobile:
-- Compact navigation and prioritized operational cards.
-- Critical approvals and alerts remain accessible.
-- Dense financial tables become readable stacked records rather than horizontal overflow.
-
-## 7. Prototype requirement
-
-The first v0 prototype must fully design ARSY DECK, SIGNAL ROOM, RIOT RADAR, THE FORGE, and ZILL WATCH. Secondary modules must have coherent, useful views—not dead menu items.
+Headquarter reads/writes business state through ARSY's versioned API using packages/contract. It must never access PocketBase superuser credentials or database adapters directly. Demo mode must be visually explicit.

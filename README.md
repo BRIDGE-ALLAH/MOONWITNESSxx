@@ -1,125 +1,145 @@
 # MOONWITNESS // RIOTWORKS
 
 **The Creative Commerce Engine**  
-**Make work that outlives the feed.**
+**MAKE WORK THAT OUTLIVES THE FEED.**
 
-RIOTWORKS is the marketplace-native creative business division of the MOONWITNESS ecosystem. It helps one operator build and manage a diversified portfolio of original digital products and media with AI-assisted research, production, quality control, distribution preparation, and financial intelligence.
+RIOTWORKS is the marketplace-native creative business division of the MOONWITNESS ecosystem. It helps one operator research demand, create original digital products, protect quality and provenance, prepare distribution through buyer-facing marketplaces, and learn from actual commercial outcomes.
 
-> **Read the signal. Forge the work. Let it travel.**
+> **READ THE SIGNAL. FORGE THE WORK. LET IT TRAVEL.**
 
-RIOTWORKS is not a generic AI content generator, an agency CRM, a dropshipping dashboard, or a promise of passive income. It is a responsible operating system for building digital assets that may compound over time.
+RIOTWORKS is not a generic AI content generator, agency CRM, dropshipping dashboard, or passive-income promise. It is a responsible operating system for building a diversified portfolio of digital works.
 
-## The business thesis
+## Product thesis
 
-Most AI creation tools begin with: "What can we generate?"
+Most AI tools ask: "What can we generate?"
 
-RIOTWORKS begins with: **"What real problem, buying intent, or underserved demand can we verify—and what original product would meaningfully serve it?"**
+RIOTWORKS asks: **"What real need can we verify, what original product can serve it, and where do relevant buyers already discover solutions?"**
 
-The operating loop is:
+**SIGNALS → EVIDENCE → OPPORTUNITIES → ORIGINAL WORK → QUALITY GATES → DISTRIBUTION → REVENUE → LEARNING → BETTER PORTFOLIO**
 
-**SIGNALS → EVIDENCE → OPPORTUNITIES → ORIGINAL PRODUCTS → QUALITY GATES → MARKETPLACE DISTRIBUTION → REVENUE → LEARNING → BETTER PORTFOLIO**
+The system automates repeatable work where technically and legally permitted. It does not manufacture demand or guarantee traffic, sales, ranking, monetization approval, or passive income.
 
-The product is designed to reduce repetitive work and avoid manual outbound prospecting. It uses existing marketplace discovery systems where available. It does **not** guarantee traffic, sales, rankings, monetization approval, or passive income. Marketplace discoverability still requires good products, trustworthy listings, policy compliance, and ongoing measurement.
-
-## Position in the MoonWitness ecosystem
+## MoonWitness ecosystem position
 
 - **EMPIRE OF THE LIGHT** — overarching narrative and values universe.
-- **MOONWITNESS** — the wider witness, discovery, creation, protection, and sharing ecosystem.
-- **RIOTWORKS** — creative commerce and digital asset business operations.
-- **ARSY DECK** — the RIOTWORKS command experience; ARSY is an ecosystem orchestration metaphor.
-- **ZILL WATCH** — integrity, quality, licensing, and policy guardrails.
-- **MIZAN LEDGER** — revenue, cost, payout, and accountability records.
+- **MOONWITNESS** — ecosystem for witnessing, discovering, creating, protecting, and sharing.
+- **RIOTWORKS** — creative commerce and digital business operations.
+- **HEADQUARTER** — the human-facing command experience and frontend application.
+- **ARSY** — the backend application/runtime and orchestration API.
+- **ZILL** — integrity, quality, licensing, policy, and protection guardrails.
+- **MIZAN** — revenue, cost, payout, and accountability records.
 
-Spiritual language is treated with respect. It is not used as a gimmick, false authority claim, or decorative shortcut.
+Sacred and spiritual language is treated respectfully. It is not used as a gimmick, false authority claim, or decorative shortcut.
 
-## Revenue portfolio
+## Business engines
 
-RIOTWORKS supports several independent revenue engines. They are prioritized, not launched indiscriminately.
-
-| Priority | Engine | Product examples | Discovery / monetization route |
+| Priority | Factory | Example products | Monetization route |
 |---|---|---|---|
-| P1 | Digital Utility Factory | Original spreadsheets, calculators, planners, templates, useful packs | Etsy and other eligible digital marketplaces |
-| P1 | Stock Asset Factory | Original illustrations, vectors, backgrounds, motion and video assets | Adobe Stock and other agencies whose current rules accept the asset type |
-| P2 | Affiliate Media Factory | Honest product demonstrations, tutorials, comparison media | Shopee Affiliate, TikTok Shop Affiliate, eligible programs |
-| P2 | Publishing Factory | Original ebooks, workbooks, practical guides | Amazon KDP |
-| P3 | Workflow Product Factory | Original automation templates, scripts, presets, creator workflows | Suitable creator marketplaces and direct-download catalogs |
-| P3 | Media Factory | Original educational, explainable, story-led video | YouTube and other eligible media platforms |
-| P4 | Game Asset & Microgame Factory | Original UI kits, 2D/3D assets, game experiences, plugins | Roblox Creator Store / DevEx, itch.io, other eligible stores |
+| P1 | Digital Utility | Original spreadsheets, calculators, planners, templates, useful packs | Eligible digital marketplaces |
+| P1 | Stock Asset | Original illustrations, vectors, backgrounds, motion/video assets | Agencies accepting the asset type |
+| P2 | Affiliate Media | Honest product explainers and demonstrations | Eligible affiliate programs |
+| P2 | Publishing | Original ebooks, workbooks, practical guides | Publisher/retail royalties |
+| P3 | Workflow Products | Original automation templates, scripts, presets, creator workflows | Suitable creator marketplaces |
+| P3 | Media | Original explainers, tutorials, animation, educational media | Platform monetization when eligible |
+| P4 | Game Assets & Microgames | Original UI kits, models, game assets, experiences | Eligible creator stores and programs |
 
-A channel is activated only after country eligibility, account approval, payment route, content policy, fee structure, and integration method are checked.
+Channels are enabled only after current country eligibility, payout, policy, fees, and integration capability are checked.
 
-## What makes RIOTWORKS different
+## Differentiation
 
-1. **Demand Gap Mining** — convert buyer problems and public discussion signals into evidence-backed product opportunities.
-2. **Evidence-first scoring** — show source, date, confidence, assumptions, and missing evidence; never invent search volume or competitor revenue.
-3. **Product families, not duplicate spam** — create genuinely useful variations for different jobs, formats, locales, and buyer segments.
-4. **Living Products** — track versions, compatibility, support notes, changelogs, and update opportunities.
-5. **Policy-aware distribution** — a channel capability registry separates official API publishing, limited official integrations, manual upload packages, and unsupported operations.
-6. **Asset provenance** — preserve authorship, source materials, prompts, model/tool, licenses, edits, disclosures, and publication history.
-7. **Aftershock learning** — identify the small subset of products that actually creates useful discovery, conversions, and contribution margin.
-8. **Portfolio retirement** — improve, pause, archive, or retire weak products instead of endlessly producing more.
-9. **Marketplace-native discovery** — prioritize platforms that already have relevant buyer intent; no cold outreach is required by the core operating model.
-10. **Human accountability** — automation handles repeatable work; the owner remains responsible for claims, rights, policy-sensitive decisions, and financial actions.
+- **Demand Gap Mining:** discover underserved buyer problems from permitted public evidence.
+- **Evidence-first scoring:** source, date, confidence, assumptions, and unknowns are visible.
+- **Product families:** create meaningful variations, not duplicate spam.
+- **Living Products:** versioning, compatibility, changelogs, and maintenance.
+- **ZILL Watch:** rights, provenance, technical quality, disclosure, and platform-policy gates.
+- **Channel Capability Registry:** distinguish manual packages from official read/write APIs.
+- **Aftershock:** learn which products create discovery, conversion, and net contribution.
+- **Portfolio Retirement:** improve, pause, archive, or retire weak products.
+- **Marketplace-native discovery:** prioritize buyer-search and recommendation ecosystems instead of cold outreach.
+- **Responsible autonomy:** automate repeatable tasks without bypassing platform rules or human accountability.
 
-## Core product areas
+## Applications and packages
 
-- **ARSY DECK** — operational command center.
+### Applications
+
+- **apps/headquarter** — RIOTWORKS frontend and operator experience; the only user-facing frontend application name.
+- **apps/arsy** — Fastify backend application and API composition root.
+
+### Core packages
+
+- **packages/arsy-core** — Fastify platform core, lifecycle, plugins, configuration, health, and shared runtime facilities.
+- **packages/orm** — custom Odoo-inspired metadata-driven ORM and addon registry.
+- **packages/orm-db** — database runtime, connection lifecycle, migrations, and transactions.
+- **packages/orm-db-adaptor** — database adapter contracts, capability declarations, and registry.
+- **packages/orm-db-adaptor-pocketbase** — PocketBase adapter.
+- **packages/orm-addon-base** — shared base entities, active state, timestamps, and audit trail.
+- **packages/orm-addon-project** — project-domain models and services.
+- **packages/orm-addon-intelligent** — AI, agents, models, prompts, tools, runs, evaluations, and usage.
+- **packages/types** — shared framework-agnostic TypeScript types.
+- **packages/contract** — runtime API schemas, DTO contracts, and inferred types.
+- **packages/lint** — shared lint, format, and TypeScript configuration.
+
+Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md) and [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md).
+
+## Product modules
+
+- **ARSY DECK** — command center.
 - **SIGNAL ROOM** — market research and source evidence.
-- **RIOT RADAR** — opportunity evaluation and decision records.
-- **THE FORGE** — product briefs, production jobs, variants, and packages.
-- **ZILL WATCH** — creative, technical, rights, and policy inspections.
-- **LAUNCH BAY** — channel readiness, listing packages, and allowed publishing.
-- **SIDRA ARCHIVE** — asset library, provenance, versions, and licenses.
-- **MIZAN LEDGER** — sales, royalties, fees, refunds, costs, and payouts.
-- **AFTERSHOCK** — portfolio performance and learning.
-- **RIOT ENGINE** — agents, schedules, workflow execution, budgets, and logs.
+- **RIOT RADAR** — opportunity evaluation.
+- **THE FORGE** — product creation and production.
+- **ZILL WATCH** — quality, rights, and policy inspection.
+- **LAUNCH BAY** — channel readiness and distribution.
+- **SIDRA ARCHIVE** — assets, provenance, and versions.
+- **MIZAN LEDGER** — financial records and payouts.
+- **AFTERSHOCK** — performance and portfolio learning.
+- **RIOT ENGINE** — agents, workflows, schedules, budgets, and logs.
 
-## Repository map
+## Repository documentation
 
 | Path | Purpose |
 |---|---|
-| [MASTER-PROMPT](./MASTER-PROMPT) | Canonical v0 prototype prompt |
-| [docs/01-ecosystem-narrative.md](./docs/01-ecosystem-narrative.md) | MoonWitness alignment, narrative, values |
-| [docs/02-product-charter.md](./docs/02-product-charter.md) | Product definition, scope, non-goals |
-| [docs/03-business-model.md](./docs/03-business-model.md) | Revenue model, economics, portfolio strategy |
-| [docs/04-marketplace-portfolio.md](./docs/04-marketplace-portfolio.md) | Platform fit, Indonesia checks, channel policy |
-| [docs/05-market-intelligence.md](./docs/05-market-intelligence.md) | Demand research, evidence, scoring |
-| [docs/06-product-factories.md](./docs/06-product-factories.md) | Product families and production pipelines |
-| [docs/07-autonomy-operating-model.md](./docs/07-autonomy-operating-model.md) | Agents, automation, approvals, safeguards |
-| [docs/08-technical-architecture.md](./docs/08-technical-architecture.md) | Future system architecture and boundaries |
-| [docs/09-information-architecture.md](./docs/09-information-architecture.md) | Navigation, modules, workflows |
-| [docs/10-design-dna.md](./docs/10-design-dna.md) | RIOT art direction and visual language |
-| [docs/11-design-system.md](./docs/11-design-system.md) | Tokens, components, layout, motion |
-| [docs/12-character-art-bible.md](./docs/12-character-art-bible.md) | Original character universe and art rules |
-| [docs/13-domain-and-data-model.md](./docs/13-domain-and-data-model.md) | Core entities and lifecycle |
-| [docs/14-governance-and-risk.md](./docs/14-governance-and-risk.md) | Rights, policy, finance, safety, operations |
-| [docs/15-roadmap-and-acceptance.md](./docs/15-roadmap-and-acceptance.md) | Build sequence and definition of done |
-| [docs/16-research-register.md](./docs/16-research-register.md) | Official sources, community signals, caveats |
+| [MASTER-PROMPT](./MASTER-PROMPT) | Full-stack implementation master prompt |
+| [docs/01-ecosystem-narrative.md](./docs/01-ecosystem-narrative.md) | MoonWitness narrative and values |
+| [docs/02-product-charter.md](./docs/02-product-charter.md) | Product definition and scope |
+| [docs/03-business-model.md](./docs/03-business-model.md) | Revenue portfolio and economics |
+| [docs/04-marketplace-portfolio.md](./docs/04-marketplace-portfolio.md) | Marketplace rules and channel capability |
+| [docs/05-market-intelligence.md](./docs/05-market-intelligence.md) | Demand research and scoring |
+| [docs/06-product-factories.md](./docs/06-product-factories.md) | Production factories |
+| [docs/07-autonomy-operating-model.md](./docs/07-autonomy-operating-model.md) | Agents, automation, approvals |
+| [docs/08-technical-architecture.md](./docs/08-technical-architecture.md) | Headquarter, ARSY, ORM and adapters |
+| [docs/09-information-architecture.md](./docs/09-information-architecture.md) | Headquarter navigation and journeys |
+| [docs/10-design-dna.md](./docs/10-design-dna.md) | RIOT art direction |
+| [docs/11-design-system.md](./docs/11-design-system.md) | Tokens and components |
+| [docs/12-character-art-bible.md](./docs/12-character-art-bible.md) | Comic character universe |
+| [docs/13-domain-and-data-model.md](./docs/13-domain-and-data-model.md) | Base entities and domain data |
+| [docs/14-governance-and-risk.md](./docs/14-governance-and-risk.md) | Rights, security, and compliance |
+| [docs/15-roadmap-and-acceptance.md](./docs/15-roadmap-and-acceptance.md) | Phases and acceptance criteria |
+| [docs/16-research-register.md](./docs/16-research-register.md) | Research sources and caveats |
 | [docs/17-glossary.md](./docs/17-glossary.md) | Canonical terminology |
+| [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md) | Workspace, packages, ORM, adapter architecture |
+| [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md) | Addon manifests, model inheritance, base fields |
 
-## Current build stage
+## Current status
 
-**Stage: product definition and v0 prototype foundation.**
+This repository is a **documentation and architecture baseline**. The target structure is specified; applications and packages are not claimed to be implemented until code, tests, and build checks exist.
 
-This repository defines the product and its design. The v0 phase is frontend-only and uses clearly labeled demo data. It must not claim real marketplace connections, real sales, or actual automated publishing.
+Recommended delivery sequence:
 
-The sequence is:
+1. Finalize specifications.
+2. Build the apps/headquarter visual prototype.
+3. Scaffold the TypeScript monorepo and package contracts.
+4. Implement packages/orm and orm-addon-base.
+5. Implement the PocketBase adapter with explicit capability limits.
+6. Build apps/arsy and connect Headquarter through typed contracts.
+7. Add Project and Intelligent addons.
+8. Validate the first real product-to-marketplace workflow.
 
-1. Finalize narrative, product strategy, business model, marketplace rules, architecture, and design DNA.
-2. Build a high-fidelity interactive prototype in v0.
-3. Review the prototype against the design and workflow acceptance criteria.
-4. Define production API contracts and data migrations.
-5. Build the smallest real operating slice and validate it with genuine marketplace activity.
-6. Expand only when evidence supports the next engine.
+## Financial truth
 
-## Financial realism
-
-RIOTWORKS aims to make routine operations increasingly autonomous. It cannot make demand, trust, buyer intent, policy approval, or income appear by automation alone. Initial setup, product judgment, quality review, customer support exceptions, tax obligations, and platform changes remain real work.
-
-Track **net contribution**, not vanity revenue:
+Track net contribution, not vanity revenue:
 
 Gross receipts  
-− refunds and chargebacks  
+− refunds / chargebacks  
 − marketplace and payment fees  
 − affiliate reversals  
 − production and compute costs  
@@ -127,11 +147,11 @@ Gross receipts
 − other attributable variable costs  
 = **net contribution before tax**
 
-Taxes, withholding, FX, reserves, payout delays, and accounting treatment must be tracked separately and verified for the operator's jurisdiction.
+Cash received, pending commissions, estimated royalties, tax withholding, FX, and payout reserves are separate records.
 
 ## Documentation status
 
-These documents form the current approved product baseline, version 1.0, dated 2026-11-07. They are a finalized product-definition baseline, not a claim that software, integrations, business results, legal review, or platform approvals are already complete.
+Product definition and architecture baseline: **v1.1**, updated 2026-11-07. This is a finalized specification baseline, not a claim that software, integrations, business results, or platform approvals are already complete.
 
 ---
 

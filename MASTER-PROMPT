@@ -1,227 +1,791 @@
-# MASTER PROMPT v2.0 — MOONWITNESS // RIOTWORKS
+# MASTER PROMPT v3.0 — MOONWITNESS // RIOTWORKS
+## Full-Stack Headquarter + ARSY + Modular ORM/Addons
 
-**Purpose:** Generate the first high-fidelity, interactive, frontend-only RIOTWORKS prototype in v0.  
-**Canonical product definition:** Read README.md and all applicable documents under docs/ before designing. This prompt is an execution brief, not a replacement for the product, business, or design specifications.
+**Specification baseline:** README.md and docs/01–19  
+**Primary outcome:** Build a modular monorepo with apps/headquarter, apps/arsy, and the packages defined below.  
+**Product tagline:** MAKE WORK THAT OUTLIVES THE FEED.
 
-## 1. Mission
+---
 
-Build **MOONWITNESS // RIOTWORKS**, the **Creative Commerce Engine**.
+# 1. Mission and execution discipline
 
-Primary line: **MAKE WORK THAT OUTLIVES THE FEED.**  
-Secondary line: **READ THE SIGNAL. FORGE THE WORK. LET IT TRAVEL.**
+Build RIOTWORKS as the creative commerce business division of MOONWITNESS.
 
-RIOTWORKS is the creative commerce division of the MoonWitness ecosystem. It helps one operator manage a portfolio of original digital products and media using evidence-led market research, AI-assisted production, strict quality and rights controls, marketplace distribution preparation, and portfolio learning.
+RIOTWORKS helps one operator discover evidence-backed demand, create original digital products, protect quality and provenance, prepare compliant marketplace distribution, measure actual commercial outcomes, and improve a diversified digital asset portfolio.
 
-This is not a generic AI dashboard, content spam generator, agency CRM, dropshipping system, or passive-income guarantee.
+This is not a generic AI dashboard, content-spam tool, agency CRM, or passive-income guarantee.
 
-Its defining loop is:
+The product loop:
 
-SIGNALS → EVIDENCE → OPPORTUNITIES → ORIGINAL WORK → INSPECTION → DISTRIBUTION → REVENUE → AFTERSHOCK → IMPROVEMENT.
+SIGNALS → EVIDENCE → OPPORTUNITIES → ORIGINAL WORK → QUALITY GATES → DISTRIBUTION → REVENUE → LEARNING → BETTER PORTFOLIO.
 
-## 2. Read the canonical documentation
+Before coding:
+1. Inspect the entire repository, existing files, package manager, scripts, conventions, CI, and current git state.
+2. Read README.md and all applicable docs/ files.
+3. Identify the actual state; do not assume the target architecture already exists.
+4. Prepare an implementation plan and dependency order.
+5. Preserve working code unless it conflicts with this specification.
+6. Do not silently replace, delete, or rename unrelated work.
 
-Treat these files as authoritative and consistent:
+Build incrementally. Compile, typecheck, lint, and test each package before depending on it. Keep the repository runnable after every milestone.
 
-- docs/01-ecosystem-narrative.md
-- docs/02-product-charter.md
-- docs/03-business-model.md
-- docs/04-marketplace-portfolio.md
-- docs/05-market-intelligence.md
-- docs/06-product-factories.md
-- docs/07-autonomy-operating-model.md
-- docs/08-technical-architecture.md
-- docs/09-information-architecture.md
-- docs/10-design-dna.md
-- docs/11-design-system.md
-- docs/12-character-art-bible.md
-- docs/13-domain-and-data-model.md
-- docs/14-governance-and-risk.md
-- docs/15-roadmap-and-acceptance.md
+Do not ask the operator to restate requirements already defined here. Use safe defaults for reversible details and document assumptions. Require approval only for irreversible, credential-sensitive, paid, legal, or external publication actions.
 
-Do not invent capabilities that contradict these documents. When a detail is not specified, choose the simplest reversible frontend-only implementation and record assumptions.
-
-## 3. Ecosystem position
+# 2. Canonical ecosystem and naming
 
 EMPIRE OF THE LIGHT → MOONWITNESS → RIOTWORKS.
 
-RIOTWORKS is the digital creative commerce and asset-business division. It cooperates conceptually with:
-- ARSY: command and orchestration.
-- ZILL: integrity, protection, quality, and policy guardrails.
-- MIZAN: financial accountability and balance.
+- MOONWITNESS: wider ecosystem.
+- RIOTWORKS: creative commerce and digital business product.
+- HEADQUARTER: user-facing frontend application.
+- ARSY: Fastify backend application/runtime and orchestration API.
+- ARSY DECK: command-center experience inside Headquarter.
+- ZILL WATCH: rights, integrity, quality, and policy guardian.
+- MIZAN LEDGER: financial accounting and accountability.
+- SIGNAL ROOM: market intelligence.
+- RIOT RADAR: opportunity evaluation.
+- THE FORGE: product and asset production.
+- LAUNCH BAY: marketplace readiness and distribution.
+- SIDRA ARCHIVE: asset/provenance repository.
+- AFTERSHOCK: portfolio analytics and learning.
+- RIOT ENGINE: agents and workflow automation.
 
-Use sacred or spiritual language respectfully. Do not turn it into fake authority, decorative noise, character clothing, or claims of divine endorsement.
+Use these names consistently in routes, navigation, docs, and code terminology. Avoid the old generic frontend app name web; the frontend application is apps/headquarter.
 
-## 4. Non-negotiable RIOT ART DNA
+Spiritual and sacred language must be treated respectfully. Do not imply divine endorsement, spiritual authority, guaranteed blessings, or supernatural product capabilities. Do not use sacred terminology as decoration or character clothing.
 
-Visual direction: **EXTREME RIOT + ORIGINAL MOONWITNESS COMIC + INDUSTRIAL BRUTALISM + PREMIUM GAME HUD + PUNK ZINE.**
+# 3. Product and business principles
 
-The product must feel like a living underground creative headquarters—not a safe, generic SaaS template.
+- Demand before production.
+- Evidence before assumptions.
+- Quality before quantity.
+- Original utility before cosmetic variation.
+- Marketplace-native discovery before cold outreach.
+- Rights and policy hard gates before distribution.
+- Net contribution before vanity revenue.
+- Portfolio diversification before channel dependency.
+- Maximum safe autonomy, never reckless automation.
+- Preserve ownership, provenance, exportability, and auditability.
 
-Use:
-- Xerox / photocopy grain and restrained distressed ink.
-- Original comic illustrations and asymmetric panel composition.
-- Strong editorial typography and oversized condensed headlines.
-- Hard-edged geometry, graphic borders, offset shadows, torn-paper accents.
-- Industrial technical markings and game-HUD information patterns.
-- Expressive street-art energy used with discipline.
-- Strong whitespace and readable operational zones.
+The platform may reduce repetitive owner work. It cannot guarantee buyer demand, marketplace traffic, ranking, platform approval, sales, or passive income.
 
-Never simply scatter effects everywhere. The interface must stay usable, accessible, and precise.
+# 4. Required monorepo structure
 
-### Core palette
+Use a TypeScript workspace with a clear apps/packages boundary. Prefer pnpm workspaces and a task runner only when it materially improves builds. Pin dependencies through the lockfile; do not copy stale version numbers from examples.
 
-- Obsidian #111315
-- Deep Industrial #191C1E
-- Panel Charcoal #24282A
-- Paper Bone #F3EBDD
-- Acid Lime #D2FF38 — primary brand accent
-- Riot Orange #FF542D — action / creative energy
-- Electric Blue #40D9FF — informational accent
-- Riot Pink #F047A4 — expressive accent
-- Muted Ink #777A76
+Target:
 
-Create a true dual theme. Dark is not simply inverted light mode. Light mode uses Paper Bone and ink-like contrast with intentional accent behavior.
+apps/
+  headquarter/
+    src/app/
+    src/components/
+    src/features/
+    src/lib/
+    src/styles/
+    src/i18n/
+    public/
+    tests/
+    package.json
+  arsy/
+    src/app.ts
+    src/server.ts
+    src/config/
+    src/plugins/
+    src/modules/
+    src/routes/
+    src/health/
+    tests/
+    package.json
 
-### Typography
+packages/
+  arsy-core/
+    src/application/
+    src/plugins/
+    src/lifecycle/
+    src/config/
+    src/errors/
+    src/health/
+    src/observability/
+    src/security/
+    src/index.ts
+  orm/
+    src/metadata/
+    src/registry/
+    src/model/
+    src/fields/
+    src/relations/
+    src/query/
+    src/domain/
+    src/lifecycle/
+    src/environment/
+    src/addon/
+    src/security/
+    src/errors/
+    src/index.ts
+  orm-db/
+    src/connection/
+    src/transaction/
+    src/migration/
+    src/unit-of-work/
+    src/capabilities/
+    src/index.ts
+  orm-db-adaptor/
+    src/adapter.ts
+    src/capabilities.ts
+    src/registry.ts
+    src/errors.ts
+    src/index.ts
+  orm-db-adaptor-pocketbase/
+    src/client/
+    src/adapter/
+    src/query-compiler/
+    src/schema/
+    src/migrations/
+    src/capabilities/
+    src/index.ts
+    tests/
+  orm-addon-base/
+    src/models/
+    src/mixins/
+    src/audit/
+    src/services/
+    src/migrations/
+    src/manifest.ts
+    src/index.ts
+  orm-addon-project/
+    src/models/
+    src/services/
+    src/routes/
+    src/migrations/
+    src/manifest.ts
+    src/index.ts
+  orm-addon-intelligent/
+    src/models/
+    src/services/
+    src/providers/
+    src/agents/
+    src/evaluations/
+    src/migrations/
+    src/manifest.ts
+    src/index.ts
+  types/
+    src/identifiers/
+    src/primitives/
+    src/domain/
+    src/utility/
+    src/index.ts
+  contract/
+    src/schemas/
+    src/api/
+    src/events/
+    src/errors/
+    src/index.ts
+  lint/
+    eslint/
+    prettier/
+    typescript/
+    package.json
 
-- Display: Archivo Black, Anton, or a suitable condensed display face.
-- Interface: Space Grotesk or equivalent.
-- Technical: IBM Plex Mono or equivalent.
+docs/
+  (the complete documentation set)
 
-Use resilient font fallbacks. Keep dense data, tables, forms, and finance views legible.
+Root files:
+  package.json
+  pnpm-workspace.yaml
+  tsconfig.base.json
+  turbo.json (optional)
+  eslint.config.*
+  .prettierrc*
+  .editorconfig
+  .gitignore
+  .env.example
+  README.md
 
-### Graphic system
+Do not create empty folders as a substitute for implementation. Create useful files, package manifests, exports, tests, and clear package boundaries.
 
-Create reusable SVG/CSS components for halftone, ink marks, technical labels, offset shadows, comic panels, stamps, divider motifs, and character containers. Do not depend on random hotlinked images for core brand art.
+Use a consistent package namespace such as @riotworks/*. Keep names and directory paths deterministic.
 
-## 5. Original character universe
+# 5. Application boundaries
 
-Create consistent, original artwork for:
-- THE SCOUT — market discovery and intelligence.
-- THE MAKER — creative production.
-- ZILL — integrity and protection.
-- THE KEEPER — assets, versions, and portfolio.
+## 5.1 apps/headquarter
 
-Respect docs/12-character-art-bible.md. Characters need coherent silhouettes, roles, expressions, and reusable SVG/vector assets. No copied franchise characters, generic emoji replacements, or the word ALLAH on clothing.
+Headquarter is the frontend and human-facing command center. It replaces the generic app name web.
 
-## 6. Global product layout
+Responsibilities:
+- RIOTWORKS visual experience.
+- ARSY DECK and all product workspaces.
+- Navigation, forms, charts, tables, interactions, notifications.
+- Typed API client using packages/contract and packages/types.
+- Locale, theme, workspace context, and user experience.
+- Display of task status, approvals, financial summaries, and audit information.
 
-Desktop-first, responsive on laptop, tablet, and mobile.
+Headquarter MUST NOT:
+- Connect directly to PocketBase as superuser.
+- contain database drivers or ORM persistence logic.
+- hold API keys, marketplace secrets, or provider credentials.
+- execute privileged marketplace mutations.
+- calculate authoritative financial ledger state in browser code.
+- bypass ARSY authorization.
 
-Global shell:
-- Branded left navigation with grouped modules.
-- Top command bar with search, command palette, workspace, notifications, locale, theme, and profile.
-- Main canvas with bold editorial page headers and contextual workspaces.
-- Optional right-side context/agent panel, collapsible at narrow widths.
+Use API access through ARSY. Browser-only state is limited to interaction state and safe UI preferences.
 
-Build consistent navigation, accessible controls, keyboard focus, toasts, dialogs, tabs, filters, sort, loading, empty, error, and skeleton states.
+Suggested frontend: Next.js App Router, React, TypeScript, Tailwind CSS, reusable components, and the RIOTWORKS design system.
 
-## 7. Required modules and first-class pages
+## 5.2 apps/arsy
 
-Build the following five fully realized core pages first. Every visible control must have a working local prototype behavior.
+ARSY is the Fastify backend application and composition root.
 
-### A. ARSY DECK — Command Center
-Headline: **THE WORK NEVER STOPS.**
-Show clearly labeled demo metrics for active products, pipeline, marketplace readiness, gross receipts, net contribution, active agents, and experiments. Include Business Pulse, Opportunity Radar, Production Pipeline, AI Workforce, Channel Health, Activity Feed, and AFTERSHOCK insights. Never present demo revenue as real.
+Responsibilities:
+- Build and start the Fastify server.
+- Load configuration and validate environment.
+- Register platform plugins and arsy-core.
+- Initialize ORM, database adapter, and addons.
+- Register module routes and application services.
+- Compose authentication, authorization, validation, rate limits, and error handling.
+- Expose health/readiness endpoints.
+- Manage graceful shutdown and resource cleanup.
 
-### B. SIGNAL ROOM — Market Intelligence
-Headline: **READ THE SIGNAL.**
-Show trend and category discovery, source stream, keyword observations, buyer problems, marketplace observations, seasonal radar, evidence dates, source links, confidence, and research status. Distinguish sourced evidence from hypotheses and model-generated synthesis. No invented search volumes or competitor sales.
+apps/arsy contains wiring and app-specific configuration, not duplicated framework internals or shared domain model definitions.
 
-### C. RIOT RADAR — Opportunity Lab
-Provide opportunity detail: buyer problem, source evidence, demand signals, competition gap, product differentiation, channel suitability, unit economics assumptions, production complexity, policy gate, confidence, and recommendation. Include Go / Research More / Reject actions. A policy hard-stop cannot be overridden by a high score.
+Use supported Fastify v5 APIs and TypeScript. Use official Fastify plugin registration and encapsulation patterns. Register infrastructure plugins before application modules/routes. Use typed predictable plugin/decorator registration.
 
-### D. THE FORGE — Product Workshop
-Support the product families defined in docs/06-product-factories.md. Show creative brief, formats, generated preview placeholders, version, source assets, model/tool provenance, assigned specialist, production state, quality state, and distribution package. Use original demo artwork and coherent assets.
+## 5.3 packages/arsy-core
 
-### E. ZILL WATCH — Quality & Integrity
-Show IP/licensing, source provenance, similarity, technical specifications, completeness, metadata, platform disclosures, and policy checks. States: PASS, WARNING, BLOCKED, NEEDS REVIEW. Explain every finding. Policy violations are hard blocks, not just score deductions.
+A reusable Fastify-based application platform used by apps/arsy.
 
-### Secondary modules
-Create useful, consistent pages or clearly scoped previews for:
-- LAUNCH BAY — channel capability, listing prep, manual package, official API, publication history.
-- SIDRA ARCHIVE — asset catalog, versions, licenses, provenance.
-- MIZAN LEDGER — gross, fees, refunds, variable cost, tax reserve, net contribution, payout.
-- AFTERSHOCK — discovery, conversion, product lifetime, cohort and portfolio learning.
-- RIOT ENGINE — specialist agents, runs, schedules, budgets, queue, approvals, logs.
-- SETTINGS / POLICY CENTER — country, timezone, currencies, platform eligibility checks, credentials placeholders, consent, data controls, policy review dates.
+Responsibilities:
+- createArsyApp() / application factory.
+- Plugin registration and dependency ordering.
+- Typed runtime context.
+- Lifecycle: configure → register plugins → initialize addons → ready → close.
+- Shared configuration validation.
+- Standard error mapping.
+- Request correlation and structured logging.
+- Health/readiness registration.
+- Graceful close and resource disposal.
+- Extension points for route modules and services.
 
-## 8. Business truth and marketplace boundaries
+Keep arsy-core independent of RIOTWORKS business entities. It may know how to load plugins and addon manifests, but it must not own Project or Intelligent domain models.
 
-Marketplace names must be treated as candidate channels, not verified live connections.
+Fastify remains the HTTP framework. Do not fork or recreate Fastify.
 
-Show connection states honestly:
-- NOT CONNECTED
-- ELIGIBILITY CHECK REQUIRED
-- MANUAL WORKFLOW
-- OFFICIAL API AVAILABLE (only when verified for the exact action)
-- LIMITED OFFICIAL INTEGRATION
-- PAUSED / POLICY REVIEW
+# 6. Custom ORM — Odoo-inspired, TypeScript-native
 
-Never imply KDP, Adobe Stock, Etsy, Gumroad, Shopee, TikTok Shop, YouTube, Roblox, or itch.io is connected or publishing successfully in the demo.
+Build RIOTWORKS' own modular ORM in packages/orm. Its design may learn from Odoo's metadata-driven models, model registry, addon manifests, dependency ordering, and model extension approach.
 
-No fake transactions, fake reviews, artificial downloads, engagement manipulation, scraping behind login, CAPTCHA bypass, rate-limit evasion, or undisclosed automated posting.
+Do not copy Odoo source code or claim API compatibility. Implement an idiomatic TypeScript architecture.
 
-The product's promise is reduced repetitive work and evidence-based portfolio decisions—not guaranteed income or zero owner responsibility.
+The ORM must be metadata-driven and addon-aware.
 
-## 9. Prototype interactions
+## 6.1 Required ORM capabilities
 
-Implement with local state and clearly labeled synthetic data:
-1. Navigation among modules.
-2. Functional dark/light toggle.
-3. Basic English/Indonesian UI locale toggle.
-4. Search and command palette.
-5. Opportunity filters and sorting.
-6. Opportunity detail and decision actions.
-7. Product creation dialog and category choice.
-8. Local production status simulation.
-9. ZILL inspection report.
-10. Channel readiness / capability details.
-11. Asset preview and version selection.
-12. Demo chart period filters.
-13. Agent activity and task detail.
-14. Notifications and status toasts.
-15. Finance ledger filter and currency display.
-16. Responsive navigation.
+Core:
+- Model registry.
+- Addon/module registry.
+- Declarative model and field metadata.
+- Model inheritance and extension.
+- Field validation and defaults.
+- Relation metadata.
+- Query/domain representation.
+- Safe query compilation through adapters.
+- Create/read/update/archive/restore/delete policy.
+- Model lifecycle hooks.
+- Environment/context.
+- Permission/record-scope integration points.
+- Migration coordination.
+- Adapter capability checking.
+- Typed model APIs.
+- Error normalization.
 
-No dead buttons. Every simulated action must say it is a prototype action. Do not simulate real publication, payment, marketplace account authorization, or external data retrieval as if it happened.
+Initial field types:
+- string
+- text
+- boolean
+- integer
+- float
+- decimal (preserve precision; never silently treat money as binary float)
+- date
+- datetime
+- JSON
+- enum/selection
+- UUID/identifier
+- relation: many-to-one, one-to-many, many-to-many where adapter supports it
 
-## 10. Technical scope
+Query API:
+- findById
+- findOne
+- search
+- count
+- create
+- createMany only when supported
+- update
+- updateMany only when supported
+- archive / restore
+- delete only when policy permits
+- pagination, sort, projection, and filter/domain expressions
 
-Frontend only:
-- Next.js App Router.
-- React + TypeScript.
-- Tailwind CSS.
-- Reusable typed components.
-- Local mock data.
-- Lightweight charts.
-- Lucide icons plus original SVG brand artwork.
+Query operators must be validated against field metadata and adapter capability. Never build query strings by concatenating untrusted user input. Unsupported operations must fail explicitly rather than silently changing semantics.
 
-Do not build a backend, database, payment system, OAuth connection, credential storage, real agent runtime, or external marketplace integration in this phase. Keep components modular and ready for later API contracts without over-engineering.
+## 6.2 Declarative model example
 
-If a repository already exists, inspect it before changing conventions. Avoid unnecessary dependencies. Ensure no broken routes, TypeScript errors, console errors, overflow, inaccessible dialogs, or nonfunctional controls.
+Implement a clean TypeScript declaration style, for example:
 
-## 11. Required output quality
+    export const Project = defineModel({
+      name: "project.project",
+      label: "Project",
+      table: "projects",
+      fields: {
+        name: fields.string({ required: true, maxLength: 160 }),
+        description: fields.text({ nullable: true }),
+        state: fields.selection({
+          values: ["draft", "active", "completed", "cancelled"],
+          default: "draft"
+        }),
+        startAt: fields.datetime({ nullable: true }),
+        ownerId: fields.relation.belongsTo("base.user", {
+          nullable: true
+        })
+      },
+      indexes: [
+        index("project_name_idx", ["name"])
+      ]
+    });
 
-The prototype must:
-- Be unmistakably RIOTWORKS without relying only on the logo.
-- Show coherent MoonWitness ecosystem positioning.
-- Integrate punk, comic, grunge, riot, industrial, and game-HUD aesthetics.
-- Include original character artwork and consistent graphic assets.
-- Have intentionally designed dark and light themes.
-- Deliver all five core pages at high fidelity.
-- Make secondary modules feel like the same product.
-- Use readable tables and financial data.
-- Be responsive and accessible.
-- Clearly mark demo data and simulated integrations.
-- Contain no dead or misleading controls.
+This is illustrative. Design actual types and builders so invalid combinations are caught at compile time and validated at runtime.
 
-## 12. Execution instruction
+## 6.3 Model extension
 
-Build the application, not a description or wireframe. Start with the global visual system and ARSY DECK, then complete SIGNAL ROOM, RIOT RADAR, THE FORGE, and ZILL WATCH. Finish secondary module previews and test every interaction.
+Support:
+- New models.
+- Extension of an existing model through addon declarations.
+- Field addition with conflict checks.
+- Method/service extension with deterministic ordering.
+- Explicit dependency declarations.
+- Stable registry composition.
+- Conflict errors for duplicate field names, incompatible types, circular dependencies, and ambiguous overrides.
 
-Do not dilute the design into a generic SaaS interface. Do not add unrequested backend work.
+Do not use uncontrolled runtime monkey-patching, arbitrary eval, or arbitrary code loading from untrusted addons.
+
+## 6.4 ORM environment
+
+Provide a scoped execution environment containing:
+- Adapter/database context.
+- Workspace/tenant context where enabled.
+- Actor/user identity.
+- Permission context.
+- Locale/timezone where relevant.
+- Request/trace ID.
+- Transaction capability or transaction handle when available.
+- Unit-of-work scope.
+
+Do not keep mutable per-request user context in global singletons.
+
+# 7. Database layer and PocketBase adapter
+
+## 7.1 packages/orm-db
+
+Own database runtime concerns:
+- Adapter lifecycle.
+- Connection/client lifecycle.
+- Transaction scope abstraction.
+- Unit-of-work coordination.
+- Migration orchestration.
+- Capability discovery.
+- Error normalization.
+- Health checks.
+- Resource cleanup.
+
+It must not hardcode PocketBase behavior.
+
+## 7.2 packages/orm-db-adaptor
+
+Own provider-neutral adapter contracts:
+- OrmDatabaseAdapter.
+- AdapterCapabilities.
+- Query request/result contracts.
+- Schema/migration capability contracts.
+- Transaction interface.
+- Relation and realtime capability flags.
+- Provider error mapping.
+- Adapter registry and factory.
+
+Capability declaration must include at least:
+- CRUD.
+- bulk create/update.
+- filtering.
+- pagination.
+- sorting.
+- projection.
+- relation expansion.
+- join support.
+- transactions.
+- schema introspection.
+- schema migrations.
+- unique constraints.
+- indexes.
+- realtime events.
+- soft delete.
+- optimistic concurrency.
+- JSON operators.
+
+The ORM must ask the adapter before using any non-basic operation.
+
+## 7.3 packages/orm-db-adaptor-pocketbase
+
+Create the first concrete PocketBase adapter using the official PocketBase JavaScript SDK or documented Web API from the server side.
+
+Architecture:
+- PocketBase is a separate Go-based service, not a Node database driver embedded inside ARSY.
+- ARSY communicates with PocketBase through the adapter.
+- The adapter owns SDK/client setup, server-side authentication, collection mapping, filter compiler, record mapping, and provider errors.
+- Superuser credentials/tokens remain server-side, protected by environment/secret management.
+- Headquarter never receives a superuser credential or bypasses ARSY.
+- Do not connect directly to PocketBase from browser code for privileged data.
+
+Important limitations:
+- PocketBase collections are backed by SQLite tables and expose PocketBase-specific record/collection APIs.
+- It is not a general SQL adapter and must not pretend to support arbitrary SQL joins.
+- Relation expansion and filtering must be limited to documented PocketBase capabilities.
+- Transaction support must be reported as unavailable through the ordinary remote SDK adapter unless a separately verified official mechanism is implemented.
+- Schema changes should use PocketBase's supported migration/deployment mechanism. Do not mutate internal SQLite tables directly.
+- View collections are read-only; the adapter must respect that.
+- Auth collection special fields and rules must not be treated as ordinary base-model fields without explicit mapping.
+- Realtime is optional and must be explicitly capability-gated.
+- If an ORM feature cannot be implemented correctly on PocketBase, reject it with a typed UnsupportedCapabilityError; never silently emulate unsafe semantics.
+
+Create a compatibility matrix and adapter tests. Do not state that PocketBase provides full Odoo ORM capabilities.
+
+## 7.4 Future database adapters
+
+Keep adapter interfaces open for a future PostgreSQL adapter and other stores. Do not add them unless needed. The domain ORM must not import PocketBase SDK types.
+
+# 8. Addon system — Odoo-inspired module architecture
+
+The ORM addon system is a first-class architectural capability.
+
+An addon is a versioned, trusted code package that declares:
+- name and technical key.
+- version.
+- description.
+- dependencies.
+- compatible platform/ORM versions.
+- models it creates.
+- models it extends.
+- services and hooks.
+- migrations.
+- permissions/capabilities.
+- routes or application integration declarations where appropriate.
+- install, upgrade, and uninstall behavior.
+
+Example manifest:
+
+    export default defineAddon({
+      name: "project",
+      version: "1.0.0",
+      depends: ["base"],
+      models: [Project, ProjectTask],
+      migrations: projectMigrations
+    });
+
+Required lifecycle:
+DISCOVER → VALIDATE → RESOLVE DEPENDENCIES → REGISTER METADATA → APPLY MIGRATIONS → INITIALIZE SERVICES → READY.
+
+Rules:
+- Resolve dependencies deterministically.
+- Reject missing dependencies and circular dependency graphs.
+- Reject duplicate addon IDs and model conflicts.
+- Respect semantic version compatibility.
+- Do not execute migrations before dependency validation.
+- Do not silently remove data when uninstalling.
+- Use explicit migration/upgrade plans.
+- Keep an addon registry snapshot and installed version.
+- Addons must not reach into another addon's private files.
+- Public exports and extension contracts are the only supported integration boundary.
+- Only trusted installed code may execute. Never install or execute arbitrary community addon code automatically.
+
+# 9. Base addon — packages/orm-addon-base
+
+This addon is foundational and must be installed automatically before all business addons.
+
+It defines the shared abstract base entity and mixins so every addon does not need to repeat common fields and audit implementation.
+
+## 9.1 BaseEntity
+
+Every persisted business model should receive base metadata automatically through ORM model composition or a single inherited abstract base.
+
+Required standard fields:
+- id: generated stable identifier.
+- active: boolean, default true; the canonical active/inactive lifecycle flag.
+- createdAt: creation timestamp.
+- updatedAt: last modification timestamp.
+- createdBy: actor/user reference when available.
+- updatedBy: actor/user reference when available.
+- version: optional optimistic concurrency version when supported.
+
+Optional centrally managed fields:
+- archivedAt.
+- archivedBy.
+
+Do not define these repeatedly in Project, Intelligent, or future addons.
+
+The active flag is not the same as a domain-specific workflow status. A Project may have state = completed while remaining active = true. Deactivation/archiving is a separate lifecycle concern.
+
+Default search behavior for ordinary business listings should exclude inactive records unless explicitly requested. Provide includeInactive or equivalent context/query option. Do not hard-delete a record merely because active becomes false.
+
+## 9.2 AuditTrail
+
+Implement one shared audit subsystem in the base addon and ORM lifecycle.
+
+Central audit behavior covers:
+- create.
+- update.
+- archive/deactivate.
+- restore/reactivate.
+- delete where explicitly allowed.
+- sensitive administrative changes.
+- addon/schema changes where appropriate.
+
+Audit event fields:
+- audit ID.
+- model technical name.
+- record ID.
+- action.
+- actor ID/type.
+- timestamp.
+- request/trace ID.
+- source (API, system, agent, import, migration).
+- changed field names.
+- before/after diff where safe.
+- metadata and reason where applicable.
+
+Rules:
+- Audit events are append-only through normal application flows.
+- Redact secrets and sensitive personal data.
+- Do not store raw credentials or prompt secrets in diffs.
+- Audit history must be permission-protected.
+- Audit trail is centrally generated from ORM lifecycle operations; individual addons must not reimplement it.
+- Use a transaction when the adapter supports it.
+- When an adapter cannot guarantee atomic writes, declare the limitation and use a durable outbox/reconciliation pattern or fail closed for operations that require guaranteed auditing.
+- Never claim tamper-proof storage unless a real integrity mechanism is implemented and verified.
+
+## 9.3 Other base services
+
+The base addon may provide shared abstractions for common name/description mixins, workspace ownership fields when enabled, active/archive service, actor context, audit service, timestamps, common constraints, and shared access-control metadata.
+
+Do not force every model to have irrelevant business fields. Only universally applicable system fields belong on BaseEntity.
+
+# 10. Required addons
+
+## packages/orm-addon-project
+
+Depends on base.
+
+Owns Project, ProjectTask, ProjectMilestone where needed, project labels/tags and membership relationships when required, project service methods, constraints, migrations, and permissions.
+
+It must not redefine id, active, createdAt, updatedAt, createdBy, updatedBy, or central audit behavior.
+
+## packages/orm-addon-intelligent
+
+Canonical spelling is intelligent.
+
+Depends on base. It may optionally depend on project only if the actual domain relationship requires it; do not create an unnecessary circular dependency.
+
+Owns AI-related domain models such as:
+- AIProvider.
+- AIModel.
+- ModelCapability.
+- Agent.
+- AgentRole.
+- AgentRun.
+- AgentTask.
+- ToolDefinition.
+- ToolExecution.
+- PromptTemplate.
+- PromptVersion.
+- KnowledgeSource.
+- RetrievalRecord.
+- EvaluationSuite.
+- EvaluationRun.
+- UsageRecord.
+- CostRecord.
+- GuardrailPolicy.
+
+Do not store raw provider keys in ORM model fields or logs. Store secret references and access them through a dedicated secret service.
+
+AI model usage must be measurable by provider, model, token/unit, task, run, estimated cost, actual cost, and timestamp where available.
+
+# 11. Shared packages
+
+## packages/types
+Framework-agnostic shared primitives and TypeScript domain types:
+- branded identifiers.
+- common enums.
+- pagination primitives.
+- result/error primitives.
+- safe JSON types.
+- shared domain value objects.
+
+Do not put Fastify request types, database drivers, browser components, or runtime validation logic here.
+
+## packages/contract
+Runtime API contracts and wire-level schemas:
+- request schemas.
+- response schemas.
+- event contracts.
+- error response contracts.
+- versioned API DTOs.
+- inferred TypeScript types from schemas.
+
+Use one canonical source for runtime validation and static types. Do not maintain duplicated hand-written DTOs in Headquarter and ARSY.
+
+## packages/lint
+Shared development configuration:
+- ESLint.
+- Prettier.
+- TypeScript base configs.
+- import boundaries / dependency rules.
+- test/lint scripts where appropriate.
+
+It is tooling configuration, not a runtime dependency.
+
+# 12. Dependency direction and boundaries
+
+Allowed high-level direction:
+
+apps/headquarter → packages/contract, packages/types, UI packages (if added)
+apps/arsy → packages/arsy-core, packages/contract, packages/types, domain addons, ORM packages
+packages/arsy-core → packages/types, packages/contract only where necessary
+packages/orm-addon-* → packages/orm, packages/orm-addon-base where declared
+packages/orm → packages/types and neutral interfaces
+packages/orm-db → packages/orm-db-adaptor, packages/types
+packages/orm-db-adaptor-pocketbase → packages/orm-db-adaptor, packages/types
+packages/contract → packages/types
+packages/lint → no runtime imports
+
+Forbidden:
+- Headquarter → database driver / ORM adapter / PocketBase superuser SDK.
+- ORM core → Project or Intelligent addon.
+- Base addon → Project or Intelligent addon.
+- Domain addon → private internals of another addon.
+- Contract → Fastify or database packages.
+- Types → framework-specific runtime packages.
+- Cyclic workspace dependencies.
+- Apps importing another app's source directly.
+
+Enforce boundaries in lint and TypeScript project references where useful.
+
+# 13. Fastify API requirements
+
+ARSY API should include:
+- /health/live.
+- /health/ready.
+- versioned API prefix /api/v1.
+- typed request/response contracts.
+- schema-based validation and serialization.
+- centralized error mapping.
+- authentication and authorization plugin boundaries.
+- request correlation.
+- structured logs.
+- rate limits where needed.
+- CORS/CSRF policy appropriate to deployment.
+- graceful shutdown.
+- OpenAPI generation from canonical contracts where feasible.
+
+Routes should delegate to application services/use cases, not embed ORM queries, business rules, and provider SDK calls in handlers.
+
+Register Fastify plugins in a predictable order. Respect Fastify encapsulation; do not rely on accidental global decorators.
+
+# 14. Headquarter design and UX
+
+Retain the canonical RIOTWORKS design DNA:
+- Extreme Riot.
+- Original MoonWitness comic characters.
+- Punk zine.
+- Neo-brutalist geometry.
+- Industrial futurism.
+- Premium game HUD.
+- Dark and light themes: Night Riot and Paper Riot.
+- Acid Lime #D2FF38, Obsidian #111315, Paper Bone #F3EBDD, Riot Orange #FF542D, Electric Blue #40D9FF, Riot Pink #F047A4.
+- Original character set: The Scout, The Maker, ZILL, The Keeper.
+- High-energy presentation balanced with readable data and accessible interactions.
+
+Headquarter modules:
+- ARSY DECK.
+- SIGNAL ROOM.
+- RIOT RADAR.
+- THE FORGE.
+- ZILL WATCH.
+- LAUNCH BAY.
+- SIDRA ARCHIVE.
+- AFTERSHOCK.
+- MIZAN LEDGER.
+- RIOT ENGINE.
+- Settings and Policy Center.
+
+Do not call the frontend web. The app path and product name are apps/headquarter and Headquarter.
+
+# 15. Testing and quality requirements
+
+- Typecheck every package.
+- Lint every package.
+- Unit test ORM metadata, registry, fields, model composition, base fields, hooks, addon dependency resolution, migration ordering, and audit behavior.
+- Adapter contract tests for PocketBase.
+- Capability tests proving unsupported operations fail explicitly.
+- Integration tests for apps/arsy using Fastify injection.
+- API contract tests for Headquarter/ARSY compatibility.
+- Test authorization and tenant/workspace isolation.
+- Test audit record creation and failure behavior.
+- Test graceful shutdown and adapter lifecycle.
+- Test that a future addon can use BaseEntity without redefining base fields.
+- Verify no circular dependencies.
+- Verify no secrets enter client bundles or logs.
+
+Do not claim full transactions, joins, or schema migration support for PocketBase unless the concrete adapter tests and official mechanism prove it.
+
+# 16. Delivery phases
+
+### Phase A — Workspace foundation
+Root tooling, workspaces, apps/headquarter, apps/arsy, packages/types, packages/contract, packages/lint.
+
+### Phase B — ARSY runtime
+packages/arsy-core, Fastify application factory, app lifecycle, health, error handling, typed routes.
+
+### Phase C — ORM foundation
+packages/orm, model metadata, field registry, model registry, query/domain model, addon loader.
+
+### Phase D — Database and PocketBase
+packages/orm-db, packages/orm-db-adaptor, packages/orm-db-adaptor-pocketbase, compatibility matrix, adapter contract tests.
+
+### Phase E — Base addon
+packages/orm-addon-base, automatic BaseEntity fields, active state, AuditTrail.
+
+### Phase F — Business addons
+packages/orm-addon-project and packages/orm-addon-intelligent.
+
+### Phase G — Headquarter integration
+Connect Headquarter to ARSY using packages/contract. Replace demo data only for features that have verified backend endpoints.
+
+### Phase H — Operational hardening
+Auth, access control, observability, budgets, kill switch, migration runbook, backup/restore, audit review, deployment docs.
+
+Do not skip ahead by creating a fake ORM facade over direct PocketBase calls. The ORM and adapter boundaries must be real and tested.
+
+# 17. Definition of done
+
+The foundation is accepted only when:
+- apps/headquarter exists and is the named frontend.
+- apps/arsy starts a Fastify server through packages/arsy-core.
+- packages/orm registers declarative models.
+- Addon manifests resolve in dependency order.
+- orm-addon-base provides id, active, timestamps, actor fields, and central audit behavior without addon duplication.
+- orm-addon-project and orm-addon-intelligent depend on base and declare only business-specific fields.
+- PocketBase adapter declares and enforces its actual capabilities.
+- Unsupported adapter features fail clearly.
+- API contracts are shared between Headquarter and ARSY.
+- Typecheck, lint, unit tests, and integration tests pass.
+- No secret, false integration, simulated sale, or unsupported capability is represented as real.
+- Documentation is updated with implementation facts, not aspirational claims.
 
 **MOONWITNESS // RIOTWORKS**  
-**NO EMPTY NOISE. MAKE SOMETHING REAL.**  
-**MAKE WORK THAT OUTLIVES THE FEED.**
+**HEADQUARTER × ARSY**  
+**NO EMPTY NOISE. MAKE SOMETHING REAL.**
