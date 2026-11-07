@@ -1,7 +1,7 @@
 use std::env;
 
 use serde::Serialize;
-use sqlx::{mysql::MySqlPoolOptions, MySqlPool};
+use sqlx::{MySqlPool, mysql::MySqlPoolOptions};
 use tokio::sync::OnceCell;
 
 use crate::config::parse_db_max_connections;
@@ -35,15 +35,14 @@ pub async fn probe() -> DatabaseStatus {
         return DatabaseStatus::NotConfigured;
     }
 
-    let max_connections = match parse_db_max_connections(
-        env::var("DB_MAX_CONNECTIONS").ok().as_deref(),
-    ) {
-        Ok(value) => value,
-        Err(error) => {
-            tracing::error!(%error, "invalid ATLAS database pool configuration");
-            return DatabaseStatus::Unavailable;
-        }
-    };
+    let max_connections =
+        match parse_db_max_connections(env::var("DB_MAX_CONNECTIONS").ok().as_deref()) {
+            Ok(value) => value,
+            Err(error) => {
+                tracing::error!(%error, "invalid ATLAS database pool configuration");
+                return DatabaseStatus::Unavailable;
+            }
+        };
 
     let pool = POOL
         .get_or_try_init(|| async {
