@@ -199,6 +199,7 @@ export class OpportunityRepository {
           updated_by = $3
         WHERE owner_id = $1 AND id = $2 AND version = $19
           AND archived_at IS NULL
+          AND product_promoted_at IS NULL
           AND NOT EXISTS (
             SELECT 1 FROM arsy_products
             WHERE owner_id = $1 AND opportunity_id = $2
@@ -256,7 +257,7 @@ export class OpportunityRepository {
       `WITH changed AS (
        UPDATE arsy_opportunities SET decision = $3, decision_rationale = $4,
          version = version + 1, updated_at = now(), updated_by = $5
-       WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL
+       WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL AND product_promoted_at IS NULL
        RETURNING *
      ), audited AS (
        INSERT INTO arsy_commerce_audit_events (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
