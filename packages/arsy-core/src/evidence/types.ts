@@ -102,7 +102,7 @@ export class EvidenceLedger {
       if (existing) {
         const sameInput =
           existing.kind === input.kind &&
-          existing.occurredAt === input.occurredAt &&
+          existing.occurredAt === new Date(input.occurredAt).toISOString() &&
           existing.actorId === input.actorId &&
           canonicalJson(existing.payload) === canonicalJson(input.payload) &&
           canonicalJson(existing.evidenceIds) === canonicalJson(normalizedEvidenceIds)
