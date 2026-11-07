@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { SqliteSystemDatabaseAdapter } from "../src/index.ts";
 
 test("SQLite adapter connects, executes parameterized queries and introspects schema", async () => {
@@ -93,4 +96,41 @@ test("SQLite adapter rejects unsafe identifiers, unsupported types and concurren
   await assert.rejects(() => adapter.beginTransaction(), /one active transaction/);
   await transaction.rollback();
   await adapter.close();
+});
+
+test("SQLite file-backed System Database survives close/reopen and uses WAL", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "moonwitness-system-db-"));
+  const filename = join(directory, "system.sqlite");
+  const first = new SqliteSystemDatabaseAdapter();
+  try {
+    await first.connect({ filename });
+    await first.executeSchemaOperation({
+      id: "create-system-setting",
+      kind: "create-table",
+      table: "system_settings",
+      description: "create system settings",
+      destructive: false,
+      payload: { columns: [{ name: "key", dataType: "TEXT", nullable: false }, { name: "value", dataType: "TEXT", nullable: true }] },
+    });
+    await first.query({
+      text: "INSERT INTO system_settings (key, value) VALUES (?, ?)",
+      parameters: [{ value: "system.mode" }, { value: "ready" }],
+      operation: "write",
+    });
+    const journal = await first.query<{ journal_mode: string }>({ text: "PRAGMA journal_mode", operation: "read" });
+    assert.equal(journal.rows[0]?.journal_mode, "wal");
+    await first.close();
+
+    const second = new SqliteSystemDatabaseAdapter();
+    await second.connect({ filename });
+    const persisted = await second.query<{ key: string; value: string }>({
+      text: "SELECT key, value FROM system_settings WHERE key = ?",
+      parameters: [{ value: "system.mode" }],
+      operation: "read",
+    });
+    assert.deepEqual(persisted.rows, [{ key: "system.mode", value: "ready" }]);
+    await second.close();
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
