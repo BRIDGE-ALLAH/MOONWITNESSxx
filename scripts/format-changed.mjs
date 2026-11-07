@@ -27,19 +27,18 @@ export async function runFormatCheck() {
   let changed = []
 
   if (base) {
+    // CI validates the committed PR/push diff only; installs may generate ignored or local files.
     changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`]))
-  } else if (
-    branch !== 'main' &&
-    run('git', ['rev-parse', '--verify', 'origin/main']).status === 0
-  ) {
-    const mergeBase = gitFiles(['merge-base', 'origin/main', 'HEAD'])[0]
-    changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${mergeBase}...HEAD`]))
+  } else {
+    if (branch !== 'main' && run('git', ['rev-parse', '--verify', 'origin/main']).status === 0) {
+      const mergeBase = gitFiles(['merge-base', 'origin/main', 'HEAD'])[0]
+      changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${mergeBase}...HEAD`]))
+    }
+    changed.push(
+      ...gitFiles(['diff', '--name-only', '--diff-filter=ACMR']),
+      ...gitFiles(['diff', '--cached', '--name-only', '--diff-filter=ACMR'])
+    )
   }
-
-  changed.push(
-    ...gitFiles(['diff', '--name-only', '--diff-filter=ACMR']),
-    ...gitFiles(['diff', '--cached', '--name-only', '--diff-filter=ACMR'])
-  )
 
   const excluded = new Set((process.env.FORMAT_EXCLUDE ?? '').split(';').filter(Boolean))
   const files = filterPrettierFiles(changed).filter((file) => !excluded.has(file))
