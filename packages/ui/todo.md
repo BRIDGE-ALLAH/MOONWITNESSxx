@@ -369,3 +369,5 @@ A component is not complete until all applicable checks pass:
 - Workspace type-check now passes ARSY and reaches Headquarter, where TypeScript could not resolve `@riotworks/ui` because the package export intentionally points at generated `dist/index.d.ts`. Turbo's `type-check` task now depends on upstream `build` tasks as well as upstream `type-check`, so workspace packages are emitted before their consumers are checked.
 
 - Workspace type-check and the UI ESM build now pass in CI. The next lint gate exposed that `@riotworks/lint` is a source-free shared-config package but incorrectly ran ESLint against a nonexistent `src` directory. It now exports a shared flat TypeScript config, and ARSY Core invokes that config against its own source tree.
+
+- Shared ESLint initially ignored ARSY Core because its TypeScript file globs were scoped to the config package directory. The shared flat config now explicitly includes the ARSY Core source path used by its filtered ESLint invocation; rerun lint to confirm.
