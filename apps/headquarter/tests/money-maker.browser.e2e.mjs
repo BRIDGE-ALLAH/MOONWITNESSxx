@@ -31,6 +31,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     // This test runs against an isolated CI PostgreSQL database. All market,
     // rights, channel and financial records below are synthetic test fixtures.
     await page.goto(`${baseUrl}/login`, { waitUntil: 'domcontentloaded' })
+    await page.waitForLoadState('networkidle')
     await page.getByLabel('Operator password').fill(operatorPassword)
     await page.getByRole('button', { name: 'Enter Headquarter' }).click()
     await page.waitForURL('**/riot-radar')
