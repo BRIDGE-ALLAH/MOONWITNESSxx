@@ -71,6 +71,24 @@ test('creates a persisted opportunity with owner and actor attribution', async (
   assert.equal(fake.calls[0].values.at(-2), 'owner-a')
 })
 
+test('preserves missing score dimensions when persisted opportunities are reloaded', async () => {
+  const incompleteRow = {
+    ...row,
+    scores: { ...row.scores },
+    score: null,
+    decision: 'research-more',
+  }
+  delete incompleteRow.scores.distributionReadiness
+
+  const fake = createDatabase([[incompleteRow]])
+  const repository = new OpportunityRepository(fake.db)
+  const [result] = await repository.list('owner-a')
+
+  assert.deepEqual(result.evaluation.missingScoreDimensions, ['distributionReadiness'])
+  assert.equal(result.evaluation.score, null)
+  assert.equal(result.evaluation.decision, 'research-more')
+})
+
 test('scopes reads to the authenticated owner', async () => {
   const fake = createDatabase([[row]])
   const repository = new OpportunityRepository(fake.db)
