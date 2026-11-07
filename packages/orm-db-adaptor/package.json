@@ -1,0 +1,13 @@
+{
+  "name": "@riotworks/orm-db-adaptor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": { ".": { "types": "./src/index.ts", "default": "./src/index.ts" } },
+  "scripts": {
+    "type-check": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions src/index.ts",
+    "lint": "pnpm --filter @riotworks/lint exec eslint src --config ../../packages/lint/.eslintrc.json --max-warnings 0"
+  },
+  "devDependencies": { "@types/node": "^22.10.2" }
+}

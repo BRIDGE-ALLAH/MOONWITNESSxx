@@ -1,0 +1,23 @@
+{
+  "name": "@riotworks/orm-db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": { "types": "./src/index.ts", "default": "./src/index.ts" },
+    "./runtime": { "types": "./src/runtime.ts", "default": "./src/runtime.ts" },
+    "./schema": { "types": "./src/schema.ts", "default": "./src/schema.ts" },
+    "./ledger": { "types": "./src/ledger.ts", "default": "./src/ledger.ts" }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions src/index.ts src/runtime.ts src/schema.ts src/ledger.ts",
+    "lint": "pnpm --filter @riotworks/lint exec eslint src test --config ../../packages/lint/.eslintrc.json --max-warnings 0",
+    "test": "node --experimental-strip-types --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@riotworks/orm": "workspace:*",
+    "@riotworks/orm-db-adaptor": "workspace:*"
+  },
+  "devDependencies": { "@types/node": "^22.10.2" }
+}

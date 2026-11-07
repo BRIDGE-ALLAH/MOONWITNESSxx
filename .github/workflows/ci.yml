@@ -7,6 +7,7 @@ on:
       - "feat-*"
       - "feat/**"
       - "fix-*"
+      - "fix/**"
       - "chore-*"
       - "headquarter/**"
   pull_request:
@@ -28,6 +29,20 @@ jobs:
     name: Repository integrity
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: moonwitness_ci
+          POSTGRES_USER: moonwitness
+          POSTGRES_PASSWORD: moonwitness-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U moonwitness -d moonwitness_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -60,6 +75,22 @@ jobs:
 
       - name: Test ARSY application runtime configuration
         run: pnpm --filter @riotworks/arsy test
+      - name: Test RIOTWORKS ORM domain and registry
+        run: pnpm --filter @riotworks/orm test
+
+      - name: Test RIOTWORKS ORM persistence and audit lifecycle
+        run: pnpm --filter @riotworks/orm-db test
+
+      - name: Test RIOTWORKS Base Platform addon
+        run: pnpm --filter @riotworks/orm-addon-base test
+
+      - name: Test libSQL database adapter
+        run: pnpm --filter @riotworks/orm-db-adaptor-libsql test
+
+      - name: Test PostgreSQL database adapter contracts
+        run: pnpm --filter @riotworks/orm-db-adaptor-postgres test
+        env:
+          TEST_DATABASE_URL: postgresql://moonwitness:moonwitness-ci-only@127.0.0.1:5432/moonwitness_ci
 
       - name: Validate Docker Compose configuration
         run: docker compose --env-file .env.docker config --quiet
@@ -208,6 +239,8 @@ jobs:
 
       - name: Type-check shared UI package
         run: pnpm --filter @riotworks/ui type-check
+      - name: Test shared UI theme contracts
+        run: pnpm --filter @riotworks/ui test
 
       - name: Type-check Headquarter application
         run: pnpm --filter @riotworks/headquarter type-check

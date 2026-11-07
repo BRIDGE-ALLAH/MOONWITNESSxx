@@ -1,0 +1,21 @@
+{
+  "name": "@riotworks/orm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": { "types": "./src/index.ts", "default": "./src/index.ts" },
+    "./fields": { "types": "./src/fields.ts", "default": "./src/fields.ts" },
+    "./domain": { "types": "./src/domain.ts", "default": "./src/domain.ts" },
+    "./registry": { "types": "./src/registry.ts", "default": "./src/registry.ts" }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions src/index.ts src/fields.ts src/domain.ts src/registry.ts",
+    "lint": "pnpm --filter @riotworks/lint exec eslint src test --config ../../packages/lint/.eslintrc.json --max-warnings 0",
+    "test": "node --experimental-strip-types --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
+  }
+}

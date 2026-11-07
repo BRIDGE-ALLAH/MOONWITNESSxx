@@ -53,6 +53,26 @@ test('readiness and database health return 503 when PostgreSQL is unavailable', 
   }
 })
 
+test('database health endpoints enforce per-client request limits', async () => {
+  for (const endpoint of ['/health/ready', '/health/db']) {
+    const fake = createFakePool()
+    const app = createApp({ databasePool: fake.pool, logger: false })
+
+    try {
+      const responses = []
+      for (let index = 0; index < 61; index += 1) {
+        responses.push(await app.inject(endpoint))
+      }
+      assert.equal(responses.slice(0, 60).every((response) => response.statusCode === 200), true)
+      assert.equal(responses[60].statusCode, 429)
+    } finally {
+      await app.close()
+    }
+
+    assert.equal(fake.closeCount, 1)
+  }
+})
+
 test('graceful shutdown signal handlers close the Fastify app and database pool once', async () => {
   const fake = createFakePool()
   const app = createApp({ databasePool: fake.pool, logger: false })
@@ -69,4 +89,21 @@ test('graceful shutdown signal handlers close the Fastify app and database pool 
 
 test('database pool construction fails closed without DATABASE_URL', () => {
   assert.throws(() => createDatabasePool({}), /DATABASE_URL is required/)
+})
+
+
+test('application accepts an injected ORM runtime and closes its persistence once', async () => {
+  const fake = createFakePool()
+  let persistenceCloseCount = 0
+  const persistence = {
+    orm: { marker: 'orm-runtime' },
+    schema: { marker: 'schema-reconciler' },
+    close: async () => { persistenceCloseCount += 1 },
+  }
+  const app = createApp({ databasePool: fake.pool, persistence, logger: false })
+  assert.equal(app.orm, persistence.orm)
+  assert.equal(app.schemaReconciler, persistence.schema)
+  await app.close()
+  assert.equal(fake.closeCount, 1)
+  assert.equal(persistenceCloseCount, 1)
 })
