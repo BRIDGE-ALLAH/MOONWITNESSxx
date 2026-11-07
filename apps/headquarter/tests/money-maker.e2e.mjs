@@ -132,6 +132,21 @@ try {
   await page.getByRole('status').filter({ hasText: 'Product brief created' }).waitFor({ state: 'visible', timeout: 30_000 })
   await page.getByText(title, { exact: true }).waitFor({ state: 'visible' })
 
+  // Exercise guarded product lifecycle transitions; "listed" is not a marketplace publication receipt.
+  const lifecycle = page.getByLabel(`Lifecycle state for ${title}`)
+  await lifecycle.selectOption('production')
+  await page.getByRole('status').filter({ hasText: `Product lifecycle updated: ${title} · production` }).waitFor({ state: 'visible', timeout: 30_000 })
+  await lifecycle.selectOption('review')
+  await page.getByRole('status').filter({ hasText: `Product lifecycle updated: ${title} · review` }).waitFor({ state: 'visible', timeout: 30_000 })
+  await lifecycle.selectOption('ready')
+  await page.getByRole('status').filter({ hasText: `Product lifecycle updated: ${title} · ready` }).waitFor({ state: 'visible', timeout: 30_000 })
+  const lifecycleProductResponse = await context.request.get(`${baseUrl}/api/products?limit=100`)
+  assert.equal(lifecycleProductResponse.status(), 200)
+  const lifecycleProductPayload = await lifecycleProductResponse.json()
+  const lifecycleProduct = lifecycleProductPayload.data.find((item) => item.title === title)
+  assert.equal(lifecycleProduct?.lifecycleState, 'ready')
+  assert.deepEqual(lifecycleProduct?.allowedNextLifecycleStates, ['production', 'listed'])
+
   // Record a real pending ledger event and reconcile it with a source URL.
   await page.goto(`${baseUrl}/mizan-ledger`, { waitUntil: 'domcontentloaded' })
   await page.getByLabel('Event type').selectOption('gross-receipt')
