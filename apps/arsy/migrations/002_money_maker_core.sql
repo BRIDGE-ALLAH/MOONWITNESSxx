@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS arsy_financial_events (
   id uuid PRIMARY KEY,
   owner_id text NOT NULL,
   product_id uuid,
-  event_type text NOT NULL CHECK (event_type IN ('gross-receipt', 'platform-fee', 'refund', 'chargeback', 'variable-cost', 'production-cost', 'tax-reserve', 'fx-adjustment', 'payout', 'payout-reversal')),
+  event_type text NOT NULL CHECK (event_type IN ('gross-receipt', 'platform-fee', 'refund', 'chargeback', 'variable-cost', 'production-cost', 'tax-reserve', 'payout', 'payout-reversal')),
   amount_minor bigint NOT NULL CHECK (amount_minor >= 0),
   currency char(3) NOT NULL CHECK (currency ~ '^[A-Z]{3}$'),
   occurred_at timestamptz NOT NULL,
@@ -83,9 +83,6 @@ CREATE TABLE IF NOT EXISTS arsy_financial_events (
   idempotency_key text NOT NULL CHECK (length(idempotency_key) > 0),
   request_hash char(64) NOT NULL CHECK (request_hash ~ '^[a-f0-9]{64}$'),
   reconciliation_state text NOT NULL CHECK (reconciliation_state IN ('pending', 'verified', 'disputed', 'reversed')),
-  fx_rate numeric(24,12),
-  fx_source text,
-  fx_observed_at timestamptz,
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_by text NOT NULL,
   FOREIGN KEY (owner_id, product_id)
