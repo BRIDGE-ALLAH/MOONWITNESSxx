@@ -8,7 +8,7 @@ export default function Home() {
         <header className="space-y-3">
           <Badge variant="lime">Prototype // Demo Data Only</Badge>
           <h1 className="font-display text-6xl uppercase leading-none">
-            MOONWITNESS <span className="text-riot-orange">//</span> RIOTWORKS
+            MOONWITNESS <span className="text-riot-orange">{'//'}</span> RIOTWORKS
           </h1>
           <p className="font-mono text-sm uppercase tracking-widest text-muted-foreground">
             Make work that outlives the feed.
