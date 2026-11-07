@@ -263,10 +263,18 @@ async fn update_engine(
 }
 
 async fn delete_engine(headers: HeaderMap, Path(id): Path<String>) -> impl IntoResponse {
-    if let Err(error) = authorized(&headers) { return error.into_response(); }
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
     match engine::delete(&id).await {
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Ok(false) => (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
+        Ok(false) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiError {
+                error: "engine instance not found",
+            }),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to delete engine instance");
             database_error().into_response()
@@ -280,7 +288,13 @@ async fn engine_health(headers: HeaderMap, Path(id): Path<String>) -> impl IntoR
         Ok(Some(item)) => {
             (StatusCode::OK, Json(adapters::probe(&item).await)).into_response()
         }
-        Ok(None) => (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
+        Ok(None) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiError {
+                error: "engine instance not found",
+            }),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to load engine for health probe");
             database_error().into_response()
