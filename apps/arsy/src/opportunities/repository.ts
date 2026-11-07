@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { DatabasePool } from '../db.ts'
 import type { OpportunityInput, OpportunityEvaluation } from './domain.ts'
 
@@ -43,6 +43,7 @@ interface OpportunityRow {
   decision_rationale: string | null
   created_at: Date | string
   updated_at: Date | string
+  request_hash?: string
 }
 
 function rows<T>(result: unknown): T[] {
@@ -94,20 +95,28 @@ const SELECT_COLUMNS = `id, title, buyer_problem, buyer_segment, job_to_be_done,
 export class OpportunityRepository {
   constructor(private readonly db: DatabasePool) {}
 
-  async create(ownerId: string, actorId: string, input: OpportunityInput, evaluation: OpportunityEvaluation): Promise<OpportunityRecord> {
+  async create(
+    ownerId: string,
+    actorId: string,
+    input: OpportunityInput,
+    evaluation: OpportunityEvaluation,
+    idempotencyKey: string,
+  ): Promise<{ opportunity: OpportunityRecord; replayed: boolean }> {
+    const requestHash = createHash('sha256').update(JSON.stringify(input)).digest('hex')
     const result = await this.db.query(
       `WITH created AS (
        INSERT INTO arsy_opportunities
         (id, owner_id, title, buyer_problem, buyer_segment, job_to_be_done, product_hypothesis,
-         product_family, candidate_channels, evidence, scores, score_details, hard_gates, hard_gate_details, score, decision,
-         created_by, updated_by)
+         product_family, candidate_channels, evidence, scores, score_details, hard_gates, hard_gate_details,
+         score, decision, idempotency_key, request_hash, created_by, updated_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb, $12::jsonb,
-         $13::jsonb, $14::jsonb, $15, $16, $17, $17)
+         $13::jsonb, $14::jsonb, $15, $16, $17, $18, $19, $19)
+       ON CONFLICT (owner_id, idempotency_key) DO NOTHING
        RETURNING *
      ), audited AS (
        INSERT INTO arsy_commerce_audit_events
          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-       SELECT $18, owner_id, 'opportunity', id, 'created', $17,
+       SELECT $20, owner_id, 'opportunity', id, 'created', $19,
          jsonb_build_object('decision', decision, 'score', score)
        FROM created
      )
@@ -116,9 +125,20 @@ export class OpportunityRepository {
         input.productHypothesis, input.productFamily, JSON.stringify(input.candidateChannels),
         JSON.stringify(input.evidence), JSON.stringify(input.scores), JSON.stringify(input.scoreDetails),
         JSON.stringify(input.hardGates), JSON.stringify(input.hardGateDetails), evaluation.score,
-        evaluation.decision, actorId, randomUUID()],
+        evaluation.decision, idempotencyKey, requestHash, actorId, randomUUID()],
     )
-    return mapOpportunity(rows<OpportunityRow>(result)[0])
+    const inserted = rows<OpportunityRow>(result)[0]
+    if (inserted) return { opportunity: mapOpportunity(inserted), replayed: false }
+
+    const existingResult = await this.db.query(
+      `SELECT ${SELECT_COLUMNS}, request_hash FROM arsy_opportunities
+       WHERE owner_id = $1 AND idempotency_key = $2 LIMIT 1`,
+      [ownerId, idempotencyKey],
+    )
+    const existing = rows<OpportunityRow>(existingResult)[0]
+    if (!existing) throw new Error('IDEMPOTENCY_RECORD_MISSING')
+    if (existing.request_hash !== requestHash) throw new Error('IDEMPOTENCY_KEY_REUSED')
+    return { opportunity: mapOpportunity(existing), replayed: true }
   }
 
   async list(ownerId: string, limit = 50): Promise<OpportunityRecord[]> {
