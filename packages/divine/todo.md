@@ -902,3 +902,15 @@ Phases may be parallelized only when their dependency contracts are stable. Do n
 - [ ] Remaining profile-specific and external interoperability tasks.
 
 **Execution update (2026-11-08):** Phase 0–2 merged to `main`; Phases 0–5 are merged to `main` (Phase 0–2 via PR #39; Phase 3–5 via PR #52). Divine unit tests passed 37/37 on the integration branch; repository CI, CodeQL, asset integrity and full workspace typecheck/build passed on PR #52. PR #54 makes the Divine test suite a permanent default-branch CI step. External SHACL conformance and broader standards round-trip tests remain open. This is a domain-foundation release, not a production integration. The Corpus repository has NOT been imported because its README states there is no repository-wide license; third-party dataset redistribution must be rights-reviewed first. Read-only access is sufficient to fetch source history. A guarded, pinned subtree importer is available at `scripts/migrate-corpus-subtree.sh` with manual workflow `.github/workflows/corpus-subtree-migration.yml`; see `docs/CORPUS-MIGRATION.md`.
+
+
+## Phase 6–8 implementation update (2026-11-08)
+
+- [x] Phase 6 initial pure-domain slice: typed witness graph, provenance-required edges, bounded traversal, deterministic serialization and no similarity-to-identity inference.
+- [x] Phase 7 initial pure-domain slice: deterministic rule execution, explicit scope compatibility, defeaters, evidence/premise trace and preserved multi-scope derivations.
+- [x] Phase 8 initial pure-domain slice: evidence-first channel ordering, semantic-method disclosure, SHA-256 reproducibility manifest and tamper verification.
+- [ ] Full Corpus contract compatibility, source-family-aware independence assessment, robust contradiction semantics and external integration remain open.
+- [ ] Benchmark retrieval and reasoning on rights-cleared data; synthetic tests are not empirical accuracy evidence.
+- [ ] Add fuzz/property tests and full workspace CI verification before marking these phases production-ready.
+
+See `PHASE-6-8-EXECUTION.md` and `docs/PHASE-6-8-RESEARCH.md`. This is an initial implementation slice, not completion of every roadmap task or a production release.
