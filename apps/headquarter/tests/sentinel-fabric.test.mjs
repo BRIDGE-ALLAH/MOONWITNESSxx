@@ -48,3 +48,13 @@ test('Evidence Expiry Budget fails closed on malformed timestamps and thresholds
   assert.equal(report.valid, false)
   assert.equal(report.counts.invalid, 1)
 })
+
+test('Blast-Radius does not mistake a longer alternate DAG path for a cycle', () => {
+  const graph = { nodes: [{ id: 'a', label: 'A', criticality: 5 }, { id: 'b', label: 'B', criticality: 3 }, { id: 'c', label: 'C', criticality: 2 }], edges: [{ id: '1', from: 'a', to: 'b', relation: 'causes' }, { id: '2', from: 'b', to: 'c', relation: 'causes' }, { id: '3', from: 'a', to: 'c', relation: 'causes' }] }
+  assert.equal(calculateBlastRadius(graph, ['a']).cycleDetected, false)
+})
+
+test('Evidence expiring earlier today is expired, not critical', () => {
+  const report = compileEvidenceExpiryBudget([{ id: 'x', capturedAt: '2026-11-01T00:00:00Z', validUntil: '2026-11-07T23:59:59Z', linkedDecisionIds: ['d1'] }], new Date('2026-11-08T00:00:00Z'))
+  assert.equal(report.items[0].status, 'expired')
+})
