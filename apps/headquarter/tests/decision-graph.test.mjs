@@ -42,3 +42,17 @@ test('flags expired evidence, invalid confidence, and dangling edges', () => {
   assert.ok(result.integrityIssues.some((issue) => issue.code === 'invalid_confidence'))
   assert.ok(result.integrityIssues.some((issue) => issue.code === 'dangling_edge'))
 })
+
+test('does not report perfect traceability when no decisions exist', () => {
+  const result = assessDecisionGraph({ ...base, nodes: [], edges: [] }, new Date('2026-11-08T00:00:00.000Z'))
+  assert.equal(result.traceability, 0)
+})
+
+test('fails closed on malformed evidence validity timestamps', () => {
+  const snapshot = {
+    ...base,
+    nodes: base.nodes.map((node) => node.id === 'evidence-1' ? { ...node, validUntil: 'not-a-date' } : node),
+  }
+  const result = assessDecisionGraph(snapshot, new Date('2026-11-08T00:00:00.000Z'))
+  assert.ok(result.integrityIssues.some((issue) => issue.code === 'expired_evidence'))
+})
