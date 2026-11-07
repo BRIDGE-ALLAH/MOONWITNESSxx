@@ -182,7 +182,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await listingForm.getByRole('button', { name: 'Prepare manual listing package' }).click()
     await page.getByRole('status').filter({ hasText: `Manual listing package ready for ${channelName}. Nothing has been published automatically.` }).waitFor()
     const listingCard = page.locator('article').filter({ hasText: title }).filter({ hasText: channelName }).first()
-    await listingCard.getByText('ready', { exact: true }).waitFor()
+    await listingCard.getByText('READY', { exact: true }).waitFor()
 
     // Persist and reconcile test financial events. These are synthetic CI fixtures,
     // not actual sales, receipts, tax payments, or income.
