@@ -56,18 +56,34 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
     assert.equal(asset.provenance.license, 'Original test fixture')
     assert.equal(await repository.get(`${ownerId}-other`, asset.id), null)
 
-    const required = ['rights', 'policy', 'technical-qa', 'creative-qa']
-    for (const inspectionType of required) {
+    const operatorAttestation = await repository.appendInspection(ownerId, ownerId, asset.id, {
+      inspectionType: 'rights',
+      status: 'pass',
+      inspectionSource: 'operator-attestation',
+      rationale: 'The test operator records a rights attestation for isolated fixture bytes.',
+      findings: [],
+      evidence: [{ label: 'Isolated CI fixture' }],
+    })
+    assert.ok(operatorAttestation)
+    assert.equal((await repository.readiness(ownerId, asset.id))?.ready, false)
+
+    const required = [
+      ['rights', 'independent-review'],
+      ['policy', 'independent-review'],
+      ['technical-qa', 'automated-check'],
+      ['creative-qa', 'independent-review'],
+    ]
+    for (const [inspectionType, inspectionSource] of required) {
       const inspection = await repository.appendInspection(ownerId, ownerId, asset.id, {
         inspectionType,
         status: 'pass',
-        inspectionSource: 'operator-attestation',
-        rationale: `CI fixture attests the ${inspectionType} check for isolated test bytes.`,
+        inspectionSource,
+        rationale: `CI fixture records the qualified ${inspectionType} check for isolated test bytes.`,
         findings: [],
         evidence: [{ label: 'Isolated CI fixture' }],
       })
       assert.ok(inspection)
-      assert.equal(inspection.inspectionSource, 'operator-attestation')
+      assert.equal(inspection.inspectionSource, inspectionSource)
     }
     assert.equal((await repository.readiness(ownerId, asset.id))?.ready, true)
 
@@ -79,7 +95,7 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
     assert.equal(reloaded.fileName, 'source.txt')
     assert.equal(reloaded.provenance.creator, 'Integration fixture author')
     assert.deepEqual(await storage.get(reloaded.storageKey), bytes)
-    assert.equal((await persisted.inspections(ownerId, asset.id))?.length, 4)
+    assert.equal((await persisted.inspections(ownerId, asset.id))?.length, 5)
     assert.equal((await persisted.readiness(ownerId, asset.id))?.ready, true)
     assert.equal((await persisted.list(ownerId, productId)).length, 1)
   } finally {
