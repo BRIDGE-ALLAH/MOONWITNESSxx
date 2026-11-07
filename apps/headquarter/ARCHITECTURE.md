@@ -96,3 +96,10 @@ Phase 7 adds a pure Decision Graph assessor for traceability, provenance, eviden
 Phase 8 adds a pure Scenario Forge calculation kernel. It evaluates explicit operations against an immutable baseline and returns `shadow-only` results. It cannot call APIs, persist state, or execute production changes.
 
 Both modules are domain foundations only. Their UI, persistence, read-only ARSY snapshot contracts, workspace scope, and production approval paths remain gated on platform design.
+
+
+## Phase 9–10 operator surfaces
+
+- `/decision-graph` composes the Decision Graph Explorer from the domain-owned synthetic fixture and pure integrity assessor. It surfaces traceability, contradiction links, stale evidence, and Decision Debt without claiming live provenance.
+- `/scenario-forge` composes the Scenario Arena. It compares explicit scenarios against one immutable fixture and ranks absolute metric deltas as a descriptive sensitivity lens, not causal attribution.
+- Both routes are marked prototype in navigation. They have no ARSY endpoint, persistence, or production write path. See `PHASE-9-10-RESEARCH.md` for research signals and validation hypotheses.
