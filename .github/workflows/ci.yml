@@ -7,6 +7,7 @@ on:
       - "feat-*"
       - "fix-*"
       - "chore-*"
+      - "headquarter/**"
   pull_request:
     branches:
       - main
@@ -90,6 +91,9 @@ jobs:
       - name: Type-check Headquarter application
         run: pnpm --filter @riotworks/headquarter type-check
 
+      - name: Test Headquarter API boundary and demo fixture
+        run: pnpm --filter @riotworks/headquarter test
+
       - name: Build Headquarter production bundle (lint checked separately)
         run: pnpm --filter @riotworks/headquarter exec next build --no-lint
 
@@ -113,10 +117,6 @@ jobs:
         uses: pnpm/action-setup@v6
         with:
           version: 12.16.1
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
           node-version: 24
           cache: pnpm
 
