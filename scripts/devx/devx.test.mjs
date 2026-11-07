@@ -4,10 +4,14 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
+  analyzeObjectiveProgress,
   appendFlightRecord,
   compileRepoContext,
   createChangePlan,
   createContextLease,
+  createResourcePassport,
+  forecastInterfaceConflicts,
+  forecastResourceCollisions,
   forecastWriteCollisions,
   parseMajorVersion,
   runDoctor,
@@ -121,4 +125,38 @@ test('context lease invalidates changed or expired repository context', () => {
   assert.deepEqual(verifyContextLease({ lease: { ...lease, ttlMs: 999 }, currentFingerprint: fingerprint, now: '2026-11-08T00:00:30.000Z' }), { valid: false, reason: 'lease_duration_mismatch' })
   assert.deepEqual(verifyContextLease({ lease, currentFingerprint: fingerprint, now: '2026-11-07T23:59:59.000Z' }), { valid: false, reason: 'lease_not_yet_valid' })
   assert.throws(() => createContextLease({ fingerprint: 'invalid' }), /SHA-256/)
+})
+
+
+test('objective watchdog detects repeated unresolved gaps despite activity changes',()=>{
+ const steps=[{failedTests:['api'],missingCriteria:['pagination'],activity:'docs'},{failedTests:['api'],missingCriteria:['pagination'],activity:'refactor'},{failedTests:['api'],missingCriteria:['pagination'],activity:'rename'}]
+ const r=analyzeObjectiveProgress({steps,repeatThreshold:3});assert.equal(r.stalled,true);assert.equal(r.consecutiveUnchangedGap,3)
+ assert.equal(analyzeObjectiveProgress({steps:[steps[0],{failedTests:[],missingCriteria:[]}]}).stalled,false)
+})
+test('objective gap fingerprints ignore array order and reject weak thresholds',()=>{
+ assert.equal(analyzeObjectiveProgress({steps:[{blockers:['db','api']},{blockers:['api','db']}],repeatThreshold:2}).stalled,true)
+ assert.throws(()=>analyzeObjectiveProgress({steps:[{}],repeatThreshold:1}),/>= 2/)
+})
+test('interface treaties catch breaking changes consumed by another agent',()=>{
+ const r=forecastInterfaceConflicts({now:'2026-11-08T00:00:00Z',treaties:[
+ {id:'producer',owner:'api',provides:['User.v1'],breakingChanges:['User.v1'],expiresAt:'2027-01-01T00:00:00Z'},
+ {id:'consumer',owner:'web',consumes:['user.v1'],expiresAt:'2027-01-01T00:00:00Z'}]})
+ assert.equal(r.safeToIntegrate,false);assert.ok(r.conflicts.some(x=>x.kind==='breaking-change-consumed'))
+})
+test('interface treaties reject expired and duplicate declarations',()=>{
+ const r=forecastInterfaceConflicts({now:'2026-11-08T00:00:00Z',treaties:[
+ {id:'a',owner:'one',provides:['X','x'],expiresAt:'2026-01-01T00:00:00Z'}]})
+ assert.ok(r.violations.includes(undefined)===false);assert.ok(r.violations.some(x=>x.code==='treaty_expired'));assert.ok(r.violations.some(x=>x.code==='duplicate_provided_interface'))
+})
+test('resource passports namespace non-port resources and validate ports',()=>{
+ const p=createResourcePassport({agentId:'agent-a',resources:{ports:[3100],databases:['app']}})
+ assert.equal(p.namespaced.databases[0],'mw-agent-a-app');assert.throws(()=>createResourcePassport({agentId:'bad/id'}),/safe/)
+ assert.throws(()=>createResourcePassport({agentId:'ok',resources:{ports:[70000]}}),/between 1 and 65535/)
+})
+test('resource forecast detects port and shared-resource collisions',()=>{
+ const r=forecastResourceCollisions({agents:[
+ {id:'a',resources:{ports:[3000],databases:['shared'],queues:['jobs']}},
+ {id:'b',resources:{ports:[3000],databases:['shared'],queues:['jobs']}}]})
+ assert.equal(r.safeToLaunchTogether,false);assert.equal(r.collisions.length,3)
+ assert.equal(forecastResourceCollisions({agents:[{id:'a',resources:{ports:[3001]}},{id:'b',resources:{ports:[3002]}}]}).safeToLaunchTogether,true)
 })

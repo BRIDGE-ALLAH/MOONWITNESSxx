@@ -987,3 +987,31 @@ Use these labels consistently when updating this file:
 - [ ] Add signed lease and policy integration only if a real trust boundary requires it.
 
 **Exit gate:** stale or expired context fails verification before an agent proceeds; a lease is never treated as an authorization credential.
+
+## Phase 27 — Objective Delta Watchdog
+**Status:** [x] Deterministic objective-gap fingerprinting and repeated-gap watchdog implemented; automatic pause/replan adapter and calibrated benchmark remain.
+- [x] Normalize and fingerprint unresolved tests, missing criteria and blockers independent of ordering.
+- [x] Detect repeated consecutive gap fingerprints despite changing activity text.
+- [x] Emit a conservative pause-and-replan recommendation after a configurable threshold.
+- [ ] Connect verified test-runner output and acceptance-criterion IDs to observations.
+- [ ] Calibrate false-loop and missed-loop rates before automatic cancellation.
+**Exit gate:** repeated observed gaps only; no process termination without an explicit runtime adapter.
+
+## Phase 28 — Interface Treaty
+**Status:** [x] Treaty validation and static provider/consumer breaking-change forecast implemented; commit-time enforcement and schema-diff adapters remain.
+- [x] Declare owner, provided/consumed interfaces, breaking changes and expiry.
+- [x] Reject malformed, expired and duplicate declarations.
+- [x] Detect duplicate providers and breaking changes consumed by another agent.
+- [ ] Derive declarations from TypeScript exports, OpenAPI, GraphQL and migration plans.
+- [ ] Revalidate treaty fingerprints at commit/merge boundaries and require consumer acknowledgement.
+**Exit gate:** static conflicts block the advisory integration check; declarations are not claimed complete or automatically inferred.
+
+## Phase 29 — Runtime Resource Passport
+**Status:** [x] Resource passport generation and static port/database/queue/volume/environment collision forecast implemented; runtime provisioning/isolation remains.
+- [x] Validate agent IDs, resource identifiers and host port range.
+- [x] Generate deterministic per-agent namespaced identifiers for non-port resources.
+- [x] Detect duplicate host ports and shared resource identifiers before launch.
+- [ ] Add Docker Compose, ephemeral database, service discovery and secret-injection adapters.
+- [ ] Add runtime reservation/release with leases, crash cleanup and cross-host coordination.
+- [ ] Benchmark startup latency and isolation leakage against worktree-only and VM-per-agent baselines.
+**Exit gate:** advisory until a runtime adapter reserves and enforces each resource; no claim of actual database, volume, secret or network isolation.
