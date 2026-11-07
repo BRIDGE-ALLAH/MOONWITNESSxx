@@ -167,37 +167,37 @@
 - [x] **P1** ErrorState with retry callback and non-technical fallback copy.
 - [x] **P1** ActivityTimeline with actor, timestamp, event label, and optional detail.
 - [x] **P1** MetricCard with label, value, unit, period, and textual trend context.
-- [ ] **P1** Search/command palette presentation and keyboard interaction.
+- [x] **P1** Search/command palette presentation and keyboard interaction.
 - [ ] **P2** Kanban primitives with an accessible alternative to drag-and-drop.
 - [ ] **P2** Resizable panels and split-view primitives.
 - [ ] **P2** Data visualization wrappers with labels, units, date range, timezone, and accessible data alternatives.
 
 ## 7. Application shell
 
-- [ ] **P1** RiotAppShell with composable regions rather than a monolithic page component.
-- [ ] **P1** RiotSidebar with active state, collapse behavior, groups, and mobile presentation.
-- [ ] **P1** RiotTopbar with page context and action slots.
-- [ ] **P1** RiotWorkspace for page-level layout and content sizing.
+- [x] **P1** RiotAppShell with composable regions rather than a monolithic page component.
+- [x] **P1** RiotSidebar with active state, collapse behavior, groups, and mobile presentation.
+- [x] **P1** RiotTopbar with page context and action slots.
+- [x] **P1** RiotWorkspace for page-level layout and content sizing.
 - [ ] **P1** RiotContextPanel / inspector drawer.
-- [ ] **P1** RiotCommandPalette.
+- [x] **P1** RiotCommandPalette with Ctrl/Cmd+K, search, grouping, and callback execution.
 - [ ] **P1** RiotNotificationCenter presentation.
-- [ ] **P1** Responsive navigation for desktop, tablet, and mobile.
-- [ ] **P1** Define shell slots for application-owned navigation and actions.
+- [x] **P1** Responsive navigation for desktop, tablet, and mobile (desktop collapse + mobile navigation dialog).
+- [x] **P1** Define shell slots for application-owned navigation and actions.
 - [ ] **P2** Status bar and contextual help surfaces.
-- [ ] **P2** Verify shell supports pages that do not need every region.
+- [x] **P2** Verify shell supports pages that do not need every region (all shell regions are optional).
 
 ## 8. MOONWITNESS / ARSY integration patterns
 
 > These are UI integration contracts, not authorization or business-logic implementations.
 
-- [ ] **P1** Define Action Registry interface for contextual actions.
-- [ ] **P1** Define Command Registry interface for global commands and keyboard shortcuts.
-- [ ] **P1** Define plugin extension slots with explicit ownership and lifecycle.
+- [x] **P1** Define Action Registry interface for contextual actions.
+- [x] **P1** Define Command Registry interface for global commands and keyboard shortcuts.
+- [x] **P1** Define plugin extension slots with explicit owner, priority, enablement predicate, and unregister lifecycle.
 - [ ] **P1** Ensure plugin-provided UI is isolated from core package internals.
-- [ ] **P1** Ensure backend/application capability checks control privileged action availability.
-- [ ] **P1** ApprovalCard presentation with approve/reject callbacks, pending state, and clear outcome feedback.
-- [ ] **P1** JobMonitor presentation for queued/running/blocked/failed/completed states.
-- [ ] **P1** RecordInspector pattern for detail and contextual actions.
+- [x] **P1** Define application-provided capability filtering hooks; server authorization remains mandatory at execution.
+- [x] **P1** ApprovalCard presentation with approve/reject callbacks, pending state, and outcome status.
+- [x] **P1** JobMonitor presentation for queued/running/blocked/succeeded/failed/cancelled states.
+- [x] **P1** RecordInspector pattern for detail fields, status, and contextual action slots.
 - [ ] **P1** View composition patterns for list, detail, form, timeline, and board views.
 - [ ] **P2** Implement domain components from the design-system catalog only when a real consumer needs them:
   - [ ] SignalCard.
@@ -270,8 +270,8 @@ A component is not complete until all applicable checks pass:
 - [ ] **P1** Document token names and semantic usage.
 - [ ] **P1** Document component props, variants, accessibility behavior, and examples.
 - [ ] **P1** Document composition patterns and controlled/uncontrolled examples.
-- [ ] **P1** Document application shell integration.
-- [ ] **P1** Document plugin extension and action/command integration contracts.
+- [x] **P1** Document application shell integration.
+- [x] **P1** Document plugin extension and action/command integration contracts.
 - [ ] **P1** Document contribution and component release checklist.
 - [ ] **P2** Add migration notes for breaking changes.
 
@@ -299,8 +299,8 @@ A component is not complete until all applicable checks pass:
   - [ ] Finalize production font hosting/licensing and original asset policy.
 - [x] **Milestone 3 — Core primitives delivered:** actions, inputs, selection, navigation, overlays, and feedback foundations shipped; advanced P1/P2 controls remain listed as follow-ups.
 - [x] **Milestone 4 — Operational UI foundations delivered:** FormField, DataTable, FilterBar, BulkActions, EmptyState, ErrorState, MetricCard, and ActivityTimeline shipped; advanced DataTable/FilterBar behaviors remain open.
-- [ ] **Milestone 5 — Application shell:** AppShell, Sidebar, Topbar, Workspace, ContextPanel, CommandPalette.
-- [ ] **Milestone 6 — Platform integration:** action/command contracts, plugin slots, approval and job presentation.
+- [x] **Milestone 5 — Application shell foundation delivered:** AppShell, Sidebar, Topbar, Workspace, desktop ContextPanel, and CommandPalette. Mobile context-panel drawer and notification center remain follow-ups.
+- [x] **Milestone 6 — Platform integration foundation delivered:** typed action/command/plugin registries, approval/job/record presentation, and integration documentation. Plugin sandbox isolation and domain-specific workflow views remain application-level follow-ups.
 - [ ] **Milestone 7 — Maturity:** Storybook, visual regression, accessibility audit, documentation, bundle/performance review.
 
 ## Definition of Done
@@ -387,3 +387,27 @@ Deferred rather than overstated:
 - FilterBar removable chips and saved-filter callbacks.
 - IconButton accessible name must be supplied by the consumer (for example `aria-label`).
 - Unit/interaction test infrastructure and visual regression.
+
+
+## Milestone 5–6 delivery record
+
+**Repository CI run #529 — success**  
+Commit: `da0fecb1496a4a8d9c8812fb63b7f3f7db31af54`
+
+Delivered:
+- Composable RiotAppShell with optional sidebar, topbar, context panel, status bar, desktop collapse, and mobile navigation dialog.
+- RiotSidebar, RiotTopbar, RiotWorkspace, RiotContextPanel, RiotCommandPalette (Ctrl/Cmd+K), and notification live-region wrapper.
+- Headquarter AppShell migrated to @riotworks/ui shell primitives; existing route structure, locale/theme controls, and module navigation retained.
+- Typed in-memory Action Registry, Command Registry, and Plugin Slot Registry with duplicate-ID protection, cleanup callbacks, enablement filtering, and priority ordering.
+- ApprovalCard, JobMonitor, and RecordInspector as data-in/callback-out presentation components.
+- PLATFORM.md documenting ownership, capability checks, plugin registration, and approval/job integration contracts.
+- Consumer smoke test expanded to 61 public exports.
+
+CI run #529 passed repository audit, frozen lockfile, workspace type-check/build tasks, lint tasks, theme contract, package ESM build, consumer smoke test, and Headquarter Next.js production compilation/prerender (15 static pages).
+
+Still deferred and intentionally not claimed complete:
+- Mobile context-panel drawer and a complete notification-center popover/feed.
+- Plugin runtime isolation/sandboxing; a React slot registry is not a security sandbox.
+- Domain-specific list/detail/form/timeline/board compositions.
+- Server authorization, approval policy, persistence, job orchestration, retry/cancel policy, and audit logging remain application/backend responsibilities.
+- Full keyboard/screen-reader/browser QA and interaction tests.
