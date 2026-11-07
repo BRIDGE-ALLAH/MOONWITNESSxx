@@ -29,12 +29,29 @@ test('product routes fail closed when operator auth is not configured', async ()
   }
 })
 
-test('product routes reject missing and invalid operator credentials before database access', async () => {
+test('product routes fail closed when operator identity is missing', async () => {
   const pool = fakePool()
   const app = await createApp({
     databasePool: pool,
     logger: false,
     env: { ARSY_OPERATOR_TOKEN: token },
+  })
+  try {
+    const response = await app.inject({ method: 'GET', url: '/api/v1/products' })
+    assert.equal(response.statusCode, 503)
+    assert.equal(response.json().error.code, 'OPERATOR_AUTH_NOT_CONFIGURED')
+    assert.equal(pool.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
+
+test('product routes reject missing and invalid operator credentials before database access', async () => {
+  const pool = fakePool()
+  const app = await createApp({
+    databasePool: pool,
+    logger: false,
+    env: { ARSY_OPERATOR_ID: 'operator-test', ARSY_OPERATOR_TOKEN: token },
   })
   try {
     const missing = await app.inject({ method: 'GET', url: '/api/v1/products' })
