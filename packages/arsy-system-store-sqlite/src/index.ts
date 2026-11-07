@@ -34,7 +34,7 @@ function canonical(value: unknown): string {
 }
 
 function digest(snapshot: RegistrySnapshot): string {
-  const { createdAt: _createdAt, ...stableSnapshot } = snapshot;
+  const stableSnapshot = Object.fromEntries(Object.entries(snapshot).filter(([key]) => key !== "createdAt"));
   return createHash("sha256").update(canonical(stableSnapshot)).digest("hex");
 }
 
