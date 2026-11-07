@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS arsy_products (
 );
 CREATE INDEX IF NOT EXISTS arsy_products_owner_updated_idx
   ON arsy_products (owner_id, updated_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS arsy_products_opportunity_unique_idx
+  ON arsy_products (opportunity_id) WHERE opportunity_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS arsy_product_versions (
   id uuid PRIMARY KEY,
@@ -123,6 +125,7 @@ CREATE TABLE IF NOT EXISTS arsy_financial_events (
   source text NOT NULL,
   provider_reference text,
   idempotency_key text NOT NULL,
+  request_hash char(64) NOT NULL,
   reconciliation_state text NOT NULL CHECK (reconciliation_state IN ('pending', 'verified', 'disputed', 'reversed')),
   fx_rate numeric(24,12),
   fx_source text,
