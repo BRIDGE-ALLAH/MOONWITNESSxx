@@ -2,12 +2,22 @@
 
 > **Mission:** Own the visual foundation of MOONWITNESS / RIOTWORKS through a reliable, programmatic, reusable, and enterprise-ready asset system.
 >
-> **Status:** Planning
+> **Status:** Foundation implemented; creative identity and production verification remain in progress
 > **Priority:** P0 foundation, then P1 adoption and expansion
 > **Package:** `@riotworks/assets`
 > **Location:** `packages/assets`
 
 ---
+
+## Implementation Notes (2026-11-07)
+
+- [x] M1 package foundation and boundaries implemented.
+- [x] M2 typed registry, resolver, and initial rendering helpers implemented.
+- [x] M3 original starter textures and visual conventions implemented; official brand marks and licensed fonts remain blocked on approved source material.
+- [x] M4 neutral empty-search and recoverable-error illustrations implemented; character library remains blocked on approved original character artwork.
+- [x] M5 local integrity validation, registry tests, and CI validation step implemented; raster optimization and external license confirmation remain outstanding.
+- [x] M6 Headquarter and shared UI integration implemented. ARSY is a Fastify backend service in this repository and is intentionally not coupled to a visual asset package.
+- [ ] Run `pnpm install --frozen-lockfile`, package tests/type-check, Headquarter type-check, and production build in a full checkout.
 
 ## 1. Product Intent
 
@@ -185,42 +195,42 @@ packages/assets/
 
 ### 1.1 Repository reconnaissance
 
-- [ ] Inspect workspace conventions in the root `package.json` and `pnpm-workspace.yaml`.
-- [ ] Inspect `packages/ui/package.json`, exports, build scripts, TypeScript configuration, and tests.
-- [ ] Inspect application bundlers and static asset handling in Headquarter and ARSY.
-- [ ] Identify existing assets and avoid duplicating or moving files without a migration plan.
+- [x] Inspect workspace conventions in the root `package.json` and `pnpm-workspace.yaml`.
+- [x] Inspect `packages/ui/package.json`, exports, build scripts, TypeScript configuration, and tests.
+- [x] Inspect application bundlers and static asset handling in Headquarter and ARSY.
+- [x] Identify existing assets and avoid duplicating or moving files without a migration plan.
 - [ ] Confirm package naming and dependency conventions used in the monorepo.
-- [ ] Record any build-system constraints that affect SVG, fonts, CSS, and static file exports.
+- [x] Record any build-system constraints that affect SVG, fonts, CSS, and static file exports.
 
 ### 1.2 Package scaffold
 
-- [ ] Create `packages/assets/package.json` using repository conventions.
-- [ ] Set package name to `@riotworks/assets` if it does not conflict with an existing package.
-- [ ] Configure package entry points and public exports.
-- [ ] Configure TypeScript build/type-check integration consistently with sibling packages.
-- [ ] Add only the dependencies actually required by the initial implementation.
+- [x] Create `packages/assets/package.json` using repository conventions.
+- [x] Set package name to `@riotworks/assets` if it does not conflict with an existing package.
+- [x] Configure package entry points and public exports.
+- [x] Configure TypeScript build/type-check integration consistently with sibling packages.
+- [x] Add only the dependencies actually required by the initial implementation.
 - [ ] Avoid adding a UI framework dependency to the asset files themselves.
-- [ ] Add a minimal `src/index.ts` public entry point.
-- [ ] Add a package README describing purpose, installation/workspace usage, and boundaries.
-- [ ] Ensure the package is included by the existing workspace without unnecessary root configuration changes.
+- [x] Add a minimal `src/index.ts` public entry point.
+- [x] Add a package README describing purpose, installation/workspace usage, and boundaries.
+- [x] Ensure the package is included by the existing workspace without unnecessary root configuration changes.
 
 ### 1.3 Conventions and contracts
 
-- [ ] Define canonical asset naming: lowercase kebab-case for file names.
-- [ ] Define stable logical IDs separately from physical file paths.
-- [ ] Define category boundaries: brand, character, illustration, icon/symbol, texture, pattern, motion, typography, document.
-- [ ] Define theme applicability: universal, light, dark, or explicitly named theme variants.
-- [ ] Define accessibility expectations for meaningful vs decorative assets.
-- [ ] Define provenance requirements: source, creator/owner, and license or usage permission.
+- [x] Define canonical asset naming: lowercase kebab-case for file names.
+- [x] Define stable logical IDs separately from physical file paths.
+- [x] Define category boundaries: brand, character, illustration, icon/symbol, texture, pattern, motion, typography, document.
+- [x] Define theme applicability: universal, light, dark, or explicitly named theme variants.
+- [x] Define accessibility expectations for meaningful vs decorative assets.
+- [x] Define provenance requirements: source, creator/owner, and license or usage permission.
 - [ ] Define how deprecated assets are marked and replaced.
-- [ ] Document the dependency direction between assets, UI, and applications.
+- [x] Document the dependency direction between assets, UI, and applications.
 
 ### 1.4 Initial type contract
 
-- [ ] Add small, practical TypeScript types for asset identity and shared metadata.
-- [ ] Keep category-specific metadata separate where requirements differ.
+- [x] Add small, practical TypeScript types for asset identity and shared metadata.
+- [x] Keep category-specific metadata separate where requirements differ.
 - [ ] Avoid a large generic metadata schema that forces irrelevant fields onto every asset.
-- [ ] Represent asset variants explicitly where they are meaningful.
+- [x] Represent asset variants explicitly where they are meaningful.
 - [ ] Ensure public types do not expose internal file-system implementation details.
 
 ### Acceptance criteria
@@ -241,31 +251,32 @@ packages/assets/
 
 ### 2.1 Registry implementation
 
-- [ ] Create a statically declared registry using TypeScript.
-- [ ] Organize registry entries by meaningful asset domains.
-- [ ] Keep logical asset IDs stable and readable.
-- [ ] Register only real files that exist in the repository.
+- [x] Create a statically declared registry using TypeScript.
+- [x] Organize registry entries by meaningful asset domains.
+- [x] Keep logical asset IDs stable and readable.
+- [x] Register only real files that exist in the repository.
 - [ ] Support explicit variants when a brand, illustration, or asset has multiple approved forms.
 - [ ] Keep registry declarations reviewable; avoid opaque generated output as the only source of truth.
 - [ ] Export registry types and public lookup functions without leaking internal implementation.
 
 ### 2.2 Resolution API
 
-- [ ] Implement a predictable resolver from logical ID to the package's consumable asset reference.
-- [ ] Define behavior for unknown IDs (clear development-time error or documented safe fallback).
+- [x] Implement a predictable resolver from logical ID to the package's consumable asset reference.
+- [x] Define behavior for unknown IDs (clear development-time error or documented safe fallback).
 - [ ] Avoid silently returning unrelated assets.
 - [ ] Avoid constructing unsafe paths from arbitrary user input.
 - [ ] Ensure references work in the actual Vite / application build configuration used by the repository.
+  - [x] Add the package to Headquarter's Next.js transpile configuration; production build verification is still pending.
 - [ ] Verify production build output and asset URLs, not only development mode.
 - [ ] Document any bundler-specific limitation or required configuration.
 
 ### 2.3 Rendering helpers
 
-- [ ] Add a generic `Asset` component only if it provides real value beyond native image/SVG usage.
+- [ ] Add a generic `Asset` component only if it provides real value beyond native image/SVG usage; the initial API exposes `AssetImage` instead.
 - [ ] Add `BrandLogo` with explicit brand and variant selection.
-- [ ] Add `Illustration` with meaningful alt text and decorative handling.
+- [x] Add `Illustration` with meaningful alt text and decorative handling.
 - [ ] Add `Character` only after the character asset contract is established.
-- [ ] Add `Texture` with safe defaults and decorative accessibility behavior.
+- [x] Add `Texture` with safe defaults and decorative accessibility behavior.
 - [ ] Keep components small, predictable, and composable.
 - [ ] Avoid duplicating image behavior that already belongs to the application or UI layer.
 - [ ] Ensure decorative assets do not pollute the accessibility tree.
@@ -289,9 +300,9 @@ import {
 <Asset name="brand.riotworks.symbol" />
 ```
 
-- [ ] Validate the API against real application usage before locking it.
+- [x] Validate the API against real application usage before locking it.
 - [ ] Prefer constrained TypeScript unions / inferred registry keys over free-form strings where practical.
-- [ ] Ensure consumers do not need to know the physical folder layout.
+- [x] Ensure consumers do not need to know the physical folder layout.
 - [ ] Document when native `img`, inline SVG, CSS background, or a package component is the better choice.
 
 ### Acceptance criteria
@@ -334,7 +345,7 @@ import {
 
 ### 3.3 Iconography and symbols
 
-- [ ] Establish Lucide (or the repository's existing functional icon library) as the functional UI icon convention.
+- [x] Establish Lucide (or the repository's existing functional icon library) as the functional UI icon convention.
 - [ ] Do not copy or recreate icons already provided by the functional icon library.
 - [ ] Separate branded symbols and original graphic marks from functional UI icons.
 - [ ] Define naming and sizing conventions for custom symbols.
@@ -343,12 +354,13 @@ import {
 
 ### 3.4 Texture and graphic primitives
 
-- [ ] Create a restrained, reusable halftone family.
+- [x] Create a restrained, reusable halftone family.
 - [ ] Create subtle grain / noise resources where technically justified.
-- [ ] Add paper and industrial surface treatments only when they reinforce the design DNA.
+- [ ] Add paper surface treatments only when an approved design and real usage require them.
+- [x] Add an industrial grid surface treatment.
 - [ ] Add comic / punk graphic motifs only as approved original resources.
-- [ ] Provide safe opacity and scale guidance.
-- [ ] Ensure textures never compromise text contrast, focus indicators, or data readability.
+- [x] Provide safe opacity and scale guidance.
+- [x] Ensure textures never compromise text contrast, focus indicators, or data readability.
 - [ ] Ensure textures can be disabled or reduced where motion / visual effects preferences require it.
 - [ ] Avoid full-screen noise, excessive overlays, and random neon decoration.
 
@@ -382,8 +394,8 @@ import {
 
 ### 4.2 Product illustration families
 
-- [ ] Create a consistent empty-state family for meaningful product scenarios.
-- [ ] Create error and recovery illustrations where they improve comprehension.
+- [ ] Expand the empty-state family beyond the initial empty-search illustration.
+- [x] Create error and recovery illustrations where they improve comprehension.
 - [ ] Create success / completion illustrations where appropriate.
 - [ ] Create onboarding and feature explanation illustrations.
 - [ ] Create campaign/editorial illustrations for Riot mode.
@@ -415,11 +427,11 @@ import {
 
 ### 5.1 Integrity validation
 
-- [ ] Add a validation script that checks registry references against actual files.
-- [ ] Detect missing files and broken references.
+- [x] Add a validation script that checks registry references against actual files.
+- [x] Detect missing files and broken references.
 - [ ] Detect duplicate files or likely duplicate content where practical.
-- [ ] Validate file extensions and supported formats.
-- [ ] Validate SVG files for parse errors and unsafe embedded content.
+- [x] Validate file extensions and supported formats.
+- [x] Validate SVG files for parse errors and unsafe embedded content.
 - [ ] Validate raster dimensions and report unusually large files.
 - [ ] Validate font file presence and declared weights where practical.
 - [ ] Validate required provenance / license information for distributable assets.
@@ -438,13 +450,13 @@ import {
 
 ### 5.3 Metadata and provenance
 
-- [ ] Define the minimum metadata required for each asset category.
-- [ ] Record creator / owner and original source.
-- [ ] Record license or explicit usage permission; do not assume public availability means permission to redistribute.
-- [ ] Record intended theme / surface applicability where relevant.
-- [ ] Record alt text or decorative status for meaningful visual assets.
+- [x] Define the minimum metadata required for each asset category.
+- [x] Record creator / owner and original source.
+- [x] Record license or explicit usage permission; do not assume public availability means permission to redistribute.
+- [x] Record intended theme / surface applicability where relevant.
+- [x] Record alt text or decorative status for meaningful visual assets.
 - [ ] Record tags only when they improve discovery or maintenance.
-- [ ] Keep metadata close to the asset or its explicit registry declaration.
+- [x] Keep metadata close to the asset or its explicit registry declaration.
 - [ ] Avoid a heavyweight metadata framework.
 
 ### 5.4 Governance and lifecycle
@@ -454,7 +466,7 @@ import {
 - [ ] Define a deprecation process that preserves compatibility during migration.
 - [ ] Document replacement asset IDs when an asset is deprecated.
 - [ ] Establish reasonable file-size budgets by asset category.
-- [ ] Add validation to CI after local validation is reliable.
+- [x] Add asset validation and registry tests to the repository CI workflow.
 - [ ] Document how to run validation and optimization locally.
 - [ ] Ensure CI failures explain how to fix the asset issue.
 
@@ -476,17 +488,17 @@ import {
 
 ### 6.1 UI integration
 
-- [ ] Review `packages/ui` for locally duplicated brand marks, illustrations, and textures.
+- [x] Review `packages/ui` for locally duplicated brand marks, illustrations, and textures.
 - [ ] Replace shared asset copies with package references where the integration is stable.
-- [ ] Keep UI component styling and semantic theme tokens in `packages/ui`.
-- [ ] Ensure assets do not create a dependency cycle.
+- [x] Keep UI component styling and semantic theme tokens in `packages/ui`.
+- [x] Ensure assets do not create a dependency cycle.
 - [ ] Update UI documentation with the asset consumption convention.
 - [ ] Remove obsolete duplicates only after all consumers are migrated.
 
 ### 6.2 Headquarter integration
 
 - [ ] Audit Headquarter for hard-coded shared asset paths and duplicated visual files.
-- [ ] Adopt `@riotworks/assets` for applicable brand and shared illustration assets.
+- [x] Adopt `@riotworks/assets` for shared surface assets in Headquarter; official brand artwork remains pending source approval.
 - [ ] Preserve Control mode readability across tables, forms, dashboards, and operational workflows.
 - [ ] Use Riot mode artwork only on appropriate product surfaces.
 - [ ] Verify route-level and production asset loading.
@@ -503,7 +515,7 @@ import {
 ### 6.4 Documentation and rollout
 
 - [ ] Publish usage examples for React applications.
-- [ ] Document how to add a new asset from source to registry to application usage.
+- [x] Document how to add a new asset from source to registry to application usage.
 - [ ] Document how to add a theme variant safely.
 - [ ] Document how to deprecate and replace an asset.
 - [ ] Add a short asset review checklist for contributors.

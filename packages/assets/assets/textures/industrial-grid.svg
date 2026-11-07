@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <pattern id="industrial-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#777A76" stroke-width="0.7" opacity="0.42" />
+      <circle cx="0" cy="0" r="1.2" fill="#777A76" opacity="0.5" />
+    </pattern>
+  </defs>
+  <rect width="256" height="256" fill="url(#industrial-grid)" />
+</svg>

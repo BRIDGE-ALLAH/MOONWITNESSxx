@@ -6,6 +6,7 @@ import { CommandPalette } from '../shell/command-palette'
 import { NAVIGATION_ITEMS } from '../shell/navigation'
 import { Sidebar } from '../shell/sidebar'
 import { Topbar } from '../shell/topbar'
+import { Texture } from '@riotworks/assets'
 
 const STRINGS = {
   en: { search: 'Search / Command Palette', workspace: 'Workspace: Demo', notifications: 'Notifications', locale: 'EN', theme: 'Theme', profile: 'Operator', demo: 'Prototype // Demo Data Only' },
@@ -47,7 +48,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isDark = mounted ? resolvedTheme === 'dark' : true
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative isolate min-h-screen bg-background text-foreground">
+      <Texture name="texture.halftone" opacity={0.035} className="pointer-events-none absolute inset-0 z-0" />
+      <div className="relative z-10 min-h-screen">
       <div className="flex min-h-screen">
         <Sidebar isOpen={navOpen} demoLabel={labels.demo} onNavigate={() => setNavOpen(false)} />
         <div className="min-w-0 flex-1">
@@ -72,6 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <CommandPalette open={paletteOpen} items={NAVIGATION_ITEMS} onClose={closePalette} />
       {notice ? <div role="status" aria-live="polite" className="fixed bottom-4 right-4 z-50 border-2 border-acid-lime bg-background px-4 py-2 font-mono text-xs uppercase text-acid-lime shadow-lg">{notice}</div> : null}
+      </div>
     </div>
   )
 }
