@@ -8,7 +8,7 @@ export default function NotFound() {
         <CardHeader>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-riot-orange">404 // Signal lost</p>
           <CardTitle>Route not found.</CardTitle>
-          <CardDescription>The requested destination does not exist or is not available in this workspace.</CardDescription>
+          <CardDescription>The requested destination does not exist or is not currently available.</CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild><Link href="/">Return to Headquarter</Link></Button>
