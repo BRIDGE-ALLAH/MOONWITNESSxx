@@ -31,7 +31,7 @@ async function createFixture() {
   await put('AGENTS.md', '# Instructions\n')
   await put(
     'governance/README.md',
-    '# Governance\n1. Approved security and safety constraints.\n2. governance/contracts are authoritative.\n'
+    '# Governance\n1. Approved security and safety constraints.\n2. contracts/ are authoritative.\n'
   )
   await put(
     'governance/enforcement.md',
