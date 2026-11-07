@@ -82,3 +82,28 @@ test('inspection route remains protected by the common operator guard', async ()
     await app.close()
   }
 })
+
+test('inspection findings reject executable evidence URLs before database writes', async () => {
+  const database = createPool()
+  const app = await createApp({ databasePool: database, logger: false, env })
+  try {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/inspections',
+      headers: { 'x-arsy-operator-token': token },
+      payload: payload({
+        inspectionType: 'rights',
+        status: 'pass',
+        findings: [{
+          severity: 'info',
+          description: 'Evidence URL must use a safe web scheme.',
+          evidenceUrl: 'javascript:alert(1)',
+        }],
+      }),
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(database.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
