@@ -1,18 +1,16 @@
-# Production image for the ARSY HTTP application.
 FROM node:24-alpine
-
 WORKDIR /app
-ENV NODE_ENV=production
 
 RUN npm install -g pnpm@12.16.1
 
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages ./packages
-COPY apps/arsy ./apps/arsy
+COPY apps ./apps
 
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile --ignore-scripts --prod=false
 RUN pnpm run build --filter="@riotworks/arsy..."
 
+ENV NODE_ENV=production
 EXPOSE 3001
 WORKDIR /app/apps/arsy
 CMD ["pnpm", "start"]
