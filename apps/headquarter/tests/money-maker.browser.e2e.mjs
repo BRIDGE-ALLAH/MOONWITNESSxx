@@ -192,7 +192,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await publicationForm.getByLabel('Published at').fill(localDateTime(-45_000))
     await publicationForm.getByRole('button', { name: 'Record manual publication receipt' }).click()
     await page.getByRole('status').filter({ hasText: 'Manual publication receipt recorded with its evidence reference.' }).waitFor()
-    await listingCard.getByText('published', { exact: true }).waitFor()
+    await listingCard.getByText('PUBLISHED', { exact: true }).waitFor()
 
     // Persist and reconcile test financial events. These are synthetic CI fixtures,
     // not actual sales, receipts, tax payments, or income.
