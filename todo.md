@@ -119,7 +119,7 @@ export class Customer extends Model {
 ### 1.2 Repair the monorepo before ORM feature work
 
 - [x] Fix the Headquarter package identity/scripts/dependencies so its Next.js source and package manifest agree.
-- [~] `packages/arsy-core` now has a source entrypoint, but `apps/arsy` still does not compose through it; define and verify that integration before marking complete.
+- [~] `packages/arsy-core` now exports a reusable Fastify plugin and `apps/arsy` composes through it; runtime boot/typecheck and tests remain.
 - [x] Remove the UI package from the ARSY backend dependency graph.
 - [x] Confirm `apps/arsy` as the only canonical HTTP backend application.
 - [ ] Review the duplicate `services/arsy` and `services/queue` code; extract useful behavior, then retire duplicates deliberately.
@@ -842,3 +842,16 @@ Use these labels consistently when updating this file:
 - [x] Add the provider-neutral domain expression AST.
 - [x] Make addon compatibility explicit for ARSY, ORM and optional API versions.
 - [x] Encode the approved v1 database role pairing in the adapter identity type: SQLite = System Database; PostgreSQL = Business Database.
+
+
+## Phase 1 lifecycle follow-up
+
+- [x] Refactor ARSY Core into a reusable Fastify plugin and typed app factory.
+- [x] Use the supported Zod validator/serializer compiler integration.
+- [x] Refactor apps/arsy into a Fastify CLI plugin entrypoint and compose through ARSY Core.
+- [x] Scope PostgreSQL pool lifecycle to each app instance and Fastify onClose.
+- [ ] Add concrete PostgreSQL Business Database and SQLite System Database adapters.
+- [ ] Refresh pnpm lockfile using pnpm 12.16.1; do not hand-edit generated lockfile.
+- [ ] Run clean install, typecheck, lint, Fastify boot/shutdown tests and adapter integration tests.
+
+See docs/29-phase-1-arsy-lifecycle-followup.md. This is source-level progress only; no verification result is claimed.
