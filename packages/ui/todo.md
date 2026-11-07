@@ -1,7 +1,7 @@
 # UI Package TODO
 
 > Scope: packages/ui — shared RIOTWORKS / MOONWITNESS React UI foundation.
-> Status: Milestone 1 complete; Milestone 3 core primitives and Milestone 4 operational foundations implemented and CI-verified. Milestone 2 visual QA and advanced component refinements remain open.
+> Status: Milestones 1 and 3–6 delivered; Milestone 7 maturity and visual-language implementation added. Milestone 2 browser visual QA and Milestone 7 browser/a11y regression gates remain open.
 
 ## Principles
 
