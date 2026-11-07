@@ -438,17 +438,17 @@ Adoption policy:
 - [x] DIV-P2-001 Read the current Corpus specification, compatibility policy, core package exports and all relevant profiles before implementing the adapter.
 - [x] DIV-P2-002 Pin a specific Corpus spec/release compatibility range; do not target an unstable moving branch silently.
 - [x] DIV-P2-003 Define CorpusReader and CorpusRelease interfaces.
-- [x] DIV-P2-004 Resolve canonical IDs only through Corpus identity contracts.
+- [ ] DIV-P2-004 Resolve canonical IDs only through Corpus identity contracts.
 - [x] DIV-P2-005 Consume Entity, Resource, Assertion, Evidence, Provenance and Assessment records without redefining them.
 - [ ] DIV-P2-006 Reuse textual, source, bibliographic, manuscript, variants, lineage, lexicon, contextual, media and scholarly profiles where applicable.
-- [x] DIV-P2-007 Preserve exact source-local IDs, external identifiers and aliases as separate identity forms.
+- [ ] DIV-P2-007 Preserve exact source-local IDs, external identifiers and aliases as separate identity forms.
 - [x] DIV-P2-008 Preserve assertion scope and method-bound assessment semantics.
 - [x] DIV-P2-009 Preserve source availability, rights and licensing restrictions in query results.
 - [x] DIV-P2-010 Define missing, restricted, unavailable and partial response states.
 - [x] DIV-P2-011 Define lazy graph projection from Corpus records; no duplicate authoritative copy.
 - [x] DIV-P2-012 Define deterministic projection keys and source release/hash references.
 - [ ] DIV-P2-013 Detect stale projections when Corpus release or contract version changes.
-- [x] DIV-P2-014 Add compatibility tests against real synthetic fixtures from Corpus.
+- [ ] DIV-P2-014 Add compatibility tests against real synthetic fixtures from Corpus.
 - [ ] DIV-P2-015 Add round-trip tests for supported mappings and explicit loss reports for unsupported fields.
 - [x] DIV-P2-016 Document adapter behavior when Corpus is absent or incompatible.
 
