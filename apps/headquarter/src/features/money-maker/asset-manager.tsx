@@ -79,6 +79,10 @@ export function AssetManager({ productVersionId }: Props) {
       '.zip': 'application/zip',
       '.json': 'application/json',
       '.txt': 'text/plain',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.webp': 'image/webp',
     }[file.name.slice(file.name.lastIndexOf('.')).toLowerCase()] ?? '')
     if (!mediaType) {
       setError('The file must have a supported media type: PDF, ZIP, JSON, TXT, PNG, JPEG or WebP.')
