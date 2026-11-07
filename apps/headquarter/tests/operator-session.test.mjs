@@ -81,6 +81,7 @@ test('production session configuration requires HTTPS', () => {
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
     HEADQUARTER_TRUSTED_PROXY_HOPS: '1',
+    HEADQUARTER_PROXY_IDENTITY_SECRET: secret,
   }), null)
 })
 
@@ -108,27 +109,40 @@ test('operator session cookie is extracted without trusting other cookies', () =
 })
 
 
+import { createHmac } from 'node:crypto'
 import {
   createLoginAttemptBucketHashes,
   resolveTrustedClientNetworkIdentity,
 } from '../src/lib/login-attempt-limiter.ts'
 
-test('production login identity requires a configured trusted proxy and one sanitized client address', () => {
-  const request = new Request('https://hq.example/login', { headers: { 'x-forwarded-for': '198.51.100.42' } })
-  assert.equal(resolveTrustedClientNetworkIdentity(request, 0, 'production'), null)
-  assert.equal(resolveTrustedClientNetworkIdentity(request, 1, 'production'), '198.51.100.42')
+test('production login identity requires a signed assertion from the configured trusted ingress', () => {
+  const now = Date.parse('2026-11-08T00:00:00.000Z')
+  const ip = '198.51.100.42'
+  const timestamp = String(Math.floor(now / 1000))
+  const signature = createHmac('sha256', secret).update(`${ip}.${timestamp}`).digest('hex')
+  const signed = new Request('https://hq.example/login', {
+    headers: {
+      'x-forwarded-for': '203.0.113.99',
+      'x-mw-client-ip': ip,
+      'x-mw-client-timestamp': timestamp,
+      'x-mw-client-signature': signature,
+    },
+  })
+  assert.equal(resolveTrustedClientNetworkIdentity(signed, 1, secret, 'production', now), ip)
+  assert.equal(resolveTrustedClientNetworkIdentity(signed, 0, secret, 'production', now), null)
+  const spoofed = new Request('https://hq.example/login', {
+    headers: { 'x-forwarded-for': ip, 'x-mw-client-ip': ip, 'x-mw-client-timestamp': timestamp, 'x-mw-client-signature': '0'.repeat(64) },
+  })
+  assert.equal(resolveTrustedClientNetworkIdentity(spoofed, 1, secret, 'production', now), null)
   assert.equal(resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
-    headers: { 'x-forwarded-for': '198.51.100.42, 203.0.113.9' },
-  }), 1, 'production'), null)
-  assert.equal(resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
-    headers: { 'x-forwarded-for': 'not-an-ip' },
-  }), 1, 'production'), null)
+    headers: { 'x-forwarded-for': ip },
+  }), 1, secret, 'production', now), null)
 })
 
 test('untrusted client-supplied forwarding headers never select a network bucket in local mode', () => {
   const first = resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
     headers: { 'x-forwarded-for': '198.51.100.1' },
-  }), 0, 'development')
+  }), 0, undefined, 'development')
   const second = resolveTrustedClientNetworkIdentity(new Request('https://hq.example/login', {
     headers: { 'x-forwarded-for': '203.0.113.2' },
   }), 0, 'development')
