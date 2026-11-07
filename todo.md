@@ -1051,3 +1051,10 @@ Use these labels consistently when updating this file:
 - [x] Phase 20: detect empty traces, malformed context, duplicate policy decisions and cross-tenant terminal receipts; mark undefined benchmark metrics as null rather than perfect.
 - [ ] Authenticated issuer registry, signed attestation envelope/KMS, actual tool-gateway enforcement, licensed benchmark import and calibrated CI thresholds remain open.
 See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract checks, not production security enforcement.
+
+
+## ARSY app lifecycle follow-up (2026-11-08)
+- [x] Extract side-effect-free Fastify application factory and inject the database pool.
+- [x] Make DB readiness return 503 and require DATABASE_URL when creating the production pool.
+- [x] Route SIGTERM/SIGINT through one idempotent app.close() operation so Fastify onClose closes the pool.
+- [ ] Verify current-head Repository CI, full workspace build and CodeQL before merge.

@@ -1,50 +1,47 @@
-/**
- * Database connector for ARSY application.
- *
- * Connects to PostgreSQL using the Docker service connection.
- * Uses the DATABASE_URL environment variable which should point
- * to the postgres Docker service (e.g., postgres://user:password@postgres:5432/db).
- *
- * This module is designed to work with Fastify and provides:
- * - Database connection pooling
- * - Health check endpoints
- * - Graceful connection management
- */
-
 import { Pool } from 'pg'
 import type { FastifyInstance } from 'fastify'
 
-// Initialize PostgreSQL pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 20, // maximum number of connections in the pool
-  idleTimeoutMillis: 30000, // close connections after 30 seconds of idle
-})
+export interface DatabasePool {
+  query: (statement: string) => Promise<unknown>
+  end: () => Promise<void>
+}
 
-/**
- * Setup database connection for Fastify app.
- *
- * @param app - Fastify instance to attach database to
- */
-export function setupDatabase(app: FastifyInstance): void {
-  // Attach pool to fastify instance for use in routes
+declare module 'fastify' {
+  interface FastifyInstance {
+    db: DatabasePool
+  }
+}
+
+export function createDatabasePool(env: NodeJS.ProcessEnv = process.env): Pool {
+  const connectionString = env.DATABASE_URL?.trim()
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is required to start the ARSY application')
+  }
+
+  return new Pool({
+    connectionString,
+    max: 20,
+    idleTimeoutMillis: 30_000,
+  })
+}
+
+export function setupDatabase(app: FastifyInstance, pool: DatabasePool): void {
   app.decorate('db', pool)
 
-  // Add health check route
-  app.get('/health/db', async () => {
+  app.get('/health/db', async (_request, reply) => {
     try {
       await pool.query('SELECT 1')
       return { status: 'ok', message: 'Database connection healthy' }
     } catch (error) {
       app.log.error({ err: error }, 'Database health check failed')
-      throw error
+      return reply.code(503).send({
+        status: 'unavailable',
+        message: 'Database connection unavailable',
+      })
     }
   })
 
-  // Let Fastify own the pool lifecycle; onClose also runs in tests and graceful shutdown.
   app.addHook('onClose', async () => {
     await pool.end()
   })
 }
-
-export { pool }
