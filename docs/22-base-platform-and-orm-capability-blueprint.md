@@ -214,3 +214,9 @@ PocketBase's native model has id, created and updated. This is not a conceptual 
 - [ ] libSQL/PostgreSQL shared portability contract passes integration tests.
 - [ ] PocketBase is not a v1 runtime dependency.
 - [ ] No feature is declared implemented without code, tests and build evidence.
+
+
+## 13. Delivery staging and repository status
+The 17 logical addon manifests above are the complete target catalog, not a requirement to implement all modules in the first milestone. First deliver base.core, base.identity, base.security, base.workspace, base.audit and base.events after the ORM and database runtime are proven. Next add settings, attachment, sequence and transient capabilities as required by the first commercial workflow. Company, communication, activity, import-export, integration, taxonomy and localization are staged by demonstrated use case. Keep one release package with independent manifests; do not split into 17 npm packages without a real versioning/deployment need.
+
+At the audited MOONWITNESS repository snapshot, the ORM and all Base Platform addon packages are absent. This blueprint is a target contract, not implementation evidence. Follow docs/23 for current-state inventory and execution order.
