@@ -20,7 +20,8 @@
     "validate": "pnpm run validate:repo && pnpm run build",
     "lockfile:check": "node scripts/check-lockfile.mjs",
     "lockfile:refresh": "node scripts/check-lockfile.mjs --lockfile-only",
-    "type-check": "pnpm run typecheck"
+    "type-check": "pnpm run typecheck",
+    "repo:lab": "node scripts/counterfactual-repo-lab.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
