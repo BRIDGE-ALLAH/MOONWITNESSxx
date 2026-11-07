@@ -4,7 +4,7 @@ Shared React + TypeScript component foundation for RIOTWORKS and MOONWITNESS.
 
 ## Workspace usage
 
-The package is consumed by workspace applications through `workspace:*`:
+The package is consumed by workspace applications through `workspace:*`. Its JavaScript entry point is ESM; the Tailwind preset remains an explicit `.cjs` subpath for compatibility with the existing Tailwind configuration:
 
 ```tsx
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@riotworks/ui'
@@ -28,7 +28,7 @@ The consumer must include `packages/ui/src/**/*.{ts,tsx}` in its Tailwind conten
 From the repository root:
 
 - `pnpm --filter @riotworks/ui run type-check` — type-check source files without emitting output.
-- `pnpm --filter @riotworks/ui run build` — emit CommonJS JavaScript and TypeScript declarations to `dist/`.
+- `pnpm --filter @riotworks/ui run build` — emit ESM JavaScript and TypeScript declarations to `dist/`.
 - `pnpm --filter @riotworks/ui run smoke-test` — build the package and verify its public exports through the package name.
 - `pnpm --filter @riotworks/ui run clean` — remove generated output.
 
