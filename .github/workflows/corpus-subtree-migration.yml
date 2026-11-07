@@ -30,7 +30,7 @@ jobs:
           [[ "$SOURCE_HEAD" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid source SHA."; exit 2; }
 
       - name: Checkout target repository with full history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
