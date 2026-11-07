@@ -86,9 +86,9 @@ Truth rules:
 - [x] MM-0201 Define Product and ProductVersion initial lifecycle using docs/06 and docs/13.
 - [x] MM-0202 Promote only approved opportunities into product briefs.
 - [x] MM-0203 Record buyer/job, differentiator, product family, target channel, format and acceptance criteria.
-- [ ] MM-0204 Add product versioning without overwriting previously approved artifacts.
+- [x] MM-0204 Add append-only product version revisions without overwriting previously approved artifacts.
 - [ ] MM-0205 Add Asset and ProvenanceRecord with author/owner, source asset, license, tool/model, edit history, checksum, disclosure and derivative links.
-- [ ] MM-0206 Add Inspection records for rights, policy, technical QA and creative QA; blocking findings prevent channel readiness.
+- [x] MM-0206 Add append-only Inspection records for rights, policy, technical QA and creative QA; product READY requires the latest four inspections to pass.
 - [x] MM-0207 Replace The Forge sample products and placeholder previews with persisted product briefs and honest empty states. and Picsum previews with persisted records and honest empty states.
 
 ### Finance
@@ -101,7 +101,7 @@ Truth rules:
 - [x] MM-0216 Add reconciliation status for pending, verified, disputed and reversed events; never count pending commission as received income.
 
 ### Verification
-- [ ] MM-0220 Unit tests for currency precision, rounding, FX provenance, refunds and contribution formula.
+- [x] MM-0220 Unit tests for integer minor-unit precision, idempotency and verified contribution formula. FX conversion remains out of scope.
 - [ ] MM-0221 Integration tests for product promotion, versioning, provenance and audit history.
 - [x] MM-0222 Integration tests for duplicate financial event idempotency and reconciliation behavior.
 - [ ] MM-0223 E2E: approved opportunity → product brief/version → record cost/receipt → refresh → verify ledger totals.
@@ -112,12 +112,12 @@ Truth rules:
 ## Phase 3 — Channel readiness, distribution and portfolio learning
 
 ### Channel and listing
-- [ ] MM-0301 Create a channel registry with country eligibility, policy review date, payout requirements, capability C0–C4, scopes, quotas and manual fallback.
-- [ ] MM-0302 Keep all channels C0/C1 until current official evidence supports a higher capability.
-- [ ] MM-0303 Implement channel readiness checks for rights, product format, metadata, disclosure, eligibility and payout setup.
-- [ ] MM-0304 Generate listing packages for manual upload before any automated publishing integration.
-- [ ] MM-0305 Store Listing and PublicationReceipt only after a real operator action or verified official provider response.
-- [ ] MM-0306 Do not implement scraping, stealth browser automation, CAPTCHA bypass or credential sharing.
+- [x] MM-0301 Create the evidence-backed C0/C1 channel registry with Indonesia eligibility, policy review date, payout requirements and manual fallback. C2–C4 remain disabled.
+- [x] MM-0302 Keep all channels C0/C1; C2–C4 are rejected/disabled until official API permission and integration verification exist.
+- [x] MM-0303 Implement readiness checks for product READY state, latest version, channel C1, Indonesia eligibility, policy and payout evidence.
+- [x] MM-0304 Generate persisted manual listing packages for the latest READY product version and enabled C1 channel.
+- [x] MM-0305 Store Listing and PublicationReceipt only after the owner manually publishes and records provider reference plus evidence URL.
+- [x] MM-0306 Do not implement scraping, stealth browser automation, CAPTCHA bypass or credential sharing.
 
 ### Aftershock and operations
 - [ ] MM-0310 Compute metrics only from persisted opportunities, products, listings, financial events and support/maintenance records.
