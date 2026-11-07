@@ -21,7 +21,8 @@ class AdapterUnitOfWork implements UnitOfWork {
       await this.transaction.commit();
       this.#state = "committed";
     } catch (error) {
-      this.#state = "failed";
+      // Preserve rollback when a failed commit leaves the adapter transaction open.
+      this.#state = this.transaction.isActive ? "active" : "failed";
       throw error;
     }
   }
