@@ -1,0 +1,18 @@
+{
+  "name": "@riotworks/orm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript-native model declarations, metadata and deterministic registry contracts for ARSY",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts",
+    "lint": "pnpm --filter @riotworks/lint exec eslint ../orm/src --config eslint.config.mjs --max-warnings 0"
+  }
+}
