@@ -36,7 +36,7 @@ This document describes the current persisted opportunity, product-brief, and fi
 | `HEADQUARTER_TRUSTED_PROXY_HOPS` | Yes in production | Number of trusted ingress proxies (1–8); production login fails closed when absent |
 | `HEADQUARTER_PROXY_IDENTITY_SECRET` | Yes in production | Separate 32+ byte HMAC secret shared with trusted ingress to authenticate client-IP assertions |
 
-Generate independent random values for the operator token and session secret. Store them in the deployment secret manager. Do not commit real values to the repository, shell history, screenshots, or logs.
+Generate independent random values for the operator token, session secret and proxy identity secret. Never reuse the session-signing secret as the ingress HMAC secret. Store them in the deployment secret manager. Do not commit real values to the repository, shell history, screenshots, or logs.
 
 
 ## Shared login throttling and trusted ingress
