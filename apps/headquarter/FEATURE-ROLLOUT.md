@@ -30,6 +30,14 @@
 | ORM / Infrastructure Health | — | Disabled roadmap entry | Planned / technical | Read-only diagnostics API, sensitive-field redaction, technical operator role |
 | Security & Audit | — | Disabled roadmap entry | Planned | Append-only audit event contract, access policy, retention/export rules |
 
+
+## Authentication and abuse controls
+
+| Capability | Current maturity | Production gate |
+|---|---|---|
+| Single-operator login throttling | PostgreSQL-backed account and HMAC network buckets shared across ARSY/Headquarter instances; five failed attempts in a 15-minute window block further login; missing ARSY/PostgreSQL protection fails closed. | Production ingress must overwrite `X-Forwarded-For` with one canonical client IP, block direct Headquarter access, and set `HEADQUARTER_TRUSTED_PROXY_HOPS=1`. Verify this contract at the deployed network boundary; application configuration alone cannot prove it. |
+
+
 ## Release rules
 
 1. Planned entries are not links and cannot be opened as if they were implemented.
