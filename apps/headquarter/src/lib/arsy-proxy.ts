@@ -38,6 +38,7 @@ export async function proxyArsyRequest(
         accept: 'application/json',
         'x-arsy-operator-token': operatorToken,
         ...(method !== 'GET' ? { 'content-type': 'application/json' } : {}),
+        ...(request.headers.get('idempotency-key') ? { 'idempotency-key': request.headers.get('idempotency-key') as string } : {}),
       },
       ...(method !== 'GET' ? { body: await request.text() } : {}),
       cache: 'no-store',
