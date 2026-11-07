@@ -10,16 +10,16 @@ Every persisted model receives exactly these fields through ORM composition:
 
 | Logical field | Domain type | Meaning |
 |---|---|---|
-| id | UUID string | Application-generated stable ID |
+| id | Opaque string ID (UUID on v1 SQL providers) | Stable provider-independent entity identity |
 | createdAt | UTC datetime | Immutable creation instant |
 | updatedAt | UTC datetime | Last successful mutation instant |
 
 Addon authors never redeclare them. Duplicate names or incompatible definitions cause a model-registry error.
 
-Provider mapping: libSQL uses TEXT ID and normalized UTC ISO-8601 timestamp text; PostgreSQL uses UUID and TIMESTAMPTZ. ARSY generates IDs so they remain stable across providers and exports. Adapters normalize physical values to one domain contract. Workspace timezone is for display only.
+Provider mapping: libSQL uses TEXT ID and normalized UTC ISO-8601 timestamp text; PostgreSQL uses UUID and TIMESTAMPTZ. For v1 SQL providers, ARSY generates UUID IDs; the logical entity contract remains an opaque string. Adapters normalize physical values to one domain contract. A future provider-native ID format requires an explicit ID-factory/mapping policy and export/import tests. Workspace timezone is for display only.
 
 ### PocketBase compatibility (not a v1 provider)
-PocketBase BaseModel already has system fields id, created, updated. This is not inherently a logical conflict. A future adapter maps logical id → native id, createdAt → native created, updatedAt → native updated. Never create duplicate physical fields. This is mapping, not a reason to rename BaseEntity.
+PocketBase BaseModel already has system fields id, created, updated. This is not inherently a logical conflict. A future adapter maps logical id → native id, createdAt → native created, updatedAt → native updated. PocketBase's native ID format may not match the current SQL UUID policy, so the adapter must define a compatible ID-generation/normalization strategy; do not assume UUID values are accepted unchanged. Never create duplicate physical fields. This is mapping, not a reason to rename BaseEntity.
 
 ## 3. Non-universal concerns
 Do not automatically add these fields to every model:

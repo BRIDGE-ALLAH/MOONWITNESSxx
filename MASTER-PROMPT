@@ -429,7 +429,7 @@ Resolve deterministically. Reject missing/circular dependencies, duplicate IDs, 
 Install before business addons. ORM composes universal metadata exactly once.
 
 ## 9.1 Minimal BaseEntity
-Every persisted model receives only id (application-generated UUID string), createdAt (UTC), and updatedAt (UTC). libSQL stores ID as TEXT and timestamps as normalized UTC text; PostgreSQL stores UUID and TIMESTAMPTZ. Adapters normalize values to one TypeScript contract. Addons never redeclare these fields; collisions fail registry validation.
+Every persisted model receives only id (opaque stable string identifier), createdAt (UTC), and updatedAt (UTC). For v1 SQL providers, ARSY generates UUID IDs; libSQL stores them as TEXT and PostgreSQL as UUID. Adapters normalize IDs/timestamps to one TypeScript contract. A future provider with native ID format must define an explicit compatible ID strategy; do not assume every provider accepts UUIDs unchanged. Addons never redeclare these fields; collisions fail registry validation.
 
 ## 9.2 Optional mixins
 - OwnershipAttribution: createdBy/updatedBy where useful.

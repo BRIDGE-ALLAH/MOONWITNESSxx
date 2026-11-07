@@ -74,13 +74,13 @@ Channels are enabled only after current country eligibility, payout, policy, fee
 - **packages/orm-db-adaptor-postgres** — PostgreSQL adapter for production.
 - **packages/orm-db-adaptor-libsql** — libSQL/SQLite-compatible adapter for local/single-node deployments.
 - **packages/orm-addon-base** — minimal BaseEntity, opt-in lifecycle mixins, central audit.
-
-PostgreSQL is recommended for production; libSQL is the lightweight/single-node option. Kysely is internal to SQL adapters. PocketBase is not part of v1 persistence.
 - **packages/orm-addon-project** — project-domain models and services.
 - **packages/orm-addon-intelligent** — AI, agents, models, prompts, tools, runs, evaluations, and usage.
 - **packages/types** — shared framework-agnostic TypeScript types.
 - **packages/contract** — runtime API schemas, DTO contracts, and inferred types.
 - **packages/lint** — shared lint, format, and TypeScript configuration.
+
+PostgreSQL is recommended for production; libSQL is the lightweight/single-node option. Kysely is internal to SQL adapters. PocketBase is not part of v1 persistence.
 
 Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md), [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md), and [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md).
 

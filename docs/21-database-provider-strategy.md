@@ -14,7 +14,7 @@ This gives one app/model architecture without pretending concurrency, locking, o
 PocketBase is a capable standalone backend, but brings its own collection schema, records API, auth collections, API rules, admin surface, and lifecycle. RIOTWORKS already owns ARSY/Fastify, API contracts, authorization, addon-aware ORM, and central audit.
 Using PB as remote persistence duplicates backend API, schema/model, auth/rules, relation/filter responsibilities, and adds a second Go service and file lifecycle. A remote SDK call is not a substitute for a single SQL transaction spanning a business mutation and its audit event.
 PB has a superuser-only Collections API for schema changes. This is useful when PB is the backend, but becomes a second schema authority beside ARSY.
-PocketBase BaseModel already defines id, created, updated. This is not inherently a logical conflict with RIOTWORKS BaseEntity. A future adapter maps logical fields to native fields; never create duplicate columns.
+PocketBase BaseModel already defines id, created, updated. This is not inherently a logical conflict with RIOTWORKS BaseEntity. A future adapter maps logical fields to native fields; its native ID format may require a compatible ID strategy rather than the current SQL UUID default. Never create duplicate columns.
 
 ## 3. Why not only SQLite without provider boundary
 One SQLite provider is simpler initially but makes PostgreSQL transition riskier if domain code relies on SQLite behavior. RIOTWORKS needs agent workflows, finance/audit writes, reporting, and possible multiple ARSY processes. Provider boundary/shared tests are justified.
@@ -46,7 +46,7 @@ RIOTWORKS ORM owns model declarations, addon registry, field/domain semantics, l
 - packages/orm: only model registry/model API.
 
 ## 8. Portability
-Portable defaults: ARSY-generated UUID string IDs; UTC timestamps; exact decimal or integer-minor-unit money; common scalar/date/JSON types; explicit FKs/indexes/nullability/defaults; portable query operators. Avoid provider-only arrays/enums, JSON operators, collations, generated columns, full text unless capability-gated.
+Portable v1 SQL ID policy: ARSY-generated UUIDs carried as opaque strings in the domain API; adapters preserve identity across providers. Any future provider-native ID format requires an explicit ID-factory/mapping contract and import/export tests. UTC timestamps; exact decimal or integer-minor-unit money; common scalar/date/JSON types; explicit FKs/indexes/nullability/defaults; portable query operators. Avoid provider-only arrays/enums, JSON operators, collations, generated columns, full text unless capability-gated.
 Capability-gated: row/advisory locks, skip-locked, JSON path, full text, partial/concurrent indexes, vendor functions, bulk/returning differences. Unsupported semantics fail clearly.
 
 ## 9. Cross-provider tests

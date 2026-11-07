@@ -57,7 +57,7 @@ SQLite/libSQL and PostgreSQL do not expose one universal REST schema API. ARSY e
 Require deployment/operator service identity and least privilege. Normal Headquarter sessions cannot mutate schema. CLI, CI, release job, and HTTP entry point call the same SchemaReconciliationService. Apply schema once in a serialized setup/release task, never from every ARSY replica or ordinary request.
 
 ## 9. BaseEntity and audit
-BaseEntity contains only id (application-generated UUID represented as string), createdAt (UTC), and updatedAt (UTC). libSQL maps id to TEXT/timestamps to normalized UTC ISO-8601; PostgreSQL maps id to UUID/timestamps to TIMESTAMPTZ. Adapters normalize these to one TypeScript contract.
+BaseEntity contains only id (opaque stable string identifier), createdAt (UTC), and updatedAt (UTC). For v1 SQL providers ARSY generates UUID IDs; the adapter maps them to TEXT on libSQL and UUID on PostgreSQL. libSQL maps id to TEXT/timestamps to normalized UTC ISO-8601; PostgreSQL maps id to UUID/timestamps to TIMESTAMPTZ. Adapters normalize these to one TypeScript contract.
 Ownership attribution, archive, version, soft delete, and toggleable active/enabled are opt-in mixins. Business state is domain-owned; do not inject universal active.
 AuditTrail is one central append-oriented model/service. SQL business mutation and required audit insert share one transaction. External side effects use a transactional outbox.
 
