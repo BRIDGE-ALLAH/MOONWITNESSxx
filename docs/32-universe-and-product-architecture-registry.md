@@ -20,7 +20,7 @@ The universe is not one monolithic application and is not identical to this Git 
 - **A-L-L-A-H.COM** — intended unified public home and gateway to the wider universe.
 - **ROCKSOUL** — a distinct creative/narrative identity and a separate runtime direction. ROCKSOUL DNA (creative expression) and ROCKSOUL Runtime (technical runtime) are different concerns.
 - **E-ISP.ID** — connectivity business identity and customer/service ecosystem.
-- **RIOTWORKS** — separately governed creative/engineering studio and operating division associated with the initial creative-commerce workflow. It is not the MOONWITNESS master brand and must not replace MOONWITNESS visual identity.
+- **RIOTWORKS** — product and operating division within MOONWITNESS, initially owning the creative-commerce workflow. Division-level expression remains subordinate to the MOONWITNESS master identity.
 
 These are product, organizational, and narrative relationships—not claims of spiritual authority or supernatural software capability. Sacred language must be handled respectfully and must never imply divine endorsement, guaranteed blessing, or guaranteed income.
 
@@ -208,7 +208,7 @@ Public web entry points may expose only deliberately designed frontends and API 
 
 ## 9. Naming and ownership rules
 
-1. MOONWITNESS remains the master product brand. RIOTWORKS may identify its own studio/operating division, but must not replace the MOONWITNESS product lockup.
+1. MOONWITNESS remains the master product brand. RIOTWORKS is its product/operating division; division-owned products may use a distinct expression without replacing the MOONWITNESS master identity.
 2. HEADQUARTER and COCKPIT are distinct application experiences; do not collapse strategy/governance into real-time NOC control.
 3. HARBOR and E-ISP are distinct: authenticated subscriber self-service versus public ISP storefront.
 4. GATE and DOCK are product experiences, not ARSY backend services.
