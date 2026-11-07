@@ -88,18 +88,44 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.deepEqual(loaded.evidence, evidence)
     assert.deepEqual(loaded.scoreDetails, input.scoreDetails)
     assert.equal(loaded.evaluation.score, 80)
+    assert.equal(loaded.revision, 1)
     assert.equal((await persistedOpportunities.list(ownerId)).length, 1)
     assert.equal((await persistedOpportunities.list(`${ownerId}-other`)).length, 0)
 
-    const revisedInput = { ...input, productHypothesis: 'A versioned reconciliation utility highlights stock discrepancies before orders are accepted.' }
-    const revisedEvaluation = evaluateOpportunity(revisedInput)
-    const revised = await persistedOpportunities.update(ownerId, ownerId, created.id, revisedInput, revisedEvaluation, loaded.revision)
-    assert.equal(revised.conflict, false)
-    assert.equal(revised.record?.revision, loaded.revision + 1)
-    assert.equal(revised.record?.productHypothesis, revisedInput.productHypothesis)
-    const stale = await persistedOpportunities.update(ownerId, ownerId, created.id, input, evaluation, loaded.revision)
-    assert.equal(stale.conflict, true)
-    assert.equal(stale.record?.revision, loaded.revision + 1)
+    const revisedInput = { ...input, title: 'PostgreSQL commerce revision fixture' }
+    const revised = await persistedOpportunities.update(ownerId, ownerId, created.id, loaded.revision, revisedInput, evaluation)
+    assert.equal(revised.status, 'updated')
+    assert.equal(revised.opportunity.revision, 2)
+    assert.equal(revised.opportunity.title, revisedInput.title)
+
+    const stale = await persistedOpportunities.update(ownerId, ownerId, created.id, loaded.revision, input, evaluation)
+    assert.equal(stale.status, 'stale')
+    assert.equal(stale.opportunity.revision, 2)
+    assert.equal(stale.opportunity.title, revisedInput.title)
+
+    const afterRevision = await persistedOpportunities.get(ownerId, created.id)
+    assert.ok(afterRevision)
+    assert.equal(afterRevision.title, revisedInput.title)
+
+    const researchDecision = await persistedOpportunities.decide(
+      ownerId, ownerId, created.id, 'research-more',
+      'Capture one additional independent source before product promotion.',
+      afterRevision.revision,
+    )
+    assert.ok(researchDecision)
+    assert.equal(researchDecision.revision, afterRevision.revision + 1)
+    assert.equal(researchDecision.evaluation.decision, 'research-more')
+
+    const promotionDecision = await persistedOpportunities.decide(
+      ownerId, ownerId, created.id, 'prototype-candidate',
+      'The completed fixture evidence now passes the test promotion gate.',
+      researchDecision.revision,
+    )
+    assert.ok(promotionDecision)
+    assert.equal(promotionDecision.revision, researchDecision.revision + 1)
+    assert.equal(promotionDecision.evaluation.decision, 'prototype-candidate')
+    const readyToPromote = await persistedOpportunities.get(ownerId, created.id)
+    assert.ok(readyToPromote)
 
     const products = new ProductRepository(pool)
     const product = await products.createFromOpportunity(ownerId, ownerId, created.id, [
@@ -110,6 +136,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(product.version, 1)
     assert.equal(product.lifecycleState, 'brief')
 
+    // Product versions are append-only and lifecycle transitions are owner-scoped and audited.
     const versionTwo = await products.createVersion(
       ownerId, ownerId, product.id, 1,
       { ...product.brief, productHypothesis: 'Version two adds reconciliation export requirements.' },
@@ -132,6 +159,54 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const retired = await products.transition(ownerId, ownerId, product.id, 3, 'retired', 'This isolated integration fixture is complete and is retired.')
     assert.equal(retired.product?.lifecycleState, 'retired')
     assert.equal((await products.history(ownerId, product.id))?.length, 3)
+
+    const locked = await new OpportunityRepository(pool).update(
+      ownerId,
+      ownerId,
+      created.id,
+      readyToPromote.revision,
+      revisedInput,
+      evaluation,
+    )
+    assert.equal(locked.status, 'promoted')
+    const lockedDecision = await new OpportunityRepository(pool).decide(
+      ownerId, ownerId, created.id, 'research-more',
+      'A promoted source opportunity must no longer be editable.',
+      readyToPromote.revision,
+    )
+    assert.equal(lockedDecision, null)
+    assert.equal(await new OpportunityRepository(pool).isPromoted(ownerId, created.id), true)
+
+    // Race a real opportunity edit against promotion. Exactly one ordering is valid:
+    // either the edit wins and the product freezes its new content, or promotion wins
+    // and the stale edit is rejected. A mixed/overwritten snapshot is never acceptable.
+    const raceOpportunity = await opportunities.create(
+      ownerId,
+      ownerId,
+      input,
+      evaluation,
+      `race-opportunity-${randomUUID()}`,
+    )
+    const raceInput = {
+      ...input,
+      title: 'Concurrent opportunity revision fixture',
+      buyerProblem: 'The concurrent edit is allowed only when it wins before the product lock.',
+    }
+    const [raceEdit, raceProduct] = await Promise.all([
+      opportunities.update(ownerId, ownerId, raceOpportunity.opportunity.id, 1, raceInput, evaluation),
+      products.createFromOpportunity(ownerId, ownerId, raceOpportunity.opportunity.id, ['Concurrent promotion preserves an atomic source snapshot.']),
+    ])
+    assert.ok(raceProduct)
+    assert.ok(raceEdit.status === 'updated' || raceEdit.status === 'promoted')
+    if (raceEdit.status === 'updated') {
+      assert.equal(raceEdit.opportunity.revision, 2)
+      assert.equal(raceProduct.title, raceInput.title)
+      assert.equal(raceProduct.brief.buyerProblem, raceInput.buyerProblem)
+    } else {
+      assert.equal(raceProduct.title, input.title)
+      assert.equal(raceProduct.brief.buyerProblem, input.buyerProblem)
+    }
+    assert.equal(await new OpportunityRepository(pool).isPromoted(ownerId, raceOpportunity.opportunity.id), true)
 
     const otherOwnerId = randomUUID()
     await assert.rejects(
@@ -223,6 +298,9 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const reloadedProduct = await persistedProducts.get(ownerId, product.id)
     assert.ok(reloadedProduct)
     assert.equal(reloadedProduct.brief.buyerProblem, input.buyerProblem)
+    assert.equal(reloadedProduct.version, 3)
+    assert.equal(reloadedProduct.lifecycleState, 'retired')
+    assert.equal((await persistedProducts.history(ownerId, product.id))?.length, 3)
     const financialEvents = await persistedFinance.list(ownerId)
     assert.equal(financialEvents.length, 8)
     assert.equal(financialEvents.find((event) => event.id === gross.event.id)?.amountMinor, '5000')
@@ -243,14 +321,6 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(usd.net_contribution_minor, '750')
     assert.equal(usd.pending_minor, '0')
 
-    const decided = await new OpportunityRepository(pool).decide(
-      ownerId,
-      ownerId,
-      created.id,
-      'research-more',
-      'Recheck the evidence before any product promotion.',
-    )
-    assert.equal(decided?.evaluation.decision, 'research-more')
     assert.equal(await new OpportunityRepository(pool).archive(ownerId, ownerId, created.id), true)
     assert.equal(await new OpportunityRepository(pool).get(ownerId, created.id), null)
 
@@ -261,6 +331,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const actions = audit.rows.map((row) => row.action)
     for (const expected of [
       'created',
+      'content-updated',
       'created-from-opportunity',
       'version-created',
       'lifecycle-transition',
