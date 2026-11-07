@@ -53,6 +53,27 @@ test('readiness and database health return 503 when PostgreSQL is unavailable', 
   }
 })
 
+
+test('database health endpoints enforce per-client request limits', async () => {
+  for (const endpoint of ['/health/ready', '/health/db']) {
+    const fake = createFakePool()
+    const app = createApp({ databasePool: fake.pool, logger: false })
+
+    try {
+      const responses = []
+      for (let index = 0; index < 61; index += 1) {
+        responses.push(await app.inject(endpoint))
+      }
+      assert.equal(responses.slice(0, 60).every((response) => response.statusCode === 200), true)
+      assert.equal(responses[60].statusCode, 429)
+    } finally {
+      await app.close()
+    }
+
+    assert.equal(fake.closeCount, 1)
+  }
+})
+
 test('graceful shutdown signal handlers close the Fastify app and database pool once', async () => {
   const fake = createFakePool()
   const app = createApp({ databasePool: fake.pool, logger: false })
