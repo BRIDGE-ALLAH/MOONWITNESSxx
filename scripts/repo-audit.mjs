@@ -56,6 +56,21 @@ export function containsBackgroundShelling(command) {
   return /(?:^|\s)&(?:\s|$)/.test(String(command))
 }
 
+export function getRequiredWorkspaceImporterPaths(workspacePackages) {
+  const dependencySections = [
+    'dependencies',
+    'devDependencies',
+    'peerDependencies',
+    'optionalDependencies',
+  ]
+
+  return workspacePackages
+    .filter(({ manifest }) =>
+      dependencySections.some((section) => Object.keys(manifest[section] ?? {}).length > 0)
+    )
+    .map(({ path }) => path)
+}
+
 export function containsSuppressedFailure(command) {
   return /\|\|\s*(?:true|echo\b)|lint-skip/i.test(String(command))
 }
@@ -65,12 +80,7 @@ export function parseWorkspaceGlobs(workspaceConfig) {
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line.startsWith('- '))
-    .map((line) =>
-      line
-        .slice(2)
-        .trim()
-        .replace(/^['"]|['"]$/g, '')
-    )
+    .map((line) => line.slice(2).trim().replace(/^['"]|['"]$/g, ''))
 
   return new Set(globs)
 }
@@ -97,6 +107,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     'check:repo',
     'audit:repo',
     'format:check',
+    'format:check:all',
     'format',
     'test',
     'validate:repo',
@@ -139,9 +150,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     errors.push('pnpm-workspace.yaml must include apps/* and packages/*.')
   }
   if (workspaceGlobs.has('services/*')) {
-    errors.push(
-      'services/* must not be a workspace until its ownership and runtime boundaries are reconciled.'
-    )
+    errors.push('services/* must not be a workspace until its ownership and runtime boundaries are reconciled.')
   }
 
   // Pass 1: collect every package manifest before resolving cross-package references.
@@ -266,7 +275,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   const lockfile = await readText('pnpm-lock.yaml')
   const missingImporters = findMissingWorkspaceImporters(
     lockfile,
-    workspacePackages.map((item) => item.path)
+    getRequiredWorkspaceImporterPaths(workspacePackages)
   )
 
   if (missingImporters.length > 0) {

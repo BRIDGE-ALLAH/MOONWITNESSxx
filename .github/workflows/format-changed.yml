@@ -56,7 +56,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Format changed files only
-        run: pnpm run format -- --all
+        run: pnpm run format
 
       - name: Validate formatter output
         run: git diff --check

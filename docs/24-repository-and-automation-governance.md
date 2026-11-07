@@ -75,7 +75,7 @@ These are required native/build dependencies in the current Next.js toolchain. D
 
 ### Lockfile integrity
 
-pnpm 12 can write `pnpm-lock.yaml` as a multi-document YAML stream. The first (boot) document records the resolved pnpm version and config dependencies. The last (project) document contains the workspace importer graph and project dependency resolutions. Both documents are intentional; never delete the first document or treat it as an accidental duplicate. The repository audit inspects the **last** document when checking workspace importers. See the official [pnpm lockfile format documentation](https://github.com/pnpm/pnpm/blob/main/pnpm/docs/lockfile.md).
+pnpm 12 can write `pnpm-lock.yaml` as a multi-document YAML stream. The first (boot) document records the resolved pnpm version and config dependencies. The last (project) document contains the workspace importer graph and project dependency resolutions. Both documents are intentional; never delete the first document or treat it as an accidental duplicate. The repository audit inspects the **last** document when checking workspace importers. Importer entries are required only for workspace packages that declare `dependencies`, `devDependencies`, `peerDependencies`, or `optionalDependencies`; empty reserved/scaffold packages do not need importer entries. See the official [pnpm lockfile format documentation](https://github.com/pnpm/pnpm/blob/main/pnpm/docs/lockfile.md).
 
 The supported workflow is:
 
@@ -84,7 +84,7 @@ The supported workflow is:
 3. Verify with `pnpm run lockfile:check` and `pnpm install --frozen-lockfile`.
 4. The workflow commits only the verified lockfile to `main` without force-pushing, then dispatches CI for the new commit. Never normalize or hand-edit the two-document stream.
 
-The check script refuses to regenerate the lockfile when it already has staged or unstaged local edits. This preserves local work. Ordinary CI and deployment installs remain frozen.
+The lockfile check is read-only: it runs `pnpm install --lockfile-only --frozen-lockfile --ignore-scripts` and never rewrites the lockfile. The explicit local refresh command refuses to run when the lockfile already has staged or unstaged changes; it never stages files automatically. Ordinary CI and deployment installs remain frozen.
 
 The lockfile workflow makes one narrow exception to PR governance: the current repository setting does not permit Actions' `GITHUB_TOKEN` to create pull requests. Rather than leaving lockfile synchronization permanently failing, it commits only a generated lockfile after a frozen install has passed. If repository administration later enables Actions PR creation, the workflow may be switched back to a reviewable PR.
 
@@ -97,13 +97,14 @@ The lockfile workflow makes one narrow exception to PR governance: the current r
 | `pnpm dev:arsy`         | Start ARSY                                                 |
 | `pnpm check:repo`       | Read-only workspace and automation audit                   |
 | `pnpm audit:repo`       | Write ignored audit artifacts under `.artifacts/`          |
-| `pnpm format`           | Format repository files                                    |
-| `pnpm format:check`     | Verify formatting                                          |
+| `pnpm format`           | Format modified, staged, and untracked supported files     |
+| `pnpm format:check`     | Verify formatting for changed files only                  |
+| `pnpm format:check:all` | Audit all tracked Prettier-supported files                 |
 | `pnpm lint`             | Repository structure and formatting gate                   |
 | `pnpm type-check`       | Run package-level Turbo type-check tasks                   |
 | `pnpm test`             | Run Node.js automation tests                               |
-| `pnpm lockfile:check`   | Verify lockfile is reproducible from workspace manifests   |
-| `pnpm lockfile:refresh` | Deliberately regenerate the pnpm lockfile                  |
+| `pnpm lockfile:check`   | Read-only frozen verification of lockfile consistency     |
+| `pnpm lockfile:refresh` | Guarded local lockfile regeneration; preserves local edits |
 | `pnpm validate:repo`    | Run repository integrity, formatting, and automation tests |
 | `pnpm validate`         | Run repository validation, package type-checks, and builds |
 
@@ -120,7 +121,7 @@ Formatting checks use a changed-files policy:
 
 This avoids turning a new gate into a mass-formatting rewrite of historical prototype code. On `main`, `format-changed.yml` runs the same changed-files formatter and, when necessary, creates a separate formatting-only bot commit and dispatches CI. It never changes application behavior, versions, or changelog content. Existing files become compliant as they are changed or through a separately reviewed cleanup. Do not claim the entire historical tree is already formatted.
 
-The current `lint` command is the repository hygiene/format gate. A full source-code ESLint configuration is not yet established across the workspace; do not describe this command as comprehensive TypeScript linting until that capability is implemented and verified.
+The current `format:check` command verifies changed supported files; `format:check:all` audits the full tracked source/config/documentation baseline. The `.github/workflows/` directory is excluded from Prettier because workflow syntax is owned by actionlint. The current `lint` command is the repository hygiene/format gate. A full source-code ESLint configuration is not yet established across the workspace; do not describe this command as comprehensive TypeScript linting until that capability is implemented and verified.
 
 ## 5. Git hooks
 

@@ -81,11 +81,17 @@ async function getCiChangedFiles() {
 }
 
 export async function getChangedFiles() {
-  const files = process.argv.includes('--all')
-    ? splitNullSeparatedPaths(runGit(['ls-tree', '-r', '--name-only', '-z', 'HEAD']).stdout)
-    : process.env.CI === 'true'
-      ? await getCiChangedFiles()
-      : getLocalChangedFiles()
+  let files
+
+  if (process.argv.includes('--all')) {
+    const result = runGit(['ls-tree', '-r', '--name-only', '-z', 'HEAD'])
+    if (result.error || result.status !== 0) {
+      throw new Error(result.error?.message ?? 'Unable to enumerate tracked repository files.')
+    }
+    files = splitNullSeparatedPaths(result.stdout)
+  } else {
+    files = process.env.CI === 'true' ? await getCiChangedFiles() : getLocalChangedFiles()
+  }
 
   return uniqueFilePaths(files).filter(isPrettierSupportedFile)
 }

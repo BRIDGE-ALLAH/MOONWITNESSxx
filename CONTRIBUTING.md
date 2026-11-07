@@ -28,9 +28,10 @@ Keep backend packages independent from UI packages. Keep queue transport, databa
 pnpm 12 uses a two-document lockfile: the first boot document records the package-manager/config dependency state, while the last document contains the real workspace dependency graph. Both are intentional. When a manifest changes, refresh and review the project lockfile:
 
 ```bash
+pnpm run lockfile:check
 pnpm run lockfile:refresh
 git diff -- pnpm-lock.yaml
-pnpm install --frozen-lockfile
+pnpm run lockfile:check
 ```
 
 Do not use `--no-frozen-lockfile` as a routine CI or deployment workaround. The **Refresh pnpm lockfile** workflow runs after manifest/workspace changes on `main` and can also be triggered manually. After a regenerated lockfile passes a frozen install, it pushes a lockfile-only bot commit without force-pushing and dispatches CI for the new commit.
@@ -50,8 +51,10 @@ After `pnpm install`, the root `prepare` script configures `core.hooksPath=.husk
 | `pnpm audit:repo`      | Write an audit report to ignored `.artifacts/`                     |
 | `pnpm format`          | Format modified, staged, and untracked supported files             |
 | `pnpm format:check`    | Verify formatting for changed files only                           |
+| `pnpm format:check:all` | Audit every tracked Prettier-supported file                        |
 | `pnpm test`            | Run Node's built-in automation tests                               |
-| `pnpm lockfile:check`  | Detect lockfile drift without overwriting pre-existing local edits |
+| `pnpm lockfile:check`  | Read-only frozen verification of lockfile consistency              |
+| `pnpm lockfile:refresh` | Guarded lockfile regeneration; refuses pre-existing local edits   |
 | `pnpm validate:repo`   | Run repository integrity, format, and automation tests             |
 | `pnpm validate`        | Run repository validation, package type-checks, and builds         |
 

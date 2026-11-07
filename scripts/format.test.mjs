@@ -4,7 +4,7 @@ import { isPrettierSupportedFile, uniqueFilePaths } from './check-format.mjs'
 
 test('recognizes supported source and configuration files', () => {
   assert.equal(isPrettierSupportedFile('apps/headquarter/src/page.tsx'), true)
-  assert.equal(isPrettierSupportedFile('.github/dependabot.yml'), true)
+  assert.equal(isPrettierSupportedFile('.github/labeler.yml'), true)
   assert.equal(isPrettierSupportedFile('.github/workflows/ci.yml'), false)
   assert.equal(isPrettierSupportedFile('README.md'), true)
 })

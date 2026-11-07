@@ -5,8 +5,9 @@ import {
   containsBackgroundShelling,
   containsSuppressedFailure,
   findMissingWorkspaceImporters,
-  parseWorkspaceGlobs,
   getProjectLockfileDocument,
+  getRequiredWorkspaceImporterPaths,
+  parseWorkspaceGlobs,
 } from './repo-audit.mjs'
 
 test('accepts conventional commit subjects with and without scopes', () => {
@@ -90,33 +91,17 @@ snapshots: {}
   assert.deepEqual(findMissingWorkspaceImporters(lockfile, ['apps/arsy']), [])
 })
 
-test('recognizes empty workspace importers in pnpm lockfiles', () => {
-  const lockfile = `---
-lockfileVersion: '9.0'
-importers:
-  .:
-    configDependencies: {}
-packages:
-  pnpm@12.16.1: {}
-snapshots:
-  pnpm@12.16.1: {}
----
-lockfileVersion: '9.0'
-importers:
-  packages/arsy-core: {}
-  packages/contract: {}
-  packages/lint: {}
-packages: {}
-snapshots: {}
-`
-
+test('requires workspace importers only for packages with dependencies', () => {
   assert.deepEqual(
-    findMissingWorkspaceImporters(lockfile, [
-      'packages/arsy-core',
-      'packages/contract',
-      'packages/lint',
+    getRequiredWorkspaceImporterPaths([
+      { path: 'packages/arsy-core', manifest: {} },
+      { path: 'packages/contract', manifest: { scripts: { generate: 'node generate.mjs' } } },
+      { path: 'packages/lint', manifest: {} },
+      { path: 'packages/seed-data', manifest: {} },
+      { path: 'apps/headquarter', manifest: { dependencies: { next: '15.1.0' } } },
+      { path: 'packages/ui', manifest: { peerDependencies: { react: '^19' } } },
     ]),
-    []
+    ['apps/headquarter', 'packages/ui']
   )
 })
 
