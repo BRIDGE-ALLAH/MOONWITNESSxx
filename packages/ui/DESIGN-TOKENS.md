@@ -19,7 +19,8 @@ The Archive theme intentionally overrides inherited dark theme tokens on its rou
 ## Rules
 
 - Prefer semantic classes such as `bg-background`, `text-foreground`, `border-border`, `bg-success`, `text-warning-foreground`, and `ring-focus`.
-- Map brand primitives to semantic roles; do not use brand colors as substitutes for success, warning, failure, or information.
+- Map MOONWITNESS brand primitives to semantic roles; do not use brand colors as substitutes for success, warning, failure, or information.
+- Legacy RIOTWORKS Tailwind aliases remain for existing prototype pages only; do not introduce them into new MOONWITNESS product screens. Migrate existing consumers before removing those compatibility aliases.
 - Never communicate status, selection, or focus through color alone; pair color with text, iconography, or accessible semantics.
 - Use Space Grotesk for display/interface and IBM Plex Mono for technical data, with documented system fallbacks.
 - Keep lunar geometry and textures subtle and away from dense data, essential text, and focus indicators.
