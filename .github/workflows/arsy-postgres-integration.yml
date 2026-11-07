@@ -44,6 +44,8 @@ jobs:
       HEADQUARTER_OPERATOR_PASSWORD: ci-operator-password-with-strong-entropy
       HEADQUARTER_SESSION_SECRET: ci-headquarter-session-secret-at-least-32-bytes
       HEADQUARTER_PUBLIC_ORIGIN: https://localhost:3000
+      HEADQUARTER_TRUSTED_PROXY_HOPS: '1'
+      HEADQUARTER_PROXY_IDENTITY_SECRET: ci-proxy-identity-secret-with-at-least-32-bytes
       NEXT_TELEMETRY_DISABLED: '1'
     steps:
       - name: Checkout
@@ -101,6 +103,7 @@ jobs:
             import https from "node:https";
             import http from "node:http";
             import fs from "node:fs";
+            import { createHmac } from "node:crypto";
             const server = https.createServer({
               key: fs.readFileSync("/tmp/headquarter.key"),
               cert: fs.readFileSync("/tmp/headquarter.crt")
@@ -110,7 +113,24 @@ jobs:
                 port: 3002,
                 path: request.url,
                 method: request.method,
-                headers: { ...request.headers, host: "localhost:3000", "x-forwarded-proto": "https" }
+                headers: (() => {
+                  const headers = { ...request.headers, host: "localhost:3000", "x-forwarded-proto": "https" };
+                  delete headers["x-forwarded-for"];
+                  delete headers["x-mw-client-ip"];
+                  delete headers["x-mw-client-timestamp"];
+                  delete headers["x-mw-proxy-hops"];
+                  delete headers["x-mw-client-signature"];
+                  const clientIp = (request.socket.remoteAddress ?? "127.0.0.1").replace(/^::ffff:/, "");
+                  const timestamp = Math.floor(Date.now() / 1000).toString();
+                  const hops = process.env.HEADQUARTER_TRUSTED_PROXY_HOPS ?? "1";
+                  const signature = createHmac("sha256", process.env.HEADQUARTER_PROXY_IDENTITY_SECRET ?? "")
+                    .update(`${clientIp}.${timestamp}.${hops}`).digest("hex");
+                  headers["x-mw-client-ip"] = clientIp;
+                  headers["x-mw-client-timestamp"] = timestamp;
+                  headers["x-mw-proxy-hops"] = hops;
+                  headers["x-mw-client-signature"] = signature;
+                  return headers;
+                })()
               }, (upstreamResponse) => {
                 response.writeHead(upstreamResponse.statusCode ?? 502, upstreamResponse.headers);
                 upstreamResponse.pipe(response);
