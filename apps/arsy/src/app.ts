@@ -6,7 +6,7 @@ import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
 import { registerOpportunityRoutes } from './opportunities/routes.ts'
 import { registerProductRoutes } from './products/routes.ts'
-import { hasValidOperatorToken } from './auth/operator-token.ts'
+import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { registerFinancialRoutes } from './finance/routes.ts'
 
 export interface CreateAppOptions {
@@ -19,19 +19,7 @@ export function createApp(options: CreateAppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? true })
   const env = options.env ?? process.env
   const databasePool = options.databasePool ?? createDatabasePool(env)
-  const operatorToken = env.ARSY_OPERATOR_TOKEN?.trim()
-
-  app.addHook('preHandler', async (request, reply) => {
-    if (!request.url.startsWith('/api/v1/')) return
-    if (!hasValidOperatorToken(request, operatorToken)) {
-      return reply.code(operatorToken ? 401 : 503).send({
-        error: {
-          code: operatorToken ? 'UNAUTHORIZED' : 'OPERATOR_AUTH_NOT_CONFIGURED',
-          message: operatorToken ? 'Valid operator credentials are required.' : 'Operator authentication is not configured.',
-        },
-      })
-    }
-  })
+  registerOperatorApiAuth(app, env)
 
   app.register(async (instance) => {
     // Register the onRoute hook before declaring routes in this encapsulated scope.
@@ -75,8 +63,9 @@ export function createApp(options: CreateAppOptions = {}) {
     )
 
     setupDatabase(instance, databasePool)
-    registerOpportunityRoutes(instance, databasePool, options.env)
-    registerProductRoutes(instance, databasePool, options.env)
+    registerOpportunityRoutes(instance, databasePool, env)
+    registerProductRoutes(instance, databasePool, env)
+    registerFinancialRoutes(instance, databasePool, env)
   })
 
   return app
