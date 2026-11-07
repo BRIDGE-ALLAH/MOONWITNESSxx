@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process'
-import { copyFile, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { chmod, copyFile, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -102,6 +102,7 @@ async function ensureEnvFile(root) {
   } catch {
     try {
       await copyFile(join(root, '.env.example'), envPath)
+      await chmod(envPath, 0o600).catch(() => {})
       return 'created from .env.example'
     } catch (error) {
       if (error.code === 'ENOENT') return 'not created: .env.example is absent'
@@ -123,6 +124,7 @@ async function writeState(root, state) {
   const path = join(root, STATE_PATH)
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 })
+  await chmod(path, 0o600).catch(() => {})
 }
 
 function checkNode() {
