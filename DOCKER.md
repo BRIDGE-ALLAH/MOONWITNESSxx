@@ -49,6 +49,8 @@ Key variables:
 - **PostgreSQL**: localhost:5432 (user: postgres, password: postgres)
 - **Redis**: localhost:6379
 
+ARSY listens on the configured PORT (3001 in Compose). Its liveness endpoint is `/health/live`; readiness at `/health/ready` checks PostgreSQL before Compose marks the service healthy.
+
 ## Service descriptions
 
 ### PostgreSQL
