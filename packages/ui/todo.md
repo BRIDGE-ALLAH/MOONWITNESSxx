@@ -44,7 +44,7 @@
   - [ ] Verify every imported package is declared.
   - [ ] Remove unused dependencies only after confirming repository-wide usage.
 - [ ] **P0** Add a production build pipeline.
-  - [ ] Generate ESM output.
+  - [x] Configure ESM output for the package entry point.
   - [ ] Generate TypeScript declaration files.
   - [ ] Decide whether CJS is required by actual consumers; do not add it without need.
   - [ ] Ensure CSS is emitted and documented as a package entry.
@@ -321,7 +321,7 @@ A component is not complete until all applicable checks pass:
 ## Milestone 1 implementation notes
 
 - Package entry points now target `dist/index.js` and `dist/index.d.ts`; styles and the Tailwind preset remain available through their existing subpaths.
-- `tsconfig.build.json` emits CommonJS JavaScript, source maps, and TypeScript declarations without changing the source type-check configuration.
+- `tsconfig.build.json` emits ESM JavaScript and TypeScript declarations without changing the source type-check configuration. A post-build step adds explicit `.js` extensions to relative imports in generated JavaScript and declarations for Node-compatible ESM resolution. The Tailwind preset is kept as `.cjs` because the existing preset uses CommonJS.
 - `smoke-test.mjs` checks the public component/function exports using the package name.
 - The CardTitle ref and prop types now both describe an HTML heading element.
 - The Google Fonts import was moved ahead of Tailwind directives so it remains a valid leading CSS import.
