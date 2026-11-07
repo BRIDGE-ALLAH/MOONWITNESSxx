@@ -81,7 +81,7 @@ function fakePool() {
 }
 
 test('opportunity routes fail closed when operator auth is not configured', async () => {
-  const app = createApp({ databasePool: fakePool(), logger: false, env: {} })
+  const app = await createApp({ databasePool: fakePool(), logger: false, env: {} })
   try {
     const response = await app.inject({ method: 'GET', url: '/api/v1/opportunities' })
     assert.equal(response.statusCode, 503)
