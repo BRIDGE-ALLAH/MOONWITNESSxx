@@ -140,6 +140,27 @@ test('channel capability cannot be promoted beyond C1', async () => {
   } finally { await app.close() }
 })
 
+test('channel registry rejects C1 records without format limits and rejects secret-like configuration keys', async () => {
+  const pool = createPool()
+  const app = await createApp({ databasePool: pool, logger: false, env })
+  try {
+    const missingFormats = await app.inject({
+      method: 'POST', url: '/api/v1/channels',
+      headers: { 'x-arsy-operator-token': token },
+      payload: { ...body, listingRequirements: {} },
+    })
+    assert.equal(missingFormats.statusCode, 400)
+
+    const secretConfig = await app.inject({
+      method: 'POST', url: '/api/v1/channels',
+      headers: { 'x-arsy-operator-token': token },
+      payload: { ...body, quotaNotes: { access_token: 'never-store-this-secret' } },
+    })
+    assert.equal(secretConfig.statusCode, 400)
+    assert.equal(pool.calls.length, 0)
+  } finally { await app.close() }
+})
+
 test('channel optimistic updates reject stale revisions', async () => {
   const pool = createPool()
   const app = await createApp({ databasePool: pool, logger: false, env })
