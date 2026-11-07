@@ -44,14 +44,14 @@ Do not use `--no-frozen-lockfile` as a routine CI or deployment workaround. The 
 | `pnpm dev:arsy` | Start ARSY only |
 | `pnpm check:repo` | Run the read-only workspace/governance audit |
 | `pnpm audit:repo` | Write an audit report to ignored `.artifacts/` |
-| `pnpm format` | Format supported repository files |
-| `pnpm format:check` | Verify repository formatting |
+| `pnpm format` | Format modified, staged, and untracked supported files |
+| `pnpm format:check` | Verify formatting for changed files only |
 | `pnpm test` | Run Node's built-in automation tests |
 | `pnpm lockfile:check` | Detect lockfile drift without overwriting pre-existing local edits |
 | `pnpm validate:repo` | Run repository integrity, format, and automation tests |
 | `pnpm validate` | Run repository validation, package type-checks, and builds |
 
-A command is only a reliable quality gate when the affected package actually defines that capability. Do not add placeholder scripts that return success without checking anything.
+A command is only a reliable quality gate when the affected package actually defines that capability. Do not add placeholder scripts that return success without checking anything. Formatting is intentionally changed-files-only: the current legacy prototype tree has not received a mass-formatting rewrite. The pnpm lockfile is excluded because pnpm owns its serialization.
 
 ## Branches, commits, and pull requests
 

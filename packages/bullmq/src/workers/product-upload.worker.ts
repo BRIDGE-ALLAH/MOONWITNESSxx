@@ -1,14 +1,12 @@
 import { Worker } from 'bullmq'
-import type { ProductUploadJob } from '../jobs/product-upload.job'
+import type { ProductUploadJob } from '../index'
 import { productUploadJob } from '../jobs/product-upload.job'
 
-// Worker — proses job dari queue
-// Letakkan di: packages/bullmq/src/workers/product-upload.worker.ts
-
-export const productUploadWorker = new Worker(
+// Experimental transport adapter only. Business state remains owned by ARSY/domain services.
+export const productUploadWorker = new Worker<ProductUploadJob>(
   'product-upload',
   async (job) => {
-    const result = await productUploadJob(job.payload as ProductUploadJob)
+    const result = await productUploadJob(job.data)
     console.log(`✅ Job completed: ${job.id}`)
     console.log(`   Result: ${JSON.stringify(result)}`)
     return result
@@ -19,34 +17,15 @@ export const productUploadWorker = new Worker(
       port: Number(process.env.REDIS_PORT) || 6379,
       password: process.env.REDIS_PASSWORD,
     },
-    // Concurrency: berapa job yang bisa diproses sekaligus
     concurrency: 4,
-    
-    // Retry konfigurasi
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 5000,
-    },
-    
-    // Priority handling
-    firstFailureAttemptDelay: 1000,
-    subsequentFailureAttemptDelay: 5000,
-    
-    // Remove job dari queue setelah selesai (jika false, job tetap ada)
-    removeOnComplete: true,
-    removeOnFail: false, // Tahan job yang gagal untuk debugging
   }
 )
 
-// Mulai worker
 console.log('🚀 Product Upload Worker started')
 console.log('   Queue: product-upload')
 console.log('   Connection: Redis')
 console.log('   Concurrency: 4')
-console.log('   Max attempts: 3')
 
-// Handle errors
 productUploadWorker.on('error', (error) => {
   console.error('❌ Worker error:', error)
 })
@@ -56,5 +35,5 @@ productUploadWorker.on('completed', (job) => {
 })
 
 productUploadWorker.on('failed', (job, error) => {
-  console.error(`❌ Job failed: ${job?.id}`, error))
+  console.error(`❌ Job failed: ${job?.id}`, error)
 })

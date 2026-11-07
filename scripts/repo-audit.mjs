@@ -78,6 +78,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     'check:repo',
     'audit:repo',
     'format:check',
+    'format',
     'test',
     'validate:repo',
     'validate',
@@ -95,6 +96,20 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     if (containsSuppressedFailure(command)) {
       errors.push(`Root script "${name}" hides a failed check or contains a skip placeholder.`)
     }
+  }
+
+  for (const path of [
+    'scripts/check-format.mjs',
+    'scripts/check-staged.mjs',
+    'scripts/check-commit-message.mjs',
+    'scripts/install-hooks.mjs'
+  ]) {
+    if (!(await exists(path))) errors.push(`Missing required repository tooling script: ${path}`)
+  }
+
+  const formatCheckCommand = rootPackage.scripts?.['format:check'] ?? ''
+  if (!String(formatCheckCommand).includes('scripts/check-format.mjs')) {
+    errors.push('format:check must use the changed-files formatting gate.')
   }
 
   const workspaceConfig = await readText('pnpm-workspace.yaml')

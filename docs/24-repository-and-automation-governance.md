@@ -109,6 +109,17 @@ The lockfile workflow makes one narrow exception to PR governance: the current r
 
 A package-level task must be backed by an actual implementation and test target. Do not add scripts that only print success, delegate unrelated work, or swallow failures. Root scripts must not use uncontrolled shell backgrounding (`&`) to simulate parallel execution; Turbo owns workspace parallelism and exit-code propagation.
 
+### Formatting baseline
+
+Formatting checks use a changed-files policy:
+
+- Locally, `pnpm format:check` checks modified, staged, and untracked supported files; `pnpm format` formats those files.
+- In CI, pull requests are checked against their merge-base with the target branch. Push events use the event's `before` commit; manual runs validate the checked-out commit.
+- The lockfile is excluded from Prettier because pnpm owns its serialization.
+- Pre-commit separately checks staged text/config files, so malformed formatting cannot be committed accidentally.
+
+This avoids turning a new gate into a mass-formatting rewrite of historical prototype code. Existing files become compliant as they are changed or through a separately reviewed formatting-only cleanup. Do not claim the entire historical tree is already formatted.
+
 The current `lint` command is the repository hygiene/format gate. A full source-code ESLint configuration is not yet established across the workspace; do not describe this command as comprehensive TypeScript linting until that capability is implemented and verified.
 
 ## 5. Git hooks

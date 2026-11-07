@@ -142,7 +142,7 @@ The repository is a **mixed documentation + early prototype baseline**, not a pr
 
 The authoritative current-state audit and execution order are [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md). Do not infer implementation from a planned package name. A package is implemented only when its source, exports, tests and build evidence exist. The engineering and automation contract is [docs/24-repository-and-automation-governance.md](./docs/24-repository-and-automation-governance.md); it distinguishes repository-level checks from full application build readiness.
 
-**Next delivery order:** (1) regenerate and verify the pnpm lockfile, then align app/package manifests and actual entrypoints; (2) complete full workspace CI and safely retire duplicate legacy services; (3) make Headquarter and ARSY/arsy-core/contracts buildable; (4) implement ORM and schema API; (5) implement SQL adapters; (6) stage required Base Platform addons; (7) business modules and first commercial slice; (8) jobs and safe automation.
+**Next delivery order:** (1) complete clean-checkout repository CI and changed-files quality gates; (2) finish Headquarter/ARSY package builds and migrate unique behavior from legacy services; (3) establish the public contract and ARSY runtime core; (4) implement ORM and programmatic schema API; (5) implement SQL adapters; (6) stage required Base Platform addons; (7) business modules and first commercial slice; (8) production jobs, observability, and deployment runbooks.
 
 ## Financial truth
 
