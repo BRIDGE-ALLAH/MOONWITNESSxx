@@ -23,13 +23,15 @@ export function resolveTrustedClientNetworkIdentity(
   // this short-lived HMAC assertion after resolving the configured trusted proxy chain.
   const address = request.headers.get('x-mw-client-ip')?.trim().toLowerCase()
   const timestamp = request.headers.get('x-mw-client-timestamp')?.trim()
+  const suppliedHops = request.headers.get('x-mw-proxy-hops')?.trim()
   const suppliedSignature = request.headers.get('x-mw-client-signature')?.trim()
   if (!address || isIP(address) === 0 || !timestamp || !/^[0-9]{10}$/.test(timestamp) ||
+      suppliedHops !== String(trustedProxyHops) ||
       !suppliedSignature || !/^[a-f0-9]{64}$/i.test(suppliedSignature)) return null
   const issuedAt = Number(timestamp)
   if (!Number.isSafeInteger(issuedAt) || Math.abs(Math.floor(now / 1000) - issuedAt) > 60) return null
 
-  const expected = createHmac('sha256', proxyIdentitySecret).update(`${address}.${timestamp}`).digest()
+  const expected = createHmac('sha256', proxyIdentitySecret).update(`${address}.${timestamp}.${suppliedHops}`).digest()
   const supplied = Buffer.from(suppliedSignature, 'hex')
   if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) return null
   return address
