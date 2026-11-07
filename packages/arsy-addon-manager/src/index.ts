@@ -176,37 +176,42 @@ export class AddonInstallPlanner {
     const operations: AddonInstallOperation[] = [];
     const installedById = new Map(installed.map((item) => [item.id, item]));
     const candidateById = new Map<string, AddonCandidate>();
+    const duplicateIds = new Set<string>();
+    const blockedIds = new Set<string>();
+    const block = (addon: string, reason: string) => { blocked.push({ addon, reason }); blockedIds.add(addon); };
     for (const candidate of candidates) {
       const id = candidate.manifest.id;
-      if (candidateById.has(id)) blocked.push({ addon: id, reason: "Duplicate addon candidate." });
+      if (candidateById.has(id)) duplicateIds.add(id);
       else candidateById.set(id, candidate);
     }
+    for (const id of duplicateIds) block(id, "Duplicate addon candidate.");
     let orderedCandidates: AddonCandidate[];
-    try { orderedCandidates = orderAddons([...candidateById.values()]); }
+    try { orderedCandidates = orderAddons([...candidateById.values()].filter((candidate) => !duplicateIds.has(candidate.manifest.id))); }
     catch (error) {
-      for (const candidate of candidates) blocked.push({ addon: candidate.manifest.id, reason: error instanceof Error ? error.message : String(error) });
+      for (const candidate of candidates) block(candidate.manifest.id, error instanceof Error ? error.message : String(error));
       orderedCandidates = [];
     }
     for (const candidate of orderedCandidates) {
       const manifest = candidate.manifest;
       const issues = manifestIssues(candidate);
-      if (issues.length) { blocked.push({ addon: manifest.id, reason: issues.join(" ") }); continue; }
+      if (issues.length) { block(manifest.id, issues.join(" ")); continue; }
       const conflicts = (manifest.conflicts ?? []).filter((id) => candidateById.has(id) || installedById.has(id));
       if (conflicts.length) { blocked.push({ addon: manifest.id, reason: "Conflicts with " + conflicts.join(", ") + "."); continue; }
       let dependencyFailure = false;
       for (const dep of manifest.dependencies ?? []) {
+        if (blockedIds.has(dep.addon)) { block(manifest.id, "Dependency " + dep.addon + " is blocked."); dependencyFailure = true; continue; }
         const target = candidateById.get(dep.addon)?.manifest;
         const installedTarget = installedById.get(dep.addon);
         const version = target?.version ?? installedTarget?.version;
-        if (!version && !dep.optional) { blocked.push({ addon: manifest.id, reason: "Missing addon dependency " + dep.addon + "." }); dependencyFailure = true; }
-        else if (version && !satisfies(version, dep.version)) { blocked.push({ addon: manifest.id, reason: "Addon dependency version mismatch: " + dep.addon + "." }); dependencyFailure = true; }
+        if (!version && !dep.optional) { block(manifest.id, "Missing addon dependency " + dep.addon + "."); dependencyFailure = true; }
+        else if (version && !satisfies(version, dep.version)) { block(manifest.id, "Addon dependency version mismatch: " + dep.addon + "."); dependencyFailure = true; }
       }
       if (dependencyFailure) continue;
       let moduleOrder: ModuleManifest[];
       try { moduleOrder = orderModules(candidate.modules); }
-      catch (error) { blocked.push({ addon: manifest.id, reason: error instanceof Error ? error.message : String(error) }); continue; }
+      catch (error) { block(manifest.id, error instanceof Error ? error.message : String(error)); continue; }
       const capabilities = evaluateCapabilities(manifest.capabilities ?? [], this.#options.capabilityPolicy);
-      if (capabilities.denied.length) { blocked.push({ addon: manifest.id, reason: capabilities.denied.map((item) => item.capability + ": " + item.reason).join(" ") }); continue; }
+      if (capabilities.denied.length) { block(manifest.id, capabilities.denied.map((item) => item.capability + ": " + item.reason).join(" ")); continue; }
       const existing = installedById.get(manifest.id);
       if (existing?.version === manifest.version && existing.enabled) continue;
       operations.push(Object.freeze({
