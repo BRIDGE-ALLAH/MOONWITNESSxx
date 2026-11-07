@@ -132,7 +132,7 @@ async function runPreflight(root) {
     result.ok = false
     result.warnings.push('The checked-in Compose stack is development-oriented; production deployment is not supported by this preflight.')
   }
-  if (!env) result.warnings.push('.env is absent; create it from .env.docker and set local values before starting Compose.')
+  if (!env) result.warnings.push('.env is absent; create it from .env.example and set local values before starting Compose.')
   if (!keys.includes('POSTGRES_PASSWORD') || /POSTGRES_PASSWORD\s*=\s*postgres(?:\s|$)/m.test(env)) {
     result.warnings.push('PostgreSQL password is unset or uses the local default. Do not expose this stack to an untrusted network.')
   }
