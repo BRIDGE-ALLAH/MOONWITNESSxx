@@ -37,7 +37,6 @@ function requestBuffer(connection: DockerConnection, path: string, timeoutMs = 5
           servername: new URL(connection.endpointUrl).hostname,
         }
 
-    let request: http.ClientRequest | undefined
     const onResponse = (response: IncomingMessage) => {
       if (response.statusCode !== 200) {
         response.resume()
@@ -49,7 +48,7 @@ function requestBuffer(connection: DockerConnection, path: string, timeoutMs = 5
       response.on('data', (chunk: Buffer) => {
         size += chunk.length
         if (size > 1_048_576) {
-          request?.destroy(new Error('Docker Engine response exceeded 1 MiB'))
+          response.destroy(new Error('Docker Engine response exceeded 1 MiB'))
           return
         }
         chunks.push(chunk)
@@ -58,7 +57,7 @@ function requestBuffer(connection: DockerConnection, path: string, timeoutMs = 5
       response.on('error', reject)
     }
 
-    request = connection.kind === 'remote'
+    const request = connection.kind === 'remote'
       ? https.request(options as https.RequestOptions, onResponse)
       : http.request(options as http.RequestOptions, onResponse)
     request.setTimeout(timeoutMs, () => request.destroy(new Error('Docker Engine request timed out')))
