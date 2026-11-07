@@ -247,7 +247,7 @@ export class AssetRepository {
 
   async readiness(ownerId: string, assetId: string): Promise<{
     ready: boolean
-    inspections: Record<InspectionType, { status: InspectionStatus; source: InspectionSource | null; reviewedAt: string | null }>
+    inspections: Record<InspectionType, { status: InspectionStatus; source: InspectionSource | null; reviewedAt: string | null; reviewedBy: string | null }>
   } | null> {
     const history = await this.inspections(ownerId, assetId)
     if (!history) return null
@@ -258,8 +258,9 @@ export class AssetRepository {
         status: record?.status ?? 'unknown',
         source: record?.inspectionSource ?? null,
         reviewedAt: record?.reviewedAt ?? null,
+        reviewedBy: record?.reviewedBy ?? null,
       }]
-    })) as Record<InspectionType, { status: InspectionStatus; source: InspectionSource | null; reviewedAt: string | null }>
+    })) as Record<InspectionType, { status: InspectionStatus; source: InspectionSource | null; reviewedAt: string | null; reviewedBy: string | null }>
     const sourceAllowed: Record<InspectionType, InspectionSource[]> = {
       rights: ['independent-review'],
       policy: ['independent-review'],
@@ -267,7 +268,7 @@ export class AssetRepository {
       'creative-qa': ['independent-review'],
     }
     const ready = required.every((type) =>
-      latest[type].status === 'pass' && latest[type].source !== null && sourceAllowed[type].includes(latest[type].source),
+      latest[type].status === 'pass' && latest[type].source !== null && sourceAllowed[type].includes(latest[type].source) && latest[type].reviewedBy !== ownerId,
     )
     return { ready, inspections: latest }
   }
