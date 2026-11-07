@@ -136,7 +136,7 @@ test('product version endpoint validates and persists an append-only revision', 
   }
 })
 
-test('product lifecycle endpoint rejects invalid transitions as conflicts', async () => {
+test('product lifecycle endpoint rejects unsupported publication states before database access', async () => {
   const productRow = {
     id: '11111111-1111-4111-8111-111111111111',
     opportunity_id: null,
@@ -172,6 +172,74 @@ test('product lifecycle endpoint rejects invalid transitions as conflicts', asyn
     })
     assert.equal(response.statusCode, 400)
     assert.equal(count, 0)
+  } finally {
+    await app.close()
+  }
+})
+
+
+test('product lifecycle endpoint persists an allowed owner-scoped transition', async () => {
+  const productRow = {
+    id: '11111111-1111-4111-8111-111111111111',
+    opportunity_id: null,
+    title: 'Operator product',
+    product_family: 'digital-utility',
+    lifecycle_state: 'brief',
+    version_id: '22222222-2222-4222-8222-222222222222',
+    version: 1,
+    brief: { summary: 'Product brief' },
+    acceptance_criteria: ['A verifiable criterion'],
+    created_at: '2026-11-08T00:00:00.000Z',
+    updated_at: '2026-11-08T00:00:00.000Z',
+  }
+  const calls = []
+  const pool = {
+    query: async (sql, values) => {
+      calls.push({ sql, values })
+      return { rows: calls.length === 1 ? [productRow] : [{ ...productRow, lifecycle_state: 'production' }] }
+    },
+    end: async () => undefined,
+  }
+  const app = await createApp({ databasePool: pool, logger: false, env: { ARSY_OPERATOR_ID: 'owner-a', ARSY_OPERATOR_TOKEN: token } })
+  try {
+    const response = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/products/11111111-1111-4111-8111-111111111111/lifecycle',
+      headers: { 'x-arsy-operator-token': token },
+      payload: { expectedVersion: 1, state: 'production', rationale: 'The approved brief is ready for production work.' },
+    })
+    assert.equal(response.statusCode, 200)
+    assert.equal(response.json().data.lifecycleState, 'production')
+    assert.equal(calls.length, 2)
+    assert.deepEqual(calls[1].values.slice(0, 2), ['owner-a', productRow.id])
+    assert.match(calls[1].sql, /lifecycle-transition/)
+  } finally {
+    await app.close()
+  }
+})
+
+test('product version history is owner-scoped and ordered by version', async () => {
+  const calls = []
+  const pool = {
+    query: async (sql, values) => {
+      calls.push({ sql, values })
+      return { rows: calls.length === 1
+        ? [{ id: '11111111-1111-4111-8111-111111111111' }]
+        : [{ id: '22222222-2222-4222-8222-222222222222', version: 1, brief: { summary: 'Original' }, acceptance_criteria: ['Original criterion'], created_at: '2026-11-08T00:00:00.000Z', created_by: 'owner-a' }] }
+    },
+    end: async () => undefined,
+  }
+  const app = await createApp({ databasePool: pool, logger: false, env: { ARSY_OPERATOR_ID: 'owner-a', ARSY_OPERATOR_TOKEN: token } })
+  try {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/products/11111111-1111-4111-8111-111111111111/versions',
+      headers: { 'x-arsy-operator-token': token },
+    })
+    assert.equal(response.statusCode, 200)
+    assert.equal(response.json().data[0].version, 1)
+    assert.deepEqual(calls[0].values, ['owner-a', '11111111-1111-4111-8111-111111111111'])
+    assert.match(calls[1].sql, /ORDER BY v.version DESC/)
   } finally {
     await app.close()
   }
