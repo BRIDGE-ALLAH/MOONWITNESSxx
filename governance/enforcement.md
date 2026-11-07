@@ -152,14 +152,14 @@ A document stating a rule is not enforcement. A check that covers only part of a
   - Enforcement: PR base review and ruleset
   - State: Human review / Repository pending
 - **GIT-04** — PR describes problem, owner/boundaries, acceptance, validation, security/data and recovery impact
-  - Enforcement: PR template/checklist and review
-  - State: Human review
+  - Enforcement: Governance-aware PR template/checklist and review
+  - State: Partial: template implemented / Human review
 - **GIT-05** — Required checks match stable real check names
   - Enforcement: Administrator ruleset readback; workflow run verification
   - State: Repository pending
 - **GIT-06** — Actions use least-privilege permissions; read-only jobs use contents: read
-  - Enforcement: Workflow YAML review and CodeQL
-  - State: Partial: CI active / Human review
+  - Enforcement: Explicit workflow permissions, Governance Engine scan, and CodeQL
+  - State: Partial: CI implementation / Human review
 - **GIT-07** — CI push filters match slash-based branches
   - Enforcement: Workflow trigger declaration and branch push run
   - State: CI active
@@ -176,8 +176,8 @@ A document stating a rule is not enforcement. A check that covers only part of a
   - Enforcement: Permission review and repeated-run integration tests
   - State: Partial: CI active / Phase 3 planned
 - **AUT-03** — Scheduled detection reports findings and does not flood Issues
-  - Enforcement: Weekly workflow read-only permissions; no issue-write step
-  - State: CI active
+  - Enforcement: Weekly workflow read-only permissions; Governance Engine check/report; no issue-write step
+  - State: Partial: implementation committed; latest-head CI verification pending
 - **AUT-04** — Hooks are local, fast, deterministic, offline, and credential-independent
   - Enforcement: Hook source review and isolated hook tests
   - State: Partial: Local active / Phase 2 planned
