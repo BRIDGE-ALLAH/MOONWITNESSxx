@@ -1,5 +1,7 @@
 # Docker & Docker Compose Setup for MOONWITNESS/RIOTWORKS
 
+> **Local-development configuration:** the default Compose stack and .env.docker are for local development only. .env.docker contains a deliberately local placeholder credential; never use it as a production secret. The PostgreSQL and Redis host ports bind to loopback. Production deployment still requires a separately managed secret, TLS/ingress, backups, monitoring, rollback, and a configured deployment target.
+
 ## Quick Start
 
 ### Prerequisites
@@ -46,6 +48,8 @@ Key variables:
 - **ARSY backend**: http://localhost:3001
 - **PostgreSQL**: localhost:5432 (user: postgres, password: postgres)
 - **Redis**: localhost:6379
+
+ARSY listens on the configured PORT (3001 in Compose). Its liveness endpoint is `/health/live`; readiness at `/health/ready` checks PostgreSQL before Compose marks the service healthy.
 
 ## Service descriptions
 

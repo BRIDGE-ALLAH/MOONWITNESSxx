@@ -12,6 +12,7 @@
  */
 
 import { Pool } from 'pg'
+import type { FastifyInstance } from 'fastify'
 
 // Initialize PostgreSQL pool
 const pool = new Pool({
@@ -25,7 +26,7 @@ const pool = new Pool({
  *
  * @param app - Fastify instance to attach database to
  */
-export function setupDatabase(app: any): void {
+export function setupDatabase(app: FastifyInstance): void {
   // Attach pool to fastify instance for use in routes
   app.decorate('db', pool)
 
@@ -35,23 +36,15 @@ export function setupDatabase(app: any): void {
       await pool.query('SELECT 1')
       return { status: 'ok', message: 'Database connection healthy' }
     } catch (error) {
-      console.error('Database health check failed:', error)
+      app.log.error({ err: error }, 'Database health check failed')
       throw error
     }
   })
 
-  // Graceful shutdown
-  const shutdown = async (): Promise<void> => {
+  // Let Fastify own the pool lifecycle; onClose also runs in tests and graceful shutdown.
+  app.addHook('onClose', async () => {
     await pool.end()
-    console.log('Database pool closed')
-  }
-
-  // Handle process termination
-  process.on('SIGTERM', shutdown)
-  process.on('SIGINT', shutdown)
-
-  // Export shutdown for use in other modules
-  ;(app as any).shutdownDatabase = shutdown
+  })
 }
 
 export { pool }
