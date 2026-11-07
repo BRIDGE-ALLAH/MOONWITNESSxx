@@ -23,18 +23,23 @@ function gitFiles(args) {
 export async function runFormatCheck() {
   const write = process.argv.includes('--write')
   const base = process.env.FORMAT_BASE_SHA
-  let changed
+  const branch = gitFiles(['branch', '--show-current'])[0]
+  let changed = []
 
   if (base) {
-    changed = gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`])
-  } else {
-    changed = [
-      ...gitFiles(['diff', '--name-only', '--diff-filter=ACMR']),
-      ...gitFiles(['diff', '--cached', '--name-only', '--diff-filter=ACMR'])
-    ]
+    changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`]))
+  } else if (branch !== 'main' && run('git', ['rev-parse', '--verify', 'origin/main']).status === 0) {
+    const mergeBase = gitFiles(['merge-base', 'origin/main', 'HEAD'])[0]
+    changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${mergeBase}...HEAD`]))
   }
 
-  const files = filterPrettierFiles(changed)
+  changed.push(
+    ...gitFiles(['diff', '--name-only', '--diff-filter=ACMR']),
+    ...gitFiles(['diff', '--cached', '--name-only', '--diff-filter=ACMR'])
+  )
+
+  const excluded = new Set((process.env.FORMAT_EXCLUDE ?? '').split(';').filter(Boolean))
+  const files = filterPrettierFiles(changed).filter((file) => !excluded.has(file))
   if (files.length === 0) {
     console.log('No changed supported files require formatting.')
     return 0
