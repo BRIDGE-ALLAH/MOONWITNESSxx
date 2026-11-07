@@ -283,8 +283,10 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
 
     // Explicit sign-out clears the cookie and revokes access to protected API routes.
     await page.goto(`${baseUrl}/the-forge`, { waitUntil: 'domcontentloaded' })
-    await page.waitForLoadState('networkidle')
-    await page.getByRole('button', { name: 'Sign out' }).click()
+    await page.getByRole('heading', { name: 'THE FORGE' }).waitFor()
+    const signOutButton = page.getByRole('button', { name: /sign out/i })
+    await signOutButton.waitFor({ state: 'visible' })
+    await signOutButton.click()
     await page.waitForURL((url) => url.pathname === '/login', { timeout: 15_000 })
     const afterLogout = await context.request.get(`${baseUrl}/api/opportunities?limit=100`)
     assert.equal(afterLogout.status(), 401)
