@@ -168,6 +168,39 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(revisedProduct.version, 2)
     assert.equal(revisedProduct.lifecycleState, 'production')
 
+    const assetStorage = new LocalAssetStorage(assetStorageDir)
+    const assets = new AssetRepository(pool)
+    const storeAsset = async (filename, bytes) => {
+      const id = randomUUID()
+      const stored = await assetStorage.write(ownerId, id, bytes)
+      const record = await assets.create(ownerId, ownerId, {
+        id,
+        productVersionId: revisedProduct.versionId,
+        filename,
+        mediaType: 'text/plain',
+        storageKey: stored.storageKey,
+        checksumSha256: stored.checksumSha256,
+        provenance: {
+          creator: 'Integration test fixture',
+          license: 'Original test fixture',
+          originalDeclaration: 'Created only for the isolated PostgreSQL asset integration test.',
+          editHistory: ['Created as a test fixture.'],
+          disclosure: 'Test data only.',
+        },
+        rightsState: 'pass',
+      })
+      assert.ok(record)
+      assert.equal(record.checksumSha256, createHash('sha256').update(bytes).digest('hex'))
+      const loaded = await assets.get(ownerId, id)
+      assert.ok(loaded)
+      assert.deepEqual(await assetStorage.read(loaded.storageKey), bytes)
+      return { id, record, storageKey: stored.storageKey }
+    }
+
+    const initialAssetBytes = Buffer.from('Persisted initial integration asset binary')
+    const initialAsset = await storeAsset('integration-asset-v1.txt', initialAssetBytes)
+    assert.equal((await assets.list(ownerId, revisedProduct.versionId)).length, 1)
+
     const inspections = new InspectionRepository(pool)
     assert.equal(
       await inspections.record(ownerId, ownerId, {
@@ -188,15 +221,15 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
         status: 'pass',
         findings: [{
           severity: 'info',
-          description: `Integration fixture confirms the ${inspectionType} inspection contract.`,
-          ...(['rights', 'policy'].includes(inspectionType) ? { evidenceUrl: `https://example.com/${inspectionType}-review` } : {}),
+          description: 'Integration fixture confirms the ' + inspectionType + ' inspection contract.',
+          ...(['rights', 'policy'].includes(inspectionType) ? { evidenceUrl: 'https://example.com/' + inspectionType + '-review' } : {}),
         }],
       })
       assert.ok(finalInspection)
     }
     assert.equal(finalInspection.productReady, true)
     assert.equal(finalInspection.productLifecycleState, 'ready')
-    assert.equal((await inspections.list(ownerId, revisedProduct.versionId)).length, 4)
+    assert.equal((await inspections.list(ownerId, revisedProduct.versionId)).length, 8)
 
     const blockedInspection = await inspections.record(ownerId, ownerId, {
       productVersionId: revisedProduct.versionId,
@@ -221,7 +254,61 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     })
     assert.equal(recoveredInspection?.productReady, true)
     assert.equal(recoveredInspection?.productLifecycleState, 'ready')
-    assert.equal((await inspections.list(ownerId, revisedProduct.versionId)).length, 6)
+
+    // Archiving the only active asset must invalidate READY and all four latest inspections.
+    assert.equal(await assets.archive(ownerId, ownerId, initialAsset.id), true)
+    assert.equal(await assets.get(ownerId, initialAsset.id), null)
+    assert.equal((await assets.list(ownerId, revisedProduct.versionId)).length, 0)
+    assert.equal((await products.get(ownerId, product.id))?.lifecycleState, 'production')
+    const afterArchive = await pool.query(
+      `SELECT DISTINCT ON (inspection_type) inspection_type, status
+       FROM arsy_inspections WHERE product_version_id = $1
+       ORDER BY inspection_type, inspected_at DESC, id DESC`,
+      [revisedProduct.versionId],
+    )
+    assert.equal(afterArchive.rows.length, 4)
+    assert.ok(afterArchive.rows.every((row) => row.status === 'needs-review'))
+
+    // Uploading a replacement asset also resets the inspection set.
+    const replacementBytes = Buffer.from('Persisted replacement integration asset binary')
+    const replacementAsset = await storeAsset('integration-asset-v2.txt', replacementBytes)
+    assert.equal((await assets.list(ownerId, revisedProduct.versionId)).length, 1)
+    const afterReplacement = await pool.query(
+      `SELECT DISTINCT ON (inspection_type) inspection_type, status
+       FROM arsy_inspections WHERE product_version_id = $1
+       ORDER BY inspection_type, inspected_at DESC, id DESC`,
+      [revisedProduct.versionId],
+    )
+    assert.equal(afterReplacement.rows.length, 4)
+    assert.ok(afterReplacement.rows.every((row) => row.status === 'needs-review'))
+
+    // The replacement asset must be inspected again before the product can become READY.
+    for (const inspectionType of inspectionTypes) {
+      finalInspection = await inspections.record(ownerId, ownerId, {
+        productVersionId: revisedProduct.versionId,
+        inspectionType,
+        status: 'pass',
+        findings: [{
+          severity: 'info',
+          description: 'Final asset inventory review fixture for ' + inspectionType + '.',
+          ...(['rights', 'policy'].includes(inspectionType) ? { evidenceUrl: 'https://example.com/final-' + inspectionType + '-review' } : {}),
+        }],
+      })
+      assert.ok(finalInspection)
+    }
+    assert.equal(finalInspection.productReady, true)
+    assert.equal(finalInspection.productLifecycleState, 'ready')
+    const currentInspectionSet = await pool.query(
+      `SELECT DISTINCT ON (inspection_type) inspection_type, status
+       FROM arsy_inspections WHERE product_version_id = $1
+       ORDER BY inspection_type, inspected_at DESC, id DESC`,
+      [revisedProduct.versionId],
+    )
+    assert.equal(currentInspectionSet.rows.length, 4)
+    assert.ok(currentInspectionSet.rows.every((row) => row.status === 'pass'))
+    const loadedReplacement = await assets.get(ownerId, replacementAsset.id)
+    assert.ok(loadedReplacement)
+    assert.deepEqual(await assetStorage.read(loadedReplacement.storageKey), replacementBytes)
 
     const channels = new ChannelRepository(pool)
     const channel = await channels.create(ownerId, channelSlug, 'Integration Manual Channel')
@@ -259,36 +346,6 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(published?.providerReference, 'provider-listing-fixture-001')
     assert.equal((await products.get(ownerId, product.id))?.lifecycleState, 'listed')
 
-
-    const assetStorage = new LocalAssetStorage(assetStorageDir)
-    const assetBytes = Buffer.from('Persisted integration asset binary')
-    const assetId = randomUUID()
-    const storedAsset = await assetStorage.write(ownerId, assetId, assetBytes)
-    const assets = new AssetRepository(pool)
-    const asset = await assets.create(ownerId, ownerId, {
-      id: assetId,
-      productVersionId: revisedProduct.versionId,
-      filename: 'integration-asset.txt',
-      mediaType: 'text/plain',
-      storageKey: storedAsset.storageKey,
-      checksumSha256: storedAsset.checksumSha256,
-      provenance: {
-        creator: 'Integration test fixture',
-        license: 'Original test fixture',
-        originalDeclaration: 'Created only for the isolated PostgreSQL asset integration test.',
-        editHistory: ['Created as a test fixture.'],
-        disclosure: 'Test data only.',
-      },
-      rightsState: 'pass',
-    })
-    assert.ok(asset)
-    assert.equal(asset.checksumSha256, createHash('sha256').update(assetBytes).digest('hex'))
-    const loadedAsset = await assets.get(ownerId, assetId)
-    assert.ok(loadedAsset)
-    assert.deepEqual(await assetStorage.read(loadedAsset.storageKey), assetBytes)
-    assert.equal(await assets.archive(ownerId, ownerId, assetId), true)
-    assert.equal(await assets.get(ownerId, assetId), null)
-    assert.equal((await assets.list(ownerId)).length, 0)
 
     const finance = new FinancialRepository(pool)
     const grossInput = {
