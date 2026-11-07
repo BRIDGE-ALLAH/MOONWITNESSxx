@@ -936,3 +936,20 @@ See docs/30-phase-5-unit-of-work.md. No test or build result is claimed yet.
 - [ ] Implement approval-bound reconciler, receipt store and atomic System Mode activation.
 
 See docs/31-phase-6-schema-planner.md. Planning is implemented as an initial source slice; DDL execution is not claimed.
+
+
+## Phase 7 execution log — Approval-bound schema reconciliation
+
+- [x] Persist schema plan before execution.
+- [x] Enforce exact provider/role match before applying DDL.
+- [x] Implement off, plan, safe and strict policy modes.
+- [x] Require explicit per-operation approval and actor binding for destructive operations.
+- [x] Preflight strict mode to avoid partial execution when approvals are missing.
+- [x] Persist operation results and verification status through the injected ReconciliationStore.
+- [x] Verify create-table/add-column/alter-column/create-index operations from database introspection.
+- [x] Add reconciler test source for mode, approval and provider boundaries.
+- [ ] Run CI test/typecheck/lint gates.
+- [ ] Implement durable SQLite System Database plan/receipt store and serialized activation lock.
+- [ ] Implement real PostgreSQL and SQLite adapters and end-to-end DDL safety tests.
+
+See docs/32-phase-7-schema-reconciler.md. This is an initial policy-enforced reconciler; real driver and durable system-store integrations remain open.
