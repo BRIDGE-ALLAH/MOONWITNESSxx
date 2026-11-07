@@ -31,6 +31,11 @@ module.exports = {
         'border-strong': 'hsl(var(--border-strong))',
         'border-subtle': 'hsl(var(--border-subtle))',
         focus: 'hsl(var(--focus))',
+        selected: 'hsl(var(--selected))',
+        disabled: 'hsl(var(--disabled))',
+        hover: 'hsl(var(--hover))',
+        pressed: 'hsl(var(--pressed))',
+        scrim: 'hsl(var(--surface-scrim))',
         // shadcn/ui CSS variable tokens
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -80,9 +85,9 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        display: ['Archivo Black', 'Anton', 'Impact', 'sans-serif'],
-        ui: ['Space Grotesk', 'Inter', 'sans-serif'],
-        mono: ['IBM Plex Mono', 'JetBrains Mono', 'monospace'],
+        display: ['var(--font-display)'],
+        ui: ['var(--font-ui)'],
+        mono: ['var(--font-mono)'],
       },
       keyframes: {
         'accordion-down': {
