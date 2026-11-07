@@ -45,6 +45,9 @@ export function AssetManager({ productId, productVersion }: Props) {
   const [file, setFile] = useState<File | null>(null)
   const [uploadKey, setUploadKey] = useState<string | null>(null)
   const [creator, setCreator] = useState('')
+  const [sourceAssetId, setSourceAssetId] = useState('')
+  const [sourceReference, setSourceReference] = useState('')
+  const [editHistoryNotes, setEditHistoryNotes] = useState('')
   const [license, setLicense] = useState('')
   const [permissionBasis, setPermissionBasis] = useState('')
   const [toolModel, setToolModel] = useState('')
@@ -110,7 +113,9 @@ export function AssetManager({ productId, productVersion }: Props) {
           contentBase64: encodeBase64(await file.arrayBuffer()),
           provenance: {
             creator, license, permissionBasis, toolModel: toolModel || undefined,
-            editHistory: [],
+            sourceAssetId: sourceAssetId.trim() || undefined,
+            sourceReference: sourceReference.trim() || undefined,
+            editHistory: editHistoryNotes.trim() ? [{ action: 'Recorded asset edit history', actor: creator, occurredAt: new Date().toISOString(), notes: editHistoryNotes.trim() }] : [],
             disclosure,
           },
         }),
@@ -118,7 +123,7 @@ export function AssetManager({ productId, productVersion }: Props) {
       const payload = await response.json()
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to store asset.')
-      setFile(null); setUploadKey(null); setCreator(''); setLicense(''); setPermissionBasis(''); setToolModel(''); setDisclosure('')
+      setFile(null); setUploadKey(null); setCreator(''); setSourceAssetId(''); setSourceReference(''); setEditHistoryNotes(''); setLicense(''); setPermissionBasis(''); setToolModel(''); setDisclosure('')
       setMessage('Asset bytes and provenance stored. Inspection gates remain unknown until recorded.')
       await refresh()
     } catch (cause) {
@@ -187,8 +192,11 @@ export function AssetManager({ productId, productVersion }: Props) {
       <div className="grid gap-2 md:grid-cols-2">
         <label className="text-[10px] font-mono uppercase">Creator / owner<input required value={creator} onChange={(event) => setCreator(event.target.value)} className="mt-1 w-full border border-acid-lime/20 bg-panel-charcoal p-2 text-xs normal-case" /></label>
         <label className="text-[10px] font-mono uppercase">License<input required value={license} onChange={(event) => setLicense(event.target.value)} placeholder="Exact license or original-work statement" className="mt-1 w-full border border-acid-lime/20 bg-panel-charcoal p-2 text-xs normal-case" /></label>
+        <label className="text-[10px] font-mono uppercase">Source asset ID (optional)<input value={sourceAssetId} onChange={(event) => setSourceAssetId(event.target.value)} placeholder="UUID of an earlier asset owned here" className="mt-1 w-full border border-acid-lime/20 bg-panel-charcoal p-2 text-xs normal-case" /></label>
+        <label className="text-[10px] font-mono uppercase">Source reference (optional)<input value={sourceReference} onChange={(event) => setSourceReference(event.target.value)} placeholder="Original URL, source identifier or archive reference" className="mt-1 w-full border border-acid-lime/20 bg-panel-charcoal p-2 text-xs normal-case" /></label>
         <label className="text-[10px] font-mono uppercase md:col-span-2">Permission basis<textarea required value={permissionBasis} onChange={(event) => setPermissionBasis(event.target.value)} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-panel-charcoal p-2 text-xs normal-case" /></label>
         <label className="text-[10px] font-mono uppercase">Tool / model (if relevant)<input value={toolModel} onChange={(event) => setToolModel(event.target.value)} className="mt-1 w-full border border-acid-lime/20 bg-panel-charcoal p-2 text-xs normal-case" /></label>
+        <label className="text-[10px] font-mono uppercase md:col-span-2">Edit history (optional)<textarea value={editHistoryNotes} onChange={(event) => setEditHistoryNotes(event.target.value)} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-panel-charcoal p-2 text-xs normal-case" /></label>
         <label className="text-[10px] font-mono uppercase">Disclosure<textarea required value={disclosure} onChange={(event) => setDisclosure(event.target.value)} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-panel-charcoal p-2 text-xs normal-case" /></label>
       </div>
       <button type="submit" disabled={saving || !file} className="bg-acid-lime px-4 py-2 font-mono text-[10px] font-bold uppercase text-obsidian disabled:opacity-40">{saving ? 'Storing asset…' : 'Store bytes & provenance'}</button>
