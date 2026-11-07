@@ -38,9 +38,12 @@ export interface ExecutionAttestation {
 }
 
 export class ExecutionProofError extends Error {
-  constructor(readonly violations: string[]) {
+  readonly violations: string[]
+
+  constructor(violations: string[]) {
     super(`Execution proof rejected: ${violations.join(', ')}`)
     this.name = 'ExecutionProofError'
+    this.violations = [...violations]
   }
 }
 
