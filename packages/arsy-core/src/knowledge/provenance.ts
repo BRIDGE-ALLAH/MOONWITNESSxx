@@ -99,6 +99,7 @@ export function assessClaimCorroboration(
 }
 
 export interface ContaminationLink {
+  sourceId: string
   evidenceId: string
   claimId: string
   decisionIds: string[]
@@ -113,7 +114,7 @@ export class ContaminationIndex {
   private readonly quarantinedSources = new Set<string>()
 
   linkEvidence(link: ContaminationLink): void {
-    if (!link.evidenceId || !link.claimId) throw new Error('evidenceId and claimId are required')
+    if (!link.sourceId || !link.evidenceId || !link.claimId) throw new Error('sourceId, evidenceId and claimId are required')
     this.links.set(link.evidenceId, { ...link, decisionIds: [...new Set(link.decisionIds)] })
   }
 
@@ -125,7 +126,7 @@ export class ContaminationIndex {
   } {
     if (!sourceId.trim()) throw new Error('sourceId is required')
     this.quarantinedSources.add(sourceId)
-    const affected = [...this.links.values()].filter((link) => link.evidenceId === sourceId)
+    const affected = [...this.links.values()].filter((link) => link.sourceId === sourceId)
     return {
       sourceId,
       affectedEvidenceIds: affected.map((link) => link.evidenceId),
