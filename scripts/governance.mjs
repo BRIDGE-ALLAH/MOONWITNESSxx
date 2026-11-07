@@ -235,7 +235,9 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
           findings,
           'error',
           'GOV-DUPLICATE-PACKAGE',
-          `Duplicate package name ${manifest.name} also declared in ${packageMap.get(manifest.name).path}.`,
+          `Duplicate package name ${manifest.name} also declared in ${
+            packageMap.get(manifest.name).path
+          }.`,
           path
         )
       } else {
