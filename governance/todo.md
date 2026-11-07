@@ -25,7 +25,7 @@
 - [x] Node engine aligned to Node 22+.
 - [x] pnpm engine aligned to pinned `12.16.1`.
 - [x] Replace workspace build allowlist placeholders with explicit booleans.
-- [x] Verify clean install with pinned pnpm 12.16.1. **Evidence:** Repository CI run `42395045245` — frozen lockfile and install pass.
+- [x] Verify clean install with pinned pnpm 12.16.1. **Evidence:** Repository CI run `42395802586` — frozen lockfile and install pass.
 
 ### P0.2 Root command contract
 
@@ -35,6 +35,7 @@
 - [x] Fix `validate:repo` and root command composition.
 - [x] Remove shell backgrounding from aggregate scripts.
 - [x] Invoke lockfile checker through `pnpm exec`.
+- [x] Expose real `check:commit` and `check:staged` commands; align Codex plugin references.
 - [ ] Execute root commands and verify failing fixtures propagate non-zero exit. **Evidence:** output + exit codes.
 
 ### P0.3 Lockfile
@@ -49,18 +50,19 @@
 - [x] Match push filters to slash branches: `feat/**`, `fix/**`, `chore/**`, `docs/**`, `refactor/**`.
 - [x] Keep audit, lockfile check, frozen install, validation observable.
 - [x] Verify CI triggers on `chore/governance-phase-0-1` (push run observed).
-- [ ] Verify repository integrity job reaches all steps and passes.
-- [ ] Verify CodeQL/Dependabot remain healthy.
+- [x] Verify repository integrity job reaches all steps and passes. **Evidence:** run `42395802586`.
+- [x] Verify CodeQL succeeds on the branch (`42395737398`).
+- [ ] Verify Dependabot alerts/update automation remain enabled and healthy.
 - [ ] Administrator applies main ruleset/required checks. **Evidence:** ruleset readback + test PR.
 
 ### P0.5 Acceptance
 
 - [x] `pnpm run check:repo`, `pnpm run format:check`, `pnpm test` pass in Repository CI run `42395045245`.
 - [x] `pnpm install --frozen-lockfile` passes from clean checkout in Repository CI run `42395045245`.
-- [ ] Full workspace type-check/build only after package scripts/entrypoints are real.
+- [ ] **BLOCKED:** Full workspace type-check/build; separate Asset integrity job reports TS2307 for missing `./demo-data` and `./types` imported by `apps/headquarter/src/features/arsy-deck/repository.ts`.
 - [ ] Review diff, secrets, changed-file scope; record CI SHA/URL.
 
-**Status:** audit passes. Lockfile was regenerated with pinned pnpm 12.16.1 and committed by the one-time branch-scoped action; CI frozen-check/install validation and administrator rules remain open.
+**Status:** Repository integrity gate passes on `42395802586` (audit, frozen lockfile, install, formatting, tests). Full Headquarter type-check and main ruleset remain open.
 
 ## Phase 1 — Governance authority and rule contracts
 
@@ -71,12 +73,12 @@
 - [x] Create canonical `governance/README.md`.
 - [x] Define precedence: safety → governance/contracts → architecture docs → agent rules → mission prompts → contributor guide → enforcement.
 - [x] Keep this file as phase ledger, not second issue tracker.
-- [x] Reconcile `AGENTS.md`, `GOAL.txt`, `MASTER-PROMPT`, and Copilot instructions; Codex plugin-specific instructions still require review.
+- [x] Reconcile `AGENTS.md`, `GOAL.txt`, `MASTER-PROMPT`, Copilot instructions, and Codex automation plugin README/manifest.
 
 ### P1.2 Contract catalogue
 
 - [x] Define Owner, Scope, Rules, Allowed, Forbidden, Enforcement, Acceptance evidence, Exceptions.
-- [x] Add Identity, Repository/Architecture, GitHub, Automation, Installation, Security contracts.
+- [x] Add separate Identity, Repository, Architecture, API, Data, GitHub, Automation, Installation, and Security contract files.
 - [x] Add Architecture, API, and Data contracts against docs/08, docs/09, docs/13, docs/18, and docs/21.
 - [ ] Review contracts with owning app/package maintainers.
 
@@ -90,7 +92,7 @@
 
 ### P1.4 Documentation reconciliation
 
-- [x] Align `AGENTS.md`, `GOAL.txt`, `MASTER-PROMPT`, and Copilot instructions with hierarchy; Codex plugin-specific instructions still require review.
+- [x] Align `AGENTS.md`, `GOAL.txt`, `MASTER-PROMPT`, Copilot instructions, and Codex automation plugin with hierarchy.
 - [ ] Remove stale duplicated governance claims without deleting historical architecture decisions.
 - [x] Link docs/24 to the canonical index and align CONTRIBUTING branch names with slash convention.
 - [ ] Verify links, command names, package names, and workflow triggers.
@@ -102,7 +104,7 @@
 - [ ] Verify no schema/manifest duplication.
 - [ ] Run audit, format, and automation tests; record exceptions and owners.
 
-**Status:** canonical index, nine separate contracts, enforcement map, and agent/Codex instruction reconciliation are implemented. Owner review and final acceptance remain open. CI audit passes; lockfile gate still fails due stale workspace importers and `pg`.
+**Status:** canonical index, nine separate contracts, enforcement map, agent/Codex instruction reconciliation, and initial CI checks are implemented. Owner review, rule-by-rule enforcement mapping, decision records, and final acceptance remain open. Repository integrity passes; the separate Headquarter Asset integrity job remains blocked by missing local modules.
 
 ## Phase 2 — Programmatic Governance Engine
 
