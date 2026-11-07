@@ -5,6 +5,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
 import { registerOpportunityRoutes } from './opportunities/routes.ts'
+import { registerProductRoutes } from './products/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
@@ -61,5 +62,6 @@ export async function createApp(options: CreateAppOptions = {}) {
 
   setupDatabase(app, databasePool)
   registerOpportunityRoutes(app, databasePool, options.env)
+  registerProductRoutes(app, databasePool, options.env)
   return app
 }
