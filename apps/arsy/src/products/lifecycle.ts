@@ -6,9 +6,9 @@ const allowedTransitions: Record<ProductLifecycleState, readonly ProductLifecycl
   brief: ['production', 'retired'],
   production: ['review', 'retired'],
   review: ['production', 'retired'],
-  // READY is derived exclusively from the latest passing inspection set.
-  // Operators may return it to production for rework, or retire it.
-  ready: ['production', 'retired'],
+  // READY is derived from inspections; asset/version mutations perform rework resets.
+  // Operators may retire a ready product, but cannot manually set it back to production.
+  ready: ['retired'],
   // LISTED is derived exclusively from a verified publication receipt.
   listed: ['retired'],
   retired: [],
