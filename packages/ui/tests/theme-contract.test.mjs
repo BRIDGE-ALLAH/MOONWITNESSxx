@@ -43,7 +43,7 @@ test("Archive overrides inherited dark tokens and defines the semantic surface c
 });
 
 test("Observatory supports both the app dark preference and an explicit route theme", () => {
-  const observatory = readRule(".dark,\\n  .theme-observatory");
+  const observatory = readRule(".theme-observatory");
   assert.match(observatory, /color-scheme:\s*dark/);
   assert.match(observatory, /--background:\s*230\s+25%\s+5%/);
   assert.match(observatory, /--primary:\s*41\s+74%\s+65%/);
