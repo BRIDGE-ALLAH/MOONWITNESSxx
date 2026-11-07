@@ -49,7 +49,7 @@ function validateRecords(records: readonly SourceLineageRecord[]): Map<string, S
     if (typeof record.lineageComplete !== "boolean") throw new Error("lineageComplete must be an explicit boolean for: " + record.sourceRef);
     if (record.familyId !== undefined && typeof record.familyId !== "string") throw new Error("familyId must be a string when present: " + record.sourceRef);
     if (byRef.has(record.sourceRef)) throw new Error("Duplicate source lineage record: " + record.sourceRef);
-    if (!Array.isArray(record.parentSourceRefs) || record.parentSourceRefs.some((ref: unknown) => typeof ref !== "string" || !ref.trim() || ref !== ref.trim())) throw new Error("Invalid parent source references for: " + record.sourceRef);
+    if (!Array.isArray(record.parentSourceRefs) || record.parentSourceRefs.some((ref: string) => !ref.trim() || ref !== ref.trim())) throw new Error("Invalid parent source references for: " + record.sourceRef);
     byRef.set(record.sourceRef, record);
   }
   return byRef;
