@@ -856,9 +856,9 @@ Use these labels consistently when updating this file:
 - [ ] Run clean pnpm install and refresh/check lockfile.
 - [ ] Run TypeScript checks and ESLint for all three packages.
 - [ ] Add and execute contract tests and minimal consumer fixture.
-- [ ] Implement and integration-test PostgreSQL Business Database adapter.
-- [ ] Implement and integration-test SQLite System Database adapter.
-- [ ] Complete ARSY Core integration and persistence lifecycle wiring.
+- [~] Implement PostgreSQL Business Database adapter and ARSY bootstrap integration; PostgreSQL container tests and production verification remain.
+- [~] Implement SQLite System Database adapter and ARSY bootstrap integration; file-backed restart/WAL tests remain.
+- [x] Complete ARSY Core integration and provider lifecycle wiring through explicit System/Business adapters.
 - [ ] Add CI evidence; no phase completion claim until the full gate passes.
 
 ### Phase 3 initial implementation
@@ -971,3 +971,12 @@ See docs/32-phase-7-schema-reconciler.md. This is an initial policy-enforced rec
 - [ ] Integrate adapters into ARSY System Mode and Business persistence routing.
 
 See docs/33-phase-8-database-adapters.md. Adapter code is authored but must not be treated as production-ready until the CI and provider integration gates pass.
+
+
+### Phase 8 ARSY provider integration follow-up
+
+- [x] Bootstrap SQLite System Database before PostgreSQL Business Database.
+- [x] Replace the legacy direct pg Pool in apps/arsy with the two concrete adapter packages.
+- [x] Add separate system/business database health routes.
+- [x] Close Business Database and System Database through Fastify onClose in reverse dependency order.
+- [ ] Run adapter packages, ARSY boot/shutdown and PostgreSQL container tests in CI.
