@@ -105,6 +105,9 @@ function assertContext(context: EnvironmentContext): void {
   if (!context.locale.trim() || !context.timeZone.trim() || !context.traceId.trim()) {
     throw new TypeError("Environment requires locale, timeZone and traceId.");
   }
+  if (context.companyId !== undefined && !context.companyId.trim()) {
+    throw new TypeError("Environment companyId cannot be empty.");
+  }
   if (context.companyId && !context.allowedCompanyIds?.includes(context.companyId)) {
     throw new TypeError("Environment company is outside the allowed-company scope.");
   }
@@ -116,8 +119,8 @@ function assertContext(context: EnvironmentContext): void {
 export function createEnvironment(options: EnvironmentOptions): Environment {
   const context = freezeContext({
     principal: options.principal,
-    ...(options.tenantId ? { tenantId: options.tenantId } : {}),
-    ...(options.companyId ? { companyId: options.companyId } : {}),
+    ...(options.tenantId !== undefined ? { tenantId: options.tenantId } : {}),
+    ...(options.companyId !== undefined ? { companyId: options.companyId } : {}),
     allowedCompanyIds: options.allowedCompanyIds ?? [],
     locale: options.locale,
     timeZone: options.timeZone,
@@ -146,6 +149,9 @@ export function createEnvironment(options: EnvironmentOptions): Environment {
   const derive = (changes: EnvironmentDerivation = {}): Environment => {
     if (changes.principal !== undefined || changes.tenantId !== undefined || changes.allowedCompanyIds !== undefined) {
       throw new TypeError("Principal, tenant and allowed-company scope cannot be escalated through environment derivation.");
+    }
+    if (changes.companyId !== undefined && !changes.companyId.trim()) {
+      throw new TypeError("Derived companyId cannot be empty.");
     }
     const companyId = changes.companyId ?? context.companyId;
     if (companyId && !context.allowedCompanyIds?.includes(companyId)) {
