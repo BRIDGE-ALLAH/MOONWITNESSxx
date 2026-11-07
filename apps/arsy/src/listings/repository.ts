@@ -178,7 +178,7 @@ export class ListingRepository {
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
         SELECT $7, $1, 'listing', changed.id, 'manual-publication-receipt-recorded', $5,
-          jsonb_build_object('providerReference', $3, 'evidenceUrl', $6, 'publishedAt', $4)
+          jsonb_build_object('providerReference', $3::text, 'evidenceUrl', $6::text, 'publishedAt', $4)
         FROM changed
       ), product_audited AS (
         INSERT INTO arsy_commerce_audit_events
