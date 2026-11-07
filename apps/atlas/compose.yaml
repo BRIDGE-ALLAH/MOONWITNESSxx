@@ -10,6 +10,7 @@ services:
     volumes:
       - atlas_mariadb_data:/var/lib/mysql
       - ./docker/mariadb/init/20-radius-db.sh:/docker-entrypoint-initdb.d/20-radius-db.sh:ro
+      - ./docker/freeradius/mysql/schema.sql:/docker-entrypoint-initdb.d/21-radius-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", 'mariadb-admin ping -h 127.0.0.1 -u root -p"$${MARIADB_ROOT_PASSWORD}" --silent']
       interval: 10s
@@ -54,10 +55,17 @@ services:
     restart: unless-stopped
 
   freeradius:
-    image: freeradius/freeradius-server:3.2.10
+    build:
+      context: .
+      dockerfile: docker/freeradius/Dockerfile
+    environment:
+      RADIUS_DB_PASSWORD: ${RADIUS_DB_PASSWORD:?Set RADIUS_DB_PASSWORD in the environment}
     ports:
       - "${RADIUS_BIND_ADDRESS:-127.0.0.1}:${RADIUS_AUTH_PORT:-1812}:1812/udp"
       - "${RADIUS_BIND_ADDRESS:-127.0.0.1}:${RADIUS_ACCT_PORT:-1813}:1813/udp"
+    depends_on:
+      mariadb:
+        condition: service_healthy
     restart: unless-stopped
 
   atlas:
@@ -71,6 +79,7 @@ services:
       ATLAS_PUBLIC_URL: ${ATLAS_PUBLIC_URL:-http://localhost:5150}
       DATABASE_URL: mysql://atlas:${ATLAS_DB_PASSWORD}@mariadb:3306/atlas
       REDIS_URL: redis://:${ATLAS_REDIS_PASSWORD}@redis:6379/0
+      ATLAS_CONTROL_TOKEN: ${ATLAS_CONTROL_TOKEN:?Set ATLAS_CONTROL_TOKEN in the environment}
       DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-10}
     ports:
       - "127.0.0.1:${ATLAS_PORT:-5150}:5150"

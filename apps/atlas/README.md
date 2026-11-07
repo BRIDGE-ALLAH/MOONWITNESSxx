@@ -42,16 +42,16 @@ FreeRADIUS is the RADIUS data-plane engine. ATLAS will own NAS inventory, subscr
 
 FreeRADIUS is launched by the development Compose stack using the upstream freeradius/freeradius-server:3.2.10 image. The upstream image's default configuration has no production NAS clients or subscriber database. It must be configured with explicit clients, secure shared secrets, certificates, and an authentication/accounting backend before being exposed to network devices. The Compose port bindings default to loopback for safety.
 
-On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user. The initialization script runs only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. The upstream FreeRADIUS image is not yet wired to this SQL backend; the ATLAS/FreeRADIUS adapter and accounting schema are still follow-up work. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
+On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user, then imports the upstream FreeRADIUS 3.2.10 MySQL schema. The initialization scripts run only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. NAS clients are read at FreeRADIUS startup; adding or changing a NAS row currently requires a FreeRADIUS reload/restart. Subscriber records can be inserted into `radcheck` and group/policy replies into `radreply` / `radusergroup`; a dedicated ATLAS subscriber/NAS CRUD API is still pending. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
 
 ## Run with Docker Compose
 
-From apps/atlas, copy .env.example to .env, replace all placeholder passwords with long URL-safe values, then run:
+From apps/atlas, copy .env.example to .env, replace all placeholder passwords and the control token with long random values, then run:
 
     cp .env.example .env
     docker compose up --build -d
 
-The dashboard is bound to 127.0.0.1:5150 by default. MariaDB and Redis are internal-only. VictoriaMetrics and VictoriaLogs are exposed on loopback at ports 8428 and 9428. FreeRADIUS UDP ports 1812 and 1813 are also loopback-bound by default.
+The dashboard is bound to 127.0.0.1:5150 by default. Set `ATLAS_CONTROL_TOKEN` to at least 32 random characters; engine-management endpoints require it as a Bearer token. MariaDB and Redis are internal-only. VictoriaMetrics and VictoriaLogs are exposed on loopback at ports 8428 and 9428. FreeRADIUS UDP ports 1812 and 1813 are also loopback-bound by default.
 
 Do not change RADIUS_BIND_ADDRESS to a public or LAN interface until you have installed a production clients.conf, replaced test certificates, configured real NAS clients with unique strong secrets, configured firewall rules, and set up an authentication/accounting backend.
 
@@ -117,7 +117,8 @@ The initial migration creates the engine registry table; the next migration adds
 - Live HTTP health probes for PowerDNS Authoritative, VictoriaMetrics, and VictoriaLogs; unsupported native protocols are reported as unsupported rather than falsely healthy.
 - MariaDB connectivity probe with bounded connection pool configuration.
 - Required Redis connectivity probe; readiness fails when Redis is unavailable.
-- Compose services for MariaDB, Redis, VictoriaMetrics, VictoriaLogs, and FreeRADIUS.
+- Compose services for MariaDB, Redis, VictoriaMetrics, VictoriaLogs, and a derived FreeRADIUS image wired to a dedicated SQL database.
+- FreeRADIUS SQL authentication/accounting schema and SQL module activation in default and inner-tunnel virtual servers.
 - Initial engine registry schema migration.
 - Dedicated Rust CI workflow.
 
