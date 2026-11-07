@@ -29,7 +29,7 @@
 - [x] Add archive ruled-paper pattern.
 - [x] Add observation desk and evidence constellation illustrations.
 - [x] Register new assets with static TypeScript declarations and provenance.
-- [x] Add dedicated logo SVG safety, external-reference, and viewBox/registry-dimension tests.
+- [x] Add SVG safety, external-reference, and viewBox/registry-dimension tests across the complete registered asset library.
 - [ ] Add optimized raster artwork only where a real use case requires it.
 
 ## Phase 4 — Typography
