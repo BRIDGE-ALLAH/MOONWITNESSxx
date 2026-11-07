@@ -208,3 +208,18 @@ test('applies the documented research-more and park score bands', () => {
   assert.equal(park.score, 52)
   assert.equal(park.decision, 'park')
 })
+
+test('evidence sources reject non-web and credential-bearing URLs', () => {
+  for (const sourceUrl of [
+    'javascript:alert(1)',
+    'data:text/html,<script>alert(1)</script>',
+    'file:///etc/passwd',
+    'https://user:password@example.com/policy',
+  ]) {
+    const parsed = opportunityInputSchema.safeParse({
+      ...validOpportunity,
+      evidence: [{ ...evidence, sourceUrl }],
+    })
+    assert.equal(parsed.success, false, sourceUrl)
+  }
+})
