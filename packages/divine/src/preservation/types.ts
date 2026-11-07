@@ -1,0 +1,6 @@
+export type PreservationDecisionKind="promote"|"reject"|"correct"|"supersede"|"restrict"|"release";
+export interface PreservationInput {readonly id:string;readonly schemaVersion:string;readonly corpusReleaseId:string;readonly corpusContentHash:string;readonly ontologyVersions:Readonly<Record<string,string>>;readonly methodVersions:Readonly<Record<string,string>>;readonly artifactRefs:readonly string[];readonly rightsProfileRefs:readonly string[];readonly createdAt:string;readonly payload:Readonly<Record<string,unknown>>}
+export interface PreservationManifest extends PreservationInput {readonly algorithm:"SHA-256";readonly contentHash:string}
+export interface PreservationDecision {readonly id:string;readonly kind:PreservationDecisionKind;readonly targetRef:string;readonly actorRef:string;readonly rationale:string;readonly recordedAt:string;readonly previousHash?:string;readonly entryHash:string}
+export interface RightsCheck {readonly allowed:boolean;readonly action:"read"|"display"|"export"|"ai-process";readonly reason:string;readonly rightsProfileRefs:readonly string[]}
+export interface IntegrityReport {readonly valid:boolean;readonly expectedHash:string;readonly actualHash:string;readonly errors:readonly string[]}
