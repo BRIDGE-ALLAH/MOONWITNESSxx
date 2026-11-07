@@ -76,9 +76,9 @@ test('production session configuration requires HTTPS', () => {
   }), null)
 })
 
-test('operator password comparison and same-origin validation', () => {
-  assert.equal(operatorPasswordMatches('correct horse', 'correct horse'), true)
-  assert.equal(operatorPasswordMatches('incorrect', 'correct horse'), false)
+test('operator password comparison and same-origin validation', async () => {
+  assert.equal(await operatorPasswordMatches('correct horse', 'correct horse'), true)
+  assert.equal(await operatorPasswordMatches('incorrect', 'correct horse'), false)
   const request = new Request('https://hq.example/api/opportunities', {
     method: 'POST',
     headers: { origin: 'https://hq.example' },
