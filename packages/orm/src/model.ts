@@ -1,4 +1,4 @@
-import type { FieldMap, ModelKind } from "./index.js";
+import type { FieldMap, ModelConstructor, ModelKind } from "./index.js";
 
 export interface ModelDeclaration {
   readonly modelName: string;
@@ -8,17 +8,6 @@ export interface ModelDeclaration {
   readonly description?: string;
   readonly extends?: readonly string[];
   readonly mixins?: readonly string[];
-}
-
-export interface ModelConstructor<T extends ModelDeclaration = ModelDeclaration> {
-  new (...args: never[]): Model;
-  readonly modelName: T["modelName"];
-  readonly module: T["module"];
-  readonly kind?: T["kind"];
-  readonly fields: T["fields"];
-  readonly description?: T["description"];
-  readonly extends?: T["extends"];
-  readonly mixins?: T["mixins"];
 }
 
 /** Base class for programmatic, static model declarations. Never instantiate it to discover metadata. */
