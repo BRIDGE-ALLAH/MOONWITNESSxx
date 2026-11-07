@@ -1,4 +1,4 @@
--- Apply through deployment/System Mode. Never auto-run schema mutations on app startup.
+-- Apply through the explicit ARSY migration command. Never auto-run schema mutations on app startup.
 CREATE TABLE IF NOT EXISTS arsy_opportunities (
   id uuid PRIMARY KEY,
   owner_id text NOT NULL,
@@ -23,10 +23,13 @@ CREATE TABLE IF NOT EXISTS arsy_opportunities (
   created_by text NOT NULL,
   updated_by text NOT NULL
 );
+
 CREATE INDEX IF NOT EXISTS arsy_opportunities_owner_updated_idx
-  ON arsy_opportunities (owner_id, updated_at DESC) WHERE archived_at IS NULL;
+  ON arsy_opportunities (owner_id, updated_at DESC)
+  WHERE archived_at IS NULL;
 CREATE INDEX IF NOT EXISTS arsy_opportunities_decision_idx
-  ON arsy_opportunities (owner_id, decision) WHERE archived_at IS NULL;
+  ON arsy_opportunities (owner_id, decision)
+  WHERE archived_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS arsy_products (
   id uuid PRIMARY KEY,
@@ -40,10 +43,12 @@ CREATE TABLE IF NOT EXISTS arsy_products (
   created_by text NOT NULL,
   updated_by text NOT NULL
 );
+
 CREATE INDEX IF NOT EXISTS arsy_products_owner_updated_idx
   ON arsy_products (owner_id, updated_at DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS arsy_products_opportunity_unique_idx
-  ON arsy_products (opportunity_id) WHERE opportunity_id IS NOT NULL;
+  ON arsy_products (opportunity_id)
+  WHERE opportunity_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS arsy_product_versions (
   id uuid PRIMARY KEY,
@@ -125,7 +130,7 @@ CREATE TABLE IF NOT EXISTS arsy_financial_events (
   source text NOT NULL,
   provider_reference text,
   idempotency_key text NOT NULL,
-  request_hash text NOT NULL CHECK (request_hash ~ '^[a-f0-9]{64}$'),
+  request_hash char(64) NOT NULL CHECK (request_hash ~ '^[a-f0-9]{64}$'),
   reconciliation_state text NOT NULL CHECK (reconciliation_state IN ('pending', 'verified', 'disputed', 'reversed')),
   fx_rate numeric(24,12),
   fx_source text,
@@ -134,6 +139,7 @@ CREATE TABLE IF NOT EXISTS arsy_financial_events (
   created_by text NOT NULL,
   UNIQUE (owner_id, idempotency_key)
 );
+
 CREATE INDEX IF NOT EXISTS arsy_financial_events_owner_occurred_idx
   ON arsy_financial_events (owner_id, occurred_at DESC);
 CREATE INDEX IF NOT EXISTS arsy_financial_events_product_idx
@@ -165,110 +171,7 @@ CREATE TABLE IF NOT EXISTS arsy_commerce_audit_events (
   occurred_at timestamptz NOT NULL DEFAULT now(),
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb
 );
-CREATE INDEX IF NOT EXISTS arsy_commerce_audit_aggregate_idx
-  ON arsy_commerce_audit_events (owner_id, aggregate_type, aggregate_id, occurred_at DESC);
 
-CREATE TABLE IF NOT EXISTS arsy_commerce_idempotency (
-  owner_id text NOT NULL,
-  idempotency_key text NOT NULL,
-  request_hash char(64) NOT NULL,
-  response_status integer NOT NULL,
-  response_body jsonb NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (owner_id, idempotency_key)
-);
-),
-  reconciliation_state text NOT NULL CHECK (reconciliation_state IN ('pending', 'verified', 'disputed', 'reversed')),
-  fx_rate numeric(24,12),
-  fx_source text,
-  fx_observed_at timestamptz,
-  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
-  created_by text NOT NULL,
-  UNIQUE (owner_id, idempotency_key)
-);
-CREATE INDEX IF NOT EXISTS arsy_financial_events_owner_occurred_idx
-  ON arsy_financial_events (owner_id, occurred_at DESC);
-CREATE INDEX IF NOT EXISTS arsy_financial_events_product_idx
-  ON arsy_financial_events (product_id, occurred_at DESC);
-
-CREATE TABLE IF NOT EXISTS arsy_payouts (
-  id uuid PRIMARY KEY,
-  owner_id text NOT NULL,
-  channel_id uuid REFERENCES arsy_channels(id),
-  amount_minor bigint NOT NULL CHECK (amount_minor >= 0),
-  currency char(3) NOT NULL,
-  status text NOT NULL CHECK (status IN ('pending', 'paid', 'failed', 'reversed', 'disputed')),
-  provider_reference text,
-  expected_at timestamptz,
-  paid_at timestamptz,
-  source_evidence jsonb NOT NULL DEFAULT '{}'::jsonb,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  created_by text NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS arsy_commerce_audit_events (
-  id uuid PRIMARY KEY,
-  owner_id text NOT NULL,
-  aggregate_type text NOT NULL,
-  aggregate_id uuid NOT NULL,
-  action text NOT NULL,
-  actor_id text NOT NULL,
-  request_id text,
-  occurred_at timestamptz NOT NULL DEFAULT now(),
-  metadata jsonb NOT NULL DEFAULT '{}'::jsonb
-);
-CREATE INDEX IF NOT EXISTS arsy_commerce_audit_aggregate_idx
-  ON arsy_commerce_audit_events (owner_id, aggregate_type, aggregate_id, occurred_at DESC);
-
-CREATE TABLE IF NOT EXISTS arsy_commerce_idempotency (
-  owner_id text NOT NULL,
-  idempotency_key text NOT NULL,
-  request_hash char(64) NOT NULL,
-  response_status integer NOT NULL,
-  response_body jsonb NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (owner_id, idempotency_key)
-);
-),
-  reconciliation_state text NOT NULL CHECK (reconciliation_state IN ('pending', 'verified', 'disputed', 'reversed')),
-  fx_rate numeric(24,12),
-  fx_source text,
-  fx_observed_at timestamptz,
-  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
-  created_by text NOT NULL,
-  UNIQUE (owner_id, idempotency_key)
-);
-CREATE INDEX IF NOT EXISTS arsy_financial_events_owner_occurred_idx
-  ON arsy_financial_events (owner_id, occurred_at DESC);
-CREATE INDEX IF NOT EXISTS arsy_financial_events_product_idx
-  ON arsy_financial_events (product_id, occurred_at DESC);
-
-CREATE TABLE IF NOT EXISTS arsy_payouts (
-  id uuid PRIMARY KEY,
-  owner_id text NOT NULL,
-  channel_id uuid REFERENCES arsy_channels(id),
-  amount_minor bigint NOT NULL CHECK (amount_minor >= 0),
-  currency char(3) NOT NULL,
-  status text NOT NULL CHECK (status IN ('pending', 'paid', 'failed', 'reversed', 'disputed')),
-  provider_reference text,
-  expected_at timestamptz,
-  paid_at timestamptz,
-  source_evidence jsonb NOT NULL DEFAULT '{}'::jsonb,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  created_by text NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS arsy_commerce_audit_events (
-  id uuid PRIMARY KEY,
-  owner_id text NOT NULL,
-  aggregate_type text NOT NULL,
-  aggregate_id uuid NOT NULL,
-  action text NOT NULL,
-  actor_id text NOT NULL,
-  request_id text,
-  occurred_at timestamptz NOT NULL DEFAULT now(),
-  metadata jsonb NOT NULL DEFAULT '{}'::jsonb
-);
 CREATE INDEX IF NOT EXISTS arsy_commerce_audit_aggregate_idx
   ON arsy_commerce_audit_events (owner_id, aggregate_type, aggregate_id, occurred_at DESC);
 
