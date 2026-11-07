@@ -367,7 +367,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await page.goto(`${baseUrl}/the-forge`, { waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'THE FORGE' }).waitFor()
     await page.waitForLoadState('networkidle')
-    const signOutButton = page.getByRole('button', { name: /sign out/i })
+    const signOutButton = page.getByTestId('operator-sign-out')
     await signOutButton.waitFor({ state: 'visible' })
     await signOutButton.click()
     await page.waitForURL((url) => url.pathname === '/login', { timeout: 15_000 })
