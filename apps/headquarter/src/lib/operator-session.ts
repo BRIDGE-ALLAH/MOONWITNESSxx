@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
+import { createHmac, scryptSync, timingSafeEqual } from 'node:crypto'
 
 export const OPERATOR_SESSION_COOKIE = 'mw_operator_session'
 const SESSION_TTL_SECONDS = 8 * 60 * 60
@@ -92,8 +92,10 @@ export function requestHasTrustedOrigin(request: Request, publicOrigin: string):
   }
 }
 
-export function operatorPasswordMatches(supplied: string, expected: string): boolean {
-  const actualDigest = createHash('sha256').update(supplied).digest()
-  const expectedDigest = createHash('sha256').update(expected).digest()
+export function operatorPasswordMatches(supplied: string, expected: string, secret: string): boolean {
+  const salt = createHmac('sha256', secret).update('moonwitness-operator-password:v1').digest()
+  const options = { N: 16_384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }
+  const actualDigest = scryptSync(supplied, salt, 32, options)
+  const expectedDigest = scryptSync(expected, salt, 32, options)
   return timingSafeEqual(actualDigest, expectedDigest)
 }
