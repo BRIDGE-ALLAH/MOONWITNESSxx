@@ -86,9 +86,7 @@ export class EvidenceLedger {
     if (!input.id.trim() || !input.aggregateId.trim() || !input.actorId.trim()) {
       throw new Error('id, aggregateId and actorId are required')
     }
-    const occurredAt = new Date(input.occurredAt)
-    if (Number.isNaN(occurredAt.getTime())) throw new Error('occurredAt must be a valid date')
-    const normalizedOccurredAt = occurredAt.toISOString()
+    if (Number.isNaN(Date.parse(input.occurredAt))) throw new Error('occurredAt must be a valid date')
 
     const previousLock = this.locks.get(input.aggregateId) ?? Promise.resolve()
     let release!: () => void
@@ -100,6 +98,7 @@ export class EvidenceLedger {
     try {
       const history = await this.store.list(input.aggregateId)
       const normalizedEvidenceIds = [...new Set(input.evidenceIds ?? [])]
+      const normalizedOccurredAt = new Date(input.occurredAt).toISOString()
       const existing = history.find((item) => item.id === input.id)
       if (existing) {
         const sameInput =
