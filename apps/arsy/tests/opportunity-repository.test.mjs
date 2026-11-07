@@ -166,3 +166,20 @@ test('checks product promotion before allowing an opportunity revision', async (
   assert.equal(await repository.hasProduct('owner-a', row.id), true)
   assert.match(fake.calls[0].sql, /WHERE owner_id = \$1 AND opportunity_id = \$2/)
 })
+
+ 
+test('decision changes advance the optimistic concurrency version', async () => {
+  const decidedRow = {
+    ...row,
+    decision: 'research-more',
+    decision_rationale: 'The evidence requires one more source before promotion.',
+    version: 2,
+  }
+  const fake = createDatabase([[decidedRow]])
+  const repository = new OpportunityRepository(fake.db)
+  const result = await repository.decide('owner-a', 'owner-a', row.id, 'research-more', 'The evidence requires one more source before promotion.')
+
+  assert.equal(result?.version, 2)
+  assert.match(fake.calls[0].sql, /version = version \+ 1/)
+  assert.deepEqual(fake.calls[0].values.slice(0, 2), ['owner-a', row.id])
+})
