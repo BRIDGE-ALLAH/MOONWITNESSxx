@@ -244,6 +244,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     )
     assert.equal(published?.status, 'published')
     assert.equal(published?.providerReference, 'provider-listing-fixture-001')
+    assert.equal((await products.get(ownerId, product.id))?.lifecycleState, 'listed')
 
 
     const assetStorage = new LocalAssetStorage(assetStorageDir)
@@ -369,6 +370,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
       'inspection-recorded',
       'manual-listing-package-created',
       'manual-publication-receipt-recorded',
+      'listed',
       'uploaded',
       'archived',
     ]) {
