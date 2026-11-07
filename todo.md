@@ -987,3 +987,60 @@ Use these labels consistently when updating this file:
 - [ ] Add signed lease and policy integration only if a real trust boundary requires it.
 
 **Exit gate:** stale or expired context fails verification before an agent proceeds; a lease is never treated as an authorization credential.
+
+## Phase 27 — Objective Delta Watchdog
+**Status:** [x] Deterministic objective-gap fingerprinting and repeated-gap watchdog implemented; automatic pause/replan adapter and calibrated benchmark remain.
+- [x] Normalize and fingerprint unresolved tests, missing criteria and blockers independent of ordering.
+- [x] Detect repeated consecutive gap fingerprints despite changing activity text.
+- [x] Emit a conservative pause-and-replan recommendation after a configurable threshold.
+- [ ] Connect verified test-runner output and acceptance-criterion IDs to observations.
+- [ ] Calibrate false-loop and missed-loop rates before automatic cancellation.
+**Exit gate:** repeated observed gaps only; no process termination without an explicit runtime adapter.
+
+## Phase 28 — Interface Treaty
+**Status:** [x] Treaty validation and static provider/consumer breaking-change forecast implemented; commit-time enforcement and schema-diff adapters remain.
+- [x] Declare owner, provided/consumed interfaces, breaking changes and expiry.
+- [x] Reject malformed, expired and duplicate declarations.
+- [x] Detect duplicate providers and breaking changes consumed by another agent.
+- [ ] Derive declarations from TypeScript exports, OpenAPI, GraphQL and migration plans.
+- [ ] Revalidate treaty fingerprints at commit/merge boundaries and require consumer acknowledgement.
+**Exit gate:** static conflicts block the advisory integration check; declarations are not claimed complete or automatically inferred.
+
+## Phase 29 — Runtime Resource Passport
+**Status:** [x] Resource passport generation and static port/database/queue/volume/environment collision forecast implemented; runtime provisioning/isolation remains.
+- [x] Validate agent IDs, resource identifiers and host port range.
+- [x] Generate deterministic per-agent namespaced identifiers for non-port resources.
+- [x] Detect duplicate host ports and shared resource identifiers before launch.
+- [ ] Add Docker Compose, ephemeral database, service discovery and secret-injection adapters.
+- [ ] Add runtime reservation/release with leases, crash cleanup and cross-host coordination.
+- [ ] Benchmark startup latency and isolation leakage against worktree-only and VM-per-agent baselines.
+**Exit gate:** advisory until a runtime adapter reserves and enforces each resource; no claim of actual database, volume, secret or network isolation.
+
+
+## Phase 30 — Objective-Gap Control Plane
+**Status:** [x] Evidence-gated objective aggregation and prioritized next-action frontier implemented; external evidence authentication and live agent routing remain.
+- [x] Model objectives and acceptance criteria separately from activity logs.
+- [x] Require latest verified, timestamp-valid evidence for criterion completion.
+- [x] Emit deterministic gap fingerprints, owners and next actions.
+- [ ] Bind observations to signed CI/test receipts and independent reviewer identities.
+- [ ] Connect the frontier to an agent scheduler with bounded retries and explicit stop conditions.
+**Exit gate:** no criterion is marked complete from agent prose or activity alone.
+
+## Phase 31 — Interface Escrow
+**Status:** [x] Breaking-interface escrow and exact-fingerprint consumer acknowledgements implemented; automatic schema diffing and merge hooks remain.
+- [x] Compute a contract fingerprint over the declared breaking interface set and consumer treaties.
+- [x] Require every declared impacted consumer to acknowledge the exact fingerprint before readiness.
+- [x] Reject unknown consumers, stale fingerprints, duplicate acknowledgements and expired escrows.
+- [ ] Derive interface changes from TypeScript/OpenAPI/GraphQL/SQL migration diffs.
+- [ ] Bind acknowledgements to authenticated GitHub identities and branch-protection checks.
+**Exit gate:** changed contracts remain blocked until every declared consumer acknowledges the same contract snapshot.
+
+## Phase 32 — Proof-Carrying Merge Queue
+**Status:** [x] Fail-closed merge evidence packet validator and deterministic digest implemented; GitHub check authentication and merge queue adapter remain.
+- [x] Recompute objective readiness, interface escrow and declared resource collisions from packet inputs.
+- [x] Require four named quality gates, evidence hashes and a verified rollback plan.
+- [x] Emit a deterministic SHA-256 packet digest and explicit blockers.
+- [ ] Verify CI run IDs/check suites against GitHub API and bind them to the exact commit SHA.
+- [ ] Sign packets with an organization-managed key and persist immutable release receipts.
+- [ ] Integrate GitHub merge queue only after review, branch-protection and provenance policy are verified.
+**Exit gate:** local packet readiness is advisory until external checks, identity, signatures and repository merge policy are authenticated.
