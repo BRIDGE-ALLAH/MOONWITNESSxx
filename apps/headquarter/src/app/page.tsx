@@ -33,8 +33,8 @@ export default function Home() {
           className="mt-12"
           eyebrow="A living creative commerce engine"
           index="MW / 001"
-          state="live"
-          statusLabel="Observatory online"
+          state="idle"
+          statusLabel="Prototype / demo environment"
           title={<>SEE MORE.<span className="text-riot-orange"> KNOW MORE.</span></>}
           description="When the moon rises, we share messages. Discover what is emerging, understand what it means, and make work that outlives the feed."
           actions={
