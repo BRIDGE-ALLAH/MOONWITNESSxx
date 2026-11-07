@@ -1,0 +1,13 @@
+{
+  "name": "@riotworks/contract",
+  "version": "0.0.0",
+  "private": true,
+  "description": "RIOTWORKS API contract definitions — ZOD schemas shared across packages",
+  "private": true,
+  "scripts": {
+    "generate": "echo 'Generate ZOD types manually if needed'"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}
