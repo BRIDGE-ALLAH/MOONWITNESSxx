@@ -73,7 +73,7 @@ The services directory exists in Git but is not included by the root pnpm-worksp
 
 ### 3.4 Missing target packages
 
-The following architecture packages are documented but do not exist in the audited tree:
+At the original audit baseline, the following architecture packages were documented but did not exist in the audited tree:
 - packages/orm
 - packages/orm-db
 - packages/orm-db-adaptor
@@ -398,3 +398,18 @@ The following changes have been committed to the Phase 0 working branch:
 - `apps/arsy` now owns its own Fastify CLI `build` and `start` commands. Its scripts no longer delegate app build/start to the ARSY Core package.
 - `packages/arsy-core` no longer declares server `dev`/`start`/`build` scripts; it is a reusable library boundary, not a second deployable HTTP server.
 - The app/core runtime integration remains open: the current ARSY app source still constructs Fastify directly, and the Core package's dependency/type/build contract still needs a dedicated implementation pass.
+
+
+## 13. Phase 1 package-contract follow-up — 2026-11-07
+
+The Phase 1 branch `chore/phase-1-package-contracts` adds the first source entrypoints for:
+
+- `packages/orm` — public TypeScript model/field/relation, manifest, registry snapshot, domain AST, error, Environment and Recordset contracts.
+- `packages/orm-db-adaptor` — provider-neutral adapter SPI, capability negotiation, transaction/query/schema introspection contracts.
+- `packages/orm-db` — UnitOfWork, schema planning/reconciliation, receipt/store and semantic upgrade contracts.
+
+These are contract surfaces only. They do not yet implement the field engine, model declaration factories, deterministic registry composer/fingerprint, concrete PostgreSQL/SQLite drivers, transaction orchestration, schema diff/reconciliation, durable schema ledger or BaseEntity addon.
+
+The package identity contract now encodes SQLite as the System Database and PostgreSQL as the Business Database. The SQLite adapter target is named `packages/orm-db-adaptor-sqlite`; concrete driver packages are intentionally not created as empty placeholders.
+
+Phase 1 remains open. No local pnpm install, lockfile regeneration, typecheck, lint, tests, build or CI workflow result has been recorded for these new packages. See `docs/25-phase-1-package-contracts.md` and the Phase 1 execution log in `todo.md` for exact scope and remaining verification gates.
