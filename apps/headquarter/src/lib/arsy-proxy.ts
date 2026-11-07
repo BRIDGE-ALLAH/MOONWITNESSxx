@@ -4,7 +4,7 @@ import {
   readOperatorSessionCookie,
   requestHasTrustedOrigin,
   verifyOperatorSession,
-} from './operator-session'
+} from './operator-session.ts'
 
 export async function proxyArsyRequest(
   request: Request,
