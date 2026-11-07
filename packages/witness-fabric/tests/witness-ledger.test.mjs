@@ -87,3 +87,13 @@ test("caller mutation cannot silently alter an appended event", async () => {
   assert.equal(ledger.replay().claims["claim:moon-water"].statement, "Original statement");
   assert.equal((await ledger.verify()).valid, true);
 });
+
+test("nested event payloads are immutable and event snapshots are defensive", async () => {
+  const ledger = new WitnessLedger();
+  const appended = await ledger.append(base({ payload: { statement: "Stable", meta: { page: 2 } } }));
+  assert.throws(() => { appended.payload.meta.page = 99; }, TypeError);
+  const exposed = ledger.events();
+  exposed[0].payload.meta.page = 88;
+  assert.equal(ledger.replay().claims["claim:moon-water"].statement, "Stable");
+  assert.equal((await ledger.verify()).valid, true);
+});

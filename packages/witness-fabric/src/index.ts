@@ -40,7 +40,7 @@ export interface WitnessSnapshot {
 
 const GENESIS = "0".repeat(64);
 const canonical = (value: unknown): string => {
-  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
   if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
   const obj = value as Record<string, unknown>;
   return "{" + Object.keys(obj).sort().map((key) => JSON.stringify(key) + ":" + canonical(obj[key])).join(",") + "}";
@@ -51,12 +51,12 @@ const digest = async (value: unknown): Promise<string> => {
   return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
-function validateInput(input: WitnessEventInput): void {
+function deepFreeze<T>(value: T): T {\n  if (value && typeof value === "object" && !Object.isFrozen(value)) {\n    Object.freeze(value);\n    for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child);\n  }\n  return value;\n}\n\nfunction validateInput(input: WitnessEventInput): void {
   for (const [name, value] of Object.entries({ id: input.id, actor: input.actor, subject: input.subject })) {
     if (!value.trim()) throw new Error(name + " must not be empty");
   }
   if (!Number.isFinite(Date.parse(input.occurredAt))) throw new Error("occurredAt must be a valid ISO date");
-  if (!input.payload || typeof input.payload !== "object" || Array.isArray(input.payload)) throw new Error("payload must be an object");
+  if (!input.payload || typeof input.payload !== "object" || Array.isArray(input.payload)) throw new Error("payload must be an object");\n  try { canonical(input.payload); } catch { throw new Error("payload must contain JSON-compatible data"); }
   if (input.evidenceRefs?.some((ref) => !ref.trim())) throw new Error("evidenceRefs must not contain empty references");
   if (input.type === "claim.proposed" && typeof input.payload.statement !== "string") throw new Error("claim.proposed requires payload.statement");
   if (input.type === "action.proposed" && typeof input.payload.tool !== "string") throw new Error("action.proposed requires payload.tool");\n  if (input.type === "policy.evaluated" && !["allowed", "denied"].includes(String(input.payload.decision))) throw new Error("policy.evaluated requires allowed or denied decision");\n  if (input.type === "claim.assessed") {
@@ -67,10 +67,10 @@ function validateInput(input: WitnessEventInput): void {
 }
 
 export class WitnessLedger {
-  readonly #events: WitnessEvent[] = [];\n  readonly #ids = new Set<string>();\n  #appendQueue: Promise<void> = Promise.resolve();\n\n  append(input: WitnessEventInput): Promise<WitnessEvent> {\n    const operation = this.#appendQueue.then(async () => {\n      validateInput(input);\n      if (this.#ids.has(input.id)) throw new Error("duplicate event id: " + input.id);\n      const safePayload = structuredClone(input.payload);\n      const body = { ...input, payload: safePayload, evidenceRefs: [...(input.evidenceRefs ?? [])], sequence: this.#events.length + 1, previousHash: this.#events.at(-1)?.hash ?? GENESIS };\n      const event: WitnessEvent = Object.freeze({ ...body, hash: await digest(body) });\n      this.#events.push(event);\n      this.#ids.add(input.id);\n      return event;\n    });\n    this.#appendQueue = operation.then(() => undefined, () => undefined);\n    return operation;\n  }
+  readonly #events: WitnessEvent[] = [];\n  readonly #ids = new Set<string>();\n  #appendQueue: Promise<void> = Promise.resolve();\n\n  append(input: WitnessEventInput): Promise<WitnessEvent> {\n    const operation = this.#appendQueue.then(async () => {\n      validateInput(input);\n      if (this.#ids.has(input.id)) throw new Error("duplicate event id: " + input.id);\n      const safePayload = deepFreeze(structuredClone(input.payload));\n      const body = { ...input, payload: safePayload, evidenceRefs: [...(input.evidenceRefs ?? [])], sequence: this.#events.length + 1, previousHash: this.#events.at(-1)?.hash ?? GENESIS };\n      const event: WitnessEvent = Object.freeze({ ...body, hash: await digest(body) });\n      this.#events.push(event);\n      this.#ids.add(input.id);\n      return event;\n    });\n    this.#appendQueue = operation.then(() => undefined, () => undefined);\n    return operation;\n  }
 
   events(): readonly WitnessEvent[] {
-    return this.#events.map((event) => Object.freeze({ ...event, payload: Object.freeze({ ...event.payload }), evidenceRefs: Object.freeze([...event.evidenceRefs]) })) as readonly WitnessEvent[];
+    return this.#events.map((event) => Object.freeze({ ...event, payload: deepFreeze(structuredClone(event.payload)), evidenceRefs: Object.freeze([...event.evidenceRefs]) })) as readonly WitnessEvent[];
   }
 
   async verify(): Promise<{ valid: boolean; checked: number; headHash: string; errors: string[] }> {
