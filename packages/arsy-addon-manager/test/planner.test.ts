@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { AddonInstallPlanner, evaluateCapabilities, type AddonCandidate, type CapabilityPolicy } from "../src/index.ts";
 
+const runtimeVersions = { arsy: "1.2.0", orm: "1.1.0" };
 const policy: CapabilityPolicy = {
   allowed: ["models.register", "database.business.write", "events.publish"],
   approvalRequired: ["database.business.write"],
@@ -26,14 +27,14 @@ test("unknown capabilities are denied and high-risk grants require approval", ()
   assert.equal(decision.denied[0]?.capability, "unknown.root");
 });
 test("creates deterministic installation plan and records required approvals", () => {
-  const planner = new AddonInstallPlanner({ capabilityPolicy: policy, now: () => new Date("2026-01-01T00:00:00.000Z") });
+  const planner = new AddonInstallPlanner({ capabilityPolicy: policy, runtimeVersions, now: () => new Date("2026-01-01T00:00:00.000Z") });
   const plan = planner.plan([candidate()]);
   assert.equal(plan.operations[0]?.addon, "crm");
   assert.deepEqual(plan.requiredApprovals, ["database.business.write"]);
   assert.equal(plan.id.length, 64);
 });
 test("quarantines invalid signature and unsafe entrypoint candidates", () => {
-  const planner = new AddonInstallPlanner({ capabilityPolicy: policy });
+  const planner = new AddonInstallPlanner({ capabilityPolicy: policy, runtimeVersions });
   const value = candidate();
   const invalid = { ...value, manifest: { ...value.manifest, entrypoint: "../outside.js" }, trust: { ...value.trust, signatureVerified: false } };
   const plan = planner.plan([invalid]);
@@ -66,4 +67,16 @@ test("orders addon dependencies before dependents and rejects addon cycles", () 
   const cyclic = planner.plan([a, b]);
   assert.equal(cyclic.operations.length, 0);
   assert.ok(cyclic.blocked.some((item) => /cycle/i.test(item.reason)));
+});
+
+test("blocks addons whose declared runtime compatibility does not match the installed runtime", () => {
+  const planner = new AddonInstallPlanner({ capabilityPolicy: policy, runtimeVersions });
+  const value = candidate();
+  const incompatible = {
+    ...value,
+    manifest: { ...value.manifest, compatibility: { arsy: "^2.0.0", orm: "^1.0.0" } },
+  };
+  const plan = planner.plan([incompatible]);
+  assert.equal(plan.operations.length, 0);
+  assert.match(plan.blocked[0]?.reason ?? "", /ARSY runtime version is incompatible/);
 });
