@@ -8,7 +8,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "20 19 * * 1"
+    - cron: '20 19 * * 1'
 
 concurrency:
   group: codeql-${{ github.workflow }}-${{ github.ref }}
