@@ -33,7 +33,7 @@ export default function UiLabPage() {
           statusLabel="Workbench demo"
           title="See the signal. Shape what follows."
           description="A living interface for teams that turn emerging signals into work with consequence. Cinematic at first glance. Precise under pressure."
-          actions={<Button variant="electric">Explore the system</Button>}
+          actions={<Button asChild variant="electric"><a href="#signal-constellation">Explore the system</a></Button>}
         />
         <div className="mt-8 flex flex-wrap items-center gap-6 border-t border-border/60 pt-5">
           <RiotLiveIndicator state="idle" label="Illustrative state" />
