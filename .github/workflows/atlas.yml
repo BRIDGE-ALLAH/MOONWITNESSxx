@@ -55,3 +55,13 @@ jobs:
 
       - name: Build release binary
         run: cargo build --locked --release
+
+      - name: Validate Docker Compose
+        env:
+          ATLAS_DB_PASSWORD: ci-atlas-db-password
+          ATLAS_DB_ROOT_PASSWORD: ci-root-password
+          ATLAS_REDIS_PASSWORD: ci-redis-password
+        run: docker compose config --quiet
+
+      - name: Build ATLAS container
+        run: docker build --tag atlas:ci .
