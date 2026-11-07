@@ -76,7 +76,7 @@
   - [ ] Interaction: focus, hover, pressed, selected, disabled.
   - [ ] Status: success, warning, danger, info, neutral, blocked.
 - [ ] **P0** Implement and verify Observatory and Archive.
-  - [ ] Check every semantic token in both themes.
+  - [x] Check all 27 required semantic token definitions in both themes with the source-level contract tests (merged PR #131); rendered contrast remains open.
   - [ ] Check contrast for text, borders, controls, and status indicators.
   - [ ] Ensure theme switching does not cause layout or hydration issues in supported consumers.
 - [ ] **P1** Define spacing scale based on the documented 4px unit.
@@ -137,6 +137,7 @@
 
 - [ ] **P0** Define conventions for component names, props, variants, sizes, slots, and ref forwarding.
 - [ ] **P0** Fix type/ref mismatches in existing components, including CardTitle heading ref typing.
+  - [x] Align CardTitle's forwarded ref with its rendered `<h3>` heading (`HTMLHeadingElement`); merged in PR #104.
 - [ ] **P0** Ensure every interactive control has a meaningful accessible name.
 - [ ] **P0** Ensure focus-visible styling is consistent and never removed without replacement.
 - [ ] **P0** Define controlled and uncontrolled behavior consistently where applicable.
