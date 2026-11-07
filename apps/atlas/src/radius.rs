@@ -167,6 +167,26 @@ pub async fn get_nas(id: i64) -> Result<Option<Nas>, sqlx::Error> {
     .await
 }
 
+pub async fn update_nas(
+    id: i64,
+    input: &NasWriteRequest,
+) -> Result<Option<Nas>, sqlx::Error> {
+    if get_nas(id).await?.is_none() {
+        return Ok(None);
+    }
+    sqlx::query("UPDATE nas SET nasname = ?, shortname = ?, `type` = ?, ports = ?, secret = ?, description = ? WHERE id = ?")
+        .bind(input.nasname.trim())
+        .bind(input.shortname.as_deref())
+        .bind(input.nas_type.trim())
+        .bind(input.ports)
+        .bind(&input.secret)
+        .bind(input.description.as_deref())
+        .bind(id)
+        .execute(radius_db::pool().await?)
+        .await?;
+    get_nas(id).await
+}
+
 pub async fn delete_nas(id: i64) -> Result<bool, sqlx::Error> {
     let result = sqlx::query("DELETE FROM nas WHERE id = ?")
         .bind(id)
@@ -278,4 +298,33 @@ pub async fn accounting_summary() -> Result<AccountingSummary, sqlx::Error> {
         input_octets,
         output_octets,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_weak_nas_secrets_and_invalid_addresses() {
+        let input = NasWriteRequest {
+            nasname: "not-an-ip".to_string(),
+            shortname: Some("router".to_string()),
+            nas_type: "other".to_string(),
+            ports: None,
+            secret: "weak".to_string(),
+            description: None,
+        };
+        assert!(validate_nas(&input).is_err());
+    }
+
+    #[test]
+    fn validates_bcrypt_and_nt_hash_credential_modes() {
+        let bcrypt = derive_credential("correct horse battery staple", "bcrypt").unwrap();
+        assert_eq!(bcrypt.0, "Crypt-Password");
+        assert!(!bcrypt.1.contains("correct horse"));
+
+        let nt_hash = derive_credential("password", "nt_hash").unwrap();
+        assert_eq!(nt_hash.0, "NT-Password");
+        assert_eq!(nt_hash.1, "0x8846f7eaee8fb117ad06bdd830b7586c");
+    }
 }
