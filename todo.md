@@ -953,3 +953,21 @@ See docs/31-phase-6-schema-planner.md. Planning is implemented as an initial sou
 - [ ] Implement real PostgreSQL and SQLite adapters and end-to-end DDL safety tests.
 
 See docs/32-phase-7-schema-reconciler.md. This is an initial policy-enforced reconciler; real driver and durable system-store integrations remain open.
+
+
+## Phase 8 execution log — Concrete database adapters
+
+- [x] Add PostgreSQL adapter package using pg Pool/PoolClient.
+- [x] Add SQLite System Database adapter package using better-sqlite3.
+- [x] Enforce PostgreSQL/Business and SQLite/System identity pairing.
+- [x] Implement connection, ping, parameterized query, transaction and schema introspection surfaces.
+- [x] Implement idempotent create-table/add-column/create-index DDL with validation and transactional execution.
+- [x] Reject automatic destructive/unsupported DDL for semantic upgrade handling.
+- [x] Add SQLite in-memory integration test source and PostgreSQL connection/identity test source.
+- [x] Allow the reviewed better-sqlite3 native build.
+- [ ] Verify lockfile, native build, typecheck, lint and adapter tests in CI.
+- [ ] Add PostgreSQL disposable-server integration tests.
+- [ ] Add SQLite file-backed WAL/restart/busy-timeout tests.
+- [ ] Integrate adapters into ARSY System Mode and Business persistence routing.
+
+See docs/33-phase-8-database-adapters.md. Adapter code is authored but must not be treated as production-ready until the CI and provider integration gates pass.
