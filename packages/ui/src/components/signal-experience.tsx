@@ -21,7 +21,7 @@ export interface RiotSignalLink {
   label?: string
 }
 
-export interface RiotSignalConstellationProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface RiotSignalConstellationProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   nodes: RiotSignalNode[]
   links?: RiotSignalLink[]
   selectedId?: string
