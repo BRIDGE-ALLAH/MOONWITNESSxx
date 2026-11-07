@@ -10,7 +10,7 @@ MOONWITNESS is an evidence-first, agent-governed workspace and product-engineeri
 - `apps/arsy` — Fastify HTTP API and orchestration runtime.
 - `packages/*` — shared UI, contracts, assets, ARSY core, evidence and research capabilities.
 - `services/*` — legacy prototypes, intentionally excluded from the pnpm workspace.
-- `docs/` and `todo.md` — architecture decisions, research and implementation status.\n- [Money Maker runtime setup](./docs/29-money-maker-runtime-setup.md) and [asset storage / inspection contract](./docs/30-money-maker-asset-storage-and-inspection.md) — current commerce runtime boundary.
+- `docs/` and `todo.md` — architecture decisions, research and implementation status.\n- [Money Maker runtime setup](./docs/29-money-maker-runtime-setup.md) and [asset storage / inspection contract](./docs/30-money-maker-asset-storage-and-inspection.md) and [channel registry / manual listing contract](./docs/31-money-maker-channel-registry-and-listings.md) — current commerce runtime boundary.
 - `.agents/skills/`, `AGENTS.md`, and `GOAL.txt` — Codex engineering workflow pack included in this repository.
 
 ## Development workflow pack
