@@ -55,7 +55,7 @@ export default function SignalRoom() {
             READ THE SIGNAL
           </h1>
           <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">
-            RIOTWORKS Market Intelligence
+            MOONWITNESS Research Intelligence
           </p>
         </header>
 

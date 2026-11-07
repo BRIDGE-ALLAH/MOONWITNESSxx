@@ -41,7 +41,7 @@
 - [x] Replace RIOTWORKS master-brand lockup in Headquarter shell and metadata.
 - [x] Add Core Promise and Brand Manifesto to Headquarter landing experience.
 - [x] Map primary UI colors and typography to MoonWitness design tokens.
-- [ ] Review all product screens for residual RIOTWORKS visual identity.
+- [x] Review Headquarter product screens and replace visible RIOTWORKS product branding with MOONWITNESS identity.
 - [ ] Create dedicated Observatory and Archive theme mappings.
 - [ ] Run visual regression and accessibility review.
 
