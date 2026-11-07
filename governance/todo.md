@@ -52,7 +52,8 @@
 - [x] Verify CI triggers on `chore/governance-phase-0-1` (push run observed).
 - [x] Verify repository integrity job reaches all steps and passes. **Evidence:** [run `42397034583`](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42397034583).
 - [x] Verify CodeQL succeeds on the branch (`42395737398`).
-- [ ] Verify Dependabot alerts/update automation remain enabled and healthy.
+- [x] Verify weekly Dependabot version-update configuration in `.github/dependabot.yml` and recent successful update runs (e.g. `42396389060`).
+- [ ] Verify Dependabot security alerts are enabled; the current integration cannot read this repository security setting.
 - [ ] Administrator applies main ruleset/required checks. **Evidence:** ruleset readback + test PR.
 
 ### P0.5 Acceptance
