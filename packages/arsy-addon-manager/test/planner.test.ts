@@ -51,3 +51,19 @@ test("rejects module dependency cycles", () => {
   assert.equal(plan.operations.length, 0);
   assert.match(plan.blocked[0]?.reason ?? "", /cycle/i);
 });
+
+test("orders addon dependencies before dependents and rejects addon cycles", () => {
+  const planner = new AddonInstallPlanner({ capabilityPolicy: policy });
+  const base = candidate("base");
+  const child = {
+    ...candidate("child"),
+    manifest: { ...candidate("child").manifest, dependencies: [{ addon: "base", version: "^1.0.0" }] },
+  };
+  const ordered = planner.plan([child, base]);
+  assert.deepEqual(ordered.operations.map((item) => item.addon), ["base", "child"]);
+  const a = { ...candidate("a"), manifest: { ...candidate("a").manifest, dependencies: [{ addon: "b", version: "^1.0.0" }] } };
+  const b = { ...candidate("b"), manifest: { ...candidate("b").manifest, dependencies: [{ addon: "a", version: "^1.0.0" }] } };
+  const cyclic = planner.plan([a, b]);
+  assert.equal(cyclic.operations.length, 0);
+  assert.ok(cyclic.blocked.some((item) => /cycle/i.test(item.reason)));
+});
