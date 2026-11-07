@@ -11,7 +11,7 @@ export function OperatorLoginForm() {
     event.preventDefault()
     setLoading(true); setError('')
     try {
-      const response = await fetch('/api/session', {
+      const response = await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ password }),
