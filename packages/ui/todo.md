@@ -358,7 +358,7 @@ Still open:
 - Contrast checks for all border, focus, overlay, disabled, selected, and interactive states.
 - Shadow/elevation contract.
 - Production font hosting/licensing and original asset policy.
-- Primitive/component work starts in Milestone 3.
+- Core primitives and operational composites were delivered in Milestones 3 and 4; advanced controls and interaction QA remain open.
 
 ### Known repository follow-ups (not blockers for Milestone 1)
 
