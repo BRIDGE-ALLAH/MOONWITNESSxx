@@ -37,7 +37,7 @@ function makeUrl(path: string): string {
   return `${base}/${normalizedPath}`
 }
 
-async function wait(ms: number, signal?: AbortSignal): Promise<void> {
+async function wait(ms: number, signal?: AbortSignal | null): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const cleanup = () => signal?.removeEventListener('abort', abort)
     const timer = setTimeout(() => {
