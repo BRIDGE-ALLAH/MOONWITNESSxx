@@ -149,7 +149,8 @@ export default function UiLabPage() {
           ]}
         />
       </section>
-\n      <footer className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+
+      <footer className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         <span>MOONWITNESS // SEE MORE. KNOW MORE.</span>
         <span>Design lab · Demo content only</span>
       </footer>
