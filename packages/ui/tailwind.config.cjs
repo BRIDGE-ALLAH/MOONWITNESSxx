@@ -15,6 +15,22 @@ module.exports = {
         'electric-blue': '#40D9FF',
         'riot-pink': '#F047A4',
         'muted-ink': '#777A76',
+        success: { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' },
+        warning: { DEFAULT: 'hsl(var(--warning))', foreground: 'hsl(var(--warning-foreground))' },
+        danger: { DEFAULT: 'hsl(var(--danger))', foreground: 'hsl(var(--danger-foreground))' },
+        info: { DEFAULT: 'hsl(var(--info))', foreground: 'hsl(var(--info-foreground))' },
+        neutral: { DEFAULT: 'hsl(var(--neutral))', foreground: 'hsl(var(--neutral-foreground))' },
+        surface: {
+          canvas: 'hsl(var(--surface-canvas))',
+          elevated: 'hsl(var(--surface-elevated))',
+          panel: 'hsl(var(--surface-panel))',
+          secondary: 'hsl(var(--surface-secondary))',
+          inset: 'hsl(var(--surface-inset))',
+          overlay: 'hsl(var(--surface-overlay))',
+        },
+        'border-strong': 'hsl(var(--border-strong))',
+        'border-subtle': 'hsl(var(--border-subtle))',
+        focus: 'hsl(var(--focus))',
         // shadcn/ui CSS variable tokens
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -49,6 +65,14 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+      },
+      transitionDuration: {
+        fast: 'var(--motion-duration-fast)',
+        standard: 'var(--motion-duration-standard)',
+        slow: 'var(--motion-duration-slow)',
+      },
+      transitionTimingFunction: {
+        riot: 'var(--motion-easing-standard)',
       },
       borderRadius: {
         lg: 'var(--radius)',
