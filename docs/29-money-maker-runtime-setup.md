@@ -10,7 +10,8 @@ This document describes the current persisted opportunity, product-brief, and fi
 - Headquarter operator login uses an eight-hour signed, HttpOnly, SameSite=Strict session cookie.
 - Operator session configuration fails closed when the password, 32+ character signing secret, or exact public origin is missing.
 - Every ARSY `/api/v1/*` business route requires both an explicit operator ID and the server-side operator token; the Fastify rate-limit plugin applies a default 120 requests/minute per route/IP, with stricter health-route limits.
-- Headquarter rejects the fifth failed operator login within a 15-minute process-local window. This is defense in depth, not a distributed limiter; production ingress must add a shared rate limit before multi-replica deployment.
+- Headquarter checks and records failed login attempts through an authenticated ARSY endpoint backed by PostgreSQL. Account-wide and network-hash buckets are shared across instances; the fifth failure in a 15-minute window blocks further attempts. If ARSY or PostgreSQL is unavailable, login fails closed.
+- In production, `HEADQUARTER_TRUSTED_PROXY_HOPS=1` is required. The single trusted ingress must overwrite `X-Forwarded-For` with one canonical client IP and direct access to Headquarter must be blocked. The application ignores forwarded IP headers in local/test mode and rejects missing, malformed, or multi-value headers in production.
 - Database migrations are explicit deployment/System Mode operations. Application startup never mutates schema.
 
 ## Required server environment
@@ -32,7 +33,7 @@ This document describes the current persisted opportunity, product-brief, and fi
 | `ARSY_OPERATOR_ID` | Yes | Must exactly match the ARSY owner ID and is signed into the browser session |
 | `HEADQUARTER_OPERATOR_PASSWORD` | Yes | Unique operator login password of at least 16 characters |
 | `HEADQUARTER_SESSION_SECRET` | Yes | Random secret of at least 32 bytes for signing sessions |
-| `HEADQUARTER_PUBLIC_ORIGIN` | Yes | Exact browser origin, e.g. `https://hq.example.com`, without a path |
+| `HEADQUARTER_PUBLIC_ORIGIN` | Yes | Exact browser origin, e.g. `https://hq.example.com`, without a path |\n| `HEADQUARTER_TRUSTED_PROXY_HOPS` | Yes in production (`1`) | Trust exactly one ingress that overwrites `X-Forwarded-For`; direct app access must be blocked. Leave unset/`0` for local development. |
 
 Generate independent random values for the operator token and session secret. Store them in the deployment secret manager. Do not commit real values to the repository, shell history, screenshots, or logs.
 
@@ -71,11 +72,11 @@ Implemented in the current development branch (implementation presence is not eq
 - evidence-backed opportunity input validation, weighted scoring, hard-gate precedence, and missing-dimension preservation;
 - owner-scoped opportunity create/list/read/decision/archive API with owner-scoped idempotent create and operator-facing decision/archive actions;
 - server-side Headquarter signed sessions, same-origin mutation checks, and server-only ARSY service credentials;
-- eligible opportunity → version-1 product brief creation, product list/detail API, and acceptance criteria;
+- eligible opportunity → version-1 product brief creation, product list/detail API, and acceptance criteria;\n- backend-validated product lifecycle transitions with owner/expected-state checks and atomic audit events;\n- immutable product version creation with expected-version concurrency, owner-scoped version history, and a Headquarter brief/version editor;
 - financial event ingestion with idempotency, event listing, currency-grouped verified summaries, and evidence-backed reconciliation;
 - audit events for opportunity, product, and financial operations;
-- explicit PostgreSQL migrations limited to implemented opportunity/product/version/financial-event/audit tables, checksum runner, and isolated integration-test coverage for migration reruns, opportunity/product/finance lifecycle, idempotency, reconciliation, audit events and persistence after reconnect;
-- Playwright browser E2E coverage configured for login → opportunity capture/decision → product brief → financial event/reconciliation → Aftershock metrics → archive → logout. The current-head workflow result is pending.
+- explicit PostgreSQL migrations for opportunity/product/version/financial-event/audit/login-attempt tables, checksum runner, and isolated integration-test coverage for migration reruns, opportunity/product/finance lifecycle, version history, idempotency, reconciliation, shared login throttling, audit events and persistence after reconnect;
+- PostgreSQL-backed shared login-attempt throttling across ARSY instances, with account/network buckets and fail-closed Headquarter integration; production requires a trusted ingress that overwrites the canonical client-IP header;\n- Playwright browser E2E coverage configured for login → opportunity capture/review/edit → product brief → lifecycle → immutable version history → financial event/reconciliation → Aftershock metrics → archive → logout. The current-head workflow result is pending.
 
 Not yet implemented or verified:
 - generic opportunity editing and operator-facing detail/evidence-history UI; decision and archive actions are implemented. Product detail UI and version editing beyond version 1 remain incomplete;

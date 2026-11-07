@@ -48,23 +48,23 @@ export function registerLoginAttemptRoutes(app: FastifyInstance, db: DatabasePoo
       `WITH keys AS (
         SELECT unnest($2::text[]) AS bucket_key
       ), upserted AS (
-        INSERT INTO arsy_login_attempt_buckets AS current
+        INSERT INTO arsy_login_attempt_buckets AS existing_bucket
           (owner_id, bucket_key, window_started_at, failure_count, blocked_until, updated_at)
         SELECT $1, keys.bucket_key, now(), 1, NULL, now()
         FROM keys
         ON CONFLICT (owner_id, bucket_key) DO UPDATE SET
           window_started_at = CASE
-            WHEN current.window_started_at <= now() - interval '15 minutes' THEN now()
-            ELSE current.window_started_at
+            WHEN existing_bucket.window_started_at <= now() - interval '15 minutes' THEN now()
+            ELSE existing_bucket.window_started_at
           END,
           failure_count = CASE
-            WHEN current.window_started_at <= now() - interval '15 minutes' THEN 1
-            ELSE current.failure_count + 1
+            WHEN existing_bucket.window_started_at <= now() - interval '15 minutes' THEN 1
+            ELSE existing_bucket.failure_count + 1
           END,
           blocked_until = CASE
             WHEN (CASE
-              WHEN current.window_started_at <= now() - interval '15 minutes' THEN 1
-              ELSE current.failure_count + 1
+              WHEN existing_bucket.window_started_at <= now() - interval '15 minutes' THEN 1
+              ELSE existing_bucket.failure_count + 1
             END) >= 5 THEN now() + interval '15 minutes'
             ELSE NULL
           END,
