@@ -50,4 +50,4 @@
 - [ ] Owner approval of logo and brand DNA.
 - [ ] Declare asset licensing policy at repository root.
 - [ ] Publish usage guidelines and migration checklist.
-- [ ] Validate all assets, run package tests/type-check, and verify production builds.
+- [x] Validate all registered assets, run package tests/type-check, and verify production builds in [PR #159 Repository CI](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42420420648) (Asset Integrity and full-workspace typecheck/build passed on PR head).
