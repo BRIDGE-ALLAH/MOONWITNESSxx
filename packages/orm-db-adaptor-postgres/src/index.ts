@@ -76,6 +76,9 @@ class PostgresTransaction implements DatabaseTransaction {
     this.#assertActive();
     try {
       await this.client.query("COMMIT");
+    } catch (error) {
+      await this.client.query("ROLLBACK").catch(() => undefined);
+      throw error;
     } finally {
       this.#active = false;
       this.client.release();
