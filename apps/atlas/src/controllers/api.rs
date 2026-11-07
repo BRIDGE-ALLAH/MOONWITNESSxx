@@ -1,19 +1,24 @@
-use axum::{Json, http::StatusCode};
+use axum::{http::StatusCode, Json};
 use loco_rs::prelude::*;
 use serde::Serialize;
 
-use crate::database::{self, DatabaseStatus};
+use crate::{
+    cache::{self, CacheStatus},
+    database::{self, DatabaseStatus},
+};
 
 #[derive(Debug, Serialize)]
 struct HealthResponse {
     status: &'static str,
     database: DatabaseStatus,
+    redis: CacheStatus,
 }
 
 #[derive(Debug, Serialize)]
 struct ReadinessResponse {
     ready: bool,
     database: DatabaseStatus,
+    redis: CacheStatus,
 }
 
 #[derive(Debug, Serialize)]
@@ -36,23 +41,31 @@ struct EngineCatalogResponse {
 }
 
 async fn health() -> Json<HealthResponse> {
-    let database = database::probe().await;
+    let (database, redis) = tokio::join!(database::probe(), cache::probe());
     Json(HealthResponse {
         status: "ok",
         database,
+        redis,
     })
 }
 
 async fn readiness() -> (StatusCode, Json<ReadinessResponse>) {
-    let database = database::probe().await;
-    let ready = database == DatabaseStatus::Available;
+    let (database, redis) = tokio::join!(database::probe(), cache::probe());
+    let ready = database == DatabaseStatus::Available && redis == CacheStatus::Available;
     let status = if ready {
         StatusCode::OK
     } else {
         StatusCode::SERVICE_UNAVAILABLE
     };
 
-    (status, Json(ReadinessResponse { ready, database }))
+    (
+        status,
+        Json(ReadinessResponse {
+            ready,
+            database,
+            redis,
+        }),
+    )
 }
 
 async fn version() -> Json<VersionResponse> {
@@ -84,13 +97,18 @@ async fn engine_catalog() -> Json<EngineCatalogResponse> {
                 adapter_status: "not_implemented",
             },
             EngineDescriptor {
+                engine: "freeradius",
+                role: "radius_authentication_accounting",
+                adapter_status: "external_engine_not_connected",
+            },
+            EngineDescriptor {
                 engine: "victoriametrics",
                 role: "metrics_storage",
                 adapter_status: "not_implemented",
             },
             EngineDescriptor {
-                engine: "clickhouse",
-                role: "log_analytics_storage",
+                engine: "victorialogs",
+                role: "log_storage_and_search",
                 adapter_status: "not_implemented",
             },
         ],

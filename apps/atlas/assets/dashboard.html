@@ -35,9 +35,9 @@
     <span class="eyebrow">MOONWITNESS / CONTROL PLANE</span>
   </header>
   <main>
-    <div class="eyebrow">DNS & Observability</div>
+    <div class="eyebrow">DNS · RADIUS · Observability</div>
     <h1>Operational command layer.</h1>
-    <p class="intro">ATLAS manages DNS and observability infrastructure. Protocol serving, telemetry ingestion, metrics storage, and log analytics remain in dedicated external engines.</p>
+    <p class="intro">ATLAS manages DNS, RADIUS, and observability infrastructure. Protocol serving, telemetry ingestion, metrics storage, and log analytics remain in dedicated external engines.</p>
     <section class="grid" aria-label="System status">
       <article class="panel">
         <h2>Application</h2>
@@ -51,21 +51,32 @@
         <p class="muted">MariaDB · SQLx · Control-plane metadata only</p>
       </article>
       <article class="panel">
+        <h2>Cache and coordination</h2>
+        <div class="value" id="redis-status">Checking</div>
+        <p class="muted">Redis · Required ATLAS dependency</p>
+      </article>
+      <article class="panel">
         <h2>DNS data plane</h2>
         <div class="value">External engines</div>
         <p class="muted">PowerDNS · Unbound · dnsdist</p>
         <span class="status"><span class="dot"></span>Adapters not implemented</span>
       </article>
       <article class="panel">
+        <h2>RADIUS data plane</h2>
+        <div class="value">FreeRADIUS 3.2</div>
+        <p class="muted">Authentication · Authorization · Accounting</p>
+        <span class="status"><span class="dot"></span>Engine deployed; ATLAS adapter pending</span>
+      </article>
+      <article class="panel">
         <h2>Observability data plane</h2>
         <div class="value">External backends</div>
-        <p class="muted">VictoriaMetrics · ClickHouse · Collectors</p>
+        <p class="muted">VictoriaMetrics · VictoriaLogs · Collectors</p>
         <span class="status"><span class="dot"></span>Adapters not implemented</span>
       </article>
     </section>
     <section class="panel" style="margin-top:1rem">
       <h2>Engine adapter catalog</h2>
-      <p class="muted">Catalog entries describe planned integration targets, not live connectivity.</p>
+      <p class="muted">Catalog entries describe integration targets, not verified live connectivity.</p>
       <div class="list" id="engines"><div class="engine">Loading catalog…</div></div>
     </section>
     <footer>SEE MORE. KNOW MORE. · ATLAS reports only verified runtime state; unconfigured integrations are never marked healthy.</footer>
@@ -82,6 +93,7 @@
         text('app-status', 'Running');
         text('version', version.version);
         text('db-status', health.database);
+        text('redis-status', health.redis);
         document.getElementById('engines').replaceChildren(...catalog.items.map(item => {
           const row = document.createElement('div');
           row.className = 'engine';
@@ -96,6 +108,7 @@
       } catch {
         text('app-status', 'API unavailable');
         text('db-status', 'Unknown');
+        text('redis-status', 'Unknown');
       }
     }
     refresh();

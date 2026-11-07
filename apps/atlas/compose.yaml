@@ -15,6 +15,49 @@ services:
       retries: 10
     restart: unless-stopped
 
+  redis:
+    image: redis:7.4-alpine
+    environment:
+      ATLAS_REDIS_PASSWORD: ${ATLAS_REDIS_PASSWORD:?Set ATLAS_REDIS_PASSWORD in the environment}
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$ATLAS_REDIS_PASSWORD\""]
+    volumes:
+      - atlas_redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", 'redis-cli -a "$$ATLAS_REDIS_PASSWORD" ping | grep -q PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.155.0
+    command:
+      - --storageDataPath=/storage
+      - --httpListenAddr=:8428
+    volumes:
+      - atlas_victoriametrics_data:/storage
+    ports:
+      - "127.0.0.1:${VICTORIA_METRICS_PORT:-8428}:8428"
+    restart: unless-stopped
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:v1.53.0
+    command:
+      - --storageDataPath=/victoria-logs-data
+      - --httpListenAddr=:9428
+    volumes:
+      - atlas_victorialogs_data:/victoria-logs-data
+    ports:
+      - "127.0.0.1:${VICTORIA_LOGS_PORT:-9428}:9428"
+    restart: unless-stopped
+
+  freeradius:
+    image: freeradius/freeradius-server:3.2.10
+    ports:
+      - "${RADIUS_BIND_ADDRESS:-127.0.0.1}:${RADIUS_AUTH_PORT:-1812}:1812/udp"
+      - "${RADIUS_BIND_ADDRESS:-127.0.0.1}:${RADIUS_ACCT_PORT:-1813}:1813/udp"
+    restart: unless-stopped
+
   atlas:
     build:
       context: .
@@ -25,14 +68,23 @@ services:
       BINDING: 0.0.0.0
       ATLAS_PUBLIC_URL: ${ATLAS_PUBLIC_URL:-http://localhost:5150}
       DATABASE_URL: mysql://atlas:${ATLAS_DB_PASSWORD}@mariadb:3306/atlas
+      REDIS_URL: redis://:${ATLAS_REDIS_PASSWORD}@redis:6379/0
       DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-10}
     ports:
       - "127.0.0.1:${ATLAS_PORT:-5150}:5150"
     depends_on:
       mariadb:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   atlas_mariadb_data:
+    driver: local
+  atlas_redis_data:
+    driver: local
+  atlas_victoriametrics_data:
+    driver: local
+  atlas_victorialogs_data:
     driver: local
