@@ -57,3 +57,29 @@ The tests are committed but must run in GitHub Actions before the milestone can 
 3. **Reality Drift Radar:** compare successive snapshots and alert when high-impact claims lose support, sources expire, or contradictory evidence appears.
 
 These are hypotheses and proposed experiments, not claims of world-first invention. Prior-art and benchmark evaluation are required before any novelty statement.
+
+
+# WITNESS FABRIC — Next Three Experiments
+
+**Date:** 2026-11-08  
+**Status:** Deterministic library prototypes committed; production integration and UI are not complete.
+
+## Phase 4 — Claim Genome
+Represent competing propositions as separate nodes. Explicit relation edges include `supports`, `contradicts`, `supersedes`, and `derived_from`. Valid-time metadata is retained on claims when supplied. Dangling references fail closed. No automatic LLM contradiction detection is implied.
+
+## Phase 5 — Counterfactual Observatory
+Remove selected evidence references or event IDs, replay the remaining history, and report claim confidence/status deltas. This is evidence sensitivity analysis; it is not a causal effect estimate. An excluded assessment is removed as a whole because the current event schema does not attribute individual confidence contributions to individual sources.
+
+## Phase 6 — Reality Drift Radar
+Compare two snapshots and surface disappeared claims, confidence drops, status regression, and stale claims. The current stale check uses claim last-updated time as a proxy. A future source registry must provide explicit observedAt, validUntil, retrieval status, and source reliability.
+
+## Research synthesis
+The field is active; these ingredients are not individually unprecedented:
+- ICLR 2026 HEDRA studies counterfactual detection and heterogeneous event causality in temporal knowledge graphs.
+- EZ-check (Information Sciences, 25 June 2026) studies explainable zero-shot KG extraction and fact-checking.
+- FreeGuard (2026) includes counterfactual evidence-chain governance.
+- Reddit practitioner discussions repeatedly report stale memory, silent supersession, weak provenance, retrieval of superseded beliefs, and the need to separate relevance from validity.
+- GitHub ecosystem surveys show temporal KG, append-only event history, agent memory, and no-DB/local-first architectures coexisting; Graphiti, Hindsight, OpenViking, Mem0, and GraphRAG are relevant prior art/comparison targets.
+
+## Proposed differentiation (hypothesis, not world-first claim)
+**Evidence Flight Recorder**: a reproducible "why did the system believe/act?" bundle containing an anchored event prefix, claim-genome branch, policy decision, counterfactual sensitivity report, and drift alerts. It could be exported as a portable signed bundle for incident review across agent vendors. Prior-art review, threat modelling, and benchmark comparison are required before novelty claims.

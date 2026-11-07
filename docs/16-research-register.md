@@ -23,3 +23,25 @@
 
 ### Research synthesis and proposed differentiator
 The individual ingredients are established research directions. MOONWITNESS should differentiate through a single operator-facing **Evidence-to-Decision Replay**: one query reconstructs what was observed, which claims were formed, how confidence changed, which policies were checked, who/what acted, and what downstream decision followed. The novelty claim must remain a hypothesis until a prior-art review and measurable evaluation are complete.
+
+
+## 8. WITNESS FABRIC follow-up research (2026-11-08)
+
+### Papers and prior art
+- **Beyond Entity Correlations: Disentangling Event Causal Puzzles in Temporal Knowledge Graphs** (ICLR 2026): https://proceedings.iclr.cc/paper_files/paper/2026/hash/cafcbf5d00a961a05bd5875c17ef0fe7-Abstract-Conference.html — HEDRA explicitly uses counterfactual detection and causal disentanglement. This is prior art for the Counterfactual Observatory; our implementation is deliberately a simpler deterministic evidence-removal sensitivity tool.
+- **EZ-check: Explainable zero-shot knowledge extraction and fact checking using knowledge graphs** (Information Sciences, 25 June 2026): https://doi.org/10.1016/j.ins.2026.123293 — supports graph-grounded claim verification as a relevant research direction.
+- **FreeGuard: Claim level graph reasoning for training free LLM hallucination mitigation** (2026): https://link.springer.com/article/10.1007/s10791-026-10667-z — includes atomic claim graphs, bidirectional evidence verification and counterfactual evidence-chain governance; direct prior art to account for.
+- **Process-aware programming assessment through temporal knowledge graph reasoning and LLM verification** (4 June 2026): https://doi.org/10.1007/s44163-026-01423-9 — temporal process graphs and verification.
+
+### Community observations (anecdotal)
+- Reddit memory architecture discussions report static context injection, no temporal decay, missing provenance, silent contradictions, and indexing latency: https://www.reddit.com/r/AI_Agents/comments/1t5hkdq/we_asked_ai_agents_what_was_broken_about_their/
+- Practitioners describe hybrid episodic + semantic memory and the risk of superseded facts returning from vector search: https://www.reddit.com/r/AI_Agents/comments/1wx6lib/i_tested_3_different_memory_architectures_for/
+- State-integrity discussions recommend invalidating derived claims when their source state is superseded: https://www.reddit.com/r/AI_Agents/comments/1whlop5/i_dont_think_ai_agents_have_a_memory_problem_i/
+
+### GitHub ecosystem scan
+- Agentic knowledge-base survey of 47 repositories: https://github.com/irresi/awesome-agentic-knowledge-base — observed patterns include append-only history, temporal KG (Graphiti), multi-tier memory (Hindsight/MemOS), local-first/no-DB designs and MCP. Survey is secondary and should be independently verified before strategic decisions.
+- Agent-memory trend snapshot: https://github.locker/topics/agent-memory — use star velocity only as a weak adoption signal.
+- Knowledge-graph trend snapshot: https://github.locker/topics/knowledge-graph — Graphify, Understand-Anything, Hindsight and auto-ontology are useful competitors/prior-art references.
+
+### New product hypothesis: Evidence Flight Recorder
+Package an independently verifiable incident bundle: anchored event prefix + claim-genome branch + policy decision + counterfactual sensitivity report + drift alerts. Cross-vendor portability and cryptographically signed provenance may differentiate it, but this is a hypothesis, not a world-first claim. Requires signed checkpoint implementation, interoperability study, adversarial benchmark and legal prior-art review.
