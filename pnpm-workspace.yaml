@@ -4,7 +4,7 @@ packages:
 
 # services/* is intentionally excluded from the workspace.
 # It contains legacy prototypes; do not add it until ownership and runtime boundaries are reconciled.
-allowBuilds:
-  esbuild: true
-  msgpackr-extract: true
-  sharp: true
+onlyBuiltDependencies:
+  - esbuild
+  - msgpackr-extract
+  - sharp
