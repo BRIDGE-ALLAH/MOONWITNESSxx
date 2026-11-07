@@ -24,16 +24,16 @@ Each owner-scoped channel stores:
 - C0/C1 capability and active/paused status;
 - optimistic revision number.
 
-Evidence is append-only and includes type, source name/URL, capture time, optional review time, evidence class, summary, limitations and actor. C1 requires official-policy, account-eligibility, payout-requirements and format-requirements evidence. Policy evidence must be classified as an observed fact for listing readiness; account and payout evidence can remain operator attestations and are explicitly identified as such.
+Evidence is append-only and includes type, source name/URL, capture time, optional review time, evidence class, summary, limitations and actor. C1 requires official-policy, account-eligibility, payout-requirements and format-requirements evidence. For listing readiness, policy, account-eligibility and payout evidence must be classified as observed facts. Operator attestations are retained but do not clear these gates; the operator must capture verifiable source evidence before a package can become ready.
 
 ## Listing readiness gates
 
 A package is ready only when every gate passes:
 1. The selected immutable product version is in review.
 2. The channel is active and C1.
-3. Country/account eligibility is eligible and supported by evidence.
+3. Country/account eligibility is eligible and supported by dated observed evidence.
 4. Official policy evidence matches the registered policy URL and is within its recheck window.
-5. Payout setup is configured and supported by evidence.
+5. Payout setup is configured and supported by dated observed evidence.
 6. The product brief explicitly names the selected channel.
 7. Required buyer/product metadata and acceptance criteria are present and within recorded channel limits.
 8. At least one asset exists for the exact product version.
