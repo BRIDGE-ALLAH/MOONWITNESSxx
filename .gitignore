@@ -10,6 +10,7 @@ reports/
 .env
 .env.*
 !.env.example
+!.env.docker.example
 *.local
 
 # Generated local AI assistance artifacts (never commit these).
