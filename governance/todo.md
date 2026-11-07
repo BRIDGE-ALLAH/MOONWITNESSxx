@@ -152,32 +152,36 @@
 
 **Goal:** safe repeatable developer setup. **Deliverables:** `install.sh`, `install.ps1`, shared Node bootstrap.
 
-- [ ] Define supported OS/architecture and prerequisites.
-- [ ] Define minimal, Headquarter, ARSY, full-dev profiles.
-- [ ] Detect OS, architecture, Node, pnpm, Git, profile-specific Docker/services.
-- [ ] Implement `install`, `doctor`, `repair`, `update`, `verify`, `uninstall`.
-- [ ] Frozen lockfile by default; refresh explicit.
-- [ ] Copy `.env.example` only if `.env` absent; never overwrite secrets.
-- [ ] Install hooks without AI credentials.
-- [ ] Test shell quoting, executable bits, PowerShell, interrupted runs.
-- [ ] Test idempotency (two installs, no unintended diff).
-- [ ] Secret-safe diagnostics and actionable remediation.
-- [ ] Define rollback and generated-file ownership.
-- [ ] Add Linux/macOS/Windows CI smoke tests; document offline/proxy/integrity behavior.
+- [x] Define supported OS/prerequisites: Linux, macOS, Windows; Node.js >=20; exact pnpm pin; Git optional for repository diagnostics. Node architecture is recorded; ARM-specific runner coverage remains open.
+- [x] Define minimal, Headquarter, ARSY, full-dev profiles.
+- [x] Detect Node, pinned pnpm, Git and platform; Docker/Compose diagnostics are handled by the runtime doctor.
+- [x] Implement `install`, `doctor`, `repair`, `update`, `verify`, `uninstall`.
+- [x] Frozen lockfile by default; explicit refresh remains a separate maintainer operation.
+- [x] Copy `.env.example` only if `.env` is absent; never overwrite secrets.
+- [ ] Install hooks without AI credentials; hooks are intentionally not installed by this first version.
+- [x] Verify POSIX launcher syntax, executable mode 100755, and PowerShell parser; interrupted-run/recovery tests remain open.
+- [ ] Test idempotency with two complete installs and a no-unintended-diff assertion.
+- [x] Secret-safe diagnostics, restrictive generated file permissions where supported, and actionable prerequisite errors.
+- [x] Define generated-file ownership; uninstall removes only `.moonwitness/install-state.json` and preserves user data.
+- [x] Add Linux/macOS/Windows unit and dry-run CI; document frozen/offline behavior. Proxy handling uses the platform's standard environment; proxy-specific CI coverage remains open.
 
-**Acceptance:** idempotent install, read-only doctor, scoped repair, accurate verify, user files/secrets preserved.
+**Acceptance:** read-only doctor, scoped repair, accurate verify, and user files/secrets preserved are implemented. Full two-run install idempotency and interrupted-run tests remain open.
+
+**Status:** implementation is in [developer-installer.md](../docs/developer-installer.md). Cross-platform tests passed on Phase 4–5 commit `9401326636928ce2369e2615a8a0d17f97e2f348` in [run 42399389656](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42399389656). Re-run is pending on the integrated Phase 0–5 branch.
 
 ## Phase 5 — Runtime and deployment lifecycle
 
-- [ ] Define dev/test/staging/production profiles.
-- [ ] Define service readiness and health endpoints.
-- [ ] Define database connectivity and backup verification.
-- [ ] Define migration plan, explicit approval, locking, rollback/forward-fix.
-- [ ] Prevent installer from running production migrations/deletion automatically.
-- [ ] Define graceful startup/shutdown and deployment pre/postflight.
-- [ ] Add recovery runbooks and test DB outage, partial startup, migration failure, interrupted deploy, rollback.
+- [x] Define the supported local development profile; production is explicitly rejected by preflight. Test/staging/production deployment profiles remain unimplemented.
+- [x] Define ARSY liveness/readiness and Compose health checks for PostgreSQL, Redis, ARSY and Headquarter.
+- [x] Check PostgreSQL connectivity through the ARSY readiness probe; backup integrity/restore verification remains open.
+- [ ] Define migration plan, explicit approval, locking, rollback/forward-fix. No migration runner or migration execution is introduced.
+- [x] Prevent installer from running production migrations/deletion automatically; installer does not execute migrations or remove user data.
+- [x] Define graceful ARSY startup/shutdown, database-pool close hook, and Compose preflight/health commands.
+- [ ] Add and test full recovery runbooks for DB outage, partial startup, migration failure, interrupted deploy and rollback. A local-development recovery outline exists; fault-injection/restore tests remain open.
 
-**Acceptance:** observable lifecycle, approved migrations, tested recovery.
+**Acceptance:** observable local lifecycle is implemented. Approved migrations, production deployment controls, and tested recovery are not yet complete.
+
+**Status:** see [runtime lifecycle](../docs/runtime-lifecycle.md), [Phase 4–5 acceptance](../docs/installer-runtime-acceptance.md), and [Operational Twin research](../docs/operational-twin-research.md).
 
 ## Phase 6 — Continuous governance and safe remediation
 
