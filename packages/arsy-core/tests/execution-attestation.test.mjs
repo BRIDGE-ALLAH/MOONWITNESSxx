@@ -31,3 +31,12 @@ test('requires approval before effect and a receipt hash for effect events', () 
   delete missingReceipt[1].payloadHash
   assert.throws(() => createExecutionAttestation(contract, missingReceipt, '2026-11-08T00:00:03Z'), ExecutionProofError)
 })
+
+test('rejects tenant switching and actor substitution in an otherwise valid trace', () => {
+  const tenantSwitch = events.map((event) => ({ ...event }))
+  tenantSwitch[1].tenantId = 'tenant-b'
+  assert.throws(() => createExecutionAttestation(contract, tenantSwitch, '2026-11-08T00:00:03Z'), ExecutionProofError)
+  const actorSwitch = events.map((event) => ({ ...event }))
+  actorSwitch[0].actorId = 'other-agent'
+  assert.throws(() => createExecutionAttestation(contract, actorSwitch, '2026-11-08T00:00:03Z'), ExecutionProofError)
+})
