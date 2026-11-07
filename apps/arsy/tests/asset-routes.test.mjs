@@ -34,10 +34,11 @@ const assetRow = {
 
 test('asset API stores binary, serves it only to the operator, and archives metadata', async () => {
   const storageDir = await mkdtemp(path.join(tmpdir(), 'arsy-asset-route-'))
+  let storedAsset = null
   const pool = {
-    query: async (sql) => {
+    query: async (sql, values = []) => {
       if (sql.includes('INSERT INTO arsy_assets')) {
-        return { rows: [{
+        storedAsset = {
           ...assetRow,
           id: values[0],
           product_version_id: values[2],
@@ -47,10 +48,11 @@ test('asset API stores binary, serves it only to the operator, and archives meta
           checksum_sha256: values[6],
           provenance: JSON.parse(values[7]),
           rights_state: values[8],
-        }] }
+        }
+        return { rows: [storedAsset] }
       }
-      if (sql.includes('UPDATE arsy_assets')) return { rows: [{ id: assetId }] }
-      if (sql.includes('FROM arsy_assets')) return { rows: [assetRow] }
+      if (sql.includes('UPDATE arsy_assets')) return { rows: [{ id: storedAsset?.id ?? assetId }] }
+      if (sql.includes('FROM arsy_assets')) return { rows: storedAsset ? [storedAsset] : [] }
       return { rows: [] }
     },
     end: async () => undefined,
