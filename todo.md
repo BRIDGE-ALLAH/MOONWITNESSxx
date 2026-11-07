@@ -770,3 +770,55 @@ Use these labels consistently when updating this file:
 - `[!]` Blocked (state the blocker and next action).
 
 **Current state:** All tasks in this file are initially unchecked. This backlog does not claim that the ORM, System Mode, adapters, or base addons already exist.
+
+---
+
+## 19. Phase 14 — Living Evidence Graph & Epistemic Memory
+
+**Status:** Research-backed proposal; implementation not yet started.  
+**Goal:** Make every consequential ARSY conclusion reconstructable from the evidence, assumptions, decisions, and system state that existed at the time.
+
+- [ ] Define a versioned Evidence Graph schema: Evidence, Claim, Source, Observation, Belief, Decision, Action, Outcome, Counterevidence, and Supersession edges.
+- [ ] Preserve immutable source observations and content hashes; keep extracted claims separate from raw evidence.
+- [ ] Record bitemporal metadata: valid time (when a fact applies) and transaction time (when the system learned/stored it).
+- [ ] Add provenance links from every claim to exact source spans, tool outputs, actor, timestamp, and ingestion method.
+- [ ] Add belief lifecycle states: candidate, supported, contested, superseded, rejected, and expired; never silently overwrite conflicting beliefs.
+- [ ] Implement contradiction detection and evidence-weighted promotion gates; confidence is a calibrated estimate, not a truth guarantee.
+- [ ] Add decision records containing alternatives, constraints, assumptions, policy version, evidence snapshot, rationale, and approval context.
+- [ ] Implement a query API for “what did ARSY know then?”, “why did it decide?”, “what evidence changed?”, and “which current claims depend on this source?”
+- [ ] Add citation-lock behavior: generated claims may cite only evidence actually retrieved/opened in the current reasoning context.
+- [ ] Add privacy-aware retention, redaction, deletion/tombstone semantics, and cryptographic audit continuity without retaining data that policy requires deleting.
+- [ ] Build benchmark fixtures for stale evidence, source poisoning, contradictory facts, temporal corrections, missing provenance, and retrieval omissions.
+- [ ] Compare against Graphiti, Hindsight, Mem0, PROJECTMEM, and Agent Zero Memory; document capability differences rather than claiming superiority without measurements.
+
+**Exit gate:** A deterministic replay can reconstruct the evidence and belief state at a chosen historical point; every promoted claim has inspectable provenance; conflict and deletion behavior pass automated tests.
+
+## 20. Phase 15 — ARSY Reality Replay & Counterfactual Safety Engine
+
+**Status:** Research-backed proposal; implementation not yet started.  
+**Goal:** Evaluate high-impact actions against a reproducible snapshot before execution, and preserve the relationship between prediction and observed outcome.
+
+- [ ] Define a Replay Capsule: registry fingerprint, policy version, actor/tenant scope, input snapshot, evidence IDs, tool versions, random seeds where controllable, and external dependency declarations.
+- [ ] Capture execution as typed events with causality IDs, parent/child spans, idempotency keys, and deterministic ordering where possible.
+- [ ] Build a replay runner with mockable external boundaries; never repeat irreversible external side effects during replay.
+- [ ] Add counterfactual branches for proposed parameter/policy/action changes and compare expected outcomes against a baseline.
+- [ ] Implement a pre-action risk gate: classify reversibility, blast radius, data sensitivity, policy constraints, evidence freshness, and confidence.
+- [ ] Require human approval for destructive, financial, permission-changing, or externally consequential actions unless a separately approved policy explicitly permits them.
+- [ ] Add invariant assertions before and after execution (tenant isolation, authorization, balance/quantity constraints where applicable, schema compatibility).
+- [ ] Add outcome reconciliation: compare predicted and observed effects, calculate drift, and feed calibrated error signals into future risk estimates.
+- [ ] Add failure injection and recovery tests for timeout, duplicate delivery, partial commit, provider outage, and stale registry.
+- [ ] Expose a human-readable replay report with timeline, evidence, action diffs, policy decisions, side-effect boundaries, and recovery status.
+- [ ] Establish evaluation metrics: replay fidelity, side-effect containment, decision calibration, false-block rate, unsafe-action escape rate, and recovery success.
+- [ ] Prototype with a narrow, reversible workflow before generalizing to all ARSY tools.
+
+**Exit gate:** The same recorded input and controlled dependencies reproduce the same internal decision path within documented tolerances; replay cannot trigger live side effects; high-impact actions are blocked or approval-gated when evidence/policy is insufficient.
+
+## 21. Research and novelty validation gate
+
+- [ ] Maintain a prior-art matrix for each proposed capability, including papers, GitHub projects, standards, patents where relevant, and known limitations.
+- [ ] Distinguish genuinely new algorithms from novel product integration or engineering combinations.
+- [ ] Record source URL, publication/version date, license, benchmark methodology, and implementation status.
+- [ ] Do not use “first in the world”, “never done before”, or equivalent claims without a defensible prior-art search and independent review.
+- [ ] Prefer measurable hypotheses and reproducible prototypes over speculative feature claims.
+- [ ] Re-run the research review before public release because the agent infrastructure ecosystem changes quickly.
+
