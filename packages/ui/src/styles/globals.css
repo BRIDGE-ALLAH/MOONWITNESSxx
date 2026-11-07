@@ -59,6 +59,20 @@
     --radius: 0.25rem;
     --radius-control: 0.25rem;
     --radius-panel: 0.375rem;
+  }
+
+  .density-compact {
+    --density-control-height: 2rem;
+    --density-control-padding-x: 0.5rem;
+    --density-row-height: 2.25rem;
+    --density-stack-gap: 0.5rem;
+  }
+
+  .density-comfortable {
+    --density-control-height: 2.5rem;
+    --density-control-padding-x: 0.75rem;
+    --density-row-height: 2.75rem;
+    --density-stack-gap: 0.75rem;
 
     --font-display: 'Archivo Black', 'Anton', Impact, sans-serif;
     --font-ui: 'Space Grotesk', Inter, sans-serif;
@@ -68,6 +82,22 @@
     --motion-duration-standard: 180ms;
     --motion-duration-slow: 260ms;
     --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+
+    /* Density contract: host applies .density-compact or .density-comfortable. */
+    --density-control-height: 2.5rem;
+    --density-control-padding-x: 0.75rem;
+    --density-row-height: 2.75rem;
+    --density-stack-gap: 0.75rem;
+
+    /* Shared stacking order for overlays and command surfaces. */
+    --z-base: 0;
+    --z-sticky: 10;
+    --z-dropdown: 20;
+    --z-overlay: 30;
+    --z-modal: 40;
+    --z-toast: 50;
+    --z-tooltip: 60;
+    --z-command: 70;
   }
 
   .dark {
