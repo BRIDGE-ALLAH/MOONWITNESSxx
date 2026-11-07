@@ -44,7 +44,7 @@
 - [ ] Petakan import graph dan cari circular dependency.
 - [ ] Verifikasi integrasi `@riotworks/ui`, termasuk exports, styles, Tailwind preset/config, dan transpilation.
 - [ ] Jalankan lint, typecheck, test, dan build; simpan baseline hasil aktual.
-- [ ] Perbaiki script quality gate yang menelan error (contoh pola `|| echo lint-skip)); command gagal harus membuat proses gagal.
+- [ ] Perbaiki script quality gate yang menelan error (contoh pola `|| echo lint-skip`); command gagal harus membuat proses gagal.
 - [ ] Identifikasi konfigurasi yang berbeda atau bertentangan dengan standar monorepo.
 
 ### 0.3 UX dan accessibility baseline
