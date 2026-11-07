@@ -9,9 +9,9 @@ function createFakePool({ fail = false } = {}) {
 
   return {
     pool: {
-      query: async () => {
+      query: async (statement) => {
         if (fail) throw new Error('database unavailable')
-        return { rows: [{ ok: 1 }] }
+        return statement === 'SELECT 1' ? { rows: [{ ok: 1 }] } : { rows: [] }
       },
       end: async () => {
         closeCount += 1
@@ -89,4 +89,37 @@ test('graceful shutdown signal handlers close the Fastify app and database pool 
 
 test('database pool construction fails closed without DATABASE_URL', () => {
   assert.throws(() => createDatabasePool({}), /DATABASE_URL is required/)
+})
+
+test('all versioned commerce APIs fail closed without the operator service token', async () => {
+  const fake = createFakePool()
+  const app = createApp({ databasePool: fake.pool, logger: false, env: {} })
+
+  try {
+    for (const url of ['/api/v1/opportunities', '/api/v1/products', '/api/v1/financial-events']) {
+      const response = await app.inject(url)
+      assert.equal(response.statusCode, 503, `expected auth configuration failure for ${url}`)
+      assert.equal(response.json().error.code, 'OPERATOR_AUTH_NOT_CONFIGURED')
+    }
+  } finally {
+    await app.close()
+  }
+})
+
+test('financial event API is registered behind the shared operator authorization boundary', async () => {
+  const fake = createFakePool()
+  const token = 'runtime-test-operator-token'
+  const app = createApp({ databasePool: fake.pool, logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
+
+  try {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/financial-events',
+      headers: { 'x-arsy-operator-token': token },
+    })
+    assert.equal(response.statusCode, 200)
+    assert.deepEqual(response.json().data, [])
+  } finally {
+    await app.close()
+  }
 })
