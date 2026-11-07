@@ -103,7 +103,7 @@ jobs:
             echo
             if [ "$CHANGED" = "true" ]; then
               echo "- Result: formatting-only commit pushed to main."
-              echo "- Commit: `$COMMIT_SHA`"
+              echo "- Commit: $COMMIT_SHA"
               echo "- CI: dispatched on main."
             else
               echo "- Result: no formatting changes were needed."

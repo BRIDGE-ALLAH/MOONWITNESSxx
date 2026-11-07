@@ -88,7 +88,7 @@ jobs:
             echo
             if [ "$CHANGED" = "true" ]; then
               echo "- Result: generated lockfile committed to main."
-              echo "- Commit: `$COMMIT_SHA`"
+              echo "- Commit: $COMMIT_SHA"
               echo "- CI: dispatched on main."
             else
               echo "- Result: lockfile already synchronized; no commit created."
