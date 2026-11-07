@@ -66,6 +66,7 @@ export class ListingRepository {
         JOIN arsy_channels c ON c.id = $3
         WHERE p.owner_id = $1 AND pv.id = $2
           AND p.lifecycle_state = 'ready'
+          AND pv.version = (SELECT MAX(latest.version) FROM arsy_product_versions latest WHERE latest.product_id = p.id)
           AND c.capability = 'C1' AND c.enabled = true
       ), created AS (
         INSERT INTO arsy_listings
