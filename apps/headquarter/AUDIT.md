@@ -141,3 +141,12 @@ The separate full-workspace typecheck/build workflow was skipped by workflow con
 - Follow-up branch makes full-workspace validation and build a required CI job; its result is pending PR verification.
 - Added test-covered Decision Graph and Scenario Forge pure domain foundations. Both are isolated from live ARSY, persistence, and production mutations.
 - Phase 6 is scoped to Headquarter engineering foundation. Browser accessibility/E2E, production deployment, identity/permission, and live API contracts remain explicit promotion gates rather than falsely closed checklist items.
+
+
+## Phase 6 final verification — PR #43
+
+- Required full-workspace validation and production build passed (GitHub Actions run `42398091453`).
+- Repository Integrity and Asset Integrity passed, including the new Decision Graph and Scenario Forge tests in the Headquarter test glob.
+- CodeQL passed (run `42398091462`).
+- The full-workspace job is no longer conditional on `FULL_QUALITY_CI`.
+- Phase 6 Headquarter engineering-foundation gate is complete. Production rollout gates remain explicitly external: browser accessibility/E2E, ARSY identity/workspace/permission/API contracts, deployment smoke test, and rollback ownership.
