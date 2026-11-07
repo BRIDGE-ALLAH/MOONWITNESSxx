@@ -2,7 +2,7 @@
 
 **Issue:** #100 — https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/100  
 **Branch:** `feat/money-maker-delivery`  
-**Baseline:** `main` at `465331ab6e958117e22954eadeec20721d0d20c3` (recheck before every implementation batch)  
+**Baseline:** `main` at `5fa7ecc21f085becaa47612acbb6a1b3a439e604` (recheck before every implementation batch)  
 **Scope:** Real creative-commerce workflows only. This plan does not reopen ARSY ORM, replace the backend, or duplicate PRs #93/#98/#24.
 
 ## Product contract
@@ -153,3 +153,16 @@ Truth rules:
 8. Do not bump a release or deploy production until the actual production readiness gate is satisfied.
 9. After each verified task, update this checklist and continue to the next dependency-ready task.
 10. If blocked, record the exact evidence and proceed with independent safe work.
+
+
+## Security follow-up — Issue #123 shared login-attempt throttling
+
+**Implementation head inspected:** `ecda9c7624a28b65478f48d4360c00beae941fd2` on PR #126.  
+**Status:** implementation present on branch; exact-head verification pending.
+
+- PostgreSQL stores operator-wide and SHA-256 trusted-network buckets. Raw client IP values are not persisted.
+- Five failures in a 15-minute window block login for 15 minutes across ARSY instances sharing the database; a successful login clears the account and network buckets.
+- Headquarter fails closed when the shared limiter is unavailable. Password verification now uses asynchronous scrypt.
+- Production requires `HEADQUARTER_TRUSTED_PROXY_HOPS=1` behind one trusted ingress that overwrites `X-Forwarded-For` and blocks direct application access; local configuration uses `0`.
+- An isolated PostgreSQL integration test exercises the limiter through two independent ARSY instances. The dedicated PostgreSQL workflow applies migrations twice and runs the integration suite.
+- Do not close Issue #123 or mark this follow-up verified until the exact latest PR head passes unit, PostgreSQL integration, Headquarter session, full Repository CI, CodeQL, browser E2E and container-build checks.
