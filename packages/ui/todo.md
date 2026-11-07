@@ -363,3 +363,5 @@ A component is not complete until all applicable checks pass:
 
 
 - Latest workspace CI passed the UI package type-check and lockfile/dependency checks, then exposed two existing ARSY typing issues: missing `@types/pg` declarations and registration of `fastify-type-provider-zod` as a Fastify plugin instead of installing its validator/serializer compilers. The app now declares `@types/pg` and configures the named Zod compilers; these fixes are workspace validation prerequisites, not UI package runtime dependencies.
+
+- The next CI pass resolved the missing pg declarations and Zod compiler registration, then found a PostgreSQL pool option mismatch (`idleTimeout` vs the driver's `idleTimeoutMillis`). The app now uses the driver's typed option; rerun workspace validation.
