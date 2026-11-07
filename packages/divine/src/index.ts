@@ -8,3 +8,7 @@ export * as Research from "./research/index.ts";
 export * as Preservation from "./preservation/index.ts";
 export * as AIAssistant from "./ai-assistant/index.ts";
 export * as Standards from "./standards/index.ts";
+
+export * as IntegrationReadiness from "./integration-readiness/index.ts";
+export * as Evaluation from "./evaluation/index.ts";
+export * as Temporal from "./temporal/index.ts";
