@@ -35,7 +35,7 @@ export function compileDecisionDebt({ snapshot, now }: DecisionDebtInput): Decis
       const expiry = Date.parse(node.validUntil)
       return !Number.isFinite(expiry) || expiry < now.getTime()
     })
-    const invalidProvenance = supportingEvidence.filter((node) => !node.provenance?.sourceRef.trim() || !Number.isFinite(Date.parse(node.provenance.capturedAt)))
+    const invalidProvenance = supportingEvidence.filter((node) => !node.provenance || !node.provenance.sourceRef.trim() || !Number.isFinite(Date.parse(node.provenance.capturedAt)))
     const reasons: DecisionDebtReason[] = []
     if (supportingEvidence.length === 0) reasons.push('missing_support')
     if (stale.length > 0) reasons.push('stale_support')
