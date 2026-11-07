@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { OrmError } from "./index.js";
+import { OrmError, assertValidModelDeclaration } from "./index.js";
 import type {
   AddonManifest, FieldDefinition, ModelConstructor, ModelExtensionDefinition,
   ModuleManifest, RegistryBuildInput, RegistryComposer, RegistryModelEntry, RegistrySnapshot,
@@ -107,6 +107,21 @@ export class DeterministicRegistryComposer implements RegistryComposer {
       assertIdentifier(model.modelName, "model");
       if (modelsByName.has(model.modelName)) throw new OrmError("ORM_DUPLICATE_MODEL", `Duplicate model "${model.modelName}".`);
       if (!modules.has(model.module)) throw new OrmError("ORM_INVALID_MODEL", `Model "${model.modelName}" references unknown module "${model.module}".`);
+      try {
+        assertValidModelDeclaration({
+          modelName: model.modelName,
+          module: model.module,
+          kind: model.kind ?? "persistent",
+          fields: model.fields,
+          ...(model.description ? { description: model.description } : {}),
+          ...(model.extends ? { extends: model.extends } : {}),
+          ...(model.mixins ? { mixins: model.mixins } : {}),
+        });
+      } catch (error) {
+        throw new OrmError("ORM_INVALID_MODEL", `Model "${model.modelName}" failed declaration validation.`, {
+          cause: error instanceof Error ? error.message : String(error),
+        });
+      }
       modelsByName.set(model.modelName, model);
     }
 
