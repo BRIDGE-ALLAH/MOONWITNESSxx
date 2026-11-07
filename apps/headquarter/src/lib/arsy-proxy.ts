@@ -42,6 +42,7 @@ export async function proxyArsyRequest(
       },
       ...(method !== 'GET' ? { body: await request.text() } : {}),
       cache: 'no-store',
+      redirect: 'error',
       signal: AbortSignal.timeout(12_000),
     })
     const payload = response.status === 204 ? null : await response.json().catch(() => ({
