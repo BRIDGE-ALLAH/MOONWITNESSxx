@@ -537,6 +537,7 @@ test('shared PostgreSQL login throttling is consistent across two ARSY instances
 
     // Restart one ARSY process and its pool; the shared lockout must survive in PostgreSQL.
     await appA.close()
+    await poolA.end()
     poolA = createDatabasePool()
     appA = createApp({ databasePool: poolA, logger: false, env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token } })
     await appA.ready()
@@ -580,5 +581,6 @@ test('shared PostgreSQL login throttling is consistent across two ARSY instances
     await poolA.query('DELETE FROM arsy_login_attempt_buckets WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await appA.close()
     await appB.close()
+    await Promise.all([poolA.end(), poolB.end()])
   }
 })
