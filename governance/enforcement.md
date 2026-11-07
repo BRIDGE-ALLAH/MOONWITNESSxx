@@ -48,7 +48,7 @@ A document stating a rule is not enforcement. A check that covers only part of a
   - State: CI active
 - **REP-04** — Packages cannot import apps; Headquarter uses API contracts; ARSY cannot depend on UI
   - Enforcement: Dependency graph/AST boundary tests
-  - State: Phase 2 planned
+  - State: Phase 2 implementation; CI verification pending
 - **REP-05** — Every workspace package has valid manifest and unique name; planning folders are not packages
   - Enforcement: `scripts/repo-audit.mjs`
   - State: CI active
@@ -96,7 +96,7 @@ A document stating a rule is not enforcement. A check that covers only part of a
   - State: Phase 2 planned
 - **API-03** — Headquarter cannot import ARSY internals, DB adapters/drivers, credentials, or private schema clients
   - Enforcement: AST dependency boundary tests and secret scanning
-  - State: Phase 2/3 planned
+  - State: Partial: Phase 2 implementation; CI verification pending / Phase 3 planned
 - **API-04** — Validation and authorization run server-side; client types are not security
   - Enforcement: API authorization tests
   - State: Phase 3 planned
