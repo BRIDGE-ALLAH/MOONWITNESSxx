@@ -335,3 +335,51 @@ These are documentation/governance corrections only. No application runtime, pac
 ## 11. Audit limitations
 
 This audit uses the tracked GitHub tree and file contents at the stated commit. It does not have the user's local uncommitted files, secrets, runtime environment, or CI execution results. If the local machine has additional unpushed changes, push them before asking for a new audit. Never infer a successful build from the presence of package manifests or lockfiles.
+
+
+---
+
+## 12. Remote revalidation addendum — 2026-11-08
+
+**Verified default branch:** `main`  
+**Verified HEAD:** `7d48d3be1fc525b327bfc39ed3dc7e127593e130`  
+**HEAD message:** Merge PR #66: objective watchdog, interface treaty and resource passports.
+
+This addendum supersedes the older repository/PR counts above wherever they conflict. The earlier sections remain historical audit evidence for their stated commit.
+
+### 12.1 Confirmed mainline deliveries
+
+- PR #56 — Repository Doctor, Change Planner and Agent Context Compiler: merged.
+- PR #61 — Repository Flight Recorder, Parallel Collision Forecast and Context Leases: merged.
+- PR #66 — Objective Delta Watchdog, Interface Treaties and Resource Passports: merged.
+- PR #72 — Divine Phases 12–14: merged.
+- PR #74 — Divine Phases 15–17: merged.
+- PR #50 — consolidated governance/installer/runtime phases 0–5: merged.
+- PR #49 remains open; its Phase 18–20 code is not part of mainline.
+
+### 12.2 Active integration queue
+
+- PR #71 — DX Phases 30–32; draft and stacked on the now-merged #66 branch. Re-target to main and revalidate the unique diff before review.
+- PR #59 — Headquarter Sentinel Fabric Phases 14–16; open, currently reported mergeable. Review its tests and CI before integration.
+- PR #55 — Counterfactual Repo Lab; open and currently reports a merge conflict. Rebase/reconcile before integration.
+- PR #53 — DX fast-feedback foundations; open and currently reports a merge conflict. Reconcile against main and verify it does not duplicate later merged DX tooling.
+- PR #49 — ARSY verifiable completion loop; open and currently reports a merge conflict. Review and rebase after checking its relationship to the already-merged governance and DX layers.
+- Earlier ARSY ORM/database PRs (#15–#41) are still represented as open stacked PRs. They must be evaluated as a dependency chain, not merged individually into main out of order.
+
+### 12.3 Current quality evidence
+
+At the revalidation instant, GitHub Actions for the latest main commit were still running. PR #75's first workflow attempt was superseded by subsequent branch commits; the latest PR workflow was queued/pending at the time of inspection. No successful result is inferred from a queued or cancelled run.
+
+### 12.4 New implementation under review
+
+PR #75, `feat/divine-phases-18-20-provenance-assurance`, adds:
+- transitive source-lineage closure and conservative independence classification;
+- a deterministic provenance red-team mutation suite;
+- a claim/scope/method/Corpus-release-bound assurance capsule;
+- Divine tests and an explicit CI step to execute the Divine test suite.
+
+The branch is not merged. Its implementation status remains pending CI and review. SHA-256 fingerprints are integrity checks only, not signatures, trusted timestamps, source-authenticity proofs, or authorization tokens.
+
+### 12.5 Execution correction
+
+PR #56 is merged, not open or conflicted. PR #61 is merged, not merely a dependency branch. PR #66 is merged into the current mainline, so PR #71 should no longer remain stacked on #66. Do not use the older PR snapshot as current state.
