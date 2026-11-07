@@ -3,7 +3,7 @@
 **Status:** Approved target architecture | **Version:** 1.3 | **Updated:** 2026-11-07
 
 ## 1. Canonical decisions
-One Fastify backend (ARSY), one custom TypeScript metadata ORM, one provider-neutral DB contract, PostgreSQL/libSQL providers, Kysely internal to adapters, code-first schema reconciliation through private ARSY API, minimal BaseEntity, opt-in mixins. PostgreSQL is production recommendation; libSQL is lightweight/single-node. PocketBase is not a v1 persistence provider.
+One Fastify backend (ARSY), one custom TypeScript declaration-based ORM, one provider-neutral DB adapter SPI, SQLite for the System Database, PostgreSQL for the Business Database, Kysely internal to SQL adapters, and programmatic reconciliation through private ARSY System Mode. PocketBase is not a v1 persistence provider.
 
 ## 2. Workspace and package map
 Use pnpm, strict TypeScript, explicit exports, deterministic build order.
@@ -17,7 +17,7 @@ Use pnpm, strict TypeScript, explicit exports, deterministic build order.
 | packages/orm-db | Connections, transactions, unit-of-work, schema reconcile, ledger | SQL dialect/domain models |
 | packages/orm-db-adaptor | Provider-neutral query/schema contract and capabilities | Concrete drivers |
 | packages/orm-db-adaptor-postgres | PostgreSQL pool, mapping, introspection, DDL, Kysely dialect | ORM metadata |
-| packages/orm-db-adaptor-libsql | libSQL client, SQLite mapping, introspection, DDL, Kysely dialect | ORM metadata |
+| packages/orm-db-adaptor-sqlite | SQLite System Database connection, mapping, introspection, DDL and system-store operations | ORM metadata or PostgreSQL business persistence |
 | packages/orm-addon-base | BaseEntity, optional mixins, AuditTrail | Project/AI fields |
 | packages/orm-addon-project | Project domain | Generic base/audit |
 | packages/orm-addon-intelligent | AI/agent domain | Raw provider credentials |
@@ -39,7 +39,7 @@ ORM owns model/field metadata, registry/extension, validation, relations, portab
 orm-db owns adapter lifecycle, transaction/unit-of-work, schema policy/plan/locks/ledger, data-upgrade checkpoints, drift verification, error normalization, cleanup. It does not own model definitions, SQL syntax, addon transformations.
 
 ## 7. Adapters
-orm-db-adaptor defines CRUD/query/schema contracts, snapshots, transaction interface, capabilities, type mapping, errors, registry. libSQL adapter owns libSQL client, SQLite mapping/introspection/DDL/Kysely libSQL dialect. PostgreSQL adapter owns pg pool, type mapping/catalog introspection/DDL/Kysely PostgreSQL dialect. Kysely is private to adapters, never owns model registry/domain semantics/BaseEntity. Do not add Drizzle as second ORM.
+orm-db-adaptor defines provider-neutral connection/transaction/query/schema contracts, snapshots and capability negotiation. SQLite adapter owns the SQLite System Database connection, mapping, introspection and DDL. PostgreSQL adapter owns the PostgreSQL Business Database pool, mapping, catalog introspection and DDL. Kysely is private to concrete adapters, never owns model registry/domain semantics/BaseEntity. Do not add Drizzle as a second ORM.
 
 ## 8. Programmatic schema control
 Desired schema comes from trusted TypeScript models; orm-db owns reconciliation; selected adapter owns physical introspection/DDL.
@@ -107,3 +107,10 @@ These provider roles supersede older shorthand in this document that grouped Pos
 
 ## 20. Decision record
 Accepted foundation decisions are recorded in `docs/24-architecture-decision-records.md` (ADR-001–ADR-012). When this document and an ADR diverge, update the relevant ADR and this architecture contract together; do not leave competing provider or ORM definitions.
+
+
+## 21. Phase 1 package contracts
+
+The initial public contract surfaces and dependency boundaries are documented in [docs/25-phase-1-package-contracts.md](25-phase-1-package-contracts.md). The new packages `@riotworks/orm`, `@riotworks/orm-db-adaptor` and `@riotworks/orm-db` currently contain initial TypeScript contract definitions only. They do not yet implement model declaration factories, registry composition, driver adapters, transaction orchestration or schema reconciliation.
+
+The SQLite adapter package name is `orm-db-adaptor-sqlite`; it is intentionally distinct from any optional libSQL business-data profile. Concrete adapters and base addon packages must be added only with real driver-backed or addon-backed entrypoints and tests, not empty scaffolding.
