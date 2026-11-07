@@ -152,7 +152,7 @@
 
 **Goal:** safe repeatable developer setup. **Deliverables:** `install.sh`, `install.ps1`, shared Node bootstrap.
 
-- [x] Define supported OS/prerequisites: Linux, macOS, Windows; Node.js >=20; exact pnpm pin; Git optional for repository diagnostics. Node architecture is recorded; ARM-specific runner coverage remains open.
+- [x] Define supported OS/prerequisites: Linux, macOS, Windows; Node.js >=22; exact pnpm pin; Git optional for repository diagnostics. Node architecture is recorded; ARM-specific runner coverage remains open.
 - [x] Define minimal, Headquarter, ARSY, full-dev profiles.
 - [x] Detect Node, pinned pnpm, Git and platform; Docker/Compose diagnostics are handled by the runtime doctor.
 - [x] Implement `install`, `doctor`, `repair`, `update`, `verify`, `uninstall`.
