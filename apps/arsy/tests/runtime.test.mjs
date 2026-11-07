@@ -66,6 +66,25 @@ test('database failures return 503 and Fastify closes the pool exactly once', as
   assert.equal(fake.closeCount, 1)
 })
 
+
+test('database health endpoints enforce per-client request limits', async () => {
+  const fake = createFakePool()
+  const app = createApp({ databasePool: fake.pool, logger: false })
+
+  try {
+    const responses = []
+    for (let index = 0; index < 61; index += 1) {
+      responses.push(await app.inject('/health/ready'))
+    }
+    assert.equal(responses.slice(0, 60).every((response) => response.statusCode === 200), true)
+    assert.equal(responses[60].statusCode, 429)
+  } finally {
+    await app.close()
+  }
+
+  assert.equal(fake.closeCount, 1)
+})
+
 test('listen configuration defaults to loopback and rejects invalid ports', () => {
   assert.deepEqual(getListenConfig({}), { host: '127.0.0.1', port: 3001 })
   assert.deepEqual(getListenConfig({ HOST: '0.0.0.0', PORT: '3210' }), {
