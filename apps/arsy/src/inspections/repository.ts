@@ -101,7 +101,7 @@ export class InspectionRepository {
 
   async list(ownerId: string, productVersionId?: string): Promise<InspectionRecord[]> {
     const result = await this.db.query(
-      `SELECT i.${columns.replaceAll(', ', ', i.')}
+      `SELECT i.id, i.product_version_id, i.inspection_type, i.status, i.findings, i.inspected_at, i.inspected_by
        FROM arsy_inspections i
        JOIN arsy_product_versions pv ON pv.id = i.product_version_id
        JOIN arsy_products p ON p.id = pv.product_id
