@@ -66,3 +66,24 @@ test("action lifecycle records policy and execution receipt", async () => {
   assert.equal(action.policyRef, "policy:publish-v2");
   assert.equal(action.receipt.remoteId, "post-1");
 });
+
+test("concurrent appends are serialized and retain a valid hash chain", async () => {
+  const ledger = new WitnessLedger();
+  await Promise.all(Array.from({ length: 30 }, (_, i) => ledger.append(base({
+    id: "parallel-" + i, subject: "observation:" + i,
+    type: "observation.recorded", payload: { content: i }
+  }))));
+  const result = await ledger.verify();
+  assert.equal(result.valid, true);
+  assert.equal(result.checked, 30);
+  assert.deepEqual(ledger.events().map((event) => event.sequence), Array.from({ length: 30 }, (_, i) => i + 1));
+});
+
+test("caller mutation cannot silently alter an appended event", async () => {
+  const ledger = new WitnessLedger();
+  const payload = { statement: "Original statement" };
+  await ledger.append(base({ payload }));
+  payload.statement = "Mutated after append";
+  assert.equal(ledger.replay().claims["claim:moon-water"].statement, "Original statement");
+  assert.equal((await ledger.verify()).valid, true);
+});

@@ -10,5 +10,5 @@
   "scripts": {
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "type-check": "tsc --noEmit"
-  },
+  }
 }

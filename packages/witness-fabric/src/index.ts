@@ -67,19 +67,7 @@ function validateInput(input: WitnessEventInput): void {
 }
 
 export class WitnessLedger {
-  readonly #events: WitnessEvent[] = [];
-  readonly #ids = new Set<string>();
-
-  async append(input: WitnessEventInput): Promise<WitnessEvent> {
-    validateInput(input);
-    if (this.#ids.has(input.id)) throw new Error("duplicate event id: " + input.id);
-    const previousHash = this.#events.at(-1)?.hash ?? GENESIS;
-    const body = { ...input, evidenceRefs: [...(input.evidenceRefs ?? [])], sequence: this.#events.length + 1, previousHash };
-    const event: WitnessEvent = Object.freeze({ ...body, hash: await digest(body) });
-    this.#events.push(event);
-    this.#ids.add(input.id);
-    return event;
-  }
+  readonly #events: WitnessEvent[] = [];\n  readonly #ids = new Set<string>();\n  #appendQueue: Promise<void> = Promise.resolve();\n\n  append(input: WitnessEventInput): Promise<WitnessEvent> {\n    const operation = this.#appendQueue.then(async () => {\n      validateInput(input);\n      if (this.#ids.has(input.id)) throw new Error("duplicate event id: " + input.id);\n      const safePayload = structuredClone(input.payload);\n      const body = { ...input, payload: safePayload, evidenceRefs: [...(input.evidenceRefs ?? [])], sequence: this.#events.length + 1, previousHash: this.#events.at(-1)?.hash ?? GENESIS };\n      const event: WitnessEvent = Object.freeze({ ...body, hash: await digest(body) });\n      this.#events.push(event);\n      this.#ids.add(input.id);\n      return event;\n    });\n    this.#appendQueue = operation.then(() => undefined, () => undefined);\n    return operation;\n  }
 
   events(): readonly WitnessEvent[] {
     return this.#events.map((event) => Object.freeze({ ...event, payload: Object.freeze({ ...event.payload }), evidenceRefs: Object.freeze([...event.evidenceRefs]) })) as readonly WitnessEvent[];

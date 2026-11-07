@@ -21,7 +21,7 @@ This v0.1 core is in-memory. It does not yet provide durable database storage, c
 - Duplicate event IDs are rejected.
 - Claims must be proposed before assessment.
 - Replay is deterministic for a fixed ordered event stream.
-- Hash chain is verifiable and sequence-bound.
+- Hash chain is verifiable and sequence-bound.\n- Concurrent appends are serialized to preserve a single deterministic sequence.\n- Event payloads are cloned at append time to prevent caller mutation.
 - Never treat a claim's confidence as truth or as an authorization signal.
 
 ## Next adapter boundary
