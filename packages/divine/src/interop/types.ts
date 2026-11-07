@@ -1,5 +1,7 @@
 export interface InteropLoss {readonly code:string;readonly sourceRef:string;readonly detail:string}
 export interface InteropReport {readonly standard:string;readonly version:string;readonly exported:number;readonly omitted:number;readonly losses:readonly InteropLoss[];readonly deterministic:true}
+export interface InteropLossBudgetPolicy {readonly standard:string;readonly allowedLossCodes:readonly string[];readonly maxOmitted:number;readonly rejectAnyLoss?:boolean}
+export interface InteropLossBudgetResult {readonly allowed:boolean;readonly violations:readonly string[];readonly acceptedLosses:readonly InteropLoss[]}
 export interface ProvenanceNode {readonly id:string;readonly kind:"entity"|"activity"|"agent";readonly attributes?:Readonly<Record<string,string|number|boolean>>}
 export interface ProvenanceRelation {readonly kind:"wasGeneratedBy"|"wasDerivedFrom"|"wasAssociatedWith"|"used";readonly subject:string;readonly object:string}
 export interface ProvenanceGraph {readonly nodes:readonly ProvenanceNode[];readonly relations:readonly ProvenanceRelation[]}
