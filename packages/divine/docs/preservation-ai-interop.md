@@ -30,7 +30,7 @@ Every exporter returns a report. The TEI profile does not encode manuscript hand
 - IIIF Presentation API 3.0: https://iiif.io/api/presentation/3.0/
 
 ## Practitioner and ecosystem signals
-- Reddit discussion on claim-level proof of GraphRAG subgraphs argues retrieval coverage is not entailment: https://www.reddit.com/r/Rag/comments/1wgwryf/graphrag_retrieves_a_plausible_subgraphbut_can_it/
+- Reddit discussion on claim-level proof of GraphRAG subgraphs argues retrieval coverage is not entailment: https://www.reddit.com/r/Rag/comments/1wgwryf/graphrag_retrieves_a_plausible_subgraphbut_can_it/\n- Reddit practitioners describe stable chunk/span IDs, server-side citation maps and exact quote validation as safeguards against attribution drift: https://www.reddit.com/r/LangChain/comments/1uukcbf/the_rag_citation_problem_why_i_ended_up_tracking/\n- A second practitioner thread proposes retaining matched child spans through parent-context expansion and validating quotations before display: https://www.reddit.com/r/LangChain/comments/1t3or38/improving_citation_accuracy_and_reducing/\n- F(AI)²R reproducibility archive publishes version-pinned provenance graphs, telemetry, verification worksheets, metrics and skill source: https://zenodo.org/records/21667684
 - A GitHub survey of 47 agent knowledge-base repositories reports wide variation in storage and extraction choices; several useful systems work without a graph DB, while temporal memory and explicit human curation remain uncommon: https://github.com/irresi/awesome-agentic-knowledge-base
 - GitHub knowledge-graph trend snapshots (Nov 6–7, 2026) show Graphify, LightRAG and NVIDIA Auto Ontology as useful implementation references, not dependencies: https://github.locker/topics/knowledge-graph
 
