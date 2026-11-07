@@ -13,6 +13,7 @@ export interface LineageIndependenceAssessment {
   readonly unresolvedSourceRefs: readonly string[];
   readonly cyclePaths: readonly (readonly string[])[];
   readonly reasonCodes: readonly string[];
+  readonly traversalLimitExceeded: boolean;
   readonly interpretation: "declared-lineage-only";
 }
 export interface ProvenanceAssuranceCapsule {
@@ -26,6 +27,8 @@ export interface ProvenanceAssuranceCapsule {
   readonly assessment: LineageIndependenceAssessment;
   readonly fingerprint: string;
 }
+const MAX_LINEAGE_DEPTH = 512;
+const MAX_LINEAGE_NODES = 10_000;
 const sortedUnique = (values: readonly string[]) => [...new Set(values)].sort();
 const hex = (bytes: ArrayBuffer) => [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, "0")).join("");
 function canonical(value: unknown): string {
@@ -57,14 +60,17 @@ export function assessSourceLineageIndependence(input: { records: readonly Sourc
   const closures = new Map<string, Set<string>>();
   const unresolved = new Set<string>();
   const cycles: string[][] = [];
+  let traversalLimitExceeded = false;
   for (const selectedRef of selected) {
     const closure = new Set<string>();
     const active: string[] = [];
     const visited = new Set<string>();
     const visit = (ref: string) => {
+      if (active.length >= MAX_LINEAGE_DEPTH) { unresolved.add(ref); traversalLimitExceeded = true; return; }
       const cycleAt = active.indexOf(ref);
       if (cycleAt >= 0) { cycles.push([...active.slice(cycleAt), ref]); unresolved.add(ref); return; }
       if (visited.has(ref)) return;
+      if (visited.size >= MAX_LINEAGE_NODES) { unresolved.add(ref); traversalLimitExceeded = true; return; }
       const record = byRef.get(ref);
       if (!record) { unresolved.add(ref); return; }
       visited.add(ref); active.push(ref); closure.add(ref);
@@ -88,8 +94,9 @@ export function assessSourceLineageIndependence(input: { records: readonly Sourc
   if (missingFamilies) reasonCodes.push("witness-family-unassigned");
   if (unresolved.size) reasonCodes.push("lineage-incomplete-or-missing");
   if (cycles.length) reasonCodes.push("lineage-cycle-detected");
-  const status: LineageIndependenceStatus = cycles.length > 0 ? "unknown" : shared.size > 0 || duplicateFamilies ? "dependent" : missingFamilies || unresolved.size > 0 ? "unknown" : "independent";
-  return { status, selectedSourceRefs: selected, familyIds: sortedUnique(familyIds.filter(Boolean)), sharedAncestorRefs: sortedUnique([...shared]), unresolvedSourceRefs: sortedUnique([...unresolved]), cyclePaths: cycles.map((path) => [...path]), reasonCodes, interpretation: "declared-lineage-only" };
+  if (traversalLimitExceeded) reasonCodes.push("lineage-traversal-limit-exceeded");
+  const status: LineageIndependenceStatus = cycles.length > 0 || traversalLimitExceeded ? "unknown" : shared.size > 0 || duplicateFamilies ? "dependent" : missingFamilies || unresolved.size > 0 ? "unknown" : "independent";
+  return { status, selectedSourceRefs: selected, familyIds: sortedUnique(familyIds.filter(Boolean)), sharedAncestorRefs: sortedUnique([...shared]), unresolvedSourceRefs: sortedUnique([...unresolved]), cyclePaths: cycles.map((path) => [...path]), reasonCodes, traversalLimitExceeded, interpretation: "declared-lineage-only" };
 }
 /** Deterministic red-team mutations for common false-independence failure modes. */
 export function runProvenanceAttackSuite(input: { records: readonly SourceLineageRecord[]; selectedSourceRefs: readonly string[] }): {
