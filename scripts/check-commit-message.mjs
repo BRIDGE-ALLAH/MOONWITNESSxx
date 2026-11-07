@@ -20,7 +20,7 @@ if (messagePath) {
         'Use: type(scope): imperative summary (maximum 72 characters).',
         'Examples: feat(arsy): add readiness endpoint',
         '          fix(headquarter): correct locale redirect',
-        '          chore(ci): pin action versions'
+        '          chore(ci): pin action versions',
       ].join('\n')
     )
     process.exitCode = 1
