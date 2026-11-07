@@ -28,6 +28,9 @@ The consumer must include `packages/ui/src/**/*.{ts,tsx}` in its Tailwind conten
 From the repository root:
 
 - `pnpm --filter @riotworks/ui run type-check` — type-check source files without emitting output.
+- `pnpm --filter @riotworks/ui run lint` — run the package-scoped TypeScript ESLint rules.
+- `pnpm --filter @riotworks/ui run theme:check` — assert that required semantic tokens exist in both themes.
+- `pnpm --filter @riotworks/ui run test` — run the theme contract check, build the package, and verify consumer exports.
 - `pnpm --filter @riotworks/ui run build` — emit ESM JavaScript and TypeScript declarations to `dist/`.
 - `pnpm --filter @riotworks/ui run smoke-test` — build the package and verify its public exports through the package name.
 - `pnpm --filter @riotworks/ui run clean` — remove generated output.
