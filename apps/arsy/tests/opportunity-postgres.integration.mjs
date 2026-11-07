@@ -376,6 +376,22 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(await new OpportunityRepository(pool).archive(ownerId, ownerId, created.id), true)
     assert.equal(await new OpportunityRepository(pool).get(ownerId, created.id), null)
 
+    const persistedInspections = new InspectionRepository(pool)
+    const retired = await persistedProducts.transitionLifecycle(ownerId, ownerId, product.id, 'listed', 'retired')
+    assert.equal(retired?.lifecycleState, 'retired')
+    assert.deepEqual(retired?.allowedNextLifecycleStates, [])
+    assert.equal(
+      await persistedInspections.record(ownerId, ownerId, {
+        productVersionId: revisedProduct.versionId,
+        inspectionType: 'technical',
+        status: 'pass',
+        findings: [{ severity: 'info', description: 'A retired product must remain terminal.' }],
+      }),
+      null,
+      'retired products must reject new inspections',
+    )
+    assert.equal((await persistedProducts.get(ownerId, product.id))?.lifecycleState, 'retired')
+
     const audit = await pool.query(
       'SELECT action FROM arsy_commerce_audit_events WHERE owner_id = $1 ORDER BY occurred_at, action',
       [ownerId],

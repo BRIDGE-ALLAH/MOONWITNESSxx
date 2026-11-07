@@ -65,7 +65,9 @@ export class InspectionRepository {
         FROM arsy_product_versions pv
         JOIN arsy_products p ON p.id = pv.product_id
         WHERE p.owner_id = $2 AND pv.id = $7
+          AND p.lifecycle_state <> 'retired'
           AND pv.version = (SELECT MAX(latest.version) FROM arsy_product_versions latest WHERE latest.product_id = p.id)
+        FOR UPDATE OF p
         RETURNING *
       ), latest AS (
         SELECT DISTINCT ON (inspection_type) inspection_type, status
@@ -86,7 +88,7 @@ export class InspectionRepository {
         SET lifecycle_state = CASE WHEN readiness.ready THEN 'ready' ELSE 'review' END,
             updated_at = now(), updated_by = $6
         FROM readiness
-        WHERE p.owner_id = $2 AND p.id = (
+        WHERE p.owner_id = $2 AND p.lifecycle_state <> 'retired' AND p.id = (
           SELECT pv.product_id
           FROM arsy_product_versions pv
           JOIN inserted ON inserted.product_version_id = pv.id
