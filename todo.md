@@ -379,7 +379,7 @@ Create only packages with real ownership and entrypoints. Avoid empty placeholde
 
 ### 6.2 Unit of Work
 
-- [ ] Implement transaction-scoped Unit of Work.
+- [~] Implement adapter-backed transaction-scoped UnitOfWorkFactory and commit/rollback helper; adapter integration and lifecycle hooks remain.
 - [ ] Track pending creates, updates, and deletes where required by ORM semantics.
 - [ ] Define flush/commit/rollback behavior.
 - [ ] Ensure lifecycle hooks run in deterministic order.
@@ -906,3 +906,17 @@ See `docs/27-phase-2-model-field-engine.md`. Source code has been authored throu
 - [ ] Implement ACL, record rules, CRUD, domain compiler and identity map.
 
 See `docs/28-phase-4-environment-recordset.md`. This is an initial runtime slice, not a complete CRUD engine.
+
+
+## Phase 5 execution log — Unit of Work runtime
+
+- [x] Implement adapter-backed UnitOfWorkFactory.
+- [x] Implement explicit transaction state and commit/rollback handling.
+- [x] Implement withUnitOfWork success/exception flow with rollback error preservation.
+- [x] Add unit test source for commit, rollback and commit failure.
+- [ ] Run test/typecheck/lint gates in clean CI.
+- [ ] Implement PostgreSQL Business Database and SQLite System Database adapters.
+- [ ] Add adapter contract/integration tests, savepoints and isolation semantics.
+- [ ] Integrate UnitOfWork into Environment and model services.
+
+See docs/30-phase-5-unit-of-work.md. No test or build result is claimed yet.
