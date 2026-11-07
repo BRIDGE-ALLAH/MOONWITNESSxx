@@ -133,9 +133,11 @@ export async function auditReleaseReadiness({ root } = {}) {
   if (!workflowFiles.some((file) => /(deploy|production)/i.test(file))) findings.push(finding('production-deployment-workflow-missing', 'error', 'No production deployment workflow is present.'))
 
   const arsyDocker = await readText(join(root, 'Dockerfile.arsy'))
+  const hqDocker = await readText(join(root, 'Dockerfile.headquarter'))
   if (!/CMD\s+\[\s*"pnpm"\s*,\s*"start"\s*\]/.test(arsyDocker)) findings.push(finding('arsy-production-entrypoint-invalid', 'error', 'Dockerfile.arsy must start the compiled application, not a development server.'))
+  if (!/CMD\s+\[\s*"pnpm"\s*,\s*"start"\s*\]/.test(hqDocker)) findings.push(finding('headquarter-production-entrypoint-invalid', 'error', 'Dockerfile.headquarter must start the compiled application.'))
   const compose = await readText(join(root, 'docker-compose.yml'))
-  if (!compose.includes('healthcheck:')) findings.push(finding('compose-healthchecks-missing', 'error', 'Local compose stack has no health checks.'))
+  if ((compose.match(/healthcheck:/g) ?? []).length < 2) findings.push(finding('compose-healthchecks-missing', 'error', 'Both ARSY and Headquarter need health checks in the local compose stack.'))
   if (/POSTGRES_PASSWORD:\s*\$\{POSTGRES_PASSWORD:-postgres\}/.test(compose)) findings.push(finding('weak-compose-default-credential', 'warning', 'Compose has a development-only default database password; never use it in production.'))
 
   return {
