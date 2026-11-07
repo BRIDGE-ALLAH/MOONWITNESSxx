@@ -100,6 +100,44 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await productCard.getByLabel(`Lifecycle state for ${title}`).selectOption('production')
     await page.getByRole('status').filter({ hasText: `Product lifecycle updated: ${title} · production` }).waitFor()
 
+    // Version history is a real owner-scoped read path; stale writes must not fork from old briefs.
+    await page.goto(`${baseUrl}/the-forge`, { waitUntil: 'domcontentloaded' })
+    const productResponse = await context.request.get(`${baseUrl}/api/products?limit=100`)
+    assert.equal(productResponse.status(), 200)
+    const productPayload = await productResponse.json()
+    const versionedProduct = productPayload.data.find((product) => product.title === title)
+    assert.ok(versionedProduct)
+
+    const versionedProductCard = page.locator('article').filter({ hasText: title }).first()
+    const revisionDetails = versionedProductCard.locator('details').filter({ hasText: 'Create next version' })
+    await revisionDetails.locator('summary').click()
+    const revisionNotes = revisionDetails.getByPlaceholder('Describe what changes in this revision')
+    await revisionNotes.waitFor({ state: 'visible' })
+    await revisionNotes.fill('Add a reviewable immutable version history to the product brief.')
+    await versionedProductCard.getByRole('button', { name: 'Create v2' }).click()
+    await page.getByRole('status').filter({ hasText: 'New immutable product version created: v2' }).waitFor()
+    await versionedProductCard.getByRole('button', { name: `Load version history for ${title}` }).click()
+    await versionedProductCard.getByText('Version 2', { exact: false }).waitFor()
+    await versionedProductCard.getByText('Version 1', { exact: false }).waitFor()
+
+    const historyResponse = await context.request.get(`${baseUrl}/api/products/${versionedProduct.id}/versions`)
+    assert.equal(historyResponse.status(), 200)
+    const historyPayload = await historyResponse.json()
+    assert.deepEqual(historyPayload.data.map((version) => version.version), [2, 1])
+    assert.equal(historyPayload.data[1].brief.buyerProblem, versionedProduct.brief.buyerProblem)
+
+    const staleVersionWrite = await context.request.post(`${baseUrl}/api/products/${versionedProduct.id}/versions`, {
+      headers: { origin: new URL(baseUrl).origin },
+      data: {
+        expectedVersion: 1,
+        brief: { ...versionedProduct.brief, buyerProblem: 'A stale version must not overwrite the latest product brief.' },
+        acceptanceCriteria: versionedProduct.acceptanceCriteria,
+      },
+    })
+    assert.equal(staleVersionWrite.status(), 409)
+    assert.equal((await staleVersionWrite.json()).error.code, 'VERSION_CONFLICT')
+
+
     // Upload a real binary into the isolated local asset store and persist its provenance/checksum.
     await productCard.getByText('Upload asset with provenance').click()
     await productCard.getByLabel('File (PDF, ZIP, JSON, TXT, PNG, JPEG, WebP)').setInputFiles({
@@ -326,42 +364,6 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await page.getByText('5000', { exact: true }).first().waitFor()
     await page.getByText('300', { exact: true }).waitFor()
 
-    // Version history is a real owner-scoped read path; stale writes must not fork from old briefs.
-    await page.goto(`${baseUrl}/the-forge`, { waitUntil: 'domcontentloaded' })
-    const productResponse = await context.request.get(`${baseUrl}/api/products?limit=100`)
-    assert.equal(productResponse.status(), 200)
-    const productPayload = await productResponse.json()
-    const versionedProduct = productPayload.data.find((product) => product.title === title)
-    assert.ok(versionedProduct)
-
-    const versionedProductCard = page.locator('article').filter({ hasText: title }).first()
-    const revisionDetails = versionedProductCard.locator('details').filter({ hasText: 'Create next version' })
-    await revisionDetails.locator('summary').click()
-    const revisionNotes = revisionDetails.getByPlaceholder('Describe what changes in this revision')
-    await revisionNotes.waitFor({ state: 'visible' })
-    await revisionNotes.fill('Add a reviewable immutable version history to the product brief.')
-    await versionedProductCard.getByRole('button', { name: 'Create v2' }).click()
-    await page.getByRole('status').filter({ hasText: 'New immutable product version created: v2' }).waitFor()
-    await versionedProductCard.getByRole('button', { name: `Load version history for ${title}` }).click()
-    await versionedProductCard.getByText('Version 2', { exact: false }).waitFor()
-    await versionedProductCard.getByText('Version 1', { exact: false }).waitFor()
-
-    const historyResponse = await context.request.get(`${baseUrl}/api/products/${versionedProduct.id}/versions`)
-    assert.equal(historyResponse.status(), 200)
-    const historyPayload = await historyResponse.json()
-    assert.deepEqual(historyPayload.data.map((version) => version.version), [2, 1])
-    assert.equal(historyPayload.data[1].brief.buyerProblem, versionedProduct.brief.buyerProblem)
-
-    const staleVersionWrite = await context.request.post(`${baseUrl}/api/products/${versionedProduct.id}/versions`, {
-      headers: { origin: new URL(baseUrl).origin },
-      data: {
-        expectedVersion: 1,
-        brief: { ...versionedProduct.brief, buyerProblem: 'A stale version must not overwrite the latest product brief.' },
-        acceptanceCriteria: versionedProduct.acceptanceCriteria,
-      },
-    })
-    assert.equal(staleVersionWrite.status(), 409)
-    assert.equal((await staleVersionWrite.json()).error.code, 'VERSION_CONFLICT')
 
     // Explicit sign-out clears the cookie and revokes access to protected API routes.
     await page.goto(`${baseUrl}/the-forge`, { waitUntil: 'domcontentloaded' })
