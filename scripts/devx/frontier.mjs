@@ -109,6 +109,9 @@ const SIGNAL_PENALTIES = { unverifiedWrites: 12, evidenceDebt: 8, interfaceDrift
 export function assessAutonomyBudget({ risk = 'medium', signals = {} } = {}) {
   if (!Object.hasOwn(RISK_PENALTIES, risk)) throw new Error('risk must be low, medium, high or critical')
   if (!signals || typeof signals !== 'object' || Array.isArray(signals)) throw new Error('signals must be an object')
+  for (const name of Object.keys(signals)) {
+    if (!Object.hasOwn(SIGNAL_PENALTIES, name)) throw new Error('unknown autonomy signal: ' + name)
+  }
   let penalty = RISK_PENALTIES[risk]
   const deductions = []
   for (const [name, weight] of Object.entries(SIGNAL_PENALTIES)) {
@@ -229,7 +232,7 @@ export function compileIncidentRegression({ incident, now = '2000-01-01T00:00:00
   const replay = {
     schemaVersion: 1,
     incidentId: incident.id,
-    title: String(incident.title ?? incident.id),
+    title: typeof incident.title === 'string' && incident.title.trim() ? incident.title.trim() : incident.id,
     operations: ordered,
     assertions,
     variants,
