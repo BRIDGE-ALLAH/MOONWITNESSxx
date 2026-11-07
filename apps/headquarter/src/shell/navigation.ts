@@ -1,5 +1,5 @@
 export type NavigationGroup = 'Command' | 'Operations' | 'Administration'
-export type NavigationStatus = 'prototype' | 'planned'
+export type NavigationStatus = 'prototype' | 'planned' | 'live'
 
 export type NavigationItem = {
   href: string | null
@@ -26,6 +26,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { href: '/aftershock', label: 'AFTERSHOCK', group: 'Operations', status: 'prototype', description: 'Performance insights and experiments' },
   { href: '/mizan-ledger', label: 'MIZAN LEDGER', group: 'Operations', status: 'prototype', description: 'Financial records and reconciliation' },
   { href: '/riot-engine', label: 'RIOT ENGINE', group: 'Operations', status: 'prototype', description: 'Workflow and run operations' },
+  { href: '/infrastructure/docker', label: 'DOCKER', group: 'Operations', status: 'live', description: 'Docker Engine connections and read-only container inventory' },
   { href: '/scenario-forge', label: 'SCENARIO ARENA', group: 'Operations', status: 'prototype', description: 'Shadow-only counterfactual planning and comparison' },
   { href: '/governance-lab', label: 'GOVERNANCE LAB', group: 'Command', status: 'prototype', description: 'Replay integrity, decision debt, and uncertainty review' },
   { href: '/settings-policy', label: 'WORKSPACE SETTINGS / POLICY', group: 'Administration', status: 'prototype', description: 'Prototype workspace and policy placeholders' },
