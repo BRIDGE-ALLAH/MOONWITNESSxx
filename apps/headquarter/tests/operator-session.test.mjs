@@ -34,17 +34,17 @@ test('signed operator sessions reject tampering and wrong secrets', () => {
 test('operator session configuration fails closed without all required secrets and origin', () => {
   assert.equal(getOperatorSessionConfig({}), null)
   assert.equal(getOperatorSessionConfig({
-    HEADQUARTER_OPERATOR_PASSWORD: 'password',
+    HEADQUARTER_OPERATOR_PASSWORD: 'strong-test-password-at-least-16',
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
   })?.operatorId, 'primary-owner')
   assert.equal(getOperatorSessionConfig({
-    HEADQUARTER_OPERATOR_PASSWORD: 'password',
+    HEADQUARTER_OPERATOR_PASSWORD: 'strong-test-password-at-least-16',
     HEADQUARTER_SESSION_SECRET: 'short',
     HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example',
   }), null)
   assert.equal(getOperatorSessionConfig({
-    HEADQUARTER_OPERATOR_PASSWORD: 'password',
+    HEADQUARTER_OPERATOR_PASSWORD: 'strong-test-password-at-least-16',
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: 'https://hq.example/path',
   }), null)
