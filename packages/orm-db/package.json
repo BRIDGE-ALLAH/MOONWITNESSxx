@@ -22,5 +22,8 @@
   "dependencies": {
     "@riotworks/orm": "workspace:*",
     "@riotworks/orm-db-adaptor": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
   }
 }
