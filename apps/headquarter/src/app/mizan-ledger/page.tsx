@@ -1,43 +1,51 @@
-import { Badge } from '@riotworks/ui'
-
-const rows = [
-  { product: 'Digital Art Collection #1', gross: 1200, fees: 180, refunds: 40, variable: 60, taxReserve: 184, net: 736, payout: 'Pending (Demo)' },
-  { product: 'Comic Panel Series', gross: 860, fees: 129, refunds: 0, variable: 95, taxReserve: 127, net: 509, payout: 'Scheduled (Demo)' },
-  { product: 'Music Beat License', gross: 540, fees: 81, refunds: 20, variable: 30, taxReserve: 82, net: 327, payout: 'Pending (Demo)' },
-]
+import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@riotworks/ui'
 
 export default function MizanLedger() {
   return (
     <main className="min-h-screen bg-obsidian p-8 text-paper-bone">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="border-b border-acid-lime/30 pb-6">
-          <Badge variant="lime">Prototype // Demo Data Only — Not Real Financials</Badge>
-          <h1 className="mt-3 font-display text-5xl uppercase">MIZAN LEDGER</h1>
-          <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">Gross, fees, refunds, variable cost, tax reserve, net contribution, payout.</p>
+      <div className="mx-auto max-w-5xl space-y-8">
+        <header className="space-y-4 border-b border-acid-lime/30 pb-8">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-display text-5xl uppercase leading-none">Mizan Ledger</h1>
+            <Badge variant="outline">Financial data not connected</Badge>
+          </div>
+          <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">
+            Receipts, fees, refunds, costs, reserves, reconciliation, and payouts
+          </p>
         </header>
-        <div className="overflow-x-auto rounded-sm border border-acid-lime/20">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-panel-charcoal font-mono uppercase text-muted-ink">
-              <tr>
-                <th className="p-3">Product</th><th className="p-3">Gross</th><th className="p-3">Fees</th><th className="p-3">Refunds</th><th className="p-3">Variable Cost</th><th className="p-3">Tax Reserve</th><th className="p-3">Net</th><th className="p-3">Payout</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.product} className="border-t border-acid-lime/10">
-                  <td className="p-3">{r.product}</td>
-                  <td className="p-3 font-mono">${r.gross}</td>
-                  <td className="p-3 font-mono">${r.fees}</td>
-                  <td className="p-3 font-mono">${r.refunds}</td>
-                  <td className="p-3 font-mono">${r.variable}</td>
-                  <td className="p-3 font-mono">${r.taxReserve}</td>
-                  <td className="p-3 font-mono text-acid-lime">${r.net}</td>
-                  <td className="p-3">{r.payout}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+
+        <Card className="border-acid-lime/30">
+          <CardHeader>
+            <CardTitle>No verified financial events yet</CardTitle>
+            <CardDescription>
+              This workspace is not connected to a financial-event or payout source. No actual
+              receipts, fees, refunds, balances, tax reserves, or payouts are available to display.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5 text-sm text-muted-ink">
+            <p>
+              The previous rows were static examples with invented products, amounts, costs, and
+              payout states. They have been removed and must not be treated as transactions or
+              financial history.
+            </p>
+            <div className="space-y-2">
+              <h2 className="font-display text-base uppercase text-paper-bone">
+                Requirements for a real ledger entry
+              </h2>
+              <ul className="list-disc space-y-1 pl-5">
+                <li>Persisted event identity, owner, actor, and idempotency key.</li>
+                <li>Exact amount in integer minor units with an ISO currency code.</li>
+                <li>Event type, occurred/recorded timestamps, and source evidence.</li>
+                <li>Separate reconciliation state for pending, verified, disputed, and reversed events.</li>
+                <li>Fees, refunds, chargebacks, costs, FX, reserves, and payouts kept distinct.</li>
+              </ul>
+            </div>
+            <p className="border-t border-acid-lime/20 pt-4">
+              Balances and net contribution will be calculated from persisted source events. This
+              page intentionally shows no totals until those records and reconciliation rules exist.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </main>
   )
