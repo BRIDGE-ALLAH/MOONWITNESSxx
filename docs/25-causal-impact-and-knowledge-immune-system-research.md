@@ -188,3 +188,18 @@ These ideas are differentiated integration hypotheses. A prior-art and patent se
 5. **Negative-Space Audit:** periodically sample operations that *did not* execute—denied calls, abandoned plans, missing receipts—to detect silent bypasses and gaps in telemetry.
 
 These are integration hypotheses. A formal novelty/patent search and implementation benchmarking remain necessary.
+
+
+### Prior-art correction — capability warrants are not novel by themselves
+
+A deeper scan surfaced directly overlapping work that narrows the novelty claim:
+
+- [AgentCap](https://arxiv.org/abs/2611.00729) (2026-10-31) already proposes short-lived, budget-bounded capabilities, session-bound parent-child delegation, argument provenance, and MCP-boundary verification.
+- [Tenuo](https://github.com/tenuo-ai/tenuo) already provides holder-bound signed warrants, exact tool/argument constraints, offline verification and attenuation-only delegation.
+- [NVIDIA Nomos](https://github.com/NVIDIA/Nomos) describes signed, single-use execution writs, nonce protection, separate sandboxed execution and hash-chained audit.
+- [SCITT Agent Execution Evidence draft](https://datatracker.ietf.org/doc/draft-thaha-scitt-agent-execution-evidence/) discusses configuration integrity, execution receipts, agent lineage, sub-agent attribution and revocable assurance.
+- Reddit discussions [asking where permissions should be enforced](https://www.reddit.com/r/AI_Agents/comments/1vvfq9v/where_should_an_ai_agents_permissions_actually_be/) and [reporting an agent modifying its own governing contract](https://www.reddit.com/r/AI_Agents/comments/1vikkme/one_of_my_agents_wrote_a_new_rule_into_its_own/) reinforce the need for a separately controlled runtime and immutable approved contract snapshots.
+
+**Design consequence:** Phase 18's capability evaluator is an integration primitive, not a novel capability-token invention. This branch now binds a grant chain to a task session and a gateway-computed canonical argument hash, but still lacks holder-key proof, nonce consumption, revocation, and gateway wiring. Compare Tenuo/AgentCap/Nomos and their licenses before choosing an implementation dependency.
+
+**Differentiation hypothesis:** connect authorization lineage to MOONWITNESS's evidence graph and execution attestations, so a later revocation or source compromise can identify not just which token was used, but which downstream decision/outcome depended on the delegated authority. This is an integration hypothesis, not a claim of global novelty.
