@@ -1,24 +1,23 @@
-# Typography assets and license record
+# MOONWITNESS typography assets
 
-## Approved font families
+The identity uses original vector lettering and the in-house **MOONWITNESS Signal** display font.
 
-The two recommended families below are distributed under the SIL Open Font License 1.1 (OFL-1.1), according to their upstream project repositories and license files.
+## Runtime
+- `MOONWITNESS-SignalDisplay-SemiBold.woff2` — original display font, weight 600, loaded by the shared UI stylesheet.
+- The wordmark and MW monogram remain outlined SVG paths and do not depend on fonts.
+- Signal Text uses native platform UI sans; Signal Instrument uses native system monospace.
+- The display font maps lowercase characters to uppercase forms and is for headings/short display copy only. Do not use it for body text or dense tables.
 
-| Family | Role | Copyright notice | Upstream source |
-|---|---|---|---|
-| Space Grotesk | Display and interface | Copyright 2020 The Space Grotesk Project Authors | https://github.com/floriankarsten/space-grotesk/blob/master/OFL.txt |
-| IBM Plex Mono | Technical / tabular data | Copyright © 2017 IBM Corp.; Reserved Font Name "Plex" | https://github.com/IBM/plex/blob/master/packages/plex-mono/fonts/complete/ttf/license.txt |
+## Editable source and build
+- Glyph source: `source/moonwitness-signal-glyphs.json`
+- Builder: `source/build_signal_font.py`
+- Pinned build dependencies: `requirements-font-build.txt`
+- Build command: `python source/build_signal_font.py`
 
-The complete OFL-1.1 text is stored in [OFL-1.1.txt](./OFL-1.1.txt). Keep each font's copyright notice and this license alongside any future font binaries. IBM Plex's reserved font name must be respected; do not rename modified derivatives to "Plex" without permission.
+The builder emits WOFF2 and TTF outputs. The committed WOFF2 is the browser runtime asset; the TTF is a local build artifact.
 
-## Hosting and redistribution decision
+## Coverage and release gates
+The prototype contains uppercase Latin, digits, common punctuation, and lowercase codepoints mapped to uppercase. Distinct lowercase glyphs, Indonesian diacritics, extended Latin, kerning refinement, browser shaping, hinting, and cross-platform QA remain open.
 
-OFL-1.1 permits use, embedding, bundling, and redistribution of covered font software with software, provided the copyright notice and license accompany each copy, the font is not sold by itself, and modified font software remains under OFL-1.1. This is a license-level review, not a legal opinion or confirmation of every upstream file's provenance.
-
-**Decision:** the family licenses are verified for a future compliant self-hosted bundle. Font binaries are intentionally not copied into this repository in this milestone; current CSS stacks remain functional with system fallbacks. A future binary import must pin an upstream release/commit, include the family-specific notice and OFL text, record file hashes and source URLs, and run font subsetting/coverage checks before deployment.
-
-## Design roles
-
-- Display / interface: Space Grotesk, weights 400–700.
-- Technical / metrics: IBM Plex Mono, weights 400–500.
-- Fallbacks remain in `packages/ui/tailwind.config.js`; do not rely on remote font CSS as a production dependency.
+## Rights
+The font and vector artwork are original project-authored starting assets and remain UNLICENSED / internal project use only pending owner approval. The old `OFL-1.1.txt` is a historical research record; Space Grotesk and IBM Plex Mono are not runtime dependencies.
