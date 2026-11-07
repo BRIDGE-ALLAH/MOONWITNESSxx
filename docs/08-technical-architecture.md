@@ -63,14 +63,14 @@ Database runtime:
 - Connection/client management.
 - Transaction abstraction.
 - Unit-of-work coordination.
-- Migration orchestration.
+- Programmatic schema reconciliation, deterministic schema plans, adapter-specific schema application, and typed data-upgrade coordination.
 - Health checks and provider error normalization.
 
 ### packages/orm-db-adaptor
 Provider-neutral adapter contracts:
 - CRUD/query interfaces.
 - Adapter capabilities.
-- Transaction and migration capability declarations.
+- Transaction and schema-management capability declarations, including introspection, create/update collection, add/alter/rename/drop field, index changes, and provider-native artifact generation.
 - Adapter factory/registry.
 - Query and result contracts.
 - Typed unsupported-capability errors.
@@ -78,7 +78,7 @@ Provider-neutral adapter contracts:
 ### packages/orm-db-adaptor-pocketbase
 First concrete PocketBase adapter. Uses the official PocketBase JS SDK or documented API from the server side. PocketBase is a separate Go service with collection APIs and SQLite-backed collections; it is not a Node SQL driver.
 
-The adapter must respect collection rules and limitations. It must not invent arbitrary SQL joins, general-purpose transactions, or automatic schema management. View collections are read-only. Relation expansion, filtering, realtime, and migrations must be capability-gated and tested. Schema changes use the supported PocketBase migration/deployment path, not direct mutation of internal SQLite tables.
+The adapter must respect collection rules and limitations. It must not invent arbitrary SQL joins or general-purpose transaction guarantees. View collections are read-only. Relation expansion, filtering, realtime, and schema operations must be capability-gated and tested. The ORM compiles addon model metadata into PocketBase collection changes. PocketBase's supported collection operations and native automigrate/migration engine generate versioned schema artifacts; do not mutate internal SQLite tables. Addon authors do not hand-write migration scripts for ordinary field additions.
 
 ### packages/orm-addon-base
 Automatically installed foundational addon:
@@ -169,7 +169,7 @@ Each adapter declares support for:
 - Relations and expansion.
 - Joins.
 - Transactions.
-- Schema introspection and migrations.
+- Schema introspection and managed schema operations.
 - Unique constraints and indexes.
 - Realtime.
 - Soft delete.
@@ -180,16 +180,16 @@ The ORM checks capabilities before running a feature. Adapter tests must verify 
 
 ### PocketBase-specific boundary
 
-PocketBase collections use SQLite tables internally but expose PocketBase collection/record APIs. A remote Node adapter must not pretend it has direct SQL semantics. Do not expose arbitrary SQL, cross-collection joins, or transaction guarantees unless separately implemented through an official verified PocketBase mechanism. View collections are read-only. PocketBase schema/migration lifecycle is managed through supported PocketBase migrations/deployment tooling.
+PocketBase collections use SQLite tables internally but expose PocketBase collection/record APIs. A remote Node adapter must not pretend it has direct SQL semantics. Do not expose arbitrary SQL, cross-collection joins, or transaction guarantees unless separately implemented through an official verified PocketBase mechanism. View collections are read-only. The ORM schema reconciler compiles addon model declarations into supported PocketBase collection operations. With PocketBase automigrate enabled, collection configuration changes through the Dashboard or Web API generate native migration files; PocketBase also supports programmatic collection operations in its JavaScript migration runtime. Keep generated pb_migrations artifacts in version control and apply them through the PocketBase migration engine. Do not hand-write addon migration scripts for ordinary schema changes and do not mutate internal SQLite tables.
 
 For critical writes that require atomic mutation plus audit, require a transaction-capable path or use a documented durable outbox/reconciliation design. Never silently accept an audit gap.
 
 ## 8. Addon runtime
 
-Addons declare manifest, technical name, version, dependencies, model definitions/extensions, migrations, services, permissions, and optional app integration points.
+Addons declare manifest, technical name, version, dependencies, model definitions/extensions, optional typed data-upgrade handlers, services, permissions, and optional app integration points. Schema changes are inferred from registered model metadata.
 
 Load sequence:
-DISCOVER → VALIDATE → RESOLVE DEPENDENCIES → REGISTER METADATA → APPLY MIGRATIONS → INITIALIZE SERVICES → READY.
+DISCOVER → VALIDATE → RESOLVE DEPENDENCIES → COMPOSE MODEL REGISTRY → PLAN SCHEMA DIFF → APPLY SAFE SCHEMA SYNC → RUN REQUIRED DATA UPGRADES → VERIFY → READY.
 
 Reject missing/circular dependencies, duplicate model/field declarations, incompatible versions, unsafe extension collisions, and untrusted code. Do not dynamically execute downloaded addon code.
 
@@ -229,7 +229,7 @@ Environment:
 - Secrets stay server-side.
 - No credentials in frontend bundles, source control, or logs.
 
-Deployment target is Docker Compose / Coolify-compatible. PocketBase may run as its own service and persistent volume. Ensure backups include PocketBase data, uploaded files, migrations, and required configuration. Verify restore procedures.
+Deployment target is Docker Compose / Coolify-compatible. PocketBase may run as its own service and persistent volume. Ensure backups include PocketBase data, uploaded files, generated pb_migrations artifacts, and required configuration. Verify restore procedures.
 
 ## 12. Testing and observability
 

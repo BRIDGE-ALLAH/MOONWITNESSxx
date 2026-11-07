@@ -64,7 +64,7 @@ Exit: registry and model composition tests pass; invalid conflicts and cycles fa
 - packages/orm-db-adaptor-pocketbase.
 - Capability matrix.
 - PocketBase contract tests.
-- Migrations and deployment runbook.
+- Automatic schema reconciliation, generated PocketBase artifact workflow, and schema-sync/recovery runbook.
 
 Exit: supported operations pass adapter tests and unsupported capabilities fail with typed errors. No false transaction/join claims.
 
@@ -126,11 +126,14 @@ Do not activate every factory/channel at the same time.
 - apps/arsy starts Fastify through packages/arsy-core.
 - Package names and boundaries match docs/18.
 - TypeScript workspace builds and typechecks.
-- packages/orm supports declarative metadata and model registry.
+- packages/orm supports declarative metadata, model registry, schema diff, and idempotent reconciliation.
 - Addon dependencies resolve deterministically.
 - orm-addon-base supplies common fields and central audit.
 - Project and Intelligent addons do not duplicate base fields.
 - PocketBase adapter capability declaration matches tested behavior.
+- Ordinary model additions do not require manually authored addon migration files.
+- Generated PocketBase-native schema artifacts are reproducible and version-controlled.
+- Destructive/data-semantic changes use explicit typed data-upgrade handlers.
 - No untrusted code loading or raw secrets in client/logs.
 - Contract schemas are shared between frontend and backend.
 - Tests cover happy paths, failures, unsupported operations, and permissions.

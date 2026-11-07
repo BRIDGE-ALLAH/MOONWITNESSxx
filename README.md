@@ -69,9 +69,9 @@ Channels are enabled only after current country eligibility, payout, policy, fee
 
 - **packages/arsy-core** — Fastify platform core, lifecycle, plugins, configuration, health, and shared runtime facilities.
 - **packages/orm** — custom Odoo-inspired metadata-driven ORM and addon registry.
-- **packages/orm-db** — database runtime, connection lifecycle, migrations, and transactions.
+- **packages/orm-db** — database runtime, schema reconciliation, safe synchronization, upgrade coordination, and transactions.
 - **packages/orm-db-adaptor** — database adapter contracts, capability declarations, and registry.
-- **packages/orm-db-adaptor-pocketbase** — PocketBase adapter.
+- **packages/orm-db-adaptor-pocketbase** — PocketBase adapter and generated PocketBase-native schema artifacts.
 - **packages/orm-addon-base** — shared base entities, active state, timestamps, and audit trail.
 - **packages/orm-addon-project** — project-domain models and services.
 - **packages/orm-addon-intelligent** — AI, agents, models, prompts, tools, runs, evaluations, and usage.
@@ -79,7 +79,7 @@ Channels are enabled only after current country eligibility, payout, policy, fee
 - **packages/contract** — runtime API schemas, DTO contracts, and inferred types.
 - **packages/lint** — shared lint, format, and TypeScript configuration.
 
-Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md) and [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md).
+Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md), [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md), and [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md).
 
 ## Product modules
 
@@ -118,6 +118,7 @@ Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm
 | [docs/17-glossary.md](./docs/17-glossary.md) | Canonical terminology |
 | [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md) | Workspace, packages, ORM, adapter architecture |
 | [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md) | Addon manifests, model inheritance, base fields |
+| [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md) | Automatic schema sync, generated PocketBase artifacts, data upgrades |
 
 ## Current status
 
@@ -128,8 +129,8 @@ Recommended delivery sequence:
 1. Finalize specifications.
 2. Build the apps/headquarter visual prototype.
 3. Scaffold the TypeScript monorepo and package contracts.
-4. Implement packages/orm and orm-addon-base.
-5. Implement the PocketBase adapter with explicit capability limits.
+4. Implement packages/orm and orm-addon-base with automatic schema reconciliation.
+5. Implement the PocketBase adapter and generated native schema artifacts with explicit capability limits.
 6. Build apps/arsy and connect Headquarter through typed contracts.
 7. Add Project and Intelligent addons.
 8. Validate the first real product-to-marketplace workflow.

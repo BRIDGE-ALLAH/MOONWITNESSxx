@@ -1,4 +1,4 @@
-# MASTER PROMPT v3.0 — MOONWITNESS // RIOTWORKS
+# MASTER PROMPT v3.1 — MOONWITNESS // RIOTWORKS
 ## Full-Stack Headquarter + ARSY + Modular ORM/Addons
 
 **Specification baseline:** README.md and docs/01–19  
@@ -125,7 +125,7 @@ packages/
   orm-db/
     src/connection/
     src/transaction/
-    src/migration/
+    src/schema-sync/
     src/unit-of-work/
     src/capabilities/
     src/index.ts
@@ -140,7 +140,7 @@ packages/
     src/adapter/
     src/query-compiler/
     src/schema/
-    src/migrations/
+    src/schema-artifacts/
     src/capabilities/
     src/index.ts
     tests/
@@ -149,14 +149,14 @@ packages/
     src/mixins/
     src/audit/
     src/services/
-    src/migrations/
+    src/upgrades/
     src/manifest.ts
     src/index.ts
   orm-addon-project/
     src/models/
     src/services/
     src/routes/
-    src/migrations/
+    src/upgrades/
     src/manifest.ts
     src/index.ts
   orm-addon-intelligent/
@@ -165,7 +165,7 @@ packages/
     src/providers/
     src/agents/
     src/evaluations/
-    src/migrations/
+    src/upgrades/
     src/manifest.ts
     src/index.ts
   types/
@@ -292,7 +292,7 @@ Core:
 - Model lifecycle hooks.
 - Environment/context.
 - Permission/record-scope integration points.
-- Migration coordination.
+- Schema reconciliation and typed data-upgrade coordination.
 - Adapter capability checking.
 - Typed model APIs.
 - Error normalization.
@@ -380,6 +380,56 @@ Provide a scoped execution environment containing:
 
 Do not keep mutable per-request user context in global singletons.
 
+# 6A. Programmatic schema management — mandatory architecture
+
+**Do not require addon authors to hand-write schema migration files for ordinary model changes.** Addon model declarations are the canonical desired schema. The ORM owns schema diffing, reconciliation, version tracking, and adapter-specific execution.
+
+Required flow:
+1. Discover and validate addon manifests.
+2. Resolve dependencies and compose all model metadata, including BaseEntity.
+3. Ask the active adapter for actual schema state and capabilities.
+4. Compare desired registry schema with actual schema.
+5. Produce a deterministic, explainable SchemaChangePlan.
+6. Classify each change as SAFE_AUTO, REQUIRES_DATA_UPGRADE, DESTRUCTIVE, or UNSUPPORTED.
+7. Apply eligible safe changes through the adapter's supported programmatic mechanism.
+8. Run typed data-upgrade handlers only when semantics/data transformation require explicit logic.
+9. Verify actual schema and record addon/schema fingerprints, execution receipts, and errors.
+10. Mark addons ready only after verification succeeds.
+
+The reconciler must be idempotent: repeating it against the same desired and actual schema is a no-op.
+
+### Schema synchronization modes
+- `plan`: inspect and report drift; change nothing.
+- `safe`: automatically apply compatible, non-destructive changes.
+- `strict`: fail on unexpected drift; the release process must resolve it.
+- `off`: disable schema mutation; health checks still report drift.
+
+Use `safe` for local development. CI should run `plan` and fail when generated schema artifacts are missing or drift is unexpected. Production should run a single serialized release/schema-sync job, not let every ARSY replica mutate schema concurrently. Safe changes may be applied automatically by that controlled job according to policy. Destructive and semantic data changes require explicit authorization.
+
+### Changes suitable for automatic synchronization
+- Create a new collection/table for a new registered model.
+- Add a nullable field.
+- Add a field with a safe deterministic default where supported.
+- Add a compatible index.
+- Add a new optional relation where supported.
+- Update non-breaking metadata such as labels and help text.
+
+### Changes requiring explicit handling
+- Rename a field/model: require `renamedFrom` or an explicit mapping.
+- Change a type or precision: require a validated conversion function.
+- Make a nullable field required: require a backfill/default and validation plan.
+- Remove a field/model/index: destructive; never drop automatically.
+- Change relation cardinality or delete behavior: require data-impact analysis.
+- Split/merge data or change business meaning: require a typed programmatic data-upgrade handler.
+
+No raw SQL migration should be the default addon-authoring workflow. When an adapter needs a deployment artifact, generate it from the schema plan. For PocketBase, generate or capture native `pb_migrations` artifacts and apply them through PocketBase's own migration engine. Do not ask addon authors to hand-write PocketBase JavaScript migration files for ordinary field additions.
+
+### Typed data-upgrade handlers
+Addons may declare upgrade handlers for semantic transformations. These are normal typed TypeScript functions with version boundaries, idempotency/checkpoint support, bounded batch processing, observability, explicit preconditions, and postconditions. They are not generic schema migration scripts and must not bypass ORM permissions or audit controls.
+
+### Schema history
+Keep an `orm_schema_state` / addon installation ledger with addon version, model fingerprint, adapter schema fingerprint, last plan hash, applied artifact/receipt, timestamp, and execution status. This history supports drift detection and repeatability; it does not mean developers must hand-write migration files.
+
 # 7. Database layer and PocketBase adapter
 
 ## 7.1 packages/orm-db
@@ -389,7 +439,7 @@ Own database runtime concerns:
 - Connection/client lifecycle.
 - Transaction scope abstraction.
 - Unit-of-work coordination.
-- Migration orchestration.
+- Schema diff, safe reconcile, version ledger, and upgrade orchestration.
 - Capability discovery.
 - Error normalization.
 - Health checks.
@@ -403,7 +453,7 @@ Own provider-neutral adapter contracts:
 - OrmDatabaseAdapter.
 - AdapterCapabilities.
 - Query request/result contracts.
-- Schema/migration capability contracts.
+- Schema introspection and managed schema-operation capability contracts.
 - Transaction interface.
 - Relation and realtime capability flags.
 - Provider error mapping.
@@ -447,7 +497,7 @@ Important limitations:
 - It is not a general SQL adapter and must not pretend to support arbitrary SQL joins.
 - Relation expansion and filtering must be limited to documented PocketBase capabilities.
 - Transaction support must be reported as unavailable through the ordinary remote SDK adapter unless a separately verified official mechanism is implemented.
-- Schema changes should use PocketBase's supported migration/deployment mechanism. Do not mutate internal SQLite tables directly.
+- PocketBase schema changes must use supported collection operations and PocketBase-native generated schema artifacts. Never mutate internal SQLite tables directly.
 - View collections are read-only; the adapter must respect that.
 - Auth collection special fields and rules must not be treated as ordinary base-model fields without explicit mapping.
 - Realtime is optional and must be explicitly capability-gated.
@@ -484,20 +534,21 @@ Example manifest:
       version: "1.0.0",
       depends: ["base"],
       models: [Project, ProjectTask],
-      migrations: projectMigrations
+      schema: projectSchema,
+      upgrades: projectDataUpgrades
     });
 
 Required lifecycle:
-DISCOVER → VALIDATE → RESOLVE DEPENDENCIES → REGISTER METADATA → APPLY MIGRATIONS → INITIALIZE SERVICES → READY.
+DISCOVER → VALIDATE → RESOLVE DEPENDENCIES → COMPOSE MODEL REGISTRY → PLAN SCHEMA DIFF → APPLY SAFE SCHEMA SYNC → RUN REQUIRED DATA UPGRADES → VERIFY → READY.
 
 Rules:
 - Resolve dependencies deterministically.
 - Reject missing dependencies and circular dependency graphs.
 - Reject duplicate addon IDs and model conflicts.
 - Respect semantic version compatibility.
-- Do not execute migrations before dependency validation.
+- Do not apply schema changes before addon dependency validation and schema planning.
 - Do not silently remove data when uninstalling.
-- Use explicit migration/upgrade plans.
+- Generate safe schema changes from model declarations; require typed data-upgrade handlers only for semantic transformations that cannot be inferred safely.
 - Keep an addon registry snapshot and installed version.
 - Addons must not reach into another addon's private files.
 - Public exports and extension contracts are the only supported integration boundary.
@@ -728,7 +779,7 @@ Do not call the frontend web. The app path and product name are apps/headquarter
 
 - Typecheck every package.
 - Lint every package.
-- Unit test ORM metadata, registry, fields, model composition, base fields, hooks, addon dependency resolution, migration ordering, and audit behavior.
+- Unit test ORM metadata, registry, fields, model composition, base fields, hooks, addon dependency resolution, schema diff/planning, safe reconciliation, generated PocketBase artifacts, data-upgrade handlers, and audit behavior.
 - Adapter contract tests for PocketBase.
 - Capability tests proving unsupported operations fail explicitly.
 - Integration tests for apps/arsy using Fastify injection.
@@ -766,7 +817,7 @@ packages/orm-addon-project and packages/orm-addon-intelligent.
 Connect Headquarter to ARSY using packages/contract. Replace demo data only for features that have verified backend endpoints.
 
 ### Phase H — Operational hardening
-Auth, access control, observability, budgets, kill switch, migration runbook, backup/restore, audit review, deployment docs.
+Auth, access control, observability, budgets, kill switch, schema-sync/recovery runbook, backup/restore, audit review, deployment docs.
 
 Do not skip ahead by creating a fake ORM facade over direct PocketBase calls. The ORM and adapter boundaries must be real and tested.
 
