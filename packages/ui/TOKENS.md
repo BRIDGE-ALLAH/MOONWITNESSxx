@@ -79,6 +79,19 @@ Do not use display typography for dense table cells, long paragraphs, or critica
 - Avoid pill-shaped containers unless the control semantics call for one.
 - Density variants belong to component APIs (for example `density="compact"`), not global scaling hacks.
 
+## Density and layering
+
+The default density is comfortable. The host may apply `.density-compact` or `.density-comfortable` to the application root; reusable controls can consume these variables without introducing per-app sizing drift.
+
+| Token | Comfortable | Compact |
+|---|---:|---:|
+| `density-control-height` | 40px | 32px |
+| `density-control-padding-x` | 12px | 8px |
+| `density-row-height` | 44px | 36px |
+| `density-stack-gap` | 12px | 8px |
+
+The z-index scale is shared by components and shell layers: `z-base` (0), `z-sticky` (10), `z-dropdown` (20), `z-overlay` (30), `z-modal` (40), `z-toast` (50), `z-tooltip` (60), and `z-command` (70). Do not create arbitrary z-index values without documenting a concrete layering requirement.
+
 ## Motion
 
 | Token | Value | Intended use |
