@@ -24,6 +24,8 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Validate local Compose configuration
+        env:
+          POSTGRES_PASSWORD: ci-validation-only-not-for-deployment
         run: docker compose --env-file .env.docker config --quiet
 
       - name: Build ARSY production image
