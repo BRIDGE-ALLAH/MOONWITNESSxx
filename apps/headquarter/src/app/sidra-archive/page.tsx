@@ -1,38 +1,5 @@
-import { Badge, Card, CardContent, CardHeader, CardTitle } from '@riotworks/ui'
+import Link from 'next/link'
 
-const assets = [
-  { id: 'asset-001', name: 'Digital Art Collection #1', type: 'Image Pack', version: '1.2.0', license: 'Original / Demo license metadata', provenance: 'Source files: artwork.ai, palette.json', status: 'READY (DEMO)' },
-  { id: 'asset-002', name: 'Comic Panel Series', type: 'Comic Bundle', version: '0.9.0', license: 'Review required', provenance: 'storyboard.ai, ink-sketches.ai', status: 'NEEDS REVIEW (DEMO)' },
-  { id: 'asset-003', name: 'Music Beat License', type: 'Audio', version: '1.0.1', license: 'Original / Demo license metadata', provenance: 'stems.wav, project.ableton', status: 'ARCHIVED (DEMO)' },
-]
-
-export default function SidraArchive() {
-  return (
-    <main className="theme-archive min-h-screen bg-background p-8 text-foreground">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <header className="border-b border-acid-lime/30 pb-6">
-          <Badge variant="lime">Prototype // Demo Data Only</Badge>
-          <h1 className="mt-3 font-display text-5xl uppercase">SIDRA ARCHIVE</h1>
-          <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">Asset catalog, versions, licenses, and provenance.</p>
-        </header>
-        <div className="grid gap-4">
-          {assets.map((a) => (
-            <Card key={a.id} className="border-acid-lime/20">
-              <CardHeader className="flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-xl">{a.name}</CardTitle>
-                <Badge variant="outline">{a.status}</Badge>
-              </CardHeader>
-              <CardContent className="grid gap-1 text-sm md:grid-cols-2">
-                <p><span className="font-mono text-muted-ink">ID:</span> {a.id}</p>
-                <p><span className="font-mono text-muted-ink">Type:</span> {a.type}</p>
-                <p><span className="font-mono text-muted-ink">Version:</span> {a.version}</p>
-                <p><span className="font-mono text-muted-ink">License:</span> {a.license}</p>
-                <p className="md:col-span-2"><span className="font-mono text-muted-ink">Provenance:</span> {a.provenance}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </main>
-  )
+export default function SidraArchivePage() {
+  return <main className="min-h-screen bg-obsidian p-8 text-paper-bone"><div className="mx-auto max-w-5xl space-y-6"><header className="border-b border-acid-lime/30 pb-6"><p className="font-mono text-xs uppercase tracking-[0.25em] text-acid-lime">RIOTWORKS / Asset Library</p><h1 className="mt-3 font-display text-5xl uppercase">SIDRA ARCHIVE</h1><p className="mt-3 text-sm text-muted-ink">Versioned product assets, licensing and provenance.</p></header><section className="border border-dashed border-acid-lime/30 p-6"><h2 className="font-display text-2xl uppercase">Asset storage is not configured</h2><p className="mt-3 text-sm text-muted-ink">The database metadata contract exists, but no binary storage provider, upload authorization, checksum verification, or download lifecycle has been configured. No sample assets are presented as stored files.</p><Link href="/the-forge" className="mt-5 inline-flex border border-acid-lime/40 px-5 py-3 font-mono text-xs uppercase">Open THE FORGE</Link></section></div></main>
 }
