@@ -1036,3 +1036,24 @@ Evidence: https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42395999916
 - [!] First Phase 9 CI run 541 reached repository lint and failed on one unused destructuring binding in the snapshot digest helper; that binding was removed in commit `c932363ebc08c6e0c97ac38ef7c152f9be4c11ab`.
 - [!] Follow-up PR workflow run 554 was cancelled before checkout/validation completed; it provides no verification evidence.
 - [ ] Obtain a fresh successful repository-integrity and full-workspace CI run for the latest Phase 9 head before treating the store package as verified.
+
+
+## Phase 11 — Addon and Module Foundation
+
+**Branch:** feat/phase-11-addon-module-foundation
+
+- [x] Add capability catalog with risk levels and default-deny unknown capabilities.
+- [x] Add allow-list, deny-list, risk ceiling, and approval-required capability evaluation.
+- [x] Validate publisher/signature/digest evidence, manifest compatibility, module ownership, and safe package-relative entrypoints.
+- [x] Plan addon install/upgrade/enable operations deterministically.
+- [x] Resolve module and addon dependency order; reject cycles, missing dependencies, and incompatible versions.
+- [x] Bind package artifact digest, module order, and required capability approvals into deterministic install plan ID.
+- [x] Add test source for capability policy, trust failures, dependency order, and cycle rejection.
+- [ ] Connect real cryptographic signature verifier and package artifact staging store.
+- [ ] Persist install plans, approvals, installed states, and quarantine records in SQLite System Store.
+- [ ] Integrate addon plan into System Mode discovery/trust/registry composition.
+- [ ] Add cross-addon module dependency resolution and shared semver library with registry composer.
+- [ ] Add sandbox/RPC execution policy, adversarial tests, and CI verification.
+
+See docs/36-phase-11-addon-module-foundation.md. The planner consumes cryptographic trust evidence; it does not implement signature verification or load executable packages.
+
