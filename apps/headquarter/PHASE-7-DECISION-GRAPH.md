@@ -24,10 +24,11 @@ Traditional audit logs answer who clicked what and when. They rarely explain wha
 - [x] Domain model and relationship vocabulary.
 - [x] Pure graph integrity/traceability assessor.
 - [x] Tests for traceable/unsubstantiated decisions, provenance, expiry, confidence, and dangling references.
-- [ ] Headquarter graph explorer and decision detail UI.
+- [x] Read-only Headquarter Decision Graph Explorer with traceability, contradiction, stale evidence, and Decision Debt views (synthetic fixture only).
+- [ ] Production graph pagination, search, and decision detail backed by ARSY contract.
 - [ ] ARSY append-only decision/evidence contracts and workspace-scoped authorization.
 - [ ] Search, pagination, redaction, retention, and export policy.
-- [ ] Human review workflow for stale/contradictory evidence.
+- [ ] Human review workflow for stale/contradictory evidence with backend audit trail.
 
 ### Non-negotiable guardrails
 
