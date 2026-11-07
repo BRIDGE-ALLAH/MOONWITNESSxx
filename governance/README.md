@@ -40,15 +40,15 @@ Use [the contract standard](./contracts/README.md) for required fields and chang
 
 ## Rule-to-enforcement map
 
-| Rule family                                           | Current enforcement                                     | State                                           |
-| ----------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------- |
-| Root identity and required commands                   | `scripts/repo-audit.mjs` + CI audit                     | Implemented                                     |
-| Workspace package manifests and names                 | `scripts/repo-audit.mjs`                                | Implemented                                     |
-| Lockfile/dependency reproducibility                   | `scripts/check-lockfile.mjs` + frozen CI install        | Implemented                                     |
-| App/package dependency direction                      | Governance Engine dependency/import checks              | CI active; owner review pending                    |
-| API compatibility and internal endpoint authorization | Contract tests and API boundary checks                  | Planned Phase 2/3                               |
-| GitHub workflow permissions and branch rules          | Governance Engine workflow scan + administrator ruleset | Partial; ruleset requires administrator         |
-| Scheduled detection idempotency                       | Weekly detection workflow + read-only permissions       | Existing; deeper tests Phase 3                  |
+| Rule family                                           | Current enforcement                                     | State                                             |
+| ----------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------- |
+| Root identity and required commands                   | `scripts/repo-audit.mjs` + CI audit                     | Implemented                                       |
+| Workspace package manifests and names                 | `scripts/repo-audit.mjs`                                | Implemented                                       |
+| Lockfile/dependency reproducibility                   | `scripts/check-lockfile.mjs` + frozen CI install        | Implemented                                       |
+| App/package dependency direction                      | Governance Engine dependency/import checks              | CI active; owner review pending                   |
+| API compatibility and internal endpoint authorization | Contract tests and API boundary checks                  | Planned Phase 2/3                                 |
+| GitHub workflow permissions and branch rules          | Governance Engine workflow scan + administrator ruleset | Partial; ruleset requires administrator           |
+| Scheduled detection idempotency                       | Weekly detection workflow + read-only permissions       | Existing; deeper tests Phase 3                    |
 | Installer safety/idempotency                          | Node + shell/PowerShell tests                           | Phase 4 implemented; full rerun test open         |
 | Production migration/deployment approval              | Human approval + runtime gates                          | Phase 5 local-dev gates; production controls open |
 
