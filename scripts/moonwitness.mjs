@@ -228,7 +228,7 @@ export async function runCli(argv, cwd = process.cwd()) {
     print({
       command: 'uninstall',
       removed: 'generated .moonwitness/install-state.json',
-      preserved: ['.env', 'node_modules', source files, Docker volumes, databases'],
+      preserved: ['.env', 'node_modules', 'source files', 'Docker volumes', 'databases'],
     })
     return
   }
