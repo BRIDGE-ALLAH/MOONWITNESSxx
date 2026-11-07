@@ -1,7 +1,7 @@
 # MOONWITNESS Governance — Execution TODO
 
 **Repository:** `BRIDGE-ALLAH/MOONWITNESS`  
-**Baseline:** `main@9164e43a078c6fdcd36b6486aef9ebdcbaa8d0e4`  
+**Baseline:** `main@0bdf4290d6c060892f85f6562a41585a2be53e08`  
 **Branch:** `chore/governance-phase-0-1`  
 **Approach:** programmatic checks + Markdown contracts; no parallel schema framework.
 
@@ -62,7 +62,7 @@
 - [ ] **BLOCKED:** Full workspace type-check/build; separate Asset integrity job reports TS2307 for missing `./demo-data` and `./types` imported by `apps/headquarter/src/features/arsy-deck/repository.ts`.
 - [ ] Review diff, secrets, changed-file scope; record CI SHA/URL.
 
-**Status:** Repository integrity gate passes on `42395802586` (audit, frozen lockfile, install, formatting, tests). Full Headquarter type-check and main ruleset remain open.
+**Latest verified status (2026-11-07):** Repository integrity passes on PR head `75df7d204279f3788be21157c0515dc9f6c85d95` in [run `42395969919`](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42395969919): audit, frozen lockfile check, frozen install, format check, and automation tests all pass. The separate Asset integrity job in that same run fails at Headquarter type-check with TS2307 for missing `./demo-data` and `./types` imported by `apps/headquarter/src/features/arsy-deck/repository.ts`; this is an application blocker, not a governance-check failure. Full workspace type-check/build, Dependabot verification, owner review, and administrator-managed `main` ruleset remain open. Earlier repository-integrity evidence is retained above.
 
 ## Phase 1 — Governance authority and rule contracts
 
