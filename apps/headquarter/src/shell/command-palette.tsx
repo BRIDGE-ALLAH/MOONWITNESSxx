@@ -13,7 +13,7 @@ export function CommandPalette({ open, items, onClose }: CommandPaletteProps) {
   const dialogRef = useRef<HTMLElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
   const filteredItems = useMemo(
-    () => items.filter((item) => item.label.toLowerCase().includes(query.trim().toLowerCase())),
+    () => items.filter((item) => item.href && item.status !== 'planned' && item.label.toLowerCase().includes(query.trim().toLowerCase())),
     [items, query],
   )
 
@@ -74,8 +74,8 @@ export function CommandPalette({ open, items, onClose }: CommandPaletteProps) {
         />
         <ul className="mt-2 max-h-72 overflow-auto" aria-label="Matching modules">
           {filteredItems.map((item) => (
-            <li key={item.href}>
-              <Link href={item.href} onClick={onClose} className="block border-b border-acid-lime/10 px-2 py-2 font-mono text-xs uppercase hover:bg-acid-lime/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acid-lime">{item.label}</Link>
+            <li key={item.href ?? item.label}>
+              <Link href={item.href!} onClick={onClose} className="block border-b border-acid-lime/10 px-2 py-2 font-mono text-xs uppercase hover:bg-acid-lime/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acid-lime">{item.label}</Link>
             </li>
           ))}
           {filteredItems.length === 0 ? <li className="px-2 py-3 text-sm text-muted-foreground" role="status">No matching modules.</li> : null}
