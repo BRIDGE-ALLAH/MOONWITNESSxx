@@ -51,7 +51,7 @@ export function validateRemoteDockerEndpoint(input: string, env = process.env): 
 }
 
 
-type ResolvedDockerAddress = { address: string; family: number }
+export type ResolvedDockerAddress = { address: string; family: number }
 type AddressClass = 'public' | 'private' | 'blocked'
 
 function classifyAddress(address: string): AddressClass {
@@ -85,12 +85,12 @@ export async function resolveRemoteDockerEndpoint(
   env = process.env,
   resolver: (hostname: string) => Promise<ResolvedDockerAddress[]> =
     (hostname) => lookup(hostname, { all: true, verbatim: true }),
-): Promise<{ url: URL; addresses: string[] }> {
+): Promise<{ url: URL; addresses: ResolvedDockerAddress[] }> {
   const url = validateRemoteDockerEndpoint(input, env)
   const records = await resolver(url.hostname)
   if (records.length === 0) throw new Error('Remote Docker endpoint did not resolve to an address')
-  const addresses = records.map((record) => record.address)
-  const classes = addresses.map(classifyAddress)
+  const addresses = records.map((record) => ({ address: record.address, family: record.family }))
+  const classes = addresses.map((record) => classifyAddress(record.address))
   if (classes.some((value) => value === 'blocked')) {
     throw new Error('Remote Docker endpoint resolves to a loopback, link-local, reserved, or otherwise blocked address')
   }
