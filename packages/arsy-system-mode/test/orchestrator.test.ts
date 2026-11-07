@@ -9,7 +9,7 @@ const registry: RegistrySnapshot = { formatVersion: 1, fingerprint: "fp", create
 const plan: SchemaPlan = { id: "plan", registryFingerprint: "fp", provider: "postgres:business", generatedAt: "2026-01-01T00:00:00.000Z", operations: [], requiresApproval: false };
 const receipt: ReconciliationReceipt = { planId: "plan", registryFingerprint: "fp", provider: "postgres:business", appliedAt: "2026-01-01T00:00:00.000Z", actorId: "operator", results: [], verified: true, status: "verified" };
 
-function makePorts(events: string[], failHandoff = false): SystemModePorts {
+function makePorts(events: string[], failHandoff = false, failPrepare = false): SystemModePorts {
   let current: SystemModeStage = "control-bootstrap";
   const policy: ReconciliationPolicy = { mode: "safe", allowDestructive: false, requireApprovalForReview: true };
   return {
@@ -42,7 +42,7 @@ function makePorts(events: string[], failHandoff = false): SystemModePorts {
     async recover() { events.push("recover"); },
     async inspectBusiness() { return {} as DatabaseSnapshot; },
     async approve() { events.push("approve"); return policy; },
-    async prepareRuntime() { events.push("prepare-runtime"); },
+    async prepareRuntime() { events.push("prepare-runtime"); if (failPrepare) throw new Error("shadow runtime unhealthy"); },
     async handoff() { events.push("handoff"); if (failHandoff) throw new Error("canary failed"); },
     async setReadiness(ready) { events.push(ready ? "ready" : "not-ready"); },
     now: () => new Date("2026-01-01T00:00:00.000Z"),
@@ -66,5 +66,14 @@ test("keeps readiness false and journals failure when runtime handoff fails afte
   assert.ok(events.includes("failed"));
   assert.ok(events.includes("not-ready"));
   assert.ok(events.includes("activate"));
+  assert.ok(events.includes("release"));
+});
+
+test("does not activate a candidate when shadow runtime preparation fails", async () => {
+  const events: string[] = [];
+  await assert.rejects(() => new SystemModeOrchestrator(makePorts(events, false, true)).run("operator"), /shadow runtime unhealthy/);
+  assert.ok(events.includes("prepare-runtime"));
+  assert.ok(!events.includes("activate"));
+  assert.ok(events.includes("not-ready"));
   assert.ok(events.includes("release"));
 });
