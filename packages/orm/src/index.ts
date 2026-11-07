@@ -60,6 +60,22 @@ export interface RelationDefinition<TTarget extends string = string>
 
 export type FieldMap = Readonly<Record<string, FieldDefinition>>;
 
+export interface MixinDefinition {
+  readonly id: string;
+  readonly module: string;
+  readonly fields: FieldMap;
+  readonly conflicts?: readonly string[];
+}
+
+export interface ModelExtensionDefinition {
+  readonly id: string;
+  readonly module: string;
+  readonly targetModel: string;
+  readonly fields?: FieldMap;
+  readonly mixins?: readonly string[];
+  readonly priority?: number;
+}
+
 export interface ModelDefinition<TFields extends FieldMap = FieldMap> {
   readonly name: string;
   readonly module: string;
@@ -94,12 +110,18 @@ export interface ModuleDependency {
   readonly optional?: boolean;
 }
 
+export interface AddonCompatibility {
+  readonly arsy: string;
+  readonly orm: string;
+  readonly api?: string;
+}
+
 export interface AddonManifest {
   readonly id: string;
   readonly version: string;
   readonly publisher: string;
   readonly description?: string;
-  readonly arsy: string;
+  readonly compatibility: AddonCompatibility;
   readonly modules: readonly string[];
   readonly dependencies?: readonly AddonDependency[];
   readonly conflicts?: readonly string[];
@@ -165,10 +187,21 @@ export class OrmError extends Error {
   }
 }
 
+export type DomainOperator =
+  | "eq" | "ne" | "gt" | "gte" | "lt" | "lte"
+  | "in" | "not-in" | "like" | "ilike" | "is-null";
+
+export type DomainExpression =
+  | Readonly<{ kind: "condition"; field: string; operator: DomainOperator; value?: unknown }>
+  | Readonly<{ kind: "and" | "or"; expressions: readonly DomainExpression[] }>
+  | Readonly<{ kind: "not"; expression: DomainExpression }>;
+
 export interface RegistryBuildInput {
   readonly addons: readonly AddonManifest[];
   readonly modules: readonly ModuleManifest[];
   readonly models: readonly ModelConstructor[];
+  readonly mixins?: readonly MixinDefinition[];
+  readonly extensions?: readonly ModelExtensionDefinition[];
 }
 
 export interface RegistryComposer {
