@@ -49,14 +49,14 @@ function validateRecords(records: readonly SourceLineageRecord[]): Map<string, S
     if (typeof record.lineageComplete !== "boolean") throw new Error("lineageComplete must be an explicit boolean for: " + record.sourceRef);
     if (record.familyId !== undefined && typeof record.familyId !== "string") throw new Error("familyId must be a string when present: " + record.sourceRef);
     if (byRef.has(record.sourceRef)) throw new Error("Duplicate source lineage record: " + record.sourceRef);
-    if (!Array.isArray(record.parentSourceRefs) || record.parentSourceRefs.some((ref) => typeof ref !== "string" || !ref.trim() || ref !== ref.trim())) throw new Error("Invalid parent source references for: " + record.sourceRef);
+    if (!Array.isArray(record.parentSourceRefs) || record.parentSourceRefs.some((ref: unknown) => typeof ref !== "string" || !ref.trim() || ref !== ref.trim())) throw new Error("Invalid parent source references for: " + record.sourceRef);
     byRef.set(record.sourceRef, record);
   }
   return byRef;
 }
 /** Independence requires complete, acyclic, disjoint ancestry and distinct declared witness families. */
 export function assessSourceLineageIndependence(input: { records: readonly SourceLineageRecord[]; selectedSourceRefs: readonly string[] }): LineageIndependenceAssessment {
-  if (!input || !Array.isArray(input.selectedSourceRefs) || input.selectedSourceRefs.some((ref) => typeof ref !== "string" || !ref.trim() || ref !== ref.trim())) throw new Error("Selected source references must be a normalized string array");
+  if (!input || !Array.isArray(input.selectedSourceRefs) || input.selectedSourceRefs.some((ref: unknown) => typeof ref !== "string" || !ref.trim() || ref !== ref.trim())) throw new Error("Selected source references must be a normalized string array");
   if (new Set(input.selectedSourceRefs).size !== input.selectedSourceRefs.length) throw new Error("Selected source references must be unique");
   const byRef = validateRecords(input.records);
   const selected = sortedUnique(input.selectedSourceRefs);
@@ -92,7 +92,7 @@ export function assessSourceLineageIndependence(input: { records: readonly Sourc
   }
   const familyIds = selected.map((ref) => byRef.get(ref)?.familyId?.trim() ?? "");
   const duplicateFamilies = familyIds.some((family, index) => family !== "" && familyIds.indexOf(family) !== index);
-  const missingFamilies = selected.some((ref) => !byRef.get(ref)?.familyId?.trim());
+  const missingFamilies = selected.some((ref: unknown) => !byRef.get(ref)?.familyId?.trim());
   const reasonCodes: string[] = [];
   if (shared.size) reasonCodes.push("shared-lineage-ancestor");
   if (duplicateFamilies) reasonCodes.push("shared-witness-family");
