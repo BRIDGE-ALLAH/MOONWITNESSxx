@@ -79,7 +79,7 @@ Local=safe; CI=plan; staging=one serialized safe job; production=one serialized 
 Every managed table has addon/model ownership metadata. Reconciler modifies only owned objects. Unmanaged tables/columns are preserved. Manual edits are reported as drift, not overwritten. Disabled/uninstalled addons retain data. Deletion is a separate approved operation.
 
 ## 12. BaseEntity
-Inject only id, createdAt, updatedAt. Ownership, archive, toggle, soft-delete, version are explicit mixins. Reject duplicates and conflicting mixins.
+Inject exactly id, createdAt, createdById, updatedAt, updatedById. Actor fields are server-controlled references to the canonical principal abstraction. Ownership beyond creator/updater, archive, toggle, soft-delete, version, workspace and company scope are explicit mixins. Reject duplicates and conflicting mixins.
 
 ## 13. Developer flow
 Edit TypeScript model → request plan → review classification → safe local sync → tests → commit model/typed handler → CI verifies plan/compatibility → one serialized release job reconciles/verifies. No generated SQL migration files in standard workflow.
@@ -90,3 +90,7 @@ Model declarations are desired source; routine nullable field requires no handwr
 
 ## 13. v1.3 composed schema scope
 Desired schema is composed from the enabled base-platform addon manifests as well as business addons. BaseEntity injects id, createdAt, createdById, updatedAt and updatedById exactly once. Optional mixins and optional base addons contribute schema only when enabled. Schema plan/reconcile remains API-triggered through ARSY; adapters execute provider-native schema operations. This supersedes older three-field BaseEntity references.
+
+
+## 15. Current implementation status
+The reconciler, provider adapters and private schema API are architecture targets, not implemented code in the audited repository snapshot. docs/23 defines the actual delivery sequence. Do not claim schema synchronization works until both provider contract suites and recovery tests pass.
