@@ -16,7 +16,7 @@
     "check:repo": "pnpm run lockfile:check && pnpm run validate:repo",
     "audit:repo": "pnpm run lockfile:check && pnpm run validate:repo",
     "format:check": "pnpm run format && pnpm run format:check",
-    "validate:repo": "pnpm run lockfile:check && pnpm run typecheck && pnpm run lint && pnpm --filter @riotworks/ui run test",
+    "validate:repo": "pnpm run lockfile:check && pnpm run typecheck && pnpm run lint && pnpm --filter @riotworks/ui run test && pnpm --filter @riotworks/headquarter run build",
     "validate": "pnpm run validate:repo && pnpm run build",
     "lockfile:check": "node scripts/check-lockfile.mjs",
     "lockfile:refresh": "pnpm install --lockfile-only --ignore-scripts"
