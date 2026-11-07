@@ -49,7 +49,7 @@ export function FinancialLedger() {
     setError('')
     try {
       const [eventResponse, summaryResponse, productResponse] = await Promise.all([
-        fetch('/api/financial-events', { cache: 'no-store' }),
+        fetch('/api/financial-events?limit=100', { cache: 'no-store' }),
         fetch('/api/financial-summary', { cache: 'no-store' }),
         fetch('/api/products', { cache: 'no-store' }),
       ])
