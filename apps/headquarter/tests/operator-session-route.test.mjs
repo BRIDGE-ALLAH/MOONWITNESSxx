@@ -147,7 +147,14 @@ test('login limiter ignores spoofed forwarding headers unless one trusted ingres
     NODE_ENV: 'production',
     HEADQUARTER_TRUSTED_PROXY_HOPS: '1',
   })
-  assert.equal(trustedHash, createHash('sha256').update('203.0.113.99').digest('hex'))
+  assert.equal(trustedHash, createHash('sha256').update('ip:203.0.113.99').digest('hex'))
+  const ipv6Short = resolveLoginNetworkHash(new Request(`${origin}/api/auth/session`, {
+    headers: { 'x-forwarded-for': '2001:db8::1' },
+  }), { NODE_ENV: 'production', HEADQUARTER_TRUSTED_PROXY_HOPS: '1' })
+  const ipv6Expanded = resolveLoginNetworkHash(new Request(`${origin}/api/auth/session`, {
+    headers: { 'x-forwarded-for': '2001:0db8:0:0:0:0:0:1' },
+  }), { NODE_ENV: 'production', HEADQUARTER_TRUSTED_PROXY_HOPS: '1' })
+  assert.equal(ipv6Short, ipv6Expanded)
   assert.equal(resolveLoginNetworkHash(new Request(`${origin}/api/auth/session`, {
     headers: { 'x-forwarded-for': 'bad-ip, 203.0.113.99' },
   }), { NODE_ENV: 'production', HEADQUARTER_TRUSTED_PROXY_HOPS: '1' }), null)

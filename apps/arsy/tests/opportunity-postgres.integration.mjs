@@ -534,6 +534,34 @@ test('shared PostgreSQL login throttling is consistent across two ARSY instances
     const blockedFromOtherInstance = await send(appA, 'check')
     assert.equal(blockedFromOtherInstance.json().data.allowed, false)
 
+    // Expire both the block and the rolling failure window, then prove the next
+    // attempt starts a fresh window rather than inheriting the old failure count.
+    await poolA.query(
+      `UPDATE arsy_login_attempt_buckets
+       SET window_started_at = now() - interval '16 minutes',
+           blocked_until = now() - interval '1 second'
+       WHERE owner_id = $1`,
+      [ownerId],
+    )
+    const allowedAfterWindowExpiry = await send(appA, 'check')
+    assert.equal(allowedAfterWindowExpiry.json().data.allowed, true)
+    const firstFailureInNewWindow = await send(appB, 'failure')
+    assert.equal(firstFailureInNewWindow.json().data.allowed, true)
+    const restartedBuckets = await poolA.query(
+      'SELECT failure_count, blocked_until FROM arsy_login_attempt_buckets WHERE owner_id = $1',
+      [ownerId],
+    )
+    assert.equal(restartedBuckets.rows.length, 2)
+    assert.ok(restartedBuckets.rows.every((row) => Number(row.failure_count) === 1 && row.blocked_until === null))
+
+    // A parallel burst shared across both application instances still trips the DB limit.
+    const burst = await Promise.all(Array.from({ length: 7 }, (_, index) =>
+      send(index % 2 === 0 ? appA : appB, 'failure'),
+    ))
+    assert.ok(burst.some((response) => response.json().data.allowed === false))
+    const blockedAfterBurst = await send(appA, 'check')
+    assert.equal(blockedAfterBurst.json().data.allowed, false)
+
     const successfulLoginClearsBuckets = await send(appB, 'success')
     assert.equal(successfulLoginClearsBuckets.json().data.allowed, true)
     const clearedFromOtherInstance = await send(appA, 'check')
