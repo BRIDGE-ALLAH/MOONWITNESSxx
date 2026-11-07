@@ -1,1 +1,33 @@
-{"name":"@riotworks/orm","version":"0.1.0","private":true,"type":"module","sideEffects":false,"exports":{".":{"types":"./src/index.ts","default":"./src/index.ts"},"./registry":{"types":"./src/registry.ts","default":"./src/registry.ts"}},"scripts":{"type-check":"tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts src/registry.ts","lint":"pnpm --filter @riotworks/lint exec eslint ../orm/src --config eslint.config.mjs --max-warnings 0"}}
+{
+  "name": "@riotworks/orm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./registry": {
+      "types": "./src/registry.ts",
+      "default": "./src/registry.ts"
+    },
+    "./fields": {
+      "types": "./src/fields.ts",
+      "default": "./src/fields.ts"
+    },
+    "./model": {
+      "types": "./src/model.ts",
+      "default": "./src/model.ts"
+    },
+    "./declaration": {
+      "types": "./src/declaration.ts",
+      "default": "./src/declaration.ts"
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts src/registry.ts src/fields.ts src/model.ts src/declaration.ts",
+    "lint": "pnpm --filter @riotworks/lint exec eslint ../orm/src --config eslint.config.mjs --max-warnings 0"
+  }
+}
