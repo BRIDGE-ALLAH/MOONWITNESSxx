@@ -30,6 +30,25 @@ for (const [key, asset] of Object.entries(assetRegistry)) {
       errors.push(`${asset.id}: missing valid SVG root / namespace`);
     }
     if (!/<\/svg>\s*$/i.test(svg)) errors.push(`${asset.id}: SVG closing tag missing`);
+    const svgRoot = svg.match(/<svg\b[^>]*>/i)?.[0];
+    const viewBox = svgRoot?.match(/\bviewBox="([^"]+)"/i)?.[1];
+    const viewBoxValues = viewBox?.trim().split(/[\s,]+/).map(Number);
+    if (
+      !svgRoot ||
+      !viewBoxValues ||
+      viewBoxValues.length !== 4 ||
+      !viewBoxValues.every(Number.isFinite) ||
+      viewBoxValues[2] <= 0 ||
+      viewBoxValues[3] <= 0
+    ) {
+      errors.push(asset.id + ": missing or invalid positive SVG viewBox dimensions");
+    } else {
+      const sourceRatio = viewBoxValues[2] / viewBoxValues[3];
+      const registryRatio = asset.width / asset.height;
+      if (Math.abs(sourceRatio - registryRatio) >= 0.02) {
+        errors.push(asset.id + ": SVG viewBox ratio " + sourceRatio.toFixed(4) + " does not match registry ratio " + registryRatio.toFixed(4));
+      }
+    }
     if (/<script\b|<foreignObject\b|\bon[a-z]+\s*=|javascript:/i.test(svg)) {
       errors.push(`${asset.id}: unsafe SVG markup detected`);
     }
