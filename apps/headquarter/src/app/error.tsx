@@ -2,7 +2,7 @@
 
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@riotworks/ui'
 
-export default function AppError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <main className="flex min-h-[60vh] items-center justify-center bg-background p-6 text-foreground">
       <Card className="w-full max-w-xl border-destructive/50">
@@ -16,7 +16,7 @@ export default function AppError({ reset }: { error: Error & { digest?: string }
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3">
           <Button onClick={reset}>Try again</Button>
-          <p className="text-xs text-muted-foreground" role="status">If you contact support, include the diagnostic reference shown in your browser logs.</p>
+          <p className="text-xs text-muted-foreground" role="status">{error.digest ? `Reference: ${error.digest}` : 'Reference unavailable'}</p>
         </CardContent>
       </Card>
     </main>
