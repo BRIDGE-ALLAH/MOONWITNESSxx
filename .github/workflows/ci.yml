@@ -78,11 +78,17 @@ jobs:
         with:
           node-version: 24
 
-      - name: Install asset package dependencies
-        run: pnpm install --filter @riotworks/assets --no-frozen-lockfile --ignore-scripts
+      - name: Install Headquarter dependency graph
+        run: pnpm install --filter @riotworks/headquarter... --no-frozen-lockfile --ignore-scripts
 
       - name: Type-check asset package
         run: pnpm --filter @riotworks/assets type-check
+
+      - name: Type-check shared UI package
+        run: pnpm --filter @riotworks/ui type-check
+
+      - name: Type-check Headquarter application
+        run: pnpm --filter @riotworks/headquarter type-check
 
       - name: Validate registry and SVG source assets
         run: node --experimental-strip-types packages/assets/scripts/validate-assets.mjs
