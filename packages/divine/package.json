@@ -31,6 +31,11 @@
       "types": "./src/epistemology/index.ts",
       "import": "./src/epistemology/index.ts",
       "default": "./src/epistemology/index.ts"
+    },
+    "./adapters": {
+      "types": "./src/adapters/index.ts",
+      "import": "./src/adapters/index.ts",
+      "default": "./src/adapters/index.ts"
     }
   },
   "scripts": {

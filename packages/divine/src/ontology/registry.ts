@@ -1,4 +1,5 @@
 import { DivineError } from "../errors.ts";
+import { isCorpusCanonicalId } from "../corpus/identity.ts";
 import type {
   OntologyCandidateGenerator, OntologyDiagnostic, OntologyDiff, OntologyMapping,
   OntologyMappingCandidate, OntologyMigrationPlan, OntologyScope, OntologyVersion,
@@ -6,13 +7,12 @@ import type {
 
 const ID = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
 const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/;
-const CANONICAL = /^mw:[a-z][a-z0-9-]*:[^\s]+$/;
 const SCOPE_KEYS = ["tradition", "community", "school", "period", "method", "project"] as const;
 const unique = (values: readonly string[]) => new Set(values).size === values.length;
 
 function validateScope(scope: OntologyScope): boolean {
   return Object.entries(scope).every(([key, value]) =>
-    (SCOPE_KEYS as readonly string[]).includes(key) && typeof value === "string" && CANONICAL.test(value),
+    (SCOPE_KEYS as readonly string[]).includes(key) && isCorpusCanonicalId(value),
   );
 }
 
@@ -58,7 +58,7 @@ export function validateOntology(ontology: OntologyVersion): readonly OntologyDi
   for (const [index, concept] of ontology.concepts.entries()) {
     if (!ID.test(concept.id)) add("INVALID_NAMESPACE", "concepts[" + index + "].id", "Concept id must be stable.");
     if (!schemes.has(concept.schemeId)) add("UNKNOWN_SCHEME", "concepts[" + index + "]", "Unknown concept scheme.");
-    if (!CANONICAL.test(concept.corpusId)) {
+    if (!isCorpusCanonicalId(concept.corpusId)) {
       add("UNKNOWN_CONCEPT", "concepts[" + index + "].corpusId", "Concept must reference a canonical Corpus lexicon id.");
     }
     if (concept.externalUri && !/^https?:\/\//.test(concept.externalUri)) {
@@ -87,11 +87,11 @@ export function validateOntology(ontology: OntologyVersion): readonly OntologyDi
     }
     if (!validateScope(mapping.scope) || !SCOPE_KEYS.some((key) => mapping.scope[key])) add("INVALID_NAMESPACE", "mappings[" + index + "].scope", "Mapping scope must be explicit and use canonical Corpus references.");
     if (["accepted", "rejected", "deprecated"].includes(mapping.status)) {
-      if (!mapping.method.trim() || !mapping.evidenceRefs.length || !mapping.reviewer || !CANONICAL.test(mapping.reviewer)) {
+      if (!mapping.method.trim() || !mapping.evidenceRefs.length || !mapping.reviewer || !isCorpusCanonicalId(mapping.reviewer)) {
         add("UNREVIEWED_MAPPING", "mappings[" + index + "]", "Promoted mappings require method, evidence and a canonical reviewer.");
       }
     }
-    if (mapping.evidenceRefs.some((id) => !CANONICAL.test(id))) {
+    if (mapping.evidenceRefs.some((id) => !isCorpusCanonicalId(id))) {
       add("UNKNOWN_CONCEPT", "mappings[" + index + "].evidenceRefs", "Evidence references must be canonical Corpus ids.");
     }
     if (mapping.relation === "exact" && mapping.status === "accepted" && !mapping.rationale.trim()) {
@@ -227,7 +227,7 @@ export function planConceptDeprecation(
     throw new DivineError("DIVINE_ONTOLOGY_INVALID", "Redirect strategy requires a replacement concept.");
   }
   if (!plan.rationale.trim() || !VERSION.test(plan.effectiveVersion) || !plan.requiredReviewers.length ||
-      plan.requiredReviewers.some((id) => !CANONICAL.test(id))) {
+      plan.requiredReviewers.some((id) => !isCorpusCanonicalId(id))) {
     throw new DivineError("DIVINE_ONTOLOGY_INVALID", "Deprecation plans require rationale, semantic version and canonical reviewers.");
   }
   return Object.freeze({
