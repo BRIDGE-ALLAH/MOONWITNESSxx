@@ -775,7 +775,7 @@ Use these labels consistently when updating this file:
 
 ## 19. Phase 14 — Living Evidence Graph & Epistemic Memory
 
-**Status:** Research-backed proposal; implementation not yet started.  
+**Status:** [~] Initial code vertical slice in `packages/arsy-core/src/evidence/`; persistence, graph projections, source-span provenance, policy integration, and automated tests remain. See implementation PR.  
 **Goal:** Make every consequential ARSY conclusion reconstructable from the evidence, assumptions, decisions, and system state that existed at the time.
 
 - [ ] Define a versioned Evidence Graph schema: Evidence, Claim, Source, Observation, Belief, Decision, Action, Outcome, Counterevidence, and Supersession edges.
@@ -795,7 +795,7 @@ Use these labels consistently when updating this file:
 
 ## 20. Phase 15 — ARSY Reality Replay & Counterfactual Safety Engine
 
-**Status:** Research-backed proposal; implementation not yet started.  
+**Status:** [~] Initial code vertical slice in `packages/arsy-core/src/replay/`; sandbox runner, external fixture adapters, capsule persistence, and automated safety tests remain. See implementation PR.  
 **Goal:** Evaluate high-impact actions against a reproducible snapshot before execution, and preserve the relationship between prediction and observed outcome.
 
 - [ ] Define a Replay Capsule: registry fingerprint, policy version, actor/tenant scope, input snapshot, evidence IDs, tool versions, random seeds where controllable, and external dependency declarations.
@@ -821,4 +821,39 @@ Use these labels consistently when updating this file:
 - [ ] Do not use “first in the world”, “never done before”, or equivalent claims without a defensible prior-art search and independent review.
 - [ ] Prefer measurable hypotheses and reproducible prototypes over speculative feature claims.
 - [ ] Re-run the research review before public release because the agent infrastructure ecosystem changes quickly.
+
+
+## 22. Phase 16 — Causal Blast-Radius Mesh & Change Digital Twin
+
+**Status:** Research proposal; do not mark implemented until evaluated against real workflows.  
+**Goal:** Predict the downstream impact of a proposed change across data, policies, agents, integrations, and user-visible workflows before it is applied.
+
+- [ ] Build a typed dependency/causality graph from observed events, model relations, policy decisions, tool calls, and deployment manifests.
+- [ ] Distinguish correlation, declared dependency, and experimentally supported causal edge; attach confidence and provenance to each edge.
+- [ ] Create a Change Impact Capsule containing proposed diff, affected entities, policy/registry fingerprints, and current evidence snapshot.
+- [ ] Run bounded counterfactual scenarios against isolated fixtures; estimate blast radius, reversibility, affected tenants, and recovery cost.
+- [ ] Add a “no-op / do nothing” baseline so ARSY can recommend delaying an action when evidence is weak.
+- [ ] Generate a machine-readable impact report and a human-readable explanation with uncertainty intervals and missing evidence.
+- [ ] Calibrate predictions against post-deployment observations; track false-positive and missed-impact rates.
+- [ ] Start with schema/policy changes and a single reversible workflow; do not claim a general digital twin prematurely.
+
+**Exit gate:** Impact predictions are benchmarked against recorded changes; causal edges are provenance-backed; uncertainty is explicit; no scenario can touch live external systems.
+
+## 23. Phase 17 — Knowledge Immune System & Adversarial Provenance Defense
+
+**Status:** Research proposal; prior art review required.  
+**Goal:** Detect poisoned, manipulated, stale, coordinated, or context-stripped evidence before it contaminates beliefs and downstream actions.
+
+- [ ] Maintain source identity, acquisition method, content hash, signature status, trust history, and freshness separately from semantic relevance.
+- [ ] Detect near-duplicate campaigns, sudden source behavior changes, quote/context mismatch, temporal anomalies, and conflicting independent observations.
+- [ ] Track claim contamination paths so one compromised source cannot silently promote dependent claims or decisions.
+- [ ] Introduce quarantined evidence state and reversible belief promotion; never delete counterevidence during conflict resolution.
+- [ ] Use independent corroboration classes and diversity constraints; multiple copies of one origin do not count as independent sources.
+- [ ] Add adversarial fixtures for prompt injection in retrieved content, forged citations, source spoofing, replayed stale evidence, and coordinated repetition.
+- [ ] Add a “belief circuit breaker” that freezes promotion and high-impact actions when provenance integrity falls below policy thresholds.
+- [ ] Provide explainable quarantine reports and an operator appeal/release path.
+- [ ] Evaluate precision/recall, time-to-detection, contamination depth, false quarantine rate, and downstream action prevention.
+- [ ] Ensure privacy, retention, deletion, and user correction semantics remain enforceable.
+
+**Exit gate:** Poisoned evidence fixtures are quarantined before belief promotion; contamination can be traced and rolled back; false-positive rates are measured; safety gates fail closed without blocking unrelated trusted evidence.
 
