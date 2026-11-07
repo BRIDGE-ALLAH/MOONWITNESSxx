@@ -46,7 +46,7 @@ export function OpportunityBoard() {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/api/opportunities', { cache: 'no-store' })
+      const response = await fetch('/api/opportunities?limit=100', { cache: 'no-store' })
       const payload = await response.json()
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to load opportunities.')
