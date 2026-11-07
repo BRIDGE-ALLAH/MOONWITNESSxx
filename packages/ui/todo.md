@@ -1,7 +1,7 @@
 # UI Package TODO
 
 > Scope: packages/ui — shared RIOTWORKS / MOONWITNESS React UI foundation.
-> Status: Milestone 1 complete and CI-verified. Milestone 2 visual foundation is implemented but still needs browser-level visual/contrast review.
+> Status: Milestone 1 complete; Milestone 3 core primitives and Milestone 4 operational foundations implemented and CI-verified. Milestone 2 visual QA and advanced component refinements remain open.
 
 ## Principles
 
@@ -103,32 +103,32 @@
 
 > Build on existing Radix primitives where appropriate. Keep APIs typed, composable, and accessible.
 
-- [ ] **P0** Button — review variants, sizes, loading, icon placement, disabled behavior, and focus states.
-- [ ] **P0** IconButton — accessible name, tooltip guidance, sizes, and disabled/loading states.
-- [ ] **P0** Input — labels, descriptions, errors, prefix/suffix slots, and input types.
-- [ ] **P0** Textarea — controlled/uncontrolled support, resize behavior, and character guidance where needed.
-- [ ] **P0** Checkbox and CheckboxGroup.
-- [ ] **P0** RadioGroup.
-- [ ] **P0** Switch.
-- [ ] **P0** Select.
+- [x] **P0** Button — variants, sizes, loading, composition (`asChild`), disabled behavior, and focus states implemented.
+- [x] **P0** IconButton — sizes, disabled/loading states, and tooltip-compatible native title/ARIA props implemented; consumers must supply an accessible name.
+- [x] **P0** Input — input types, invalid state, and FormField label/description/error composition implemented; prefix/suffix slots remain deferred.
+- [x] **P0** Textarea — controlled/uncontrolled values, invalid state, and optional character count implemented.
+- [x] **P0** Checkbox and CheckboxGroup.
+- [x] **P0** RadioGroup (native keyboard-operable radio inputs).
+- [x] **P0** Switch.
+- [x] **P0** Select.
 - [ ] **P1** Combobox / searchable select.
 - [ ] **P1** MultiSelect with keyboard-operable selection and removable values.
 - [ ] **P1** Toggle and ToggleGroup.
 - [ ] **P1** ButtonGroup.
-- [ ] **P1** Tabs.
-- [ ] **P1** Breadcrumb.
-- [ ] **P1** Pagination.
+- [x] **P1** Tabs.
+- [x] **P1** Breadcrumb.
+- [x] **P1** Pagination.
 - [ ] **P1** Accordion / Collapsible.
 - [ ] **P1** Dialog and AlertDialog.
 - [ ] **P1** Popover and DropdownMenu.
 - [ ] **P1** Drawer / Sheet.
-- [ ] **P1** Tooltip.
+- [x] **P1** Tooltip.
 - [ ] **P1** Badge and StatusBadge.
-- [ ] **P1** Alert / Callout.
-- [ ] **P1** Separator.
-- [ ] **P1** Avatar.
-- [ ] **P1** Progress and Spinner.
-- [ ] **P1** Skeleton.
+- [x] **P1** Alert / Callout.
+- [x] **P1** Separator.
+- [x] **P1** Avatar with image-load fallback.
+- [x] **P1** Progress and Spinner.
+- [x] **P1** Skeleton.
 - [ ] **P1** Toast / notification primitive.
 - [ ] **P2** Calendar and DatePicker after date/time and timezone requirements are agreed.
 - [ ] **P2** Command primitive for keyboard-driven interfaces.
@@ -149,24 +149,24 @@
 
 ## 6. Operational composites
 
-- [ ] **P0** FormField system.
-  - [ ] Label, required marker, description, validation message, and error association.
-  - [ ] Compose with Input, Select, Checkbox, Radio, and Textarea.
-  - [ ] Provide accessible IDs and ARIA relationships.
-- [ ] **P0** DataTable foundation.
-  - [ ] Sorting and pagination.
-  - [ ] Row selection and bulk selection.
+- [x] **P0** FormField system.
+  - [x] Label, required marker, description, validation message, and error association.
+  - [x] Compose with Input, Select, Checkbox, Radio, and Textarea through the typed control render-prop.
+  - [x] Provide accessible IDs and ARIA relationships.
+- [x] **P0** DataTable foundation (client-side presentation primitives; see deferred behaviors below).
+  - [x] Sorting and pagination.
+  - [x] Row selection and bulk selection with controlled/uncontrolled state.
   - [ ] Column visibility and sizing.
   - [ ] Empty, loading, and error states.
-  - [ ] Responsive strategy for dense data.
+  - [x] Responsive overflow strategy for dense data.
   - [ ] Keyboard and screen-reader behavior.
-  - [ ] Keep fetching and server-side query behavior controlled by the consumer.
+  - [x] Keep fetching and server-side query behavior controlled by the consumer.
 - [ ] **P1** FilterBar with search, filter controls, removable chips, clear/reset, and optional saved-filter callbacks.
-- [ ] **P1** BulkActions toolbar with explicit selection count and safe action affordances.
-- [ ] **P1** EmptyState with title, explanation, optional illustration, and action slot.
-- [ ] **P1** ErrorState with retry callback and non-technical fallback copy.
-- [ ] **P1** ActivityTimeline with actor, timestamp, event label, and optional detail.
-- [ ] **P1** MetricCard with label, value, unit, period, and accessible trend context.
+- [x] **P1** BulkActions toolbar with explicit selection count and consumer-owned action affordances.
+- [x] **P1** EmptyState with title, explanation, optional icon, and action slot.
+- [x] **P1** ErrorState with retry callback and non-technical fallback copy.
+- [x] **P1** ActivityTimeline with actor, timestamp, event label, and optional detail.
+- [x] **P1** MetricCard with label, value, unit, period, and textual trend context.
 - [ ] **P1** Search/command palette presentation and keyboard interaction.
 - [ ] **P2** Kanban primitives with an accessible alternative to drag-and-drop.
 - [ ] **P2** Resizable panels and split-view primitives.
@@ -297,8 +297,8 @@ A component is not complete until all applicable checks pass:
   - [ ] Render and inspect both themes in Headquarter, including focus, disabled, selected, hover, and overlay states.
   - [x] Define compact/comfortable density contract and z-index layers.
   - [ ] Finalize production font hosting/licensing and original asset policy.
-- [ ] **Milestone 3 — Complete core primitives:** actions, inputs, selection, navigation, overlays, feedback.
-- [ ] **Milestone 4 — Operational UI:** FormField, DataTable, FilterBar, EmptyState, ErrorState, ActivityTimeline.
+- [x] **Milestone 3 — Core primitives delivered:** actions, inputs, selection, navigation, overlays, and feedback foundations shipped; advanced P1/P2 controls remain listed as follow-ups.
+- [x] **Milestone 4 — Operational UI foundations delivered:** FormField, DataTable, FilterBar, BulkActions, EmptyState, ErrorState, MetricCard, and ActivityTimeline shipped; advanced DataTable/FilterBar behaviors remain open.
 - [ ] **Milestone 5 — Application shell:** AppShell, Sidebar, Topbar, Workspace, ContextPanel, CommandPalette.
 - [ ] **Milestone 6 — Platform integration:** action/command contracts, plugin slots, approval and job presentation.
 - [ ] **Milestone 7 — Maturity:** Storybook, visual regression, accessibility audit, documentation, bundle/performance review.
@@ -365,3 +365,25 @@ Still open:
 - `@riotworks/arsy-core` lint remains deferred until a proper package-local shared ESLint config can be consumed; it is not silently treated as a pass.
 - Headquarter's legacy ESLint command reports that ESLint 9 cannot find a flat config, but its existing script masks this as `lint-skip`. This does not affect the UI package lint result or production build.
 - The root `format:check` script still needs a separate audit; it was not part of the passing Repository integrity acceptance gate.
+
+
+## Milestone 3–4 delivery record
+
+**Repository CI run #407 — success**  
+Commit: `c0e51bcb0e039c06ad64c492bd79e81790a6404d`
+
+Implemented and exported:
+- Core controls: Button (loading + `asChild` composition), IconButton, Input, Textarea, Checkbox, CheckboxGroup, RadioGroup, Switch, Select.
+- Navigation and overlays: Tabs, Breadcrumb, Pagination, Dialog, Popover, Tooltip.
+- Feedback and identity: Alert, Progress, Spinner, Skeleton, Avatar.
+- Operational composition: FormField, DataTable, FilterBar, BulkActions, EmptyState, ErrorState, MetricCard, ActivityTimeline.
+- README usage examples and consumer export smoke coverage (47 exports).
+
+CI verified frozen lockfile, repository audit, all 7 workspace type-check/build tasks, UI lint, theme token contract, UI package build, consumer smoke test, and Headquarter production build/prerender.
+
+Deferred rather than overstated:
+- Combobox/MultiSelect, Toggle/ToggleGroup, ButtonGroup, Accordion, AlertDialog, DropdownMenu, Drawer/Sheet, Toast provider, and Command palette.
+- DataTable column visibility/sizing and dedicated loading/error render slots; keyboard/screen-reader and browser interaction audit.
+- FilterBar removable chips and saved-filter callbacks.
+- IconButton accessible name must be supplied by the consumer (for example `aria-label`).
+- Unit/interaction test infrastructure and visual regression.
