@@ -22,3 +22,11 @@ test('a failed independent check blocks completion', () => {
 test('rejects duplicate contract check identifiers', () => {
   assert.throws(() => evaluateCompletion({ ...contract, checks: [{ id: 'x' }, { id: 'x' }] }, 'agent', []), /Duplicate/)
 })
+
+test('rejects contracts with no required checks', () => {
+  assert.throws(() => evaluateCompletion({ ...contract, checks: [{ id: 'optional', required: false }] }, 'agent', []), /at least one required check/)
+})
+test('rejects invalid runtime verification states without passing', () => {
+  const result = evaluateCompletion(contract, 'agent', [{ ...proof('artifact'), status: 'MAYBE' }, proof('tests')])
+  assert.equal(result.status, 'UNVERIFIED')
+})
