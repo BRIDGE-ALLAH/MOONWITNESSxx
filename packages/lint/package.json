@@ -3,10 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "RIOTWORKS lint configuration — shared ESLint config",
-  "private": true,
-  "scripts": {
-    "lint": "eslint \"src/**/*.ts\" --ext .ts,.tsx"
-  },
+  "scripts": {},
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
