@@ -17,7 +17,7 @@ export interface MemoryIntegrityTrial { caseId: string; attackId: MemoryIntegrit
 export interface ScoredMemoryIntegrityTrial extends MemoryIntegrityTrial { verdict: IntegrityVerdict; score: number }
 export interface MemoryIntegrityBenchmarkReport {
   version: 1; totalTrials: number; attackTrials: number; controlTrials: number; blockedAtRead: number
-  detectedOnlyAtAudit: number; undetectedAttacks: number; falseAlarms: number; score: number
+  detectedOnlyAtAudit: number; blockedWithoutSignal: number; undetectedAttacks: number; falseAlarms: number; score: number
   trials: ScoredMemoryIntegrityTrial[]
 }
 
