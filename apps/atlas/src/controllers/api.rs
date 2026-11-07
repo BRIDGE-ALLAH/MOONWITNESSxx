@@ -726,7 +726,8 @@ async fn replace_radius_group_policy(
                 "groupname": input.groupname,
                 "policy_count": input.policies.len()
             })),
-        ).into_response(),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to replace RADIUS group policy");
             database_error().into_response()
