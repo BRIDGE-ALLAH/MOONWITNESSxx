@@ -1,6 +1,6 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 
 # services/* is intentionally excluded until ownership and runtime boundaries are reconciled.
 allowBuilds:

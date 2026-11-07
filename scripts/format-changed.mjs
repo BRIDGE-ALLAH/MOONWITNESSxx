@@ -28,7 +28,10 @@ export async function runFormatCheck() {
 
   if (base) {
     changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`]))
-  } else if (branch !== 'main' && run('git', ['rev-parse', '--verify', 'origin/main']).status === 0) {
+  } else if (
+    branch !== 'main' &&
+    run('git', ['rev-parse', '--verify', 'origin/main']).status === 0
+  ) {
     const mergeBase = gitFiles(['merge-base', 'origin/main', 'HEAD'])[0]
     changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${mergeBase}...HEAD`]))
   }
@@ -46,10 +49,14 @@ export async function runFormatCheck() {
   }
 
   const executable = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
-  const result = run(executable, ['exec', 'prettier', write ? '--write' : '--check', '--ignore-unknown', ...files], {
-    stdio: 'inherit',
-    shell: process.platform === 'win32'
-  })
+  const result = run(
+    executable,
+    ['exec', 'prettier', write ? '--write' : '--check', '--ignore-unknown', ...files],
+    {
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+    }
+  )
 
   if (result.error) {
     console.error(result.error.message)

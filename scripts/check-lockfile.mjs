@@ -25,12 +25,14 @@ if (!refresh) args.push('--frozen-lockfile')
 
 const result = run(pnpm, args, {
   stdio: 'inherit',
-  shell: process.platform === 'win32'
+  shell: process.platform === 'win32',
 })
 if (result.error || result.status !== 0) {
   console.error(result.error?.message ?? 'pnpm could not validate or refresh the lockfile.')
   process.exit(result.status ?? 1)
 }
-console.log(refresh
-  ? 'Lockfile refresh completed. Review and commit the diff with its manifest changes.'
-  : 'pnpm-lock.yaml is in sync with workspace manifests.')
+console.log(
+  refresh
+    ? 'Lockfile refresh completed. Review and commit the diff with its manifest changes.'
+    : 'pnpm-lock.yaml is in sync with workspace manifests.'
+)
