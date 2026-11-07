@@ -58,27 +58,36 @@ Channels are enabled only after current country eligibility, payout, policy, fee
 - **Marketplace-native discovery:** prioritize buyer-search and recommendation ecosystems instead of cold outreach.
 - **Responsible autonomy:** automate repeatable tasks without bypassing platform rules or human accountability.
 
-## Applications and packages
+## Applications and packages — target vs current implementation
 
 ### Applications
 
-- **apps/headquarter** — RIOTWORKS frontend and operator experience; the only user-facing frontend application name.
-- **apps/arsy** — Fastify backend application and API composition root.
+- **apps/headquarter** — intended Next.js frontend and operator experience. Current files are a prototype; its package manifest still needs correction.
+- **apps/arsy** — canonical Fastify backend application. Current implementation is only a minimal health/status route.
 
-### Core packages
+### Existing package inventory (prototype stage)
 
-- **packages/arsy-core** — Fastify platform core, lifecycle, plugins, configuration, health, and shared runtime facilities.
+- **packages/ui** — small shared React component library.
+- **packages/types** — early shared TypeScript types.
+- **packages/contract** — package manifest exists; contract implementation remains incomplete.
+- **packages/arsy-core** — manifest exists; runtime implementation remains incomplete.
+- **packages/policy** — early ZILL policy prototype.
+- **packages/notifications** — early notification prototype.
+- **packages/feature-flags** — early feature-flag prototype.
+- **packages/seed-data** — seed/demo tooling scaffold.
+- **packages/bullmq** — experimental queue/worker code; not the canonical job architecture.
+- **packages/lint** — tooling package requiring repair.
+
+### Planned core packages (not yet implemented)
+
 - **packages/orm** — custom Odoo-inspired metadata-driven ORM and addon registry.
 - **packages/orm-db** — database runtime, transactions, unit-of-work, programmatic schema reconciliation, and data-upgrade coordination.
 - **packages/orm-db-adaptor** — provider-neutral contracts, capabilities, and registry.
 - **packages/orm-db-adaptor-postgres** — PostgreSQL adapter for production.
 - **packages/orm-db-adaptor-libsql** — libSQL/SQLite-compatible adapter for local/single-node deployments.
-- **packages/orm-addon-base** — minimal BaseEntity, opt-in lifecycle mixins, central audit.
+- **packages/orm-addon-base** — modular Base Platform with the five-field BaseEntity contract.
 - **packages/orm-addon-project** — project-domain models and services.
 - **packages/orm-addon-intelligent** — AI, agents, models, prompts, tools, runs, evaluations, and usage.
-- **packages/types** — shared framework-agnostic TypeScript types.
-- **packages/contract** — runtime API schemas, DTO contracts, and inferred types.
-- **packages/lint** — shared lint, format, and TypeScript configuration.
 
 PostgreSQL is recommended for production; libSQL is the lightweight/local/single-node option. Kysely is internal to SQL adapters. PocketBase is not part of v1 persistence. BaseEntity injects five universal metadata fields; the Odoo-inspired base platform is a suite of independently declared addons for identity, security, workspace, audit, events, communication, activities, attachments, sequences, settings, localization and more.
 
@@ -124,21 +133,15 @@ Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm
 | [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md) | ARSY internal schema API and programmatic reconciliation |
 | [docs/21-database-provider-strategy.md](./docs/21-database-provider-strategy.md) | PostgreSQL/libSQL decision, portability, BaseEntity mapping |
 | [docs/22-base-platform-and-orm-capability-blueprint.md](./docs/22-base-platform-and-orm-capability-blueprint.md) | Complete base addon catalog, Odoo-inspired ORM capability matrix, mixins and ownership boundaries |
+| [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md) | Actual repository inventory, defects, canonical topology and revised implementation roadmap |
 
 ## Current status
 
-This repository is a **documentation and architecture baseline**. The target structure is specified; applications and packages are not claimed to be implemented until code, tests, and build checks exist.
+The repository is a **mixed documentation + early prototype baseline**, not a production-ready application. Headquarter and ARSY exist as thin prototypes; several utility packages exist; the custom ORM, database runtime/adapters, Base Platform addons and end-to-end commercial workflow do not yet exist. The tracked `services/` directory contains duplicate/stranded prototypes and is not part of the pnpm workspace.
 
-Recommended delivery sequence:
+The authoritative current-state audit and execution order are [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md). Do not infer implementation from a planned package name. A package is implemented only when its source, exports, tests and build evidence exist.
 
-1. Finalize specifications.
-2. Build the apps/headquarter visual prototype.
-3. Scaffold the TypeScript monorepo and package contracts.
-4. Implement packages/orm and orm-addon-base with automatic schema reconciliation.
-5. Implement PostgreSQL and libSQL adapters behind one contract and prove portability with shared integration tests.
-6. Build apps/arsy and connect Headquarter through typed contracts.
-7. Add Project and Intelligent addons.
-8. Validate the first real product-to-marketplace workflow.
+**Next delivery order:** (1) repair workspace/manifests/CI and duplicate service code; (2) make Headquarter and ARSY/arsy-core/contracts buildable; (3) implement ORM and schema API; (4) implement SQL adapters; (5) stage required Base Platform addons; (6) business modules and first commercial slice; (7) jobs and safe automation.
 
 ## Financial truth
 
@@ -157,7 +160,7 @@ Cash received, pending commissions, estimated royalties, tax withholding, FX, an
 
 ## Documentation status
 
-Product definition and architecture baseline: **v1.3**, updated 2026-11-07. This is a finalized specification baseline, not a claim that software, integrations, business results, or platform approvals are already complete.
+Product definition and architecture baseline: **v2.0**, updated 2026-11-07. This is a finalized specification baseline, not a claim that software, integrations, business results, or platform approvals are already complete.
 
 ---
 
