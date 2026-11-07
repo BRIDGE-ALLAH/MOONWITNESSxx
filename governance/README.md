@@ -52,7 +52,7 @@ Use [the contract standard](./contracts/README.md) for required fields and chang
 | Installer safety/idempotency                          | Node + shell/PowerShell tests                     | Planned Phase 4                         |
 | Production migration/deployment approval              | Human approval + runtime gates                    | Planned Phase 5                         |
 
-A rule marked planned is not yet enforced. Do not describe a future check as active until its test and CI evidence exist.
+See the [detailed rule-to-enforcement register](./enforcement.md) for individual rule IDs, enforcement routes, and honest maturity states. A rule marked planned is not yet enforced. Do not describe a future check as active until its test and CI evidence exist.
 
 ## Enforcement levels
 
