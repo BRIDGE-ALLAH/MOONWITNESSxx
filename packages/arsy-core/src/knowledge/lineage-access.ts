@@ -2,7 +2,7 @@ export type DataClassification = 'public' | 'internal' | 'confidential' | 'restr
 export interface LineageSourceField { sourceId: string; fieldPath: string; tenantId: string; classification: DataClassification }
 export interface DerivedArtifactLineage { artifactId: string; tenantId: string; sourceFields: readonly LineageSourceField[]; lineageComplete: boolean }
 export interface LineageAccessContext { requesterId: string; tenantId: string; allowedClassifications: readonly DataClassification[]; allowedSourceIds?: readonly string[] }
-export interface LineageAccessDecision {
+const CLASSIFICATION_RANK: Record<DataClassification, number> = { public: 0, internal: 1, confidential: 2, restricted: 3 }\n\nexport interface LineageAccessDecision {
   allowed: boolean; reasonCodes: string[]
   deniedSourceFields: Array<{ sourceId: string; fieldPath: string; reason: string }>
 }
