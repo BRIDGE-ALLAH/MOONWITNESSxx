@@ -84,7 +84,7 @@
 - [x] Evaluasi route grouping untuk workspace dan administration; keputusan Phase 1 adalah mempertahankan URL saat ini sampai locale/auth/workspace routing siap.
 - [x] Tetapkan keputusan locale: target URL `/id` dan `/en` didokumentasikan; implementasi routing ditunda sampai platform localization siap.
 - [ ] Pastikan root layout, locale layout, dan workspace layout memiliki tanggung jawab berbeda.
-- [ ] Tambahkan not-found, error boundary, dan loading boundary pada level yang tepat.
+- [x] Tambahkan not-found, error boundary, dan loading boundary pada level route App Router.
 - [ ] Pastikan deep-link, refresh halaman, dan navigasi browser berfungsi konsisten.
 - [x] Pastikan navigasi mobile dan desktop menggunakan sumber konfigurasi yang sama.
 
@@ -161,7 +161,7 @@
 - [ ] Standarkan structured client logging tanpa data sensitif.
 - [x] Kirim `x-request-id` pada setiap request dan baca request ID dari response/error envelope bila tersedia.
 - [ ] Integrasikan error reporting sesuai platform.
-- [ ] Tambahkan route-level error boundaries dan fallback UI.
+- [x] Tambahkan route-level error boundary, loading skeleton, dan not-found fallback UI.
 - [ ] Pastikan operasi async memiliki pending, success, failure, dan cancellation behavior.
 - [ ] Definisikan strategi cache, invalidation, dan stale data per jenis data.
 
@@ -183,7 +183,7 @@
 - [x] Definisikan semantic tokens untuk surface, text, border, accent, focus, status, overlay, dan interactive state.
 - [ ] Migrasikan seluruh komponen/halaman agar memakai semantic token; migrasi awal tersedia pada global foundation dan Badge/Button.
 - [ ] Finalisasi spacing, radius, elevation, border, motion, typography, dan z-index scale secara menyeluruh.
-- [ ] Dokumentasikan aturan kapan memakai primitive UI dan kapan membuat domain pattern.
+- [x] Dokumentasikan aturan kapan memakai primitive UI dan kapan membuat domain pattern di `packages/ui/DESIGN-TOKENS.md`.
 
 ### 3.2 Visual identity
 - [ ] Pertahankan DNA Extreme Riot, MoonWitness comic universe, punk-zine energy, industrial brutalism, dan premium game HUD.
@@ -391,6 +391,8 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Phase 2 browser-safe ARSY API boundary added in `src/platform/arsy` (public endpoint contracts and authentication flows remain gated on ARSY implementation).
 - [x] Phase 3 semantic Night Riot/Paper Riot token foundation, status tokens, reduced-motion baseline, and focus treatment added to `packages/ui`.
 - [x] Command palette keyboard focus containment added; manual browser/screen-reader verification remains pending.
+- [x] Route-level loading, error recovery, and not-found UI added; browser verification remains pending.
+- [x] Shared design-token contract documented in `packages/ui/DESIGN-TOKENS.md`.
 - [ ] Feature pages migrated to live ARSY endpoints; current module content remains demo/static.
 - [ ] Identity/session, authorization, workspace context, and route-aware localization implemented against approved backend contracts.
 - [ ] Complete primitive audit, responsive/contrast checks, and visual regression baseline verified.
