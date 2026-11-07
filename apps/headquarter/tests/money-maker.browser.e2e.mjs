@@ -113,7 +113,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await productCard.getByLabel('Disclosure').fill('Synthetic CI fixture; no external ownership or license claim.')
     await productCard.getByRole('button', { name: 'Upload to this version' }).click()
     await productCard.getByRole('status').filter({ hasText: 'Uploaded browser-e2e-asset.txt; SHA-256' }).waitFor()
-    await productCard.getByText('browser-e2e-asset.txt', { exact: true }).waitFor()
+    await productCard.getByText('browser-e2e-asset.txt', { exact: true }).first().waitFor()
 
     // All four latest inspections plus at least one active rights-cleared asset are
     // required before ARSY can derive the product's READY state.
