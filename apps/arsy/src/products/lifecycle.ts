@@ -7,7 +7,8 @@ const allowedTransitions: Record<ProductLifecycleState, readonly ProductLifecycl
   production: ['review'],
   // READY is inspection-derived; it must never be set by a generic lifecycle mutation.
   review: ['production'],
-  ready: ['production', 'listed'],
+  // LISTED is set only by the publication-receipt workflow.
+  ready: ['production', 'retired'],
   listed: ['retired'],
   retired: [],
 }

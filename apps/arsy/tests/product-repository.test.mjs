@@ -51,3 +51,17 @@ test('product reads are owner-scoped', async () => {
   await repository.get('owner-a', productRow.id)
   assert.deepEqual(values, ['owner-a', productRow.id])
 })
+
+
+test('generic product lifecycle mutation cannot list without a publication receipt', async () => {
+  let calls = 0
+  const repository = new ProductRepository({
+    query: async () => { calls += 1; return { rows: [] } },
+    end: async () => undefined,
+  })
+  const result = await repository.transitionLifecycle(
+    'owner-a', 'owner-a', productRow.id, 'ready', 'listed',
+  )
+  assert.equal(result, null)
+  assert.equal(calls, 0, 'receipt workflow must own the transition to listed')
+})
