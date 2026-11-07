@@ -26,10 +26,10 @@ docker compose down -v
 
 ### Environment variables
 
-Copy `.env.docker` to `.env` and adjust as needed:
+The installer creates `.env` from `.env.example` without overwriting an existing file. If setting up manually, copy the shared template and set local values:
 
 ```bash
-cp .env.docker .env
+cp .env.example .env
 ```
 
 Key variables:
