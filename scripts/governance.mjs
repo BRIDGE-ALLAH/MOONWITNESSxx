@@ -198,7 +198,7 @@ export function formatFindings(report) {
     `**Errors:** ${report.counts.error} · **Warnings:** ${report.counts.warning}`,
     '',
   ]
-  for ( (const severity of ['error', 'warning']) ) {
+  for (const severity of ['error', 'warning']) {
     lines.push(`## ${severity === 'error' ? 'Errors' : 'Warnings'}`, '')
     const matches = report.findings.filter(item => item.severity === severity)
     if (!matches.length) lines.push('- None', '')
