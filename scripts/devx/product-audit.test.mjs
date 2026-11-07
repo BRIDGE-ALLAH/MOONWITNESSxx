@@ -50,7 +50,7 @@ test('Headquarter audit checks navigation-to-route integrity and persistent disc
     await mkdir(join(root, 'apps/headquarter/src/shell'), { recursive: true })
     await writeFile(join(root, 'apps/headquarter/src/app/overview/page.tsx'), 'export default function Page() { return null }')
     await writeFile(join(root, 'apps/headquarter/src/shell/navigation.ts'), "export const items = [{ href: '/overview', label: 'Overview', status: 'prototype' }]")
-    await writeFile(join(root, 'apps/headquarter/src/shell/topbar.tsx'), '<Badge aria-label={labels.demo}>{labels.demo}</Badge>')
+    await writeFile(join(root, 'apps/headquarter/src/shell/topbar.tsx'), '<Badge role="status" aria-label={labels.demo}>{labels.demo}</Badge>')
     const report = await auditHeadquarterExperience({ root })
     assert.equal(report.ok, true)
     assert.equal(report.routeCount, 1)
