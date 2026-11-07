@@ -136,6 +136,9 @@ export async function auditReleaseReadiness({ root } = {}) {
   const changelog = await readText(join(root, 'CHANGELOG.md'))
   const unreleased = changelog.match(/^## \[Unreleased\]\s*([\s\S]*?)(?=^## \[|$)/m)
   if (!unreleased || !unreleased[1].trim()) findings.push(finding('unreleased-changelog-empty', 'error', 'CHANGELOG.md must contain a non-empty Unreleased section before release.'))
+  const latestChangelogVersion = (changelog.match(/^## \[(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\]/m) ?? [])[1] ?? null
+  if (!latestChangelogVersion) findings.push(finding('changelog-release-version-missing', 'error', 'CHANGELOG.md must identify the latest released SemVer version.'))
+  else if (manifest.version && manifest.version !== latestChangelogVersion) findings.push(finding('package-changelog-version-mismatch', 'error', 'Root package version ' + manifest.version + ' does not match latest changelog release ' + latestChangelogVersion + '.'))
 
   let workflowFiles = []
   try { workflowFiles = await readdir(join(root, '.github/workflows')) } catch { /* reported below */ }
@@ -153,7 +156,7 @@ export async function auditReleaseReadiness({ root } = {}) {
   return {
     ready: !findings.some((item) => item.severity === 'error'),
     packageVersion: manifest.version ?? null,
-    latestChangelogVersion: (changelog.match(/^## \[([^\]]+)\]/m) ?? [])[1] ?? null,
+    latestChangelogVersion,
     workflowFiles,
     findings,
     note: 'This local preflight cannot verify remote tags, GitHub Release publication, secrets, deployment-provider state, live health, or production smoke tests.',
