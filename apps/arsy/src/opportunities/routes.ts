@@ -1,9 +1,9 @@
 import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
+import { hasValidOperatorToken } from '../auth/operator-token.ts'
 import { evaluateOpportunity, opportunityInputSchema } from './domain.ts'
 import { OpportunityRepository } from './repository.ts'
-import { hasValidOperatorToken } from '../auth/operator-token.ts'
 
 const idSchema = z.string().uuid()
 const decisionSchema = z.object({
@@ -16,8 +16,30 @@ const listQuerySchema = z.object({
 
 export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool, env: NodeJS.ProcessEnv = process.env): void {
   const repository = new OpportunityRepository(db)
-  const ownerId = env.ARSY_OPERATOR_ID?.trim() || 'primary-owner'
+  const ownerId = env.ARSY_OPERATOR_ID?.trim() ?? ''
   const actorId = ownerId
+  const token = env.ARSY_OPERATOR_TOKEN?.trim()
+
+  app.addHook('preHandler', async (request, reply) => {
+    if (!request.url.startsWith('/api/v1/')) return
+    if (!ownerId || !token) {
+      return reply.code(503).send({
+        error: {
+          code: 'OPERATOR_AUTH_NOT_CONFIGURED',
+          message: 'A deliberate operator ID and server-side operator token are required.',
+        },
+      })
+    }
+    if (!hasValidOperatorToken(request, token)) {
+      return reply.code(401).send({
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Valid operator credentials are required.',
+        },
+      })
+    }
+  })
+
   app.get('/api/v1/opportunities', async (request, reply) => {
     const parsed = listQuerySchema.safeParse(request.query)
     if (!parsed.success) return reply.code(400).send({ error: { code: 'INVALID_QUERY', message: 'Invalid opportunity list query.' } })
