@@ -23,6 +23,7 @@ const passingGates = {
 }
 
 const evidence = {
+  evidenceId: 'evidence-policy-001',
   sourceName: 'Official marketplace policy',
   sourceUrl: 'https://example.com/policy',
   sourceType: 'official-documentation',
@@ -30,6 +31,7 @@ const evidence = {
   evidenceClass: 'observed-fact',
   summary: 'The current official documentation describes the required product format.',
   reliability: 'high',
+  limitations: 'One official source; no buyer interviews have been conducted.',
   collectionMethod: 'Manual review of public official documentation',
   permissionBasis: 'Publicly accessible official documentation',
 }
@@ -44,7 +46,17 @@ const validOpportunity = {
   candidateChannels: ['Etsy', 'Gumroad'],
   evidence: [evidence],
   scores: completeScores,
+  scoreDetails: Object.fromEntries(Object.keys(completeScores).map((key) => [key, {
+    rationale: 'This score is supported by the cited official source and current review notes.',
+    confidence: 'medium',
+    evidenceIds: ['evidence-policy-001'],
+  }])),
   hardGates: passingGates,
+  hardGateDetails: Object.fromEntries(Object.entries(passingGates).map(([key, status]) => [key, {
+    status,
+    rationale: 'Reviewed against the current official source; eligibility must be rechecked before launch.',
+    evidenceIds: ['evidence-policy-001'],
+  }]))
 }
 
 test('accepts a complete evidence-backed opportunity input', () => {
@@ -64,6 +76,22 @@ test('rejects an opportunity without evidence or a valid source URL', () => {
 
   assert.equal(noEvidence.success, false)
   assert.equal(invalidUrl.success, false)
+})
+
+test('requires evidence references and rationale for every scored dimension', () => {
+  const missingRationale = opportunityInputSchema.safeParse({
+    ...validOpportunity,
+    scoreDetails: { ...validOpportunity.scoreDetails, demandEvidence: undefined },
+  })
+  const unknownEvidence = opportunityInputSchema.safeParse({
+    ...validOpportunity,
+    scoreDetails: {
+      ...validOpportunity.scoreDetails,
+      demandEvidence: { ...validOpportunity.scoreDetails.demandEvidence, evidenceIds: ['missing-evidence'] },
+    },
+  })
+  assert.equal(missingRationale.success, false)
+  assert.equal(unknownEvidence.success, false)
 })
 
 test('uses the documented weighted score and prototype threshold', () => {
