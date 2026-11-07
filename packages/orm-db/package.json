@@ -1,1 +1,22 @@
-{"name":"@riotworks/orm-db","version":"0.1.0","private":true,"type":"module","sideEffects":false,"exports":{".":{"types":"./src/index.ts","default":"./src/index.ts"}},"scripts":{"type-check":"tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts","lint":"pnpm --filter @riotworks/lint exec eslint ../orm-db/src --config eslint.config.mjs --max-warnings 0"},"dependencies":{"@riotworks/orm":"workspace:*","@riotworks/orm-db-adaptor":"workspace:*"}}
+{
+  "name": "@riotworks/orm-db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts src/runtime.ts",
+    "lint": "pnpm --filter @riotworks/lint exec eslint ../orm-db/src ../orm-db/test --config eslint.config.mjs --max-warnings 0",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@riotworks/orm": "workspace:*",
+    "@riotworks/orm-db-adaptor": "workspace:*"
+  }
+}
