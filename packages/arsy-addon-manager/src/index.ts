@@ -90,7 +90,11 @@ export interface AddonInstallPlan {
   readonly blocked: readonly Readonly<{ addon: string; reason: string }>[];
   readonly createdAt: string;
 }
-export interface AddonPlannerOptions { readonly capabilityPolicy: CapabilityPolicy; readonly now?: () => Date }
+export interface AddonPlannerOptions {
+  readonly capabilityPolicy: CapabilityPolicy;
+  readonly runtimeVersions: Readonly<{ arsy: string; orm: string }>;
+  readonly now?: () => Date;
+}
 
 function satisfies(actual: string, range: string): boolean {
   if (range === "*" || range === actual) return true;
@@ -148,7 +152,7 @@ function orderAddons(candidates: readonly AddonCandidate[]): AddonCandidate[] {
   return ordered;
 }
 
-function manifestIssues(candidate: AddonCandidate): string[] {
+function manifestIssues(candidate: AddonCandidate, runtimeVersions: Readonly<{ arsy: string; orm: string }>): string[] {
   const { manifest, modules, trust } = candidate;
   const issues: string[] = [];
   if (!idPattern.test(manifest.id)) issues.push("Invalid addon identifier.");
@@ -158,6 +162,10 @@ function manifestIssues(candidate: AddonCandidate): string[] {
   if (!manifest.integrity || manifest.integrity !== trust.digest) issues.push("Manifest digest does not match verified artifact digest.");
   if (!manifest.entrypoint || manifest.entrypoint.startsWith("/") || manifest.entrypoint.includes("..") || manifest.entrypoint.includes("\\")) issues.push("Unsafe package entrypoint.");
   if (!manifest.compatibility?.arsy || !manifest.compatibility?.orm) issues.push("Compatibility declaration is incomplete.");
+  else {
+    if (!satisfies(runtimeVersions.arsy, manifest.compatibility.arsy)) issues.push("ARSY runtime version is incompatible.");
+    if (!satisfies(runtimeVersions.orm, manifest.compatibility.orm)) issues.push("ORM runtime version is incompatible.");
+  }
   const ids = new Set(modules.map((module) => module.id));
   if (ids.size !== modules.length || ids.size !== manifest.modules.length || manifest.modules.some((id) => !ids.has(id))) issues.push("Manifest module list does not exactly match module declarations.");
   for (const module of modules) {
@@ -193,7 +201,7 @@ export class AddonInstallPlanner {
     }
     for (const candidate of orderedCandidates) {
       const manifest = candidate.manifest;
-      const issues = manifestIssues(candidate);
+      const issues = manifestIssues(candidate, this.#options.runtimeVersions);
       if (issues.length) { block(manifest.id, issues.join(" ")); continue; }
       const conflicts = (manifest.conflicts ?? []).filter((id) => candidateById.has(id) || installedById.has(id));
       if (conflicts.length) { blocked.push({ addon: manifest.id, reason: "Conflicts with " + conflicts.join(", ") + "."); continue; }
