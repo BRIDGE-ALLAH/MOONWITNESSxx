@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const DEFAULT_ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)))
-const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts'])
+const SOURCE_EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts', '.yml', '.yaml'])
 
 async function exists(root, path) {
   try { await access(resolve(root, path)); return true } catch { return false }
@@ -185,6 +185,7 @@ export async function analyzeGovernance(root = DEFAULT_ROOT) {
     result: counts.error > 0 ? 'failed' : counts.warning > 0 ? 'passed-with-warnings' : 'passed',
     counts,
     workspacePackages: workspacePackages.length,
+    ruleCoverage: (() => { const source = enforcement ?? ''; const rows = ruleRows(source); return { total: rows.length, withEnforcement: rows.filter(row => row.hasEnforcement).length, withState: rows.filter(row => row.hasState).length, complete: rows.filter(row => row.hasEnforcement && row.hasState).length } })(),
     findings: findings.sort((a, b) => a.severity.localeCompare(b.severity) || a.code.localeCompare(b.code) || a.path.localeCompare(b.path)),
   }
 }
