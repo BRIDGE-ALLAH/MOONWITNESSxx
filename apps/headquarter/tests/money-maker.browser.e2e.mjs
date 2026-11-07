@@ -264,6 +264,13 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     assert.equal(staleVersionWrite.status(), 409)
     assert.equal((await staleVersionWrite.json()).error.code, 'VERSION_CONFLICT')
 
+    // Explicit sign-out clears the cookie and revokes access to protected API routes.
+    await page.goto(`${baseUrl}/the-forge`, { waitUntil: 'domcontentloaded' })
+    await page.getByRole('button', { name: 'Sign out' }).click()
+    await page.waitForURL((url) => url.pathname === '/login', { timeout: 15_000 })
+    const afterLogout = await context.request.get(`${baseUrl}/api/opportunities?limit=100`)
+    assert.equal(afterLogout.status(), 401)
+
     const anonymousPage = await browser.newPage()
     await anonymousPage.goto(`${baseUrl}/riot-radar`, { waitUntil: 'domcontentloaded' })
     await anonymousPage.getByLabel('Operator password').waitFor()
