@@ -354,11 +354,11 @@ export class FxConversionRepository {
           (id, owner_id, source_event_id, from_amount_minor, from_currency,
            to_amount_minor, to_currency, rate_numerator, rate_denominator,
            rate_source, source_url, observed_at, idempotency_key, request_hash, created_by)
-        SELECT $1, $2, e.id, $4::bigint, $5, $6::bigint, $7, $8::numeric, $9::numeric,
+        SELECT $1, $2, e.id, $4::bigint, $5::varchar(3), $6::bigint, $7::varchar(3), $8::numeric, $9::numeric,
           $10, $11, $12::timestamptz, $13, $14, $15
         FROM arsy_financial_events e
         WHERE e.owner_id = $2 AND e.id = $3 AND e.reconciliation_state = 'verified'
-          AND e.amount_minor = $4::bigint AND e.currency = $5
+          AND e.amount_minor = $4::bigint AND e.currency = $5::varchar(3)
         ON CONFLICT (owner_id, idempotency_key) DO NOTHING
         RETURNING *
       ), audited AS (
