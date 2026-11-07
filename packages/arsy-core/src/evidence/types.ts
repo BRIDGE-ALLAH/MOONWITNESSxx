@@ -43,9 +43,9 @@ export class InMemoryEvidenceStore implements EvidenceStore {
 
   async append(event: EvidenceEvent): Promise<void> {
     const stream = this.streams.get(event.aggregateId) ?? []
-    if (stream.some((item) => item.id === event.id)) {
-      const existing = stream.find((item) => item.id === event.id)
-      if (existing?.hash !== event.hash) throw new Error('Event id collision')
+    const existing = stream.find((item) => item.id === event.id)
+    if (existing) {
+      if (existing.hash !== event.hash) throw new Error('Event id collision')
       return
     }
     stream.push(event)
@@ -71,33 +71,53 @@ function hashEvent(event: Omit<EvidenceEvent, 'hash'>): string {
 
 /** Append-only, per-aggregate evidence history with a tamper-evident hash chain. */
 export class EvidenceLedger {
+  private readonly locks = new Map<string, Promise<void>>()
+
   constructor(private readonly store: EvidenceStore) {}
 
   async append(input: EvidenceEventInput): Promise<EvidenceEvent> {
     if (!input.id.trim() || !input.aggregateId.trim() || !input.actorId.trim()) {
       throw new Error('id, aggregateId and actorId are required')
     }
-    if (Number.isNaN(Date.parse(input.occurredAt))) throw new Error('occurredAt must be an ISO date')
-    const history = await this.store.list(input.aggregateId)
-    const existing = history.find((item) => item.id === input.id)
-    if (existing) {
-      const sameInput = existing.kind === input.kind && existing.aggregateId === input.aggregateId &&
-        existing.occurredAt === input.occurredAt && existing.actorId === input.actorId &&
-        canonicalJson(existing.payload) === canonicalJson(input.payload) &&
-        canonicalJson(existing.evidenceIds) === canonicalJson([...new Set(input.evidenceIds ?? [])])
-      if (sameInput) return existing
-      throw new Error('Event id collision')
-    }
-    const previous = history.at(-1) ?? null
-    const base = {
-      ...input,
-      evidenceIds: [...new Set(input.evidenceIds ?? [])],
-      recordedAt: new Date().toISOString(),
-      previousHash: previous?.hash ?? null,
-    }
-    const event = { ...base, hash: hashEvent(base) }
-    await this.store.append(event)
-    return event
+    if (Number.isNaN(Date.parse(input.occurredAt))) throw new Error('occurredAt must be a valid date')
+
+    const previousLock = this.locks.get(input.aggregateId) ?? Promise.resolve()
+    let release!: () => void
+    const currentLock = new Promise<void>((resolve) => { release = resolve })
+    const queuedLock = previousLock.then(() => currentLock)
+    this.locks.set(input.aggregateId, queuedLock)
+    await previousLock
+
+    try {
+      const history = await this.store.list(input.aggregateId)
+      const normalizedEvidenceIds = [...new Set(input.evidenceIds ?? [])]
+      const existing = history.find((item) => item.id === input.id)
+      if (existing) {
+        const sameInput =
+          existing.kind === input.kind &&
+          existing.occurredAt === input.occurredAt &&
+          existing.actorId === input.actorId &&
+          canonicalJson(existing.payload) === canonicalJson(input.payload) &&
+          canonicalJson(existing.evidenceIds) === canonicalJson(normalizedEvidenceIds)
+        if (sameInput) return existing
+        throw new Error('Event id collision')
+      }
+
+      const previous = history.at(-1) ?? null
+      const base: Omit<EvidenceEvent, 'hash'> = {
+        id: input.id,
+        kind: input.kind,
+        aggregateId: input.aggregateId,
+        occurredAt: input.occurredAt,
+        recordedAt: new Date().toISOString(),
+        actorId: input.actorId,
+        payload: input.payload,
+        evidenceIds: normalizedEvidenceIds,
+        previousHash: previous?.hash ?? null,
+      }
+      const event: EvidenceEvent = { ...base, hash: hashEvent(base) }
+      await this.store.append(event)
+      return event
     } finally {
       release()
       if (this.locks.get(input.aggregateId) === queuedLock) this.locks.delete(input.aggregateId)
