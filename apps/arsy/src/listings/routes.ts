@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { httpEvidenceUrlSchema } from '../http-url.ts'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { ListingRepository } from './repository.ts'
@@ -16,7 +17,7 @@ const createSchema = z.object({
 })
 const receiptSchema = z.object({
   providerReference: z.string().trim().min(2).max(300),
-  evidenceUrl: z.string().url().max(2048),
+  evidenceUrl: httpEvidenceUrlSchema,
   publishedAt: z.string().datetime({ offset: true }),
 })
 const idSchema = z.string().uuid()
