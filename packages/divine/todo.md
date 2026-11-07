@@ -4,10 +4,10 @@
 
 - **Repository:** BRIDGE-ALLAH/MOONWITNESS
 - **Target path:** packages/divine/todo.md
-- **Proposed package:** @moonwitness/divine
+- **Implemented package:** @riotworks/divine (the current workspace namespace)
 - **Codename:** SIDRATUL MUNTAHA
-- **Architecture status:** proposed; implementation not yet started
-- **Document status:** research-informed execution baseline
+- **Architecture status:** Phase 0–5 foundations implemented; production integration and remaining acceptance gates are still open
+- **Document status:** live execution ledger; checked tasks require code and verification
 - **Last researched:** 2026-11-08
 
 > This file is the executable task ledger for Divine. It is deliberately more detailed than a feature wishlist: every phase defines ownership, dependencies, deliverables, acceptance criteria, and explicit non-goals. A checked item means implementation and verification exist in the repository; documentation alone is not implementation.
@@ -55,13 +55,13 @@ Dependency direction must remain acyclic. Divine may define ports and adapters f
 
 ## 0.2 Package and naming decision
 
-- Package target: @moonwitness/divine.
+- Package target: @riotworks/divine. The @moonwitness/divine scope is deferred until repository-wide package governance changes.
 - Repository path: packages/divine.
 - Internal codename: SIDRATUL MUNTAHA.
 - Preservation concept: LAWH AL-MAHFUZ.
 - Product category: Sacred Knowledge & Epistemic Research Infrastructure.
 
-The current MOONWITNESS root manifest still uses the riotworks package scope. Before publishing or declaring the package name final, reconcile workspace naming with the authoritative repository governance decision. Do not silently introduce a conflicting package scope or mass-rename existing packages as part of this task.
+The current MOONWITNESS workspace uses the @riotworks package scope. Divine follows that existing governance rather than introducing a one-off namespace. A future repository-wide namespace migration must be handled as a separate coordinated change.
 
 ## 0.3 Conceptual inspiration boundary
 
@@ -535,7 +535,7 @@ Adoption policy:
 - [x] DIV-P5-009 Define boundary policies for unobservable/metaphysical questions.
 - [x] DIV-P5-010 Define missing-data semantics and ensure absence never becomes negation.
 - [x] DIV-P5-011 Define user-facing explanation contract: known evidence, missing evidence, scope, method and limitations.
-- [ ] DIV-P5-012 Add property-based tests for unknown/not-recorded/not-applicable/false distinctions.
+- [x] DIV-P5-012 Add property-based tests for unknown/not-recorded/not-applicable/false distinctions.
 - [x] DIV-P5-013 Add tests proving an unsupported query returns abstention rather than invented content.
 - [x] DIV-P5-014 Add documentation on the Sidrat conceptual inspiration and its non-literal software interpretation.
 
@@ -901,4 +901,4 @@ Phases may be parallelized only when their dependency contracts are stable. Do n
 - [x] Phase 5 SIDRAT epistemic boundary engine implemented with explicit knowledge states, method-bound sufficiency, non-widening scope rules and hard abstention for metaphysical/normative queries.
 - [ ] Remaining profile-specific and external interoperability tasks.
 
-**Execution update (2026-11-08):** Phase 0–2 merged to `main`; Phases 3–5 domain modules are implemented on `feat-divine-phases-3-5`; TypeScript, lint, repository validation and full workspace build passed in GitHub Actions. The dedicated unit-test step is now enabled in CI and will be verified on this branch. P5 property-based tests and external standards conformance remain open. Not a production release. The full Corpus repository has NOT been migrated: this connection has read-only access. See `docs/CORPUS-MIGRATION.md`.
+**Execution update (2026-11-08):** Phase 0–2 merged to `main`; Phases 3–5 domain modules are implemented on `feat-divine-phases-3-5`; TypeScript, lint, repository validation and full workspace build passed in GitHub Actions. The dedicated unit-test step is now enabled in CI and will be verified on this branch. External SHACL conformance and full standards round-trip tests remain open. Not a production release. The full Corpus repository has NOT been migrated: the source has no repository-wide license and third-party dataset redistribution must be rights-reviewed first. Read-only access is sufficient to fetch the source; see `docs/CORPUS-MIGRATION.md`.
