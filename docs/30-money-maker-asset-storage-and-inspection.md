@@ -89,7 +89,7 @@ Source qualification for readiness:
 - technical QA: automated-check or independent-review;
 - creative QA: independent-review.
 
-All four latest statuses must be pass and each declared source must meet its qualification. An operator attestation is retained as evidence of what the operator asserted, but does not satisfy independent rights/policy/creative verification. The source label is recorded provenance; ARSY does not authenticate an external reviewer's identity. Channel publication remains blocked until that trust boundary is independently established.
+All four latest statuses must be pass, each declared source must meet its qualification, and the inspection actor must differ from the product owner. An operator attestation is retained as evidence of what the operator asserted, but cannot satisfy independent rights/policy/creative verification. The public operator API always records the configured owner as actor, so it cannot self-clear channel readiness by selecting an independent-review or automated-check label. A future trusted reviewer/automation integration must authenticate its own principal before it can record a qualifying inspection. The source label is recorded provenance; ARSY does not authenticate an external reviewer's identity today. Channel publication remains blocked until that trust boundary is independently established.
 
 ## Non-goals
 
