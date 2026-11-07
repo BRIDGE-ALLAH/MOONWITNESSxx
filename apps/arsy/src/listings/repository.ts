@@ -131,10 +131,10 @@ export class ListingRepository {
   async recordPublication(ownerId: string, actorId: string, id: string, providerReference: string, evidenceUrl: string, publishedAt: string): Promise<ListingRecord | null> {
     const result = await this.db.query(
       `WITH changed AS (
-        UPDATE arsy_listings SET status = 'published', provider_reference = $3,
-          published_at = $4::timestamptz, updated_at = now(), updated_by = $5,
+        UPDATE arsy_listings SET status = 'published', provider_reference = $3::text,
+          published_at = $4::timestamptz, updated_at = now(), updated_by = $5::text,
           listing_package = listing_package || jsonb_build_object('publicationReceipt', jsonb_build_object(
-            'providerReference', $3, 'evidenceUrl', $6, 'recordedAt', now(), 'recordedBy', $5
+            'providerReference', $3::text, 'evidenceUrl', $6::text, 'recordedAt', now(), 'recordedBy', $5::text
           ))
         WHERE owner_id = $1 AND id = $2 AND status IN ('ready', 'submitted')
           AND EXISTS (
@@ -169,7 +169,7 @@ export class ListingRepository {
           )
         RETURNING *
       ), product AS (
-        UPDATE arsy_products p SET lifecycle_state = 'listed', updated_at = now(), updated_by = $5
+        UPDATE arsy_products p SET lifecycle_state = 'listed', updated_at = now(), updated_by = $5::text
         WHERE p.owner_id = $1 AND p.id = (
           SELECT pv.product_id FROM arsy_product_versions pv JOIN changed ON changed.product_version_id = pv.id LIMIT 1
         )
@@ -177,13 +177,13 @@ export class ListingRepository {
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-        SELECT $7, $1, 'listing', changed.id, 'manual-publication-receipt-recorded', $5,
-          jsonb_build_object('providerReference', $3::text, 'evidenceUrl', $6::text, 'publishedAt', $4)
+        SELECT $7, $1, 'listing', changed.id, 'manual-publication-receipt-recorded', $5::text,
+          jsonb_build_object('providerReference', $3::text, 'evidenceUrl', $6::text, 'publishedAt', $4::timestamptz)
         FROM changed
       ), product_audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-        SELECT $8, $1, 'product', product.id, 'listed', $5,
+        SELECT $8, $1, 'product', product.id, 'listed', $5::text,
           jsonb_build_object('listingId', changed.id)
         FROM product CROSS JOIN changed
       )
