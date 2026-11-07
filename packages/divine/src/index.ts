@@ -8,3 +8,6 @@ export * as Research from "./research/index.ts";
 export * as Preservation from "./preservation/index.ts";
 export * as AIAssistant from "./ai-assistant/index.ts";
 export * as Standards from "./standards/index.ts";
+
+export * as Corpus from "./corpus/index.ts";
+export * as Adapters from "./adapters/index.ts";
