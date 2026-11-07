@@ -51,3 +51,10 @@ A module may move from prototype to production only when all applicable items ar
 ## Closure decision
 
 The **Headquarter foundation workstream** can close when required workspace CI and the Phase 6 tests are green. This does not certify every prototype module as production-ready. External integration and UX validation remain tracked production gates, not hidden TODOs.
+
+
+## Phase 7–8 foundations
+
+- Decision Graph: graph schema, provenance/traceability assessor, invalid/expired evidence checks, and tests are implemented. UI and server-owned contracts remain future work.
+- Scenario Forge: deterministic, immutable, shadow-only calculation engine and tests are implemented. Snapshot sourcing, scenario comparison UI, uncertainty model, and persistence remain future work.
+- Both are deliberately read-only/pure at this stage and are not exposed as production-ready routes.
