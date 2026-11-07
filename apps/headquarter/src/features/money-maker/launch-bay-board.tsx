@@ -82,6 +82,7 @@ const initialChannelForm = {
   grantedScopes: '', quotaNotes: '{}', policySummary: '', accountEvidenceUrl: '', payoutEvidenceUrl: '', formatEvidenceUrl: '',
 }
 const isoDate = (value: string) => value ? new Date(`${value}T00:00:00.000Z`).toISOString() : null
+const isoDateEnd = (value: string) => value ? new Date(`${value}T23:59:59.999Z`).toISOString() : null
 
 export function LaunchBayBoard() {
   const [channels, setChannels] = useState<Channel[]>([])
@@ -190,7 +191,7 @@ export function LaunchBayBoard() {
           countryCode: channelForm.countryCode, accountEligibility: channelForm.accountEligibility,
           officialPolicyUrl: channelForm.officialPolicyUrl || null,
           policyReviewedAt: isoDate(channelForm.policyReviewedAt),
-          policyRecheckAt: isoDate(channelForm.policyRecheckAt),
+          policyRecheckAt: isoDateEnd(channelForm.policyRecheckAt),
           payoutRequirements: JSON.parse(channelForm.payoutRequirements),
           listingRequirements: JSON.parse(channelForm.listingRequirements),
           payoutSetupStatus: channelForm.payoutSetupStatus, capability: channelForm.capability,
@@ -240,7 +241,7 @@ export function LaunchBayBoard() {
           ...draft, expectedRevision: channel.revision,
           officialPolicyUrl: draft.officialPolicyUrl || null,
           policyReviewedAt: isoDate(draft.policyReviewedAt),
-          policyRecheckAt: isoDate(draft.policyRecheckAt),
+          policyRecheckAt: isoDateEnd(draft.policyRecheckAt),
           payoutRequirements: JSON.parse(draft.payoutRequirements),
           listingRequirements: JSON.parse(draft.listingRequirements),
           grantedScopes: draft.grantedScopes.split(',').map((item) => item.trim()).filter(Boolean),
