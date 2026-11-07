@@ -4,14 +4,23 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
+  acknowledgeInterfaceEscrow,
+  analyzeObjectiveProgress,
+  buildObjectiveControlPlane,
   appendFlightRecord,
   compileRepoContext,
   createChangePlan,
   createContextLease,
+  createInterfaceEscrow,
+  createMergeEvidencePacket,
+  createResourcePassport,
+  forecastInterfaceConflicts,
+  forecastResourceCollisions,
   forecastWriteCollisions,
   parseMajorVersion,
   runDoctor,
   verifyContextLease,
+  verifyInterfaceEscrow,
   verifyFlightRecorder,
 } from './lib.mjs'
 
@@ -121,4 +130,97 @@ test('context lease invalidates changed or expired repository context', () => {
   assert.deepEqual(verifyContextLease({ lease: { ...lease, ttlMs: 999 }, currentFingerprint: fingerprint, now: '2026-11-08T00:00:30.000Z' }), { valid: false, reason: 'lease_duration_mismatch' })
   assert.deepEqual(verifyContextLease({ lease, currentFingerprint: fingerprint, now: '2026-11-07T23:59:59.000Z' }), { valid: false, reason: 'lease_not_yet_valid' })
   assert.throws(() => createContextLease({ fingerprint: 'invalid' }), /SHA-256/)
+})
+
+
+test('objective watchdog detects repeated unresolved gaps despite activity changes',()=>{
+ const steps=[{failedTests:['api'],missingCriteria:['pagination'],activity:'docs'},{failedTests:['api'],missingCriteria:['pagination'],activity:'refactor'},{failedTests:['api'],missingCriteria:['pagination'],activity:'rename'}]
+ const r=analyzeObjectiveProgress({steps,repeatThreshold:3});assert.equal(r.stalled,true);assert.equal(r.consecutiveUnchangedGap,3)
+ assert.equal(analyzeObjectiveProgress({steps:[steps[0],{failedTests:[],missingCriteria:[]}]}).stalled,false)
+})
+test('objective gap fingerprints ignore array order and reject weak thresholds',()=>{
+ assert.equal(analyzeObjectiveProgress({steps:[{blockers:['db','api']},{blockers:['api','db']}],repeatThreshold:2}).stalled,true)
+ assert.throws(()=>analyzeObjectiveProgress({steps:[{}],repeatThreshold:1}),/>= 2/)
+})
+test('interface treaties catch breaking changes consumed by another agent',()=>{
+ const r=forecastInterfaceConflicts({now:'2026-11-08T00:00:00Z',treaties:[
+ {id:'producer',owner:'api',provides:['User.v1'],breakingChanges:['User.v1'],expiresAt:'2027-01-01T00:00:00Z'},
+ {id:'consumer',owner:'web',consumes:['user.v1'],expiresAt:'2027-01-01T00:00:00Z'}]})
+ assert.equal(r.safeToIntegrate,false);assert.ok(r.conflicts.some(x=>x.kind==='breaking-change-consumed'))
+})
+test('interface treaties reject expired and duplicate declarations',()=>{
+ const r=forecastInterfaceConflicts({now:'2026-11-08T00:00:00Z',treaties:[
+ {id:'a',owner:'one',provides:['X','x'],expiresAt:'2026-01-01T00:00:00Z'}]})
+ assert.ok(r.violations.includes(undefined)===false);assert.ok(r.violations.some(x=>x.code==='treaty_expired'));assert.ok(r.violations.some(x=>x.code==='duplicate_provided_interface'))
+})
+test('resource passports namespace non-port resources and validate ports',()=>{
+ const p=createResourcePassport({agentId:'agent-a',resources:{ports:[3100],databases:['app']}})
+ assert.equal(p.namespaced.databases[0],'mw-agent-a-app');assert.throws(()=>createResourcePassport({agentId:'bad/id'}),/safe/)
+ assert.throws(()=>createResourcePassport({agentId:'ok',resources:{ports:[70000]}}),/between 1 and 65535/)
+})
+test('resource forecast detects port and shared-resource collisions',()=>{
+ const r=forecastResourceCollisions({agents:[
+ {id:'a',resources:{ports:[3000],databases:['shared'],queues:['jobs']}},
+ {id:'b',resources:{ports:[3000],databases:['shared'],queues:['jobs']}}]})
+ assert.equal(r.safeToLaunchTogether,false);assert.equal(r.collisions.length,3)
+ assert.equal(forecastResourceCollisions({agents:[{id:'a',resources:{ports:[3001]}},{id:'b',resources:{ports:[3002]}}]}).safeToLaunchTogether,true)
+})
+
+
+const validObjectiveFixture=()=>({
+ objectives:[{id:'release',title:'Release safely',owner:'release-agent',priority:10,acceptanceCriteria:[{id:'tests',description:'Tests pass',owner:'qa'},{id:'docs',description:'Docs reviewed',owner:'docs'}]}],
+ observations:[
+ {objectiveId:'release',criterionId:'tests',status:'passed',verified:true,evidenceId:'ci-run-1',recordedAt:'2026-11-08T00:00:01Z'},
+ {objectiveId:'release',criterionId:'docs',status:'passed',verified:true,evidenceId:'review-1',recordedAt:'2026-11-08T00:00:02Z'}
+ ]
+})
+const validEscrowFixture=()=>{
+ const treaties=[
+  {id:'api',owner:'api-agent',provides:['User.v2'],breakingChanges:['User.v1'],expiresAt:'2027-01-01T00:00:00Z'},
+  {id:'web',owner:'web-agent',consumes:['User.v1'],expiresAt:'2027-01-01T00:00:00Z'}
+ ]
+ let escrow=createInterfaceEscrow({treaties,changeSet:{id:'api-v2',version:'2',breakingInterfaces:['User.v1'],expiresAt:'2027-01-01T00:00:00Z'},now:'2026-11-08T00:00:00Z'})
+ escrow=acknowledgeInterfaceEscrow({escrow,consumer:'web-agent',contractFingerprint:escrow.contractFingerprint,acknowledgedAt:'2026-11-08T00:01:00Z'})
+ return escrow
+}
+test('objective control plane requires verified evidence for every criterion',()=>{
+ const fixture=validObjectiveFixture(),report=buildObjectiveControlPlane({...fixture,now:'2026-11-08T01:00:00Z'})
+ assert.equal(report.ready,true);assert.equal(report.completedCount,1)
+ const weak=buildObjectiveControlPlane({objectives:fixture.objectives,observations:[{...fixture.observations[0],verified:false}] ,now:'2026-11-08T01:00:00Z'})
+ assert.equal(weak.ready,false);assert.equal(weak.nextActions.length,2)
+})
+test('objective control plane rejects future observations and duplicate criteria',()=>{
+ const fixture=validObjectiveFixture()
+ assert.throws(()=>buildObjectiveControlPlane({objectives:fixture.objectives,observations:[{...fixture.observations[0],recordedAt:'2027-01-01T00:00:00Z'}],now:'2026-11-08T00:00:00Z'}),/future/)
+ assert.throws(()=>buildObjectiveControlPlane({objectives:[{id:'x',acceptanceCriteria:[{id:'a'},{id:'a'}]}]}),/duplicate criterion/)
+})
+test('interface escrow blocks merge until every affected consumer acknowledges exact fingerprint',()=>{
+ const escrow=validEscrowFixture(),report=verifyInterfaceEscrow({escrow,now:'2026-11-08T02:00:00Z'})
+ assert.equal(report.safeToMerge,true);assert.deepEqual(report.acknowledgedConsumers,['web-agent'])
+ const pending=createInterfaceEscrow({treaties:[{id:'web',owner:'web-agent',consumes:['User.v1'],expiresAt:'2027-01-01T00:00:00Z'}],changeSet:{id:'x',breakingInterfaces:['User.v1'],expiresAt:'2027-01-01T00:00:00Z'},now:'2026-11-08T00:00:00Z'})
+ assert.equal(verifyInterfaceEscrow({escrow:pending,now:'2026-11-08T01:00:00Z'}).safeToMerge,false)
+ assert.throws(()=>acknowledgeInterfaceEscrow({escrow:pending,consumer:'web-agent',contractFingerprint:'0'.repeat(64)}),/does not match/)
+})
+test('merge evidence packet fails closed and hashes a complete readiness packet',()=>{
+ const fixture=validObjectiveFixture(),escrow=validEscrowFixture()
+ const input={commitSha:'a'.repeat(40),...fixture,interfaceEscrow:escrow,agents:[{id:'api',resources:{ports:[3001]}},{id:'web',resources:{ports:[3002]}}],
+ checks:['repository-integrity','asset-integrity','developer-experience','full-workspace-quality'].map(name=>({name,status:'success',runId:42})),
+ evidence:[{id:'ci-run',sha256:'b'.repeat(64)},{id:'acceptance',sha256:'c'.repeat(64)}],
+ rollback:{strategy:'revert-commit',owner:'release-agent',verified:true},now:'2026-11-08T03:00:00Z'}
+ const packet=createMergeEvidencePacket(input)
+ assert.equal(packet.ready,true);assert.equal(packet.digest.length,64)
+ const blocked=createMergeEvidencePacket({...input,checks:input.checks.slice(1)})
+ assert.equal(blocked.ready,false);assert.ok(blocked.failures.some(x=>x.includes('repository-integrity')))
+})
+
+test('interface escrow detects tampered contract and consumer set',()=>{
+ const escrow=validEscrowFixture()
+ assert.equal(verifyInterfaceEscrow({escrow,now:'2026-11-08T02:00:00Z'}).safeToMerge,true)
+ assert.equal(verifyInterfaceEscrow({escrow:{...escrow,contract:{...escrow.contract,version:'3'}},now:'2026-11-08T02:00:00Z'}).reason,'escrow_fingerprint_mismatch')
+ assert.equal(verifyInterfaceEscrow({escrow:{...escrow,consumers:[]},now:'2026-11-08T02:00:00Z'}).reason,'escrow_consumer_set_mismatch')
+})
+test('merge evidence packet rejects invalid generation time',()=>{
+ const fixture=validObjectiveFixture()
+ const packet=createMergeEvidencePacket({commitSha:'a'.repeat(40),...fixture,interfaceEscrow:validEscrowFixture(),agents:[],checks:[],evidence:[],rollback:null,now:'invalid'})
+ assert.equal(packet.ready,false);assert.ok(packet.failures.includes('invalid_now_timestamp'))
 })
