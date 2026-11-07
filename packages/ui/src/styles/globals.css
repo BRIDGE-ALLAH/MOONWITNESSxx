@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,7 +7,7 @@
 @layer base {
   :root {
     color-scheme: light;
-    /* Paper Riot — warm paper, near-obsidian ink. */
+    /* Archive fallback — warm paper, deep-ink text. */
     --background: 37 30% 93%;
     --foreground: 210 8% 14%;
     --card: 37 30% 96%;
@@ -41,36 +41,69 @@
     --motion-normal: 180ms;
   }
 
-  .dark {
+  .dark,
+  .theme-observatory {
     color-scheme: dark;
-    /* Night Riot — obsidian industrial surfaces with controlled signal colors. */
-    --background: 216 8% 8%;
-    --foreground: 37 30% 93%;
-    --card: 212 8% 11%;
-    --card-foreground: 37 30% 93%;
-    --popover: 212 8% 11%;
-    --popover-foreground: 37 30% 93%;
-    --primary: 74 100% 61%;
-    --primary-foreground: 216 8% 8%;
-    --secondary: 210 7% 16%;
-    --secondary-foreground: 37 30% 93%;
-    --muted: 210 7% 16%;
-    --muted-foreground: 210 5% 62%;
-    --accent: 16 100% 58%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    /* MOONWITNESS Observatory — Void, instrument panels, lunar text, gold signal. */
+    --background: 230 25% 5%;
+    --foreground: 45 35% 93%;
+    --card: 228 29% 10%;
+    --card-foreground: 45 35% 93%;
+    --popover: 228 29% 10%;
+    --popover-foreground: 45 35% 93%;
+    --primary: 41 74% 65%;
+    --primary-foreground: 230 25% 5%;
+    --secondary: 222 22% 18%;
+    --secondary-foreground: 45 35% 93%;
+    --muted: 222 22% 18%;
+    --muted-foreground: 220 17% 73%;
+    --accent: 256 28% 53%;
+    --accent-foreground: 45 35% 93%;
+    --destructive: 0 50% 57%;
+    --destructive-foreground: 230 25% 5%;
     --success: 145 55% 48%;
-    --success-foreground: 216 8% 8%;
+    --success-foreground: 230 25% 5%;
     --warning: 38 92% 58%;
-    --warning-foreground: 216 8% 8%;
+    --warning-foreground: 230 25% 5%;
     --info: 196 90% 58%;
-    --info-foreground: 216 8% 8%;
-    --border: 210 7% 20%;
-    --input: 210 7% 24%;
-    --ring: 74 100% 61%;
-    --focus: 74 100% 61%;
-    --overlay: 216 8% 4%;
+    --info-foreground: 230 25% 5%;
+    --border: 222 22% 18%;
+    --input: 222 22% 18%;
+    --ring: 41 74% 65%;
+    --focus: 41 74% 65%;
+    --overlay: 230 25% 3%;
+  }
+
+  .theme-archive {
+    color-scheme: light;
+    /* MOONWITNESS Archive — Moonlight paper, Deep Ink, accessible violet focus. */
+    --background: 45 35% 93%;
+    --foreground: 230 21% 11%;
+    --card: 45 35% 96%;
+    --card-foreground: 230 21% 11%;
+    --popover: 45 35% 96%;
+    --popover-foreground: 230 21% 11%;
+    --primary: 255 32% 43%;
+    --primary-foreground: 45 35% 93%;
+    --secondary: 45 17% 86%;
+    --secondary-foreground: 230 21% 11%;
+    --muted: 45 20% 89%;
+    --muted-foreground: 226 9% 37%;
+    --accent: 41 52% 29%;
+    --accent-foreground: 45 35% 93%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 145 55% 32%;
+    --success-foreground: 0 0% 100%;
+    --warning: 41 52% 29%;
+    --warning-foreground: 45 35% 93%;
+    --info: 196 90% 36%;
+    --info-foreground: 0 0% 100%;
+    --border: 45 16% 80%;
+    --input: 45 16% 80%;
+    --ring: 255 32% 43%;
+    --focus: 255 32% 43%;
+    --overlay: 230 25% 5%;
   }
 
   * {

@@ -38,7 +38,7 @@ module.exports = {
         sm: 'var(--radius-control)',
       },
       fontFamily: {
-        display: ['Archivo Black', 'Anton', 'Impact', 'sans-serif'],
+        display: ['Space Grotesk', 'Inter', 'sans-serif'],
         ui: ['Space Grotesk', 'Inter', 'sans-serif'],
         mono: ['IBM Plex Mono', 'JetBrains Mono', 'monospace'],
       },
