@@ -69,6 +69,15 @@ test('memory integrity benchmark covers ten attack classes and scores read-time 
   assert.equal(report.score, 10.5 / 11)
 })
 
+test('memory integrity metric counts blocked and served attacks detected only at audit', () => {
+  const report = scoreMemoryIntegrityBenchmark([
+    { caseId: 'blocked-late', attackId: 'content_mutation', attacked: true, served: false, detectedAt: 'audit' },
+    { caseId: 'served-late', attackId: 'record_deletion', attacked: true, served: true, detectedAt: 'audit' },
+  ])
+  assert.equal(report.detectedOnlyAtAudit, 2)
+  assert.equal(report.blockedAtRead, 0)
+})
+
 test('benchmark rejects duplicate trial IDs and inconsistent control labels', () => {
   assert.throws(() => scoreMemoryIntegrityBenchmark([
     { caseId: 'same', attackId: 'content_mutation', attacked: true, served: false, detectedAt: 'read' },
