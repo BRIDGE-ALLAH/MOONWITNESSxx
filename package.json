@@ -12,7 +12,7 @@
     "lint:all": "pnpm run lint",
     "typecheck": "turbo run type-check",
     "typecheck:all": "pnpm run typecheck",
-    "test": "node --test",
+    "test": "node --test && turbo run test",
     "clean": "turbo run clean",
     "check:repo": "node scripts/repo-audit.mjs",
     "audit:repo": "node scripts/repo-audit.mjs --write-report",
