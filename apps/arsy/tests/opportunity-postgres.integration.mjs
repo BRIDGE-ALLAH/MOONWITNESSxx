@@ -145,6 +145,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
 
 
     const revisedProduct = await products.createVersion(ownerId, ownerId, product.id, {
+      buyerProblem: input.buyerProblem,
       revisionNotes: 'Version two adds clear reorder threshold behavior.',
       sourceOpportunityId: created.id,
     }, [
