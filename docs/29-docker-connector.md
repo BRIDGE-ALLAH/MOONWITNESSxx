@@ -23,7 +23,7 @@ Status: initial read-only connector implementation; not a production deployment 
 - `DOCKER_REMOTE_ALLOW_PRIVATE_NETWORKS=1`: opt-in only for a trusted deployment whose allowlisted Docker host resolves to RFC1918/ULA addresses. Loopback, link-local, multicast, reserved and documentation ranges remain blocked.
 - Optional `DOCKER_LOCAL_SOCKET_PATH`: only `/var/run/docker.sock` or `/run/docker.sock`.
 
-Generate secrets with a trusted secret manager or, for local development, `openssl rand -base64 32`. Never commit generated values. The login route's built-in failed-attempt throttle is process-local; production ingress must also enforce a shared rate limit before scaling Headquarter across multiple replicas.
+Generate secrets with a trusted secret manager or, for local development, `openssl rand -base64 32`. Never commit generated values. The shared login throttle is PostgreSQL-backed and stores an HMAC-SHA256 fingerprint rather than a raw IP or reversible unkeyed IP hash. Production must set `HEADQUARTER_TRUSTED_PROXY_HOPS=1` only behind one trusted ingress that overwrites `X-Forwarded-For` and blocks direct Headquarter access; otherwise login intentionally fails closed.
 
 ## Database migration
 
@@ -48,7 +48,7 @@ The Compose stack does **not** mount the host Docker socket by default. This is 
 
 ## Remote Docker
 
-Remote endpoints must use HTTPS, present a trusted CA and client certificate/key, and have a hostname listed exactly in `DOCKER_REMOTE_ALLOWED_HOSTS`. Plain HTTP, URL credentials, IP literals, local hostnames and arbitrary URL paths are rejected. ARSY resolves every A/AAAA answer before connecting, rejects loopback/link-local/reserved answers, blocks private answers unless `DOCKER_REMOTE_ALLOW_PRIVATE_NETWORKS=1` is explicitly configured, and pins the HTTPS socket to the validated address while retaining hostname-based TLS verification to prevent DNS rebinding. TLS private material is encrypted at rest using AES-256-GCM and is never returned in API responses.
+Remote endpoints must use HTTPS, present a trusted CA and client certificate/key, and have a hostname listed exactly in `DOCKER_REMOTE_ALLOWED_HOSTS`. Plain HTTP, URL credentials, IP literals, local hostnames and arbitrary URL paths are rejected. ARSY resolves every A/AAAA answer before connecting, rejects loopback/link-local/reserved answers, blocks private answers by default, and permits RFC1918/ULA only when `DOCKER_REMOTE_ALLOW_PRIVATE_NETWORKS=1` is explicitly configured for a trusted deployment. The HTTPS socket is pinned to one of the validated addresses while hostname-based TLS verification remains enabled, preventing a second DNS lookup from rebinding the connection. Mixed safe/unsafe DNS answers fail closed. TLS private material is encrypted at rest using AES-256-GCM and is never returned in API responses.
 
 ## API surface
 
