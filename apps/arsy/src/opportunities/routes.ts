@@ -1,9 +1,9 @@
-import { timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { evaluateOpportunity, opportunityInputSchema } from './domain.ts'
 import { OpportunityRepository } from './repository.ts'
+import { hasValidOperatorToken } from '../auth/operator-token.ts'
 
 const idSchema = z.string().uuid()
 const decisionSchema = z.object({
@@ -14,15 +14,6 @@ const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 })
 
-function authorized(request: { headers: Record<string, string | string[] | undefined> }, token: string | undefined): boolean {
-  if (!token) return false
-  const supplied = request.headers['x-arsy-operator-token']
-  if (typeof supplied !== 'string') return false
-  const expected = Buffer.from(token)
-  const actual = Buffer.from(supplied)
-  return expected.length === actual.length && timingSafeEqual(expected, actual)
-}
-
 export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool, env: NodeJS.ProcessEnv = process.env): void {
   const repository = new OpportunityRepository(db)
   const ownerId = env.ARSY_OPERATOR_ID?.trim() || 'primary-owner'
@@ -31,7 +22,7 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
 
   app.addHook('preHandler', async (request, reply) => {
     if (!request.url.startsWith('/api/v1/')) return
-    if (!authorized(request, token)) {
+    if (!hasValidOperatorToken(request, token)) {
       return reply.code(token ? 401 : 503).send({
         error: {
           code: token ? 'UNAUTHORIZED' : 'OPERATOR_AUTH_NOT_CONFIGURED',
