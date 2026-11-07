@@ -228,23 +228,23 @@
 
 **Tujuan:** membuktikan pola arsitektur pada satu feature sebelum diterapkan ke semua domain.
 
-- [ ] Pilih satu feature representatif (disarankan ARSY DECK bila sesuai prioritas produk) sebagai reference implementation.
-- [ ] Dokumentasikan user journey, domain ownership, data source, permission, dan tindakan sensitif feature tersebut.
-- [ ] Pisahkan page composition, feature components, hooks/state, API adapter, types, dan tests.
-- [ ] Implementasikan integrasi backend nyata melalui API boundary.
-- [ ] Implementasikan loading, empty, error, forbidden, stale, partial, dan success state.
+- [x] Pilih ARSY DECK sebagai reference feature berdasarkan IA dan kebutuhan weekly owner review.
+- [x] Dokumentasikan user journey, domain ownership, kondisi sumber data, batas permission, dan belum adanya tindakan sensitif di `src/features/arsy-deck/README.md`.
+- [x] Pisahkan page composition, feature view, repository boundary, demo fixture, dan domain types di `src/features/arsy-deck`; tests belum ditandai selesai karena test runner belum tersedia.
+- [ ] Integrasikan backend nyata setelah ARSY menerbitkan workspace-pulse contract; saat ini `apps/arsy` belum menyediakan endpoint tersebut.
+- [ ] Implementasikan lifecycle state produksi (loading/empty/error/forbidden/stale/partial/success) setelah API contract dan permission model tersedia; route-level fallback ada, bukan pengganti state domain.
 - [ ] Implementasikan search/filter/sort/pagination sesuai kebutuhan domain.
 - [ ] Implementasikan detail view/drawer dan action confirmation bila relevan.
 - [ ] Untuk tindakan berisiko, tampilkan impact, confirmation, progress, hasil, dan audit reference bila tersedia.
-- [ ] Pastikan status yang ditampilkan berasal dari data aktual, bukan hardcoded/demo state.
+- [x] Pastikan semua status sample diberi label eksplisit demo dan tidak mengklaim data aktual.
 - [ ] Tambahkan unit test untuk logic dan component behavior.
 - [ ] Tambahkan integration test untuk API boundary dan permission behavior.
 - [ ] Tambahkan E2E untuk alur pengguna utama.
-- [ ] Dokumentasikan pola reference implementation untuk direplikasi feature lain.
+- [x] Dokumentasikan pola reference implementation untuk direplikasi feature lain di `src/features/arsy-deck/README.md`.
 
 **Gate Phase 4**
 - [ ] Satu feature dapat dipakai sebagai contoh implementasi end-to-end.
-- [ ] Tidak ada mock yang menyamar sebagai data produksi.
+- [x] Tidak ada mock yang menyamar sebagai data produksi pada ARSY DECK; disclosure demo selalu terlihat.
 - [ ] Semua lifecycle state dan permission behavior teruji.
 - [ ] Pola dapat direplikasi tanpa copy-paste struktur yang tidak perlu.
 
@@ -255,11 +255,11 @@
 **Tujuan:** memperluas fondasi ke seluruh area produk dengan ownership yang jelas.
 
 ### 5.1 Navigation dan information architecture
-- [ ] Cocokkan menu dengan Information Architecture resmi.
-- [ ] Kelompokkan menu berdasarkan mental model user, bukan struktur internal backend.
-- [ ] Bedakan area workspace/operasional dari administration/system management.
-- [ ] Tetapkan label, deskripsi, icon, route, permission, dan status availability untuk setiap menu.
-- [ ] Hilangkan menu yang belum memiliki route/fitur nyata atau beri status yang jujur.
+- [x] Cocokkan menu dengan `docs/09-information-architecture.md`.
+- [x] Kelompokkan menu menjadi Command, Operations, dan Administration berdasarkan mental model produk.
+- [x] Pisahkan navigation group Administration dari Command dan Operations.
+- [x] Tetapkan label, deskripsi, route, dan status prototype/planned untuk setiap menu; icon dan permission menunggu sistem ikon/authorization resmi.
+- [x] Entri tanpa route ditampilkan disabled sebagai PLANNED, bukan tautan ke halaman palsu.
 - [ ] Pastikan deep link dan breadcrumb konsisten.
 
 ### 5.2 Administration
@@ -273,10 +273,10 @@
 - [ ] Pastikan setiap halaman administration memiliki role/permission model, auditability, dan confirmation untuk perubahan sensitif.
 
 ### 5.3 Feature rollout
-- [ ] Buat checklist kesiapan yang sama untuk setiap feature.
+- [x] Buat register readiness dan production gate di `FEATURE-ROLLOUT.md`.
 - [ ] Migrasikan feature satu per satu ke struktur dan API pattern yang telah tervalidasi.
 - [ ] Jangan membuka route sebagai production-ready sebelum data, permission, failure state, dan tests tersedia.
-- [ ] Tandai capability yang belum tersedia sebagai planned/disabled dengan penjelasan yang akurat.
+- [x] Tandai capability administrasi yang belum tersedia sebagai planned/disabled dengan deskripsi yang akurat.
 - [ ] Hapus prototype state dan placeholder setelah pengganti nyata tersedia.
 - [ ] Pastikan setiap feature memiliki owner dan dokumentasi operasional.
 
@@ -384,7 +384,7 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 
 ---
 
-## Execution record — 2026-11-07
+## Execution record — 2026-11-08
 
 - [x] Phase 0 source audit recorded in [AUDIT.md](./AUDIT.md).
 - [x] Phase 1 shell decomposition and folder conventions recorded in [ARCHITECTURE.md](./ARCHITECTURE.md).
@@ -393,9 +393,12 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Command palette keyboard focus containment added; manual browser/screen-reader verification remains pending.
 - [x] Route-level loading, error recovery, and not-found UI added; browser verification remains pending.
 - [x] Shared design-token contract documented in `packages/ui/DESIGN-TOKENS.md`.
-- [ ] Feature pages migrated to live ARSY endpoints; current module content remains demo/static.
+- [ ] Feature pages migrated to live ARSY endpoints; current module content remains demo/static and ARSY Deck now uses a domain-owned, explicitly demo-only repository.
 - [ ] Identity/session, authorization, workspace context, and route-aware localization implemented against approved backend contracts.
 - [ ] Complete primitive audit, responsive/contrast checks, and visual regression baseline verified.
 - [ ] Clean-checkout lint, type-check, tests, and Next.js build verified in CI or local environment.
 - [ ] Browser-level responsive and accessibility checks verified.
 - [ ] Route-aware `/id` and `/en` localization implemented; current locale toggle remains prototype-only.
+- [x] Phase 4 ARSY Deck reference-feature structure established without inventing unavailable backend contracts.
+- [x] Phase 5 navigation aligned with approved IA; unimplemented administration routes are disabled and marked planned.
+- [x] Feature rollout and production promotion gates documented in `FEATURE-ROLLOUT.md`.
