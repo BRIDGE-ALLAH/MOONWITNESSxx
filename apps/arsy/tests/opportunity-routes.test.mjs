@@ -52,8 +52,11 @@ const body = {
 
 function fakePool() {
   const records = []
+  const calls = []
   return {
+    calls,
     query: async (sql) => {
+      calls.push(sql)
       if (sql.includes('INSERT INTO arsy_opportunities')) {
         const record = {
           id: '11111111-1111-4111-8111-111111111111',
@@ -140,6 +143,37 @@ test('authenticated operator create/list routes return the inserted record', asy
     assert.equal(listed.statusCode, 200)
     assert.equal(listed.json().data.length, 1)
     assert.equal(listed.json().data[0].id, created.json().data.id)
+  } finally {
+    await app.close()
+  }
+})
+
+ 
+test('all versioned business API groups reject anonymous requests before database access', async () => {
+  const pool = fakePool()
+  const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
+  const app = await createApp({ databasePool: pool, logger: false, env })
+  const id = '11111111-1111-4111-8111-111111111111'
+  const requests = [
+    { method: 'GET', url: '/api/v1/products' },
+    { method: 'POST', url: '/api/v1/products/from-opportunity', payload: { opportunityId: id, acceptanceCriteria: ['A measurable acceptance criterion'] } },
+    { method: 'GET', url: `/api/v1/products/${id}` },
+    { method: 'GET', url: '/api/v1/financial-events' },
+    { method: 'POST', url: '/api/v1/financial-events', payload: {
+      eventType: 'gross-receipt', amountMinor: '1000', currency: 'IDR',
+      occurredAt: '2026-11-08T00:00:00Z', source: 'test evidence', idempotencyKey: 'test-key-0001',
+    } },
+    { method: 'PATCH', url: `/api/v1/financial-events/${id}/reconciliation`, payload: {
+      state: 'verified', rationale: 'Test reconciliation rationale.', evidenceUrl: 'https://example.com/evidence',
+    } },
+    { method: 'GET', url: '/api/v1/financial-summary' },
+  ]
+  try {
+    for (const request of requests) {
+      const response = await app.inject(request)
+      assert.equal(response.statusCode, 401, `Expected authentication for ${request.method} ${request.url}`)
+    }
+    assert.equal(pool.calls.length, 0, 'unauthorized business requests must not reach repositories')
   } finally {
     await app.close()
   }
