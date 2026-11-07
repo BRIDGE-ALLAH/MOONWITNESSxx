@@ -65,7 +65,7 @@ export default function SignalRoom() {
               <CardHeader>
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm font-mono uppercase tracking-widest text-muted-icon">{trend.title}</span>
-                  <Badge status={trend.trend === 'up' ? 'lime' : trend.trend === 'down' ? 'error' : 'default'}>{trend.confidence}%</Badge>
+                  <Badge variant={trend.trend === 'up' ? 'lime' : trend.trend === 'down' ? 'destructive' : 'outline'}>{trend.confidence}%</Badge>
                 </div>
                 <CardTitle className="hidden">{trend.title}</CardTitle>
               </CardHeader>
@@ -83,7 +83,7 @@ export default function SignalRoom() {
           <h2 className="text-xl font-display uppercase tracking-wider mb-4">Category Discovery</h2>
           <div className="grid grid-cols-2 gap-2">
             {categoryData.map((cat) => (
-              <Badge key={cat.id} status={cat.trend === 'up' ? 'default' : cat.trend === 'down' ? 'error' : 'default'} className="text-xs font-mono uppercase tracking-wider">
+              <Badge key={cat.id} variant={cat.trend === 'up' ? 'lime' : cat.trend === 'down' ? 'destructive' : 'outline'} className="text-xs font-mono uppercase tracking-wider">
                 {cat.label} <span className="text-xs">{cat.count}</span>
               </Badge>
             ))}
@@ -94,7 +94,7 @@ export default function SignalRoom() {
           <h2 className="text-xl font-display uppercase tracking-wider mb-4">Source Streams</h2>
           <div className="grid grid-cols-2 gap-2">
             {sourceStreams.map((stream) => (
-              <Badge key={stream.id} status={stream.verified ? 'default' : 'error'} className="text-xs font-mono uppercase tracking-wider">
+              <Badge key={stream.id} variant={stream.verified ? 'electric' : 'outline'} className="text-xs font-mono uppercase tracking-wider">
                 {stream.name} <span className="text-xs">({stream.confidence}%)</span>
               </Badge>
             ))}
@@ -111,7 +111,7 @@ export default function SignalRoom() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{`Affected: ${problem.affected}%`}</p>
-                  <Badge status={problem.severity === 'high' ? 'error' : 'warning'} />
+                  <Badge variant={problem.severity === 'high' ? 'destructive' : 'orange'}>{problem.severity}</Badge>
                 </CardContent>
               </Card>
             ))}
@@ -130,7 +130,7 @@ export default function SignalRoom() {
                   <p className="text-sm text-muted-foreground">{obs.observation}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <span>{obs.trend === 'up' ? '▲' : '▼'}</span>
-                    <Badge status={obs.trend === 'up' ? 'default' : 'error'} />
+                    <Badge variant={obs.trend === 'up' ? 'lime' : 'destructive'}>{obs.trend}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -142,7 +142,7 @@ export default function SignalRoom() {
           <h2 className="text-xl font-display uppercase tracking-wider mb-4">Research Status</h2>
           <div className="grid grid-cols-3 gap-2">
             {researchStatus.map((status) => (
-              <Badge key={status.id} status={status.badgeColor} className="text-xs font-mono uppercase tracking-wider">
+              <Badge key={status.id} variant="outline" className="text-xs font-mono uppercase tracking-wider">
                 {status.label} <span className="text-xs">{status.count}</span>
               </Badge>
             ))}

@@ -117,7 +117,7 @@ export default function TheForge() {
                   <summary className="cursor-pointer text-sm text-acid-lime underline">
                     Production State
                   </summary>
-                  <Badge status={product.productionState} className="text-xs ml-2" />
+                  <Badge variant="outline" className="ml-2 text-xs">{product.productionState}</Badge>
                   <p>{product.productionState}</p>
                 </details>
 
@@ -125,7 +125,7 @@ export default function TheForge() {
                   <summary className="cursor-pointer text-sm text-acid-lime underline">
                     Quality State
                   </summary>
-                  <Badge status={product.qualityState} className="text-xs ml-2" />
+                  <Badge variant="outline" className="ml-2 text-xs">{product.qualityState}</Badge>
                   <p>{product.qualityState}</p>
                 </details>
 

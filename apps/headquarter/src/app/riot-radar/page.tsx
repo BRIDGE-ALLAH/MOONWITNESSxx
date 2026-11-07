@@ -142,7 +142,9 @@ export default function RIOTRadar() {
                   </summary>
                   <p>
                     <strong>{opp.policyGate}</strong>{' '}
-                    <Badge status={opp.policyGate.includes('HARD STOP') ? 'error' : 'default'} />
+                    <Badge variant={opp.policyGate.includes('HARD STOP') ? 'destructive' : 'outline'}>
+                      {opp.policyGate.includes('HARD STOP') ? 'HARD STOP' : 'REVIEW'}
+                    </Badge>
                   </p>
                 </details>
 
@@ -173,8 +175,8 @@ export default function RIOTRadar() {
                     {opp.actions.map((action) => (
                       <Badge
                         key={action.label}
-                        status={action.color === 'error' ? 'error' : action.color === 'info' ? 'default' : 'default'}
-                        className="text-xs px-3 py-1"
+                        variant={action.color === 'error' ? 'destructive' : action.color === 'info' ? 'electric' : 'lime'}
+                        className="px-3 py-1 text-xs"
                       >
                         {action.label}
                       </Badge>

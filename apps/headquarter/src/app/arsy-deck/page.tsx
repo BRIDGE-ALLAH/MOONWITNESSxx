@@ -88,7 +88,7 @@ export default function ARSYDeck() {
                   <p className="text-sm text-muted-foreground">{opp.description}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <span className="text-xs font-mono">{opp.confidence}%</span>
-                    <Badge status={opp.status} />
+                    <Badge variant="outline">{String(opp.status)}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -108,7 +108,7 @@ export default function ARSYDeck() {
                   <p className="text-sm text-muted-foreground">{agent.role}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <span>{agent.status}</span>
-                    <Badge status={agent.status} />
+                    <Badge variant="electric">{agent.status}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -126,7 +126,7 @@ export default function ARSYDeck() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{channel.status}</p>
-                  <Badge status={channel.status === 'not connected' ? 'error' : 'default'} />
+                  <Badge variant={channel.status === 'not connected' ? 'destructive' : 'outline'}>{channel.status}</Badge>
                 </CardContent>
               </Card>
             ))}
