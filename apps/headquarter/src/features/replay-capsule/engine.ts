@@ -5,7 +5,7 @@ import type { ReplayCapsule, ReplayCapsulePayload, ReplayVerification } from './
 export const REPLAY_ENGINE_VERSION = '1.0.0'
 
 function canonicalize(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value)
+  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null'
   if (Array.isArray(value)) return '[' + value.map(canonicalize).join(',') + ']'
   const record = value as Record<string, unknown>
   return '{' + Object.keys(record).sort().map((key) => JSON.stringify(key) + ':' + canonicalize(record[key])).join(',') + '}'
