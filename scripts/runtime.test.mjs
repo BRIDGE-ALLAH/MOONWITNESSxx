@@ -20,7 +20,7 @@ test('runtime passport environment inventory contains names only', () => {
   ])
 })
 
-test('risk gate escalates with blast radius, reversibility and uncertainty', () => {
+test('risk gate escalates with blast radius, irreversibility and uncertainty', () => {
   assert.equal(assessChangeRisk({ blastRadius: 0, reversibility: 1, uncertainty: 1 }).gate, 'automated-preflight-only')
   assert.equal(assessChangeRisk({ blastRadius: 2, reversibility: 2, uncertainty: 1 }).gate, 'human-approval')
   assert.equal(assessChangeRisk({ blastRadius: 3, reversibility: 3, uncertainty: 3 }).gate, 'blocked-until-reviewed')
