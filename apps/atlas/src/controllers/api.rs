@@ -12,6 +12,7 @@ use crate::{
     adapters,
     cache::{self, CacheStatus},
     database::{self, DatabaseStatus},
+    dns::{self, PowerDnsClient, RrsetPatchRequest, ZoneCreateRequest},
     engine::{self, EngineWriteRequest},
     radius::{self, NasWriteRequest, SubscriberWriteRequest},
     radius_db,
@@ -461,6 +462,158 @@ async fn accounting_summary(headers: HeaderMap) -> impl IntoResponse {
     }
 }
 
+
+async fn list_dns_zones(headers: HeaderMap, Path(engine_id): Path<String>) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    let engine = match engine::get(&engine_id).await {
+        Ok(Some(engine)) => engine,
+        Ok(None) => return (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to load DNS engine");
+            return database_error().into_response();
+        }
+    };
+    let client = match PowerDnsClient::new(&engine) {
+        Ok(client) => client,
+        Err(message) => return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response(),
+    };
+    match client.list_zones().await {
+        Ok(zones) => (StatusCode::OK, Json(zones)).into_response(),
+        Err(error) => {
+            tracing::error!(engine_id = %engine.id, %error, "PowerDNS zone list failed");
+            (StatusCode::BAD_GATEWAY, Json(ApiError { error: "PowerDNS API request failed" })).into_response()
+        }
+    }
+}
+
+async fn create_dns_zone(
+    headers: HeaderMap,
+    Path(engine_id): Path<String>,
+    Json(input): Json<ZoneCreateRequest>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    if let Err(message) = dns::validate_zone(&input) {
+        return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
+    }
+    let engine = match engine::get(&engine_id).await {
+        Ok(Some(engine)) => engine,
+        Ok(None) => return (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to load DNS engine");
+            return database_error().into_response();
+        }
+    };
+    let client = match PowerDnsClient::new(&engine) {
+        Ok(client) => client,
+        Err(message) => return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response(),
+    };
+    match client.create_zone(&input).await {
+        Ok(zone) => (StatusCode::CREATED, Json(zone)).into_response(),
+        Err(error) => {
+            tracing::error!(engine_id = %engine.id, %error, "PowerDNS zone creation failed");
+            (StatusCode::BAD_GATEWAY, Json(ApiError { error: "PowerDNS API request failed" })).into_response()
+        }
+    }
+}
+
+async fn get_dns_zone(
+    headers: HeaderMap,
+    Path((engine_id, zone_id)): Path<(String, String)>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    if let Err(message) = dns::validate_zone_name(&zone_id) {
+        return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
+    }
+    let engine = match engine::get(&engine_id).await {
+        Ok(Some(engine)) => engine,
+        Ok(None) => return (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to load DNS engine");
+            return database_error().into_response();
+        }
+    };
+    let client = match PowerDnsClient::new(&engine) {
+        Ok(client) => client,
+        Err(message) => return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response(),
+    };
+    match client.get_zone(&zone_id).await {
+        Ok(zone) => (StatusCode::OK, Json(zone)).into_response(),
+        Err(error) => {
+            tracing::error!(engine_id = %engine.id, %error, "PowerDNS zone retrieval failed");
+            (StatusCode::BAD_GATEWAY, Json(ApiError { error: "PowerDNS API request failed" })).into_response()
+        }
+    }
+}
+
+async fn delete_dns_zone(
+    headers: HeaderMap,
+    Path((engine_id, zone_id)): Path<(String, String)>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    if let Err(message) = dns::validate_zone_name(&zone_id) {
+        return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
+    }
+    let engine = match engine::get(&engine_id).await {
+        Ok(Some(engine)) => engine,
+        Ok(None) => return (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to load DNS engine");
+            return database_error().into_response();
+        }
+    };
+    let client = match PowerDnsClient::new(&engine) {
+        Ok(client) => client,
+        Err(message) => return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response(),
+    };
+    match client.delete_zone(&zone_id).await {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(error) => {
+            tracing::error!(engine_id = %engine.id, %error, "PowerDNS zone deletion failed");
+            (StatusCode::BAD_GATEWAY, Json(ApiError { error: "PowerDNS API request failed" })).into_response()
+        }
+    }
+}
+
+async fn patch_dns_rrsets(
+    headers: HeaderMap,
+    Path((engine_id, zone_id)): Path<(String, String)>,
+    Json(input): Json<RrsetPatchRequest>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    if let Err(message) = dns::validate_rrsets(&zone_id, &input) {
+        return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
+    }
+    let engine = match engine::get(&engine_id).await {
+        Ok(Some(engine)) => engine,
+        Ok(None) => return (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to load DNS engine");
+            return database_error().into_response();
+        }
+    };
+    let client = match PowerDnsClient::new(&engine) {
+        Ok(client) => client,
+        Err(message) => return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response(),
+    };
+    match client.patch_rrsets(&zone_id, &input).await {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(error) => {
+            tracing::error!(engine_id = %engine.id, %error, "PowerDNS RRset update failed");
+            (StatusCode::BAD_GATEWAY, Json(ApiError { error: "PowerDNS API request failed" })).into_response()
+        }
+    }
+}
+
 pub fn routes() -> Routes {
     Routes::new()
         .prefix("/api/v1")
@@ -468,6 +621,11 @@ pub fn routes() -> Routes {
         .add("/system/readiness", get(readiness))
         .add("/system/version", get(version))
         .add("/engines/catalog", get(engine_catalog))
+        .add("/dns/engines/{engine_id}/zones", get(list_dns_zones).post(create_dns_zone))
+        .add(
+            "/dns/engines/{engine_id}/zones/{zone_id}",
+            get(get_dns_zone).delete(delete_dns_zone).patch(patch_dns_rrsets),
+        )
         .add("/engines", get(list_engines).post(create_engine))
         .add(
             "/engines/{id}",

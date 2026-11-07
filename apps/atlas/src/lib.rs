@@ -7,3 +7,4 @@ pub mod database;
 pub mod engine;
 pub mod radius;
 pub mod radius_db;
+pub mod dns;

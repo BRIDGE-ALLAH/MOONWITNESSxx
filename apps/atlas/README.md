@@ -80,7 +80,10 @@ The dashboard is served at http://127.0.0.1:5150/.
 - PUT /api/v1/engines/{id} — update an engine (Bearer token required).
 - DELETE /api/v1/engines/{id} — remove an engine (Bearer token required).
 - GET /api/v1/engines/{id}/health — run a live backend probe (Bearer token required).
+- GET/POST /api/v1/dns/engines/{engine_id}/zones — list or create PowerDNS zones (Bearer token required).
+- GET/DELETE/PATCH /api/v1/dns/engines/{engine_id}/zones/{zone_id} — inspect/delete a zone or apply RRset changes (Bearer token required).
 - GET/POST /api/v1/radius/nas — list or create NAS clients (Bearer token required).
+- PUT /api/v1/radius/nas/{id} — update a NAS client and rotate its shared secret (Bearer token required).
 - DELETE /api/v1/radius/nas/{id} — remove a NAS client (Bearer token required).
 - GET/POST /api/v1/radius/subscribers — list or create/update subscriber credentials and optional group (Bearer token required). The POST body accepts `username`, `password`, optional `groupname`, and optional `credential_mode` (`bcrypt` default or `nt_hash`).
 - DELETE /api/v1/radius/subscribers/{username} — remove subscriber authentication/policy rows (accounting history is retained).
@@ -136,7 +139,6 @@ The migrations create the engine registry, add non-secret adapter configuration 
 
 - Unbound and dnsdist native control adapters.
 
-- Full PowerDNS zone/record management API adapter.
 - VictoriaMetrics and VictoriaLogs query/configuration APIs beyond basic health probes.
 - Production certificate rotation, RadSec listener profile, and dynamic NAS reload without restarting FreeRADIUS.
 - Collector management, desired/actual state reconciliation, and durable operational jobs.
