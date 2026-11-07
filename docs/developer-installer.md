@@ -4,7 +4,7 @@ The repository installer is a thin Bash/PowerShell launcher over one Node.js imp
 
 ## Requirements
 
-- Node.js 20 or newer.
+- Node.js 22 or newer.
 - The exact pnpm version declared by `package.json` (`packageManager`).
 - Git is recommended for repository-aware diagnostics.
 - Docker Engine and the Compose v2 plugin are optional and only needed for the container stack.
