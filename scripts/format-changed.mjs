@@ -23,12 +23,13 @@ function gitFiles(args) {
 export async function runFormatCheck() {
   const write = process.argv.includes('--write')
   const base = process.env.FORMAT_BASE_SHA
+  const head = process.env.FORMAT_HEAD_SHA || 'HEAD'
   const branch = gitFiles(['branch', '--show-current'])[0]
   let changed = []
 
   if (base) {
     // CI validates the committed PR/push diff only; installs may generate ignored or local files.
-    changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${base}...HEAD`]))
+    changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${base}...${head}`]))
   } else {
     if (branch !== 'main' && run('git', ['rev-parse', '--verify', 'origin/main']).status === 0) {
       const mergeBase = gitFiles(['merge-base', 'origin/main', 'HEAD'])[0]
