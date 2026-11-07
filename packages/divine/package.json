@@ -7,56 +7,19 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
-    "./corpus": {
-      "types": "./src/corpus/index.ts",
-      "import": "./src/corpus/index.ts",
-      "default": "./src/corpus/index.ts"
-    },
-    "./ontology": {
-      "types": "./src/ontology/index.ts",
-      "import": "./src/ontology/index.ts",
-      "default": "./src/ontology/index.ts"
-    },
-    "./theology": {
-      "types": "./src/theology/index.ts",
-      "import": "./src/theology/index.ts",
-      "default": "./src/theology/index.ts"
-    },
-    "./epistemology": {
-      "types": "./src/epistemology/index.ts",
-      "import": "./src/epistemology/index.ts",
-      "default": "./src/epistemology/index.ts"
-    },
-    "./evidence": {
-      "types": "./src/evidence/index.ts",
-      "import": "./src/evidence/index.ts",
-      "default": "./src/evidence/index.ts"
-    },
-    "./reasoning": {
-      "types": "./src/reasoning/index.ts",
-      "import": "./src/reasoning/index.ts",
-      "default": "./src/reasoning/index.ts"
-    },
-    "./research": {
-      "types": "./src/research/index.ts",
-      "import": "./src/research/index.ts",
-      "default": "./src/research/index.ts"
-    }
+    ".": {"types":"./src/index.ts","import":"./src/index.ts","default":"./src/index.ts"},
+    "./corpus": {"types":"./src/corpus/index.ts","import":"./src/corpus/index.ts","default":"./src/corpus/index.ts"},
+    "./ontology": {"types":"./src/ontology/index.ts","import":"./src/ontology/index.ts","default":"./src/ontology/index.ts"},
+    "./theology": {"types":"./src/theology/index.ts","import":"./src/theology/index.ts","default":"./src/theology/index.ts"},
+    "./epistemology": {"types":"./src/epistemology/index.ts","import":"./src/epistemology/index.ts","default":"./src/epistemology/index.ts"},
+    "./evidence": {"types":"./src/evidence/index.ts","import":"./src/evidence/index.ts","default":"./src/evidence/index.ts"},
+    "./reasoning": {"types":"./src/reasoning/index.ts","import":"./src/reasoning/index.ts","default":"./src/reasoning/index.ts"},
+    "./research": {"types":"./src/research/index.ts","import":"./src/research/index.ts","default":"./src/research/index.ts"},
+    "./preservation": {"types":"./src/preservation/index.ts","import":"./src/preservation/index.ts","default":"./src/preservation/index.ts"},
+    "./ai": {"types":"./src/ai/index.ts","import":"./src/ai/index.ts","default":"./src/ai/index.ts"},
+    "./interop": {"types":"./src/interop/index.ts","import":"./src/interop/index.ts","default":"./src/interop/index.ts"}
   },
-  "scripts": {
-    "type-check": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.mjs"
-  },
-  "engines": {
-    "node": ">=22",
-    "pnpm": ">=9"
-  },
-  "devDependencies": {
-    "typescript": "^5.7.2"
-  }
+  "scripts": {"type-check":"tsc --noEmit","test":"node --experimental-strip-types --test tests/*.test.mjs"},
+  "engines": {"node":">=22","pnpm":">=9"},
+  "devDependencies": {"typescript":"^5.7.2"}
 }
