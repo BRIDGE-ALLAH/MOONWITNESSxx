@@ -4,6 +4,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 
 const EXPECTED_SERVICES = ['postgres', 'redis', 'arsy', 'headquarter']
 
@@ -52,6 +53,11 @@ function command(name, args, cwd, options = {}) {
 
 function report(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`)
+}
+
+function readEnvValue(content, key) {
+  const line = content.split(/\\r?\\n/).find((entry) => entry.match(/^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*=/)?.[1] === key)
+  return line ? line.slice(line.indexOf('=') + 1).trim().replace(/^['\"]|['\"]$/g, '') : null
 }
 
 async function readEnv(root) {
@@ -107,7 +113,7 @@ async function runPreflight(root) {
   const env = await readEnv(root)
   const keys = extractEnvKeys(env)
   const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
-  const mode = process.env.NODE_ENV ?? 'development'
+  const mode = process.env.NODE_ENV ?? readEnvValue(env, 'NODE_ENV') ?? 'development'
   const result = {
     command: 'preflight',
     mode,
@@ -220,7 +226,7 @@ async function main(argv) {
   throw new Error(`Unknown runtime action: ${action}`)
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main(process.argv.slice(2)).catch((error) => {
     console.error(`Runtime check failed: ${error.message}`)
     process.exitCode = 1
