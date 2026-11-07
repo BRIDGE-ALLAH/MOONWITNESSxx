@@ -37,8 +37,6 @@ function parseInspectionPrincipals(env: NodeJS.ProcessEnv): Map<string, string> 
 }
 
 function hasValidInspectionPrincipal(request: OperatorRequest, principals: Map<string, string>): string | null {
-  const pathname = request.headers['x-forwarded-path']
-  void pathname
   const id = request.headers['x-arsy-inspector-id']
   const token = request.headers['x-arsy-inspector-token']
   if (typeof id !== 'string' || typeof token !== 'string') return null
