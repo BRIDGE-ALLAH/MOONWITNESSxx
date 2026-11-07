@@ -1,188 +1,63 @@
-# Docker & Docker Compose Setup for MOONWITNESS/RIOTWORKS
+# Docker for MOONWITNESS
 
-## Quick Start
+## Scope
 
-### Prerequisites
+The committed Docker Compose file is a **local host stack** for validating the built ARSY and Headquarter images with PostgreSQL and Redis. It is not a production deployment target: it does not provide TLS ingress, managed secrets, managed data services, backup/restore, deployment orchestration, rollback, or a public production URL.
 
-- Docker Desktop (or Docker + Docker Compose separately)
-- 4GB+ free disk space for images and volumes
-- Ports 3000 (Headquarter), 3001 (ARSY), 5432 (PostgreSQL), 6379 (Redis) available
+The application images use their production start commands. Compose publishes ports on loopback only and requires an explicit PostgreSQL password.
 
-### Start services
+## Prerequisites
 
-```bash
-# Start all services (Headquarter, ARSY, PostgreSQL, Redis)
-docker-compose up -d
+- Docker Engine or Docker Desktop with Compose v2
+- Node.js/pnpm are not required on the host when using the prebuilt images
 
-# View logs
-docker-compose logs -f
+## Start the local stack
 
-# Stop services
-docker-compose down
-
-# Remove volumes (destructive — deletes database)
-docker-compose down -v
-```
-
-### Environment variables
-
-Copy `.env.docker` to `.env` and adjust as needed:
+Create an ignored local environment file and set a unique password:
 
 ```bash
 cp .env.docker .env
+printf 'POSTGRES_PASSWORD=%s\n' "$(openssl rand -base64 32)" >> .env
+docker compose up -d --build
 ```
 
-Key variables:
+Compose will fail closed if `POSTGRES_PASSWORD` is missing. Do not reuse the example value for any shared environment.
 
-- `NODE_ENV` — development or production
-- `POSTGRES_PASSWORD` — PostgreSQL password (default: postgres)
-- `ARSY_PORT` — ARSY backend port (default: 3001)
-- `HEADQUARTER_PORT` — Headquarter frontend port (default: 3000)
-- `NEXT_PUBLIC_ARSY_URL` — Frontend URL for backend API (default: http://localhost:3001)
+## Local endpoints
 
-### Access services
+- Headquarter: http://127.0.0.1:3000
+- ARSY: http://127.0.0.1:3001
+- PostgreSQL: 127.0.0.1:5432
+- Redis: 127.0.0.1:6379
 
-- **Headquarter frontend**: http://localhost:3000
-- **ARSY backend**: http://localhost:3001
-- **PostgreSQL**: localhost:5432 (user: postgres, password: postgres)
-- **Redis**: localhost:6379
+The database and Redis ports are bound to loopback and are not published to other network interfaces by default.
 
-## Service descriptions
-
-### PostgreSQL
-
-- Image: `postgres:16-alpine`
-- Database: `moonwitness` (configurable)
-- Data persists in `postgres_data` volume
-- Healthcheck enabled
-
-### Redis
-
-- Image: `redis:7-alpine`
-- Used by BullMQ for job queues and caching
-- Data persists in `redis_data` volume
-- Healthcheck enabled
-
-### ARSY (Backend)
-
-- Built from `Dockerfile.arsy`
-- Fastify HTTP API running on port 3001
-- Depends on PostgreSQL and Redis
-- Mounts local source for development hot-reload
-- Healthcheck enabled
-
-### Headquarter (Frontend)
-
-- Built from `Dockerfile.headquarter`
-- Next.js application running on port 3000
-- Depends on ARSY backend
-- Mounts local source for development hot-reload
-- Configured with `NEXT_PUBLIC_ARSY_URL` for API communication
-
-## Development workflow
-
-### Local changes
-
-Edit files in `apps/headquarter`, `apps/arsy`, or `packages/`. Changes are immediately reflected in running containers (thanks to volume mounts).
-
-### Rebuild services
-
-After changing package.json or dependencies:
+## Useful commands
 
 ```bash
-docker-compose up --build
+docker compose ps
+docker compose logs -f arsy headquarter
+docker compose logs -f postgres redis
+docker compose down
 ```
 
-### View service logs
+To remove local database and Redis data as well:
 
 ```bash
-docker-compose logs -f arsy
-docker-compose logs -f headquarter
-docker-compose logs -f postgres
+docker compose down -v
 ```
 
-### Access container shell
+**Warning:** `down -v` permanently deletes the local named volumes.
 
-```bash
-docker-compose exec arsy sh
-docker-compose exec headquarter sh
-docker-compose exec postgres psql -U postgres -d moonwitness
-```
+## Image build verification
 
-## Production considerations
+CI validates Compose interpolation using an ephemeral CI-only password, then builds both images from the repository root:
 
-For production deployments:
+- `Dockerfile.arsy`
+- `Dockerfile.headquarter`
 
-1. **Security**:
-   - Set strong `POSTGRES_PASSWORD`
-   - Use secrets management (e.g., Docker secrets, Kubernetes)
-   - Never commit `.env` files with real secrets
+A successful image build is not evidence of a production deployment or a live external integration.
 
-2. **Performance**:
-   - Use multi-stage builds (already in Dockerfiles)
-   - Disable hot-reload mounts in production
-   - Use PostgreSQL replicas and Redis Sentinel/Cluster
+## Production requirements
 
-3. **Monitoring**:
-   - Add health check endpoints to ARSY
-   - Configure centralized logging (ELK, Datadog, etc.)
-   - Set up alerts for service failures
-
-4. **Scaling**:
-   - Use Docker Swarm or Kubernetes for orchestration
-   - Implement load balancing (Nginx, HAProxy)
-   - Separate read/write database replicas
-
-## Troubleshooting
-
-### Services won't start
-
-```bash
-docker-compose logs -f
-```
-
-### Port already in use
-
-Change ports in `.env` or stop conflicting containers:
-
-```bash
-docker ps
-docker stop <container-id>
-```
-
-### Database connection errors
-
-Verify PostgreSQL is healthy:
-
-```bash
-docker-compose exec postgres pg_isready
-```
-
-### Clear everything and restart fresh
-
-```bash
-docker-compose down -v
-docker system prune -a
-docker-compose up -d
-```
-
-## File structure
-
-```
-.
-├── docker-compose.yml          # Service orchestration
-├── Dockerfile.arsy             # ARSY backend image
-├── Dockerfile.headquarter      # Headquarter frontend image
-├── .env.docker                 # Docker environment template
-├── apps/
-│   ├── arsy/                   # Backend source
-│   └── headquarter/            # Frontend source
-├── packages/                   # Shared packages
-└── pnpm-workspace.yaml         # pnpm workspace config
-```
-
-## Related documentation
-
-- [docs/08-technical-architecture.md](../docs/08-technical-architecture.md) — Backend/ORM architecture
-- [docs/24-repository-and-automation-governance.md](../docs/24-repository-and-automation-governance.md) — Git/CI setup
-- [README.md](../README.md) — Project overview
+A production launch still requires an explicitly selected hosting target, TLS/reverse-proxy ingress, production secret management, private data-service networking, durable managed storage, tested backup/restore, migration and rollback procedures, deployment automation, production health checks, and smoke tests. Do not expose this local Compose profile directly to the public internet.
