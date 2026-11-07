@@ -28,3 +28,9 @@ export async function DELETE(request: Request, context: RouteContext) {
   if (path instanceof NextResponse) return path
   return proxyArsyRequest(request, path, 'DELETE')
 }
+
+export async function PATCH(request: Request, context: RouteContext) {
+  const path = await opportunityPath(context)
+  if (path instanceof NextResponse) return path
+  return proxyArsyRequest(request, path, 'PATCH')
+}
