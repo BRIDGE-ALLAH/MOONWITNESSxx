@@ -1,6 +1,7 @@
 'use client'
 
 import { OperatorLogoutButton } from './operator-logout-button'
+import { AssetManager } from './asset-manager'
 import { useCallback, useEffect, useState } from 'react'
 
 type Opportunity = {
@@ -194,6 +195,7 @@ export function ProductBoard() {
               </>}
             </div>
           </details>
+          <AssetManager productId={product.id} productVersion={product.version} />
           {lifecycleActions[product.lifecycleState]?.length > 0 && <div className="space-y-2 border-t border-acid-lime/15 pt-3">
             <label className="block space-y-1 text-[10px] font-mono uppercase text-muted-ink">Lifecycle rationale
               <textarea value={lifecycleRationales[product.id] ?? ''} onChange={(event) => setLifecycleRationales((current) => ({ ...current, [product.id]: event.target.value }))} rows={2} maxLength={1000} placeholder="Why is this transition justified?" className="w-full border border-acid-lime/20 bg-obsidian p-2 text-sm normal-case" />
