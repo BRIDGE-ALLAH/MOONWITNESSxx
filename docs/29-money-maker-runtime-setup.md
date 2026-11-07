@@ -9,7 +9,8 @@ This document describes the current persisted opportunity, product-brief, and fi
 - The ARSY operator token and database URL are server-only secrets. Never prefix them with `NEXT_PUBLIC_`.
 - Headquarter operator login uses an eight-hour signed, HttpOnly, SameSite=Strict session cookie.
 - Operator session configuration fails closed when the password, 32+ character signing secret, or exact public origin is missing.
-- Every ARSY `/api/v1/*` business route requires both an explicit operator ID and the server-side operator token.
+- Every ARSY `/api/v1/*` business route requires both an explicit operator ID and the server-side operator token; the Fastify rate-limit plugin applies a default 120 requests/minute per route/IP, with stricter health-route limits.
+- Headquarter rejects the fifth failed operator login within a 15-minute process-local window. This is defense in depth, not a distributed limiter; production ingress must add a shared rate limit before multi-replica deployment.
 - Database migrations are explicit deployment/System Mode operations. Application startup never mutates schema.
 
 ## Required server environment
@@ -68,19 +69,21 @@ Run this first against an isolated development/staging database and verify backu
 
 Implemented in the current development branch (implementation presence is not equivalent to verified production readiness):
 - evidence-backed opportunity input validation, weighted scoring, hard-gate precedence, and missing-dimension preservation;
-- owner-scoped opportunity create/list/read/decision/archive API with owner-scoped idempotent create;
+- owner-scoped opportunity create/list/read/decision/archive API with owner-scoped idempotent create and operator-facing decision/archive actions;
 - server-side Headquarter signed sessions, same-origin mutation checks, and server-only ARSY service credentials;
 - eligible opportunity → version-1 product brief creation, product list/detail API, and acceptance criteria;
 - financial event ingestion with idempotency, event listing, currency-grouped verified summaries, and evidence-backed reconciliation;
 - audit events for opportunity, product, and financial operations;
-- explicit PostgreSQL migrations, checksum runner, and isolated integration-test coverage for migration reruns, opportunity/product/finance lifecycle, idempotency, reconciliation, and persistence after reconnect.
+- explicit PostgreSQL migrations limited to implemented opportunity/product/version/financial-event/audit tables, checksum runner, and isolated integration-test coverage for migration reruns, opportunity/product/finance lifecycle, idempotency, reconciliation, audit events and persistence after reconnect;
+- Playwright browser E2E coverage configured for login → opportunity capture/decision → product brief → financial event/reconciliation → Aftershock metrics → archive → logout. The current-head workflow result is pending.
 
 Not yet implemented or verified:
-- opportunity edit/detail/decision/archive user workflows and full product detail/version editing UI;
+- generic opportunity editing and operator-facing detail/evidence-history UI; decision and archive actions are implemented. Product detail UI and version editing beyond version 1 remain incomplete;
 - asset binary storage, rights/inspection workflows, channel/listing integrations, payout lifecycle, and external provider webhooks;
-- shared/distributed login-attempt throttling;
-- current-head CI, CodeQL, container build, and PostgreSQL integration execution evidence;
-- browser E2E from login through opportunity capture, product promotion, financial entry and reconciliation;
-- production deployment, backups, restore drills, rollback and live smoke tests.
+- shared/distributed login-attempt throttling (the current login throttle is process-local and must be paired with an ingress limiter before scaling);
+- current-head CI, CodeQL, container build, PostgreSQL integration and Playwright E2E execution evidence;
+- production deployment, managed secrets, HTTPS ingress, backups, restore drills, rollback and live smoke tests;
+- search/filter/cursor pagination and complete lifetime counts; current portfolio counts are explicitly bounded to the latest 100 records;
+- asset binary storage/provenance, inspection workflows, channel listing/publication receipts, payout provider integrations and verified FX conversion.
 
 No sample transaction, revenue figure, payout, market trend or publication is created by this workflow.
