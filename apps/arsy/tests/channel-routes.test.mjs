@@ -116,3 +116,44 @@ test('channel review rejects duplicate country entries rather than accepting con
     await app.close()
   }
 })
+
+test('country, payout and policy evidence reject non-HTTP(S) URL schemes', async () => {
+  const invalidReviews = [
+    {
+      countryEligibility: [{ country: 'ID', status: 'pass', sourceUrl: 'javascript:alert(1)', checkedAt: '2026-11-08T00:00:00Z' }],
+      payoutRequirements: { status: 'unknown', notes: 'Not checked yet.' },
+      policyStatus: 'unknown',
+      manualFallback: 'The owner manually uploads the package and records the receipt.',
+    },
+    {
+      countryEligibility: [{ country: 'ID', status: 'unknown' }],
+      payoutRequirements: { status: 'pass', sourceUrl: 'data:text/plain,proof', checkedAt: '2026-11-08T00:00:00Z', notes: 'Payout requirements were reviewed.' },
+      policyStatus: 'unknown',
+      manualFallback: 'The owner manually uploads the package and records the receipt.',
+    },
+    {
+      countryEligibility: [{ country: 'ID', status: 'unknown' }],
+      payoutRequirements: { status: 'unknown', notes: 'Not checked yet.' },
+      policyStatus: 'pass',
+      policyUrl: 'file:///etc/passwd',
+      policyCheckedAt: '2026-11-08T00:00:00Z',
+      manualFallback: 'The owner manually uploads the package and records the receipt.',
+    },
+  ]
+  const pool = fakePool()
+  const app = await createApp({ databasePool: pool, logger: false, env })
+  try {
+    for (const review of invalidReviews) {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: '/api/v1/channels/11111111-1111-4111-8111-111111111111/review',
+        headers: { 'x-arsy-operator-token': token },
+        payload: review,
+      })
+      assert.equal(response.statusCode, 400)
+    }
+    assert.equal(pool.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
