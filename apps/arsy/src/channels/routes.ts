@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { httpEvidenceUrlSchema } from '../http-url.ts'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { ChannelRepository } from './repository.ts'
@@ -11,17 +12,17 @@ const reviewSchema = z.object({
   countryEligibility: z.array(z.object({
     country: z.string().trim().length(2).toUpperCase(),
     status: z.enum(['pass', 'blocked', 'unknown']),
-    sourceUrl: z.string().url().optional(),
+    sourceUrl: httpEvidenceUrlSchema.optional(),
     checkedAt: z.string().datetime({ offset: true }).optional(),
   })).min(1).max(30),
   payoutRequirements: z.object({
     status: z.enum(['pass', 'blocked', 'unknown']),
-    sourceUrl: z.string().url().optional(),
+    sourceUrl: httpEvidenceUrlSchema.optional(),
     checkedAt: z.string().datetime({ offset: true }).optional(),
     notes: z.string().trim().min(5).max(1000),
   }),
   policyStatus: z.enum(['pass', 'blocked', 'unknown']),
-  policyUrl: z.string().url().optional(),
+  policyUrl: httpEvidenceUrlSchema.optional(),
   policyCheckedAt: z.string().datetime({ offset: true }).optional(),
   manualFallback: z.string().trim().min(10).max(2000),
 }).superRefine((input, context) => {
