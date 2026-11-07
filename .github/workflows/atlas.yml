@@ -62,7 +62,9 @@ jobs:
           ATLAS_DB_ROOT_PASSWORD: ci-root-password
           ATLAS_REDIS_PASSWORD: ci-redis-password
           RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
+          RADIUS_STATUS_SECRET: ci-radius-status-secret-which-is-long-enough-32
           ATLAS_CONTROL_TOKEN: ci-atlas-control-token-which-is-long-enough
+          ATLAS_DOCKER_SUBNET: 172.31.240.0/24
         run: docker compose config --quiet
 
       - name: Build ATLAS container
