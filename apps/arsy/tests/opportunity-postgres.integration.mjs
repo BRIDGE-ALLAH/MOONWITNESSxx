@@ -68,9 +68,15 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(evaluation.decision, 'prototype-candidate')
 
     const opportunities = new OpportunityRepository(pool)
-    const created = await opportunities.create(ownerId, ownerId, input, evaluation)
+    const opportunityIdempotencyKey = `opportunity-${randomUUID()}`
+    const createResult = await opportunities.create(ownerId, ownerId, input, evaluation, opportunityIdempotencyKey)
+    const created = createResult.opportunity
     assert.ok(created.id)
     assert.equal(created.evaluation.score, 80)
+    assert.equal(createResult.replayed, false)
+    const createReplay = await opportunities.create(ownerId, ownerId, input, evaluation, opportunityIdempotencyKey)
+    assert.equal(createReplay.replayed, true)
+    assert.equal(createReplay.opportunity.id, created.id)
 
     // A fresh connection proves the opportunity is not merely in process memory.
     await pool.end()
