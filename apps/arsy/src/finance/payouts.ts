@@ -280,7 +280,7 @@ export class PayoutRepository {
             (p.status = 'pending' AND $3 IN ('paid', 'failed', 'disputed')) OR
             (p.status = 'paid' AND $3 IN ('reversed', 'disputed')) OR
             (p.status = 'failed' AND $3 = 'disputed') OR
-            (p.status = 'disputed' AND $3 IN ('paid', 'failed', 'reversed'))
+            (p.status = 'disputed' AND ($3 IN ('paid', 'failed') OR ($3 = 'reversed' AND p.paid_at IS NOT NULL)))
           )
         RETURNING p.*, (SELECT status FROM current) AS from_status
       ), history AS (
