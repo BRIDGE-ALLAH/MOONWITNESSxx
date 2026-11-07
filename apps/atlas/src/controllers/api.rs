@@ -81,7 +81,6 @@ fn authorized(headers: &HeaderMap) -> Result<(), (StatusCode, Json<ApiError>)> {
     let expected = expected.as_bytes();
     let provided = provided.as_bytes();
     if expected.len() < 32
-        || expected.is_empty()
         || expected.len() != provided.len()
         || !bool::from(expected.ct_eq(provided))
     {

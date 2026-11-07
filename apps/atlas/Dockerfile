@@ -14,6 +14,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /build/target/release/atlas-cli /usr/local/bin/atlas
+COPY --from=builder /build/target/release/atlas-migrate /usr/local/bin/atlas-migrate
 COPY --from=builder /build/config ./config
 ENV LOCO_ENV=production
 ENV BINDING=0.0.0.0
