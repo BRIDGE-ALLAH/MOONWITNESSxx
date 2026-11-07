@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  workflows: write
 
 jobs:
   format-preview:
@@ -74,11 +73,6 @@ jobs:
           git add \
             .github/ISSUE_TEMPLATE/bug_report.yml \
             .github/ISSUE_TEMPLATE/feature_request.yml \
-            .github/workflows/ci.yml \
-            .github/workflows/codeql.yml \
-            .github/workflows/refresh-lockfile.yml \
-            .github/workflows/weekly-detection.yml \
-            .github/workflows/format-preview.yml \
             docker-compose.yml \
             docs/developer-installer.md \
             docs/operational-twin-research.md \
@@ -100,3 +94,4 @@ jobs:
           name: formatted-moonwitness-files
           path: formatted-output/
           retention-days: 1
+          include-hidden-files: true
