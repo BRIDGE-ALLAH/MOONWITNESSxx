@@ -2,18 +2,16 @@ import Fastify from 'fastify'
 import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
-// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
+import { setupDatabase } from './db'
 
-const app = Fastify({
-  logger: true,
-})
+// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
+const app = Fastify({ logger: true })
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
 
 const typedApp = app.withTypeProvider<ZodTypeProvider>()
 
-// Example route
 typedApp.get(
   '/',
   {
@@ -26,26 +24,41 @@ typedApp.get(
       },
     },
   },
-  async () => {
-    return {
-      status: 'ok',
-      message: 'ARSY Command Center is running',
-    }
-  }
+  async () => ({
+    status: 'ok',
+    message: 'ARSY Command Center is running',
+  })
 )
 
-// Database connector setup
-import { setupDatabase } from './db'
+app.get('/health/live', async () => ({ status: 'ok' }))
+
 setupDatabase(app)
 
+const shutdown = async (signal: string): Promise<void> => {
+  app.log.info({ signal }, 'Graceful shutdown started')
+  try {
+    await app.close()
+    app.log.info({ signal }, 'Graceful shutdown completed')
+  } catch (error) {
+    app.log.error({ err: error, signal }, 'Graceful shutdown failed')
+    process.exitCode = 1
+  }
+}
+
+process.once('SIGTERM', () => void shutdown('SIGTERM'))
+process.once('SIGINT', () => void shutdown('SIGINT'))
+
+const port = Number(process.env.PORT ?? 3000)
+const host = process.env.HOST ?? '0.0.0.0'
+
 app
-  .listen({ port: 3000 })
+  .listen({ port, host })
   .then(() => {
-    console.log('🚀 ARSY Command Center running on http://localhost:3000')
+    app.log.info({ host, port }, 'ARSY Command Center is running')
   })
-  .catch((err) => {
-    console.error(err)
-    process.exit(1)
+  .catch((error) => {
+    app.log.error(error)
+    process.exitCode = 1
   })
 
 export { app }
