@@ -186,7 +186,6 @@ export class DeterministicSchemaPlanner implements SchemaPlanner {
       for (const column of desiredColumns) {
         const found = existingColumns.get(column.name);
         if (!found) {
-          const field = model.fields[column.name];
           const hasDefault = column.defaultExpression !== undefined;
           const risk: ReconciliationRisk = !column.nullable && !hasDefault ? "review" : "safe";
           operations.push(operation(
