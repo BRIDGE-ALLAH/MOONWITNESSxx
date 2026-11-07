@@ -1,5 +1,10 @@
 # Repository Engineering Rules
 
+## Governance authority
+- Read `governance/README.md` and the applicable contract before changing repository policy, automation, ownership, or installation behavior.
+- `governance/README.md` is canonical for governance precedence and rule contracts; `docs/23` is authoritative for the current-state inventory/execution order; `docs/24` is detailed repository automation guidance.
+- Lower-level agent prompts and local plans MUST NOT override security, governance contracts, or canonical architecture decisions.
+
 ## Mission
 Keep this repository correct, secure, maintainable, minimal and releasable. Prefer the smallest complete change that satisfies the requirement.
 
@@ -18,7 +23,7 @@ Keep this repository correct, secure, maintainable, minimal and releasable. Pref
 - README explains the project; `docs/` holds necessary versioned technical docs; Wiki holds useful extended guides; CHANGELOG records released changes.
 
 ## Engineering
-- Follow existing architecture, style, dependency and branch conventions.
+- Follow governance/README.md, applicable contracts, existing architecture, style, dependency and branch conventions.
 - Fix root causes. Keep diffs focused and backward-compatible unless change is explicitly intended.
 - Add/update meaningful tests for behavior changes and bugs. Test according to impact; do not run unrelated suites repeatedly.
 - Never weaken tests, lint, security checks or CI to get green.
