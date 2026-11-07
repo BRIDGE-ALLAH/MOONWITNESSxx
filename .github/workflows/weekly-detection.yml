@@ -3,7 +3,7 @@ name: Weekly repository audit
 on:
   schedule:
     # Monday 02:30 Asia/Jakarta (Sunday 19:30 UTC).
-    - cron: "30 19 * * 0"
+    - cron: '30 19 * * 0'
   workflow_dispatch:
 
 concurrency:
