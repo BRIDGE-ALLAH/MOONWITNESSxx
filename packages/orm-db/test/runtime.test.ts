@@ -58,4 +58,5 @@ test("commit failures are surfaced and do not pretend the unit is active", async
   };
   const factory = createUnitOfWorkFactory(broken as never);
   await assert.rejects(() => withUnitOfWork(factory, async () => "done"), /commit failed/);
+  assert.deepEqual(fake.calls, ["rollback"]);
 });
