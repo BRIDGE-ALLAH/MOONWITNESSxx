@@ -1,99 +1,89 @@
 import { Queue } from 'bullmq'
+import { QueueScheduler } from 'bullmq'
 
+// Job definition types
 export type ProductUploadJob = {
   productId: string
   filePath: string
   userId: string
-  priority?: 1 | 2 | 3
+  priority?: 'high' | 'normal' | 'low'
 }
 
 export type AnalysisJob = {
   signalId: string
   analysisType: 'market' | 'competitor' | 'trend'
-  parameters?: Record<string, unknown>
+  parameters?: Record<string, any>
 }
 
-function getRedisConnection() {
-  return {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: Number(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD,
-  }
-}
-
+// Producer — create and push jobs
 export async function enqueueProductUpload(
   queueName: 'product-upload',
   job: ProductUploadJob
 ): Promise<string> {
-  const queue = new Queue<ProductUploadJob>(queueName, {
-    connection: getRedisConnection(),
+  const queue = new Queue(queueName, {
+    connection: {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number(process.env.REDIS_PORT) || 6379,
+      password: process.env.REDIS_PASSWORD,
+    },
   })
 
-  try {
-    const created = await queue.add('product-upload', job, {
-      priority: job.priority,
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 5000,
-      },
-      removeOnComplete: true,
-      removeOnFail: false,
-    })
+  const jobId = await queue.add('product-upload', job, {
+    priority: job.priority || 'normal',
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 5000,
+    },
+  })
 
-    if (!created.id) throw new Error('BullMQ did not return a job ID.')
-    return created.id
-  } finally {
-    await queue.close()
-  }
+  return jobId
 }
 
 export async function enqueueAnalysisJob(
   queueName: 'signal-analysis',
   job: AnalysisJob
 ): Promise<string> {
-  const queue = new Queue<AnalysisJob>(queueName, {
-    connection: getRedisConnection(),
+  const queue = new Queue(queueName, {
+    connection: {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number(process.env.REDIS_PORT) || 6379,
+      password: process.env.REDIS_PASSWORD,
+    },
   })
 
-  try {
-    const created = await queue.add('signal-analysis', job, {
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 3000,
-      },
-      removeOnComplete: true,
-      removeOnFail: false,
-    })
+  const jobId = await queue.add('signal-analysis', job, {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 3000,
+    },
+  })
 
-    if (!created.id) throw new Error('BullMQ did not return a job ID.')
-    return created.id
-  } finally {
-    await queue.close()
-  }
+  return jobId
 }
 
+// Scheduler — recurring jobs
 export async function scheduleProductReview(
   queueName: 'product-upload',
   productId: string
 ): Promise<void> {
-  const queue = new Queue<{ productId: string }>(queueName, {
-    connection: getRedisConnection(),
+  const queue = new Queue(queueName, {
+    connection: {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number(process.env.REDIS_PORT) || 6379,
+      password: process.env.REDIS_PASSWORD,
+    },
   })
 
-  try {
-    await queue.add(
-      'product-review',
-      { productId },
-      {
-        jobId: `product-review:${productId}`,
-        repeat: {
-          pattern: '0 2 * * *',
-        },
-      }
-    )
-  } finally {
-    await queue.close()
-  }
+  await new QueueScheduler(queueName, {
+    connection: {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number(process.env.REDIS_PORT) || 6379,
+      password: process.env.REDIS_PASSWORD,
+    },
+  }).scheduleEvery('product-review', {
+    productId,
+    cronTime: '0 2 * * *', // Every day at 02:00
+  })
 }

@@ -13,7 +13,6 @@ The core rule: **no product at scale without a documented buyer problem and a pl
 ## 2. Intelligence sources
 
 Potential source classes:
-
 - Public Reddit discussions and community forums.
 - Public reviews and Q&A where collection/use is permitted.
 - Official marketplace category pages and public search suggestions.
@@ -28,7 +27,6 @@ Use official APIs or permitted public access. Follow site terms, robots/rate lim
 ## 3. Evidence model
 
 Every observation must record:
-
 - Evidence ID.
 - Source name and canonical URL.
 - Capture time and source publication time, if available.
@@ -41,7 +39,6 @@ Every observation must record:
 - Expiry/recheck date.
 
 Separate evidence classes:
-
 - **Observed fact:** directly visible in a trusted source.
 - **Community anecdote:** an individual report, not a market-wide statistic.
 - **Inference:** reasoned interpretation from evidence.
@@ -53,7 +50,6 @@ Never convert an anecdote into an industry average.
 ## 4. Buyer-problem mining
 
 Look for:
-
 - Repeated workarounds.
 - Confusing or incomplete existing products.
 - Repeated complaints about complexity or missing features.
@@ -70,26 +66,25 @@ Do not copy a commenter’s wording, file, design, or product. Extract the under
 
 Use a 100-point explainable score:
 
-| Dimension                                     | Weight |
-| --------------------------------------------- | -----: |
-| Demand evidence strength                      |     25 |
-| Competition / quality gap                     |     20 |
-| Product usefulness and differentiation        |     15 |
-| Marketplace and buyer-intent fit              |     15 |
-| Production feasibility and cost               |     10 |
-| Durability / repeat demand / update potential |     10 |
-| Distribution readiness                        |      5 |
+| Dimension | Weight |
+|---|---:|
+| Demand evidence strength | 25 |
+| Competition / quality gap | 20 |
+| Product usefulness and differentiation | 15 |
+| Marketplace and buyer-intent fit | 15 |
+| Production feasibility and cost | 10 |
+| Durability / repeat demand / update potential | 10 |
+| Distribution readiness | 5 |
 
 **Policy, rights, country eligibility, and payout feasibility are hard gates, not a small weighted score.** A red hard gate blocks production or publication regardless of the score.
 
 Each dimension must have evidence, confidence, and reason. Missing data lowers confidence and may trigger Research More.
 
 Default decision bands are hypotheses to calibrate:
-
 - 80–100: prototype candidate.
 - 65–79: further research or small test.
 - Below 65: park or reject.
-  These bands must not be presented as validated predictive accuracy.
+These bands must not be presented as validated predictive accuracy.
 
 ## 6. Research workflow
 
@@ -116,33 +111,26 @@ Default decision bands are hypotheses to calibrate:
 ## 8. Out-of-the-box research modes
 
 ### Demand Gap Mining
-
 Aggregate recurring problem patterns from permitted public discussion.
 
 ### Review Friction Mining
-
 Identify what buyers say is difficult, missing, confusing, or poorly documented in existing products.
 
 ### Localization Gap Radar
-
 Compare the needs of a target region against the languages, units, currencies, formats, and examples offered by existing products.
 
 ### Seasonal Opportunity Radar
-
 Track events, school calendars, tax/planning seasons, holidays, and recurring buying moments with production lead times.
 
 ### Workflow Pain Mining
-
 Use public GitHub issues, discussions, and release notes to identify repetitive developer tasks that could become reusable templates, starter packs, or utilities.
 
 ### Format Gap Mining
-
 Find cases where useful information exists but is difficult to use in a particular format—e.g., an unclear guide that could become an accessible checklist or structured spreadsheet, subject to platform rules.
 
 ## 9. Research output contract
 
 Each opportunity package includes:
-
 - One-sentence buyer problem.
 - Defined buyer segment and job.
 - Evidence list with URLs/dates.

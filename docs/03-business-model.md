@@ -12,22 +12,21 @@ The economic asset is the portfolio: original, properly licensed products with d
 
 ## 2. Revenue engines and priority
 
-| Priority | Engine                   | Revenue event                                                  | Initial stance                 |
-| -------- | ------------------------ | -------------------------------------------------------------- | ------------------------------ |
-| P1       | Digital Utility          | Marketplace purchase/download of original utility              | Pilot                          |
-| P1       | Stock Assets             | License/download of original stock work                        | Pilot                          |
-| P2       | Affiliate Media          | Validated referred purchase and commission                     | Controlled pilot               |
-| P2       | Publishing               | Ebook/print royalty from eligible sales                        | Secondary                      |
-| P3       | Workflow Products        | Sale of original scripts, automation templates, presets, packs | Research then pilot            |
-| P3       | Media                    | Ad share or other platform monetization                        | Audience asset; not quick cash |
-| P4       | Game Assets & Microgames | Asset purchase, in-experience purchase, creator revenue        | Experimental                   |
+| Priority | Engine | Revenue event | Initial stance |
+|---|---|---|---|
+| P1 | Digital Utility | Marketplace purchase/download of original utility | Pilot |
+| P1 | Stock Assets | License/download of original stock work | Pilot |
+| P2 | Affiliate Media | Validated referred purchase and commission | Controlled pilot |
+| P2 | Publishing | Ebook/print royalty from eligible sales | Secondary |
+| P3 | Workflow Products | Sale of original scripts, automation templates, presets, packs | Research then pilot |
+| P3 | Media | Ad share or other platform monetization | Audience asset; not quick cash |
+| P4 | Game Assets & Microgames | Asset purchase, in-experience purchase, creator revenue | Experimental |
 
 Do not activate every engine simultaneously. Start with two product engines and one content-distribution experiment. Add new engines only when operational capacity and evidence justify them.
 
 ## 3. Portfolio thesis
 
 The portfolio should combine:
-
 - **Long-tail assets:** stock illustrations, vectors, textures, audio/video assets, and other licensed creative resources.
 - **Useful utilities:** calculators, spreadsheets, templates, planners, workflow packs, and practical digital toolkits.
 - **Media that demonstrates value:** tutorials, comparisons, original explainers, and honest product demonstrations.
@@ -38,7 +37,6 @@ A catalog should not be judged by count alone. A small group of differentiated, 
 ## 4. Marketplace-native discovery
 
 Primary discovery mechanisms:
-
 - Search queries and category placement.
 - Marketplace recommendation surfaces.
 - Related-item pages.
@@ -54,39 +52,30 @@ RIOTWORKS can prepare metadata, variants, previews, and performance tests. It mu
 ## 5. Out-of-the-box product strategies
 
 ### 5.1 Demand Gap Mining
-
 Find repeated, specific buyer problems in public discussions and public product feedback. Convert them into original products; never copy the post, product, or creator's work.
 
 ### 5.2 Product Mutation with real utility
-
 Create genuinely distinct product editions for different jobs, workflows, sizes, regions, or skill levels. Each edition must deliver meaningful differences, not cosmetic duplicates.
 
 ### 5.3 Living Products
-
 Treat selected templates, workflows, packs, and guides as maintained products: version, compatibility notes, changelog, fix history, and update package.
 
 ### 5.4 Localization Packs
-
 Adapt units, currencies, dates, spelling, examples, instructions, page sizes, and assumptions for a specific buyer region. Translation alone is not sufficient.
 
 ### 5.5 Seasonal Opportunity Radar
-
 Identify upcoming school, tax, planning, event, and shopping cycles. Research lead time and production cutoff so products are ready before the relevant demand window.
 
 ### 5.6 Micro-utility and creator workflow packs
-
 Explore small, self-serve tools and assets: n8n workflow templates, ComfyUI workflows, spreadsheet tools, SVG/icon packs, motion presets, game UI kits, browser extensions, and developer utilities. Marketplace and licensing suitability must be checked per product.
 
 ### 5.7 Asset Provenance Graph
-
 Store original source, author, prompt/brief, tool/model, license, edit history, derivative relationships, AI disclosure, and destinations. Reuse only when rights and marketplace rules permit.
 
 ### 5.8 Portfolio Retirement Agent
-
 Detect products with weak discovery, conversion, margin, high support burden, or expired relevance. Recommend specific actions: improve preview, fix metadata, change packaging, pause, archive, or retire.
 
 ### 5.9 Reusable research, not duplicate listings
-
 One research insight can inform a spreadsheet, a video, a stock illustration, and a guide—but each must be independently useful, correctly licensed, and tailored to its channel. Do not upload the same file repeatedly as fake variations.
 
 ## 6. Unit economics
@@ -106,7 +95,6 @@ Gross receipts
 = **Net contribution before tax**
 
 Also record:
-
 - Payout balance and payout date.
 - Withholding tax and tax forms.
 - Currency conversion rate and source.
@@ -119,7 +107,6 @@ Revenue is not profit. Gross sales are not cash received. Platform dashboards ma
 ## 7. Experiment design
 
 Every new product or niche needs:
-
 - Hypothesis.
 - Buyer and job-to-be-done.
 - Evidence and date.

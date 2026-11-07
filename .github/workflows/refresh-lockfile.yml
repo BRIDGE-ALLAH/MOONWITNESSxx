@@ -1,28 +1,15 @@
 name: Refresh pnpm lockfile
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "package.json"
-      - "pnpm-workspace.yaml"
-      - "pnpm-lock.yaml"
-      - "apps/**/package.json"
-      - "packages/**/package.json"
   workflow_dispatch:
 
 permissions:
-  actions: write
   contents: write
-
-concurrency:
-  group: refresh-pnpm-lockfile
-  cancel-in-progress: false
+  pull-requests: write
 
 jobs:
   refresh:
-    name: Regenerate and verify lockfile
+    name: Regenerate and propose lockfile
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -40,57 +27,24 @@ jobs:
           node-version: 24
 
       - name: Regenerate lockfile from workspace manifests
-        run: pnpm install --lockfile-only --no-frozen-lockfile --ignore-scripts
+        run: pnpm install --lockfile-only --ignore-scripts
 
-      - name: Verify regenerated lockfile
-        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Open or update lockfile pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore-refresh-pnpm-lockfile
+          delete-branch: true
+          commit-message: "chore: refresh pnpm lockfile"
+          title: "chore: refresh pnpm lockfile"
+          body: |
+            ## Purpose
 
-      - name: Commit verified lockfile to main
-        id: commit
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            Regenerate the pnpm lockfile from committed workspace manifests using the pinned pnpm version.
 
-          if git diff --quiet -- pnpm-lock.yaml; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "pnpm-lock.yaml is already synchronized."
-            exit 0
-          fi
+            ## Validation
 
-          git diff --check -- pnpm-lock.yaml
-          git add pnpm-lock.yaml
-          git commit -m "chore: sync pnpm lockfile"
-
-          # Never force-push. If main moved during generation, fail safely and rerun.
-          git push origin HEAD:main
-
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      # A GITHUB_TOKEN push does not start push-triggered workflows.
-      # Dispatch CI explicitly against the new main commit.
-      - name: Dispatch CI for synchronized main
-        if: steps.commit.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-        run: gh workflow run ci.yml --ref main
-
-      - name: Summarize lockfile result
-        if: always()
-        env:
-          CHANGED: ${{ steps.commit.outputs.changed }}
-          COMMIT_SHA: ${{ steps.commit.outputs.commit_sha }}
-        run: |
-          {
-            echo "## pnpm lockfile synchronization"
-            echo
-            if [ "$CHANGED" = "true" ]; then
-              echo "- Result: generated lockfile committed to main."
-              echo "- Commit: $COMMIT_SHA"
-              echo "- CI: dispatched on main."
-            else
-              echo "- Result: lockfile already synchronized; no commit created."
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+            - Generated with pnpm 12.16.1.
+            - No application source files are changed.
+            - Review the dependency graph diff before merging.
+          add-paths: pnpm-lock.yaml

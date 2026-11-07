@@ -1,12 +1,4 @@
-import {
-  Badge,
-  Button,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@riotworks/ui'
+import { Badge, Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@riotworks/ui'
 
 const metrics = [
   { label: 'Active Products', value: 12, subtitle: 'Live now', icon: '📦' },
@@ -20,27 +12,9 @@ const metrics = [
 ]
 
 const opportunities = [
-  {
-    id: 1,
-    title: 'New Market Entry',
-    description: 'Expanding to Southeast Asia',
-    confidence: 85,
-    status: 'opportunity',
-  },
-  {
-    id: 2,
-    title: 'New Product Line',
-    description: 'AI-powered digital art',
-    confidence: 72,
-    status: 'opportunity',
-  },
-  {
-    id: 3,
-    title: 'Channel Expansion',
-    description: 'New platform integration',
-    confidence: 68,
-    status: 'opportunity',
-  },
+  { id: 1, title: 'New Market Entry', description: 'Expanding to Southeast Asia', confidence: 85, status: 'opportunity' },
+  { id: 2, title: 'New Product Line', description: 'AI-powered digital art', confidence: 72, status: 'opportunity' },
+  { id: 3, title: 'Channel Expansion', description: 'New platform integration', confidence: 68, status: 'opportunity' },
 ]
 
 const aiWorkforce = [
@@ -58,27 +32,9 @@ const channelHealth = [
 ]
 
 const activityFeed = [
-  {
-    id: 1,
-    title: 'New product uploaded',
-    description: 'Product #123 added to marketplace',
-    time: '2 hours ago',
-    avatar: '📦',
-  },
-  {
-    id: 2,
-    title: 'Experiment launched',
-    description: 'New A/B test started',
-    time: ' yesterday',
-    avatar: '🧪',
-  },
-  {
-    id: 3,
-    title: 'Agent task completed',
-    description: 'AI workforce task finished',
-    time: '2 days ago',
-    avatar: '👥',
-  },
+  { id: 1, title: 'New product uploaded', description: 'Product #123 added to marketplace', time: '2 hours ago', avatar: '📦' },
+  { id: 2, title: 'Experiment launched', description: 'New A/B test started', time: ' yesterday', avatar: '🧪' },
+  { id: 3, title: 'Agent task completed', description: 'AI workforce task finished', time: '2 days ago', avatar: '👥' },
 ]
 
 const aftershockInsights = [
@@ -105,9 +61,7 @@ export default function ARSYDeck() {
             <Card key={metric.label} className="border-acid-lime/30">
               <CardHeader>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-mono uppercase tracking-widest text-muted-ink">
-                    {metric.label}
-                  </span>
+                  <span className="text-sm font-mono uppercase tracking-widest text-muted-ink">{metric.label}</span>
                   <Badge variant={metric.value > 90 ? 'lime' : 'default'}>{metric.value}%</Badge>
                 </div>
                 <CardTitle className="hidden">{metric.label}</CardTitle>
@@ -143,15 +97,10 @@ export default function ARSYDeck() {
         </section>
 
         <section className="space-y-6">
-          <h2 className="text-xl font-display uppercase tracking-wider mb-4">
-            Production Pipeline
-          </h2>
+          <h2 className="text-xl font-display uppercase tracking-wider mb-4">Production Pipeline</h2>
           <div className="grid grid-cols-3 gap-4">
             {aiWorkforce.map((agent) => (
-              <Card
-                key={agent.name}
-                className="border-2 border-opacity-50 hover:border-acid-lime/50"
-              >
+              <Card key={agent.name} className="border-2 border-opacity-50 hover:border-acid-lime/50">
                 <CardHeader>
                   <CardTitle className="text-sm uppercase tracking-wider">{agent.name}</CardTitle>
                 </CardHeader>
@@ -171,20 +120,13 @@ export default function ARSYDeck() {
           <h2 className="text-xl font-display uppercase tracking-wider mb-4">Channel Health</h2>
           <div className="grid grid-cols-2 gap-4">
             {channelHealth.map((channel) => (
-              <Card
-                key={channel.platform}
-                className="border-2 border-opacity-50 hover:border-acid-lime/50"
-              >
+              <Card key={channel.platform} className="border-2 border-opacity-50 hover:border-acid-lime/50">
                 <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider">
-                    {channel.platform}
-                  </CardTitle>
+                  <CardTitle className="text-sm uppercase tracking-wider">{channel.platform}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{channel.status}</p>
-                  <Badge variant={channel.status === 'not connected' ? 'destructive' : 'outline'}>
-                    {channel.status}
-                  </Badge>
+                  <Badge variant={channel.status === 'not connected' ? 'destructive' : 'outline'}>{channel.status}</Badge>
                 </CardContent>
               </Card>
             ))}
@@ -195,10 +137,7 @@ export default function ARSYDeck() {
           <h2 className="text-xl font-display uppercase tracking-wider mb-4">Activity Feed</h2>
           <div className="space-y-3">
             {activityFeed.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-start gap-3 p-3 border-b border-acid-lime/20 last:border-0"
-              >
+              <div key={item.id} className="flex items-start gap-3 p-3 border-b border-acid-lime/20 last:border-0">
                 <span className="text-xl">{item.avatar}</span>
                 <div className="flex-1">
                   <p className="font-medium">{item.title}</p>
@@ -211,19 +150,12 @@ export default function ARSYDeck() {
         </section>
 
         <section className="space-y-6">
-          <h2 className="text-xl font-display uppercase tracking-wider mb-4">
-            AFTERSHOCK Insights
-          </h2>
+          <h2 className="text-xl font-display uppercase tracking-wider mb-4">AFTERSHOCK Insights</h2>
           <div className="grid grid-cols-3 gap-4">
             {aftershockInsights.map((insight) => (
-              <Card
-                key={insight.id}
-                className="border-2 border-opacity-50 hover:border-acid-lime/50"
-              >
+              <Card key={insight.id} className="border-2 border-opacity-50 hover:border-acid-lime/50">
                 <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider">
-                    {insight.metric}
-                  </CardTitle>
+                  <CardTitle className="text-sm uppercase tracking-wider">{insight.metric}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-display font-bold {insight.change.includes('-') ? 'text-acid-lime' : 'text-paper-bone'}">

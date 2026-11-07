@@ -25,40 +25,33 @@ Keep backend packages independent from UI packages. Keep queue transport, databa
 - pnpm 12.16.1, pinned in the root `package.json`.
 - Use the committed pnpm lockfile as the dependency source of truth.
 
-pnpm 12 uses a two-document lockfile: the first boot document records the package-manager/config dependency state, while the last document contains the real workspace dependency graph. Both are intentional. When a manifest changes, refresh and review the project lockfile:
+The current repository audit has identified missing workspace importer entries in `pnpm-lock.yaml`. Before relying on a frozen install, refresh and review the lockfile:
 
 ```bash
-pnpm run lockfile:check
 pnpm run lockfile:refresh
 git diff -- pnpm-lock.yaml
-pnpm run lockfile:check
+pnpm install --frozen-lockfile
 ```
 
-Do not use `--no-frozen-lockfile` as a routine CI or deployment workaround. The **Refresh pnpm lockfile** workflow runs after manifest/workspace changes on `main` and can also be triggered manually. After a regenerated lockfile passes a frozen install, it pushes a lockfile-only bot commit without force-pushing and dispatches CI for the new commit.
-
-## Local Git hooks
-
-After `pnpm install`, the root `prepare` script configures `core.hooksPath=.husky` for the local checkout. It does not run in CI. A pre-existing custom `core.hooksPath` is preserved rather than overwritten.
+Do not use `--no-frozen-lockfile` as a routine CI or deployment workaround. The manual GitHub Action **Refresh pnpm lockfile** can also create a reviewable pull request.
 
 ## Common commands
 
-| Command                 | Purpose                                                         |
-| ----------------------- | --------------------------------------------------------------- |
-| `pnpm dev`              | Start all packages with a dev task                              |
-| `pnpm dev:headquarter`  | Start Headquarter only                                          |
-| `pnpm dev:arsy`         | Start ARSY only                                                 |
-| `pnpm check:repo`       | Run the read-only workspace/governance audit                    |
-| `pnpm audit:repo`       | Write an audit report to ignored `.artifacts/`                  |
-| `pnpm format`           | Format modified, staged, and untracked supported files          |
-| `pnpm format:check`     | Verify formatting for changed files only                        |
-| `pnpm format:check:all` | Audit every tracked Prettier-supported file                     |
-| `pnpm test`             | Run Node's built-in automation tests                            |
-| `pnpm lockfile:check`   | Read-only frozen verification of lockfile consistency           |
-| `pnpm lockfile:refresh` | Guarded lockfile regeneration; refuses pre-existing local edits |
-| `pnpm validate:repo`    | Run repository integrity, format, and automation tests          |
-| `pnpm validate`         | Run repository validation, package type-checks, and builds      |
+| Command | Purpose |
+|---|---|
+| `pnpm dev` | Start all packages with a dev task |
+| `pnpm dev:headquarter` | Start Headquarter only |
+| `pnpm dev:arsy` | Start ARSY only |
+| `pnpm check:repo` | Run the read-only workspace/governance audit |
+| `pnpm audit:repo` | Write an audit report to ignored `.artifacts/` |
+| `pnpm format` | Format supported repository files |
+| `pnpm format:check` | Verify repository formatting |
+| `pnpm test` | Run Node's built-in automation tests |
+| `pnpm lockfile:check` | Detect lockfile drift without overwriting pre-existing local edits |
+| `pnpm validate:repo` | Run repository integrity, format, and automation tests |
+| `pnpm validate` | Run repository validation, package type-checks, and builds |
 
-A command is only a reliable quality gate when the affected package actually defines that capability. Do not add placeholder scripts that return success without checking anything. Formatting is intentionally changed-files-only: the current legacy prototype tree has not received a mass-formatting rewrite. The pnpm lockfile is excluded because pnpm owns its serialization. GitHub Actions workflow files are excluded from Prettier and checked separately with actionlint in CI.
+A command is only a reliable quality gate when the affected package actually defines that capability. Do not add placeholder scripts that return success without checking anything.
 
 ## Branches, commits, and pull requests
 
@@ -81,7 +74,6 @@ chore(ci): pin workflow toolchain
 Keep the subject at or below 72 characters. Git hooks validate formatting for staged text/config files and commit subject syntax. Hooks must stay local, fast, deterministic, and offline.
 
 Every pull request must explain:
-
 - the user or system problem being solved;
 - the owning app/package and boundaries affected;
 - tests and validation actually run;

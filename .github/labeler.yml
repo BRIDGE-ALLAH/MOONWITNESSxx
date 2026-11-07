@@ -1,33 +1,33 @@
 documentation:
   - changed-files:
       - any-glob-to-any-file:
-          - 'README.md'
-          - 'MASTER-PROMPT'
-          - 'docs/**'
-          - '*.md'
+          - "README.md"
+          - "MASTER-PROMPT"
+          - "docs/**"
+          - "*.md"
 
 headquarter:
   - changed-files:
       - any-glob-to-any-file:
-          - 'apps/headquarter/**'
+          - "apps/headquarter/**"
 
 arsy:
   - changed-files:
       - any-glob-to-any-file:
-          - 'apps/arsy/**'
+          - "apps/arsy/**"
 
 shared-package:
   - changed-files:
       - any-glob-to-any-file:
-          - 'packages/**'
+          - "packages/**"
 
 tooling:
   - changed-files:
       - any-glob-to-any-file:
-          - '.github/**'
-          - '.husky/**'
-          - 'scripts/**'
-          - 'package.json'
-          - 'pnpm-lock.yaml'
-          - 'pnpm-workspace.yaml'
-          - 'turbo.json'
+          - ".github/**"
+          - ".husky/**"
+          - "scripts/**"
+          - "package.json"
+          - "pnpm-lock.yaml"
+          - "pnpm-workspace.yaml"
+          - "turbo.json"

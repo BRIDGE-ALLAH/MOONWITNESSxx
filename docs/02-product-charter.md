@@ -15,7 +15,6 @@ The defining objective is to make repeatable operations increasingly autonomous 
 Initial user: one owner/operator based in Indonesia who wants to sell original digital products and media to Indonesian and global buyers without running a client-service or outbound-sales business.
 
 The system must support:
-
 - Indonesian operator setup and local payout checks.
 - English-first global listing preparation with Indonesian UI.
 - Local currency and foreign-currency accounting.
@@ -76,25 +75,20 @@ This does not remove the need for discovery optimization, listing quality, hones
 ## 8. Release boundary
 
 ### Prototype
-
 Frontend-only, synthetic data, simulated interactions, no real account connections.
 
 ### MVP
-
 One end-to-end product family, evidence capture, provenance, inspection, one permitted distribution path, and reliable revenue-cost records.
 
 ### Growth
-
 More product factories, marketplaces, localization, scheduled intelligence, and deeper automation.
 
 ### Autonomy
-
 Only after each channel's official integration, policies, and failure behavior are validated.
 
 ## 9. Success definition
 
 RIOTWORKS succeeds when it helps the operator create a repeatable, lawful, quality-controlled process where:
-
 - Product decisions are supported by evidence.
 - Production cost is measurable.
 - Listings accurately represent delivered products.

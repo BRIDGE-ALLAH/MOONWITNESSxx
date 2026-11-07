@@ -9,52 +9,14 @@ on:
       - edited
 
 permissions:
-  issues: write
+  contents: read
   pull-requests: write
 
 jobs:
-  ensure-labels:
-    name: Ensure managed labels exist
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create missing repository labels
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const labels = [
-              { name: 'bug', color: 'd73a4a', description: 'A reproducible defect' },
-              { name: 'enhancement', color: 'a2eeef', description: 'A proposed capability or improvement' },
-              { name: 'documentation', color: '0075ca', description: 'Documentation changes' },
-              { name: 'headquarter', color: '5319e7', description: 'Headquarter frontend changes' },
-              { name: 'arsy', color: 'd93f0b', description: 'ARSY backend changes' },
-              { name: 'shared-package', color: '1d76db', description: 'Shared package changes' },
-              { name: 'tooling', color: 'fbca04', description: 'Repository tooling and automation changes' }
-            ]
-
-            const existing = await github.paginate(github.rest.issues.listLabelsForRepo, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 100
-            })
-            const existingNames = new Set(existing.map((label) => label.name))
-
-            for (const label of labels) {
-              if (existingNames.has(label.name)) continue
-
-              await github.rest.issues.createLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ...label
-              })
-              core.info(`Created repository label: ${label.name}`)
-            }
-
   label:
-    name: Apply path-based labels
-    needs: ensure-labels
     runs-on: ubuntu-latest
     steps:
       - name: Apply path-based labels
         uses: actions/labeler@v7
         with:
-          sync-labels: false
+          sync-labels: true

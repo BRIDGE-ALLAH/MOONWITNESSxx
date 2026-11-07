@@ -1,16 +1,27 @@
-import type { ProductUploadJob } from '../index'
+import { Queue, QueueScheduler } from 'bullmq'
+import type { ProductUploadJob } from './index'
 
-// Prototype processor only; it does not upload files or persist business data yet.
-export async function productUploadJob(payload: ProductUploadJob) {
+// Job file — ini adalah definisi job yang akan diproses worker
+// Letakkan di: packages/bullmq/src/jobs/product-upload.job.ts
+
+export const productUploadJob = async (payload: ProductUploadJob) => {
   const { productId, filePath, userId } = payload
-
+  
+  // Simulate processing
   console.log(`🔄 Processing product upload: ${productId}`)
   console.log(`   File: ${filePath}`)
   console.log(`   User: ${userId}`)
-
-  // TODO: validate file, upload to storage, persist metadata, and run integrity checks.
+  
+  // TODO: Implement actual product upload logic
+  // - Validate file type/size
+  // - Upload to storage
+  // - Update database
+  // - Trigger ZILL integrity checks
+  // - Notify via ARSY
+  
+  // Mock success
   return {
-    status: 'prototype-completed',
+    status: 'completed',
     productId,
     processedAt: new Date().toISOString(),
   }

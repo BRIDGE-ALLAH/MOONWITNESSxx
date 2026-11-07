@@ -11,7 +11,6 @@ A product must be useful, lawful, accurately represented, and permitted on its d
 ## 2. Rights and provenance
 
 For each deliverable record:
-
 - Human creator / operator contribution.
 - Source assets and ownership/license.
 - Generation and editing tools.
@@ -27,7 +26,6 @@ Reject or block assets with unclear ownership, unlicensed reference material, pr
 ## 3. Marketplace policy governance
 
 Maintain a versioned policy registry per provider:
-
 - Official policy URL.
 - Policy name and version/date.
 - Last checked date.
@@ -55,7 +53,6 @@ A policy watcher may detect and summarize updates, but policy changes that mater
 ## 5. Platform automation
 
 Allowed:
-
 - Official documented APIs within scopes.
 - User-authorized integrations.
 - Manual upload packages.
@@ -63,7 +60,6 @@ Allowed:
 - Public research that follows source terms and rate limits.
 
 Not allowed:
-
 - CAPTCHA bypass or stealth automation.
 - Login/session theft or cookie copying.
 - Scraping private or access-controlled areas without permission.
@@ -87,7 +83,6 @@ Not allowed:
 ## 7. Financial governance
 
 Never automate:
-
 - Payout destination changes.
 - Tax declarations or tax interviews.
 - Bank account changes.
@@ -101,7 +96,6 @@ Reconcile actual statements and platform exports. Separate gross sales, fees, re
 ## 8. Sensitive product categories
 
 Require additional review or exclude by default:
-
 - Medical, health, legal, financial, and safety advice products.
 - Regulated goods or services.
 - Children's data or targeting.
@@ -113,25 +107,24 @@ The initial product scope should avoid high-risk regulated categories.
 
 ## 9. Risk register
 
-| Risk                                  | Mitigation                                                             |
-| ------------------------------------- | ---------------------------------------------------------------------- |
-| No marketplace discovery              | Evidence-led niche, listing quality, channel diversity, experiments    |
-| Income concentration                  | Multiple product families and channel risk limits                      |
-| Rejection or account suspension       | Policy registry, manual fallback, low-risk launch                      |
-| Copyright/IP claim                    | Provenance, similarity checks, rights gate                             |
-| AI content policy change              | Versioned policy watcher and human review                              |
+| Risk | Mitigation |
+|---|---|
+| No marketplace discovery | Evidence-led niche, listing quality, channel diversity, experiments |
+| Income concentration | Multiple product families and channel risk limits |
+| Rejection or account suspension | Policy registry, manual fallback, low-risk launch |
+| Copyright/IP claim | Provenance, similarity checks, rights gate |
+| AI content policy change | Versioned policy watcher and human review |
 | Fake metrics or hallucinated research | Evidence citations, source dates, confidence, no synthetic live claims |
-| Unexpected compute cost               | Per-run and monthly budgets, model routing                             |
-| Duplicate publication                 | Idempotency and external receipt checks                                |
-| Payout hold or FX surprise            | Country preflight, tax/payout verification, reconciliation             |
-| Security compromise                   | Secret vault, least privilege, audit, backups                          |
-| Customer complaint or refund          | Clear product description, support queue, human escalation             |
-| Vendor lock-in                        | Exportable assets, provider abstraction, data portability              |
+| Unexpected compute cost | Per-run and monthly budgets, model routing |
+| Duplicate publication | Idempotency and external receipt checks |
+| Payout hold or FX surprise | Country preflight, tax/payout verification, reconciliation |
+| Security compromise | Secret vault, least privilege, audit, backups |
+| Customer complaint or refund | Clear product description, support queue, human escalation |
+| Vendor lock-in | Exportable assets, provider abstraction, data portability |
 
 ## 10. Incident response
 
 When a suspected policy, security, rights, or payment incident occurs:
-
 1. Pause affected workflow/channel.
 2. Preserve logs and evidence.
 3. Avoid repeated external calls.
@@ -143,7 +136,6 @@ When a suspected policy, security, rights, or payment incident occurs:
 ## 11. Honest product claims
 
 RIOTWORKS must never claim:
-
 - Guaranteed passive income.
 - Guaranteed ranking, search placement, or sales.
 - Marketplace approval.

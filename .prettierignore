@@ -6,4 +6,3 @@ coverage/
 .artifacts/
 reports/
 pnpm-lock.yaml
-.github/workflows/

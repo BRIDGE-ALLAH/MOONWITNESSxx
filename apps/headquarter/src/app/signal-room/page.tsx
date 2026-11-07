@@ -1,50 +1,10 @@
-import {
-  Badge,
-  Button,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@riotworks/ui'
+import { Badge, Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@riotworks/ui'
 
 const trendData = [
-  {
-    id: 1,
-    title: 'Digital Art Collectibles',
-    category: 'digital-art',
-    trend: 'up',
-    confidence: 85,
-    source: 'Twitter',
-    sourceLink: 'https://twitter.com',
-  },
-  {
-    id: 2,
-    title: 'NFT Gaming',
-    category: 'gaming',
-    trend: 'up',
-    confidence: 72,
-    source: 'Twitter',
-    sourceLink: 'https://twitter.com',
-  },
-  {
-    id: 3,
-    title: 'Music NFTs',
-    category: 'music',
-    trend: 'down',
-    confidence: 68,
-    source: 'Twitter',
-    sourceLink: 'https://twitter.com',
-  },
-  {
-    id: 4,
-    title: 'Metaverse Land',
-    category: 'virtual',
-    trend: 'sideways',
-    confidence: 55,
-    source: 'Twitter',
-    sourceLink: 'https://twitter.com',
-  },
+  { id: 1, title: 'Digital Art Collectibles', category: 'digital-art', trend: 'up', confidence: 85, source: 'Twitter', sourceLink: 'https://twitter.com' },
+  { id: 2, title: 'NFT Gaming', category: 'gaming', trend: 'up', confidence: 72, source: 'Twitter', sourceLink: 'https://twitter.com' },
+  { id: 3, title: 'Music NFTs', category: 'music', trend: 'down', confidence: 68, source: 'Twitter', sourceLink: 'https://twitter.com' },
+  { id: 4, title: 'Metaverse Land', category: 'virtual', trend: 'sideways', confidence: 55, source: 'Twitter', sourceLink: 'https://twitter.com' },
 ]
 
 const categoryData = [
@@ -76,20 +36,8 @@ const marketplaceObservations = [
 
 const evidenceData = [
   { id: 1, title: 'Twitter Thread Analysis', date: '2024-01-15', type: 'sourced', confidence: 85 },
-  {
-    id: 2,
-    title: 'Community Sentiment Survey',
-    date: '2024-01-10',
-    type: 'sourced',
-    confidence: 72,
-  },
-  {
-    id: 2,
-    title: 'AI-Generated Market Forecast',
-    date: '2024-01-08',
-    type: 'model-generated',
-    confidence: 60,
-  },
+  { id: 2, title: 'Community Sentiment Survey', date: '2024-01-10', type: 'sourced', confidence: 72 },
+  { id: 2, title: 'AI-Generated Market Forecast', date: '2024-01-08', type: 'model-generated', confidence: 60 },
 ]
 
 const researchStatus = [
@@ -103,7 +51,9 @@ export default function SignalRoom() {
     <main className="min-h-screen bg-obsidian text-paper-bone p-8">
       <div className="mx-auto max-w-7xl">
         <header className="border-b border-acid-lime/30 pb-8 mb-8">
-          <h1 className="text-5xl font-display uppercase leading-none mb-4">READ THE SIGNAL</h1>
+          <h1 className="text-5xl font-display uppercase leading-none mb-4">
+            READ THE SIGNAL
+          </h1>
           <p className="font-mono text-sm uppercase tracking-widest text-muted-ink">
             RIOTWORKS Market Intelligence
           </p>
@@ -114,20 +64,8 @@ export default function SignalRoom() {
             <Card key={trend.id} className="border-acid-lime/30">
               <CardHeader>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-mono uppercase tracking-widest text-muted-icon">
-                    {trend.title}
-                  </span>
-                  <Badge
-                    variant={
-                      trend.trend === 'up'
-                        ? 'lime'
-                        : trend.trend === 'down'
-                          ? 'destructive'
-                          : 'outline'
-                    }
-                  >
-                    {trend.confidence}%
-                  </Badge>
+                  <span className="text-sm font-mono uppercase tracking-widest text-muted-icon">{trend.title}</span>
+                  <Badge variant={trend.trend === 'up' ? 'lime' : trend.trend === 'down' ? 'destructive' : 'outline'}>{trend.confidence}%</Badge>
                 </div>
                 <CardTitle className="hidden">{trend.title}</CardTitle>
               </CardHeader>
@@ -145,13 +83,7 @@ export default function SignalRoom() {
           <h2 className="text-xl font-display uppercase tracking-wider mb-4">Category Discovery</h2>
           <div className="grid grid-cols-2 gap-2">
             {categoryData.map((cat) => (
-              <Badge
-                key={cat.id}
-                variant={
-                  cat.trend === 'up' ? 'lime' : cat.trend === 'down' ? 'destructive' : 'outline'
-                }
-                className="text-xs font-mono uppercase tracking-wider"
-              >
+              <Badge key={cat.id} variant={cat.trend === 'up' ? 'lime' : cat.trend === 'down' ? 'destructive' : 'outline'} className="text-xs font-mono uppercase tracking-wider">
                 {cat.label} <span className="text-xs">{cat.count}</span>
               </Badge>
             ))}
@@ -162,11 +94,7 @@ export default function SignalRoom() {
           <h2 className="text-xl font-display uppercase tracking-wider mb-4">Source Streams</h2>
           <div className="grid grid-cols-2 gap-2">
             {sourceStreams.map((stream) => (
-              <Badge
-                key={stream.id}
-                variant={stream.verified ? 'electric' : 'outline'}
-                className="text-xs font-mono uppercase tracking-wider"
-              >
+              <Badge key={stream.id} variant={stream.verified ? 'electric' : 'outline'} className="text-xs font-mono uppercase tracking-wider">
                 {stream.name} <span className="text-xs">({stream.confidence}%)</span>
               </Badge>
             ))}
@@ -177,20 +105,13 @@ export default function SignalRoom() {
           <h2 className="text-xl font-display uppercase tracking-wider mb-4">Buyer Problems</h2>
           <div className="grid grid-cols-2 gap-4">
             {buyerProblems.map((problem) => (
-              <Card
-                key={problem.id}
-                className="border-2 border-opacity-50 hover:border-acid-lime/50"
-              >
+              <Card key={problem.id} className="border-2 border-opacity-50 hover:border-acid-lime/50">
                 <CardHeader>
-                  <CardTitle className="text-sm uppercase tracking-wider">
-                    {problem.problem}
-                  </CardTitle>
+                  <CardTitle className="text-sm uppercase tracking-wider">{problem.problem}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{`Affected: ${problem.affected}%`}</p>
-                  <Badge variant={problem.severity === 'high' ? 'destructive' : 'orange'}>
-                    {problem.severity}
-                  </Badge>
+                  <Badge variant={problem.severity === 'high' ? 'destructive' : 'orange'}>{problem.severity}</Badge>
                 </CardContent>
               </Card>
             ))}
@@ -198,9 +119,7 @@ export default function SignalRoom() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-xl font-display uppercase tracking-wider mb-4">
-            Marketplace Observations
-          </h2>
+          <h2 className="text-xl font-display uppercase tracking-wider mb-4">Marketplace Observations</h2>
           <div className="grid grid-cols-2 gap-4">
             {marketplaceObservations.map((obs) => (
               <Card key={obs.id} className="border-2 border-opacity-50 hover:border-acid-lime/50">
@@ -223,11 +142,7 @@ export default function SignalRoom() {
           <h2 className="text-xl font-display uppercase tracking-wider mb-4">Research Status</h2>
           <div className="grid grid-cols-3 gap-2">
             {researchStatus.map((status) => (
-              <Badge
-                key={status.id}
-                variant="outline"
-                className="text-xs font-mono uppercase tracking-wider"
-              >
+              <Badge key={status.id} variant="outline" className="text-xs font-mono uppercase tracking-wider">
                 {status.label} <span className="text-xs">{status.count}</span>
               </Badge>
             ))}

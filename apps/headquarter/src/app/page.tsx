@@ -1,13 +1,5 @@
 import Link from 'next/link'
-import {
-  Button,
-  Badge,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@riotworks/ui'
+import { Button, Badge, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@riotworks/ui'
 
 export default function Home() {
   return (
@@ -27,26 +19,18 @@ export default function Home() {
           <CardHeader>
             <CardTitle>Creative Commerce Engine</CardTitle>
             <CardDescription>
-              apps/headquarter + packages/ui (shadcn/ui) — workspace active. Use the left nav or
-              command palette to explore modules.
+              apps/headquarter + packages/ui (shadcn/ui) — workspace active. Use the left nav or command palette to explore modules.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
-            <Button asChild variant="default">
-              <Link href="/arsy-deck">Enter Deck</Link>
-            </Button>
-            <Button asChild variant="riot">
-              <Link href="/the-forge">Forge Work</Link>
-            </Button>
-            <Button asChild variant="electric">
-              <Link href="/signal-room">Read Signal</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/zill-watch">Inspect</Link>
-            </Button>
+            <Button asChild variant="default"><Link href="/arsy-deck">Enter Deck</Link></Button>
+            <Button asChild variant="riot"><Link href="/the-forge">Forge Work</Link></Button>
+            <Button asChild variant="electric"><Link href="/signal-room">Read Signal</Link></Button>
+            <Button asChild variant="outline"><Link href="/zill-watch">Inspect</Link></Button>
           </CardContent>
         </Card>
       </div>
     </main>
   )
 }
+

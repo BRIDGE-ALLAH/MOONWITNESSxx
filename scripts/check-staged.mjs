@@ -2,8 +2,7 @@ import { spawnSync } from 'node:child_process'
 
 const staged = spawnSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z'], {
   encoding: 'utf8',
-  maxBuffer: 10 * 1024 * 1024,
-  windowsHide: true,
+  maxBuffer: 10 * 1024 * 1024
 })
 
 if (staged.error || staged.status !== 0) {
@@ -12,18 +11,10 @@ if (staged.error || staged.status !== 0) {
 }
 
 const supportedExtensions = /\.(?:css|html|js|json|jsx|md|mdx|mjs|scss|sh|ts|tsx|yaml|yml)$/
-const files = staged.stdout
-  .split('\0')
-  .filter(
-    (file) =>
-      file &&
-      file !== 'pnpm-lock.yaml' &&
-      !file.startsWith('.github/workflows/') &&
-      supportedExtensions.test(file)
-  )
+const files = staged.stdout.split('\0').filter((file) => file && supportedExtensions.test(file))
 
 if (files.length === 0) {
-  console.log('No staged Prettier-supported text/config files require formatting checks.')
+  console.log('No staged text/config files require formatting checks.')
   process.exit(0)
 }
 
@@ -33,8 +24,7 @@ const result = spawnSync(
   ['exec', 'prettier', '--check', '--ignore-unknown', ...files],
   {
     stdio: 'inherit',
-    shell: process.platform === 'win32',
-    windowsHide: true,
+    shell: process.platform === 'win32'
   }
 )
 

@@ -8,7 +8,7 @@ export async function submitProductUpload({
   productId,
   filePath,
   userId,
-  priority = 'normal',
+  priority = 'normal'
 }: {
   productId: string
   filePath: string
@@ -19,7 +19,7 @@ export async function submitProductUpload({
     productId,
     filePath,
     userId,
-    priority,
+    priority
   })
   return { jobId, status: 'enqueued' }
 }
@@ -28,7 +28,7 @@ export async function submitProductUpload({
 export async function submitSignalAnalysis({
   signalId,
   analysisType,
-  parameters,
+  parameters
 }: {
   signalId: string
   analysisType: 'market' | 'competitor' | 'trend'
@@ -37,7 +37,7 @@ export async function submitSignalAnalysis({
   const jobId = await enqueueAnalysisJob('signal-analysis', {
     signalId,
     analysisType,
-    parameters,
+    parameters
   })
   return { jobId, status: 'enqueued' }
 }

@@ -27,7 +27,3 @@ If private vulnerability reporting is unavailable, contact the repository mainta
 ## Security checks
 
 CodeQL runs on pull requests, pushes to `main`, and a weekly schedule. Dependabot checks dependency and GitHub Actions updates weekly. These automated checks complement—not replace—review, threat modeling, secure configuration, and operational monitoring.
-
-## Dependency lifecycle scripts
-
-pnpm 12 blocks unapproved dependency build scripts. MOONWITNESS keeps an explicit, narrow allowlist in `pnpm-workspace.yaml`; do not replace it with a blanket approval. Review the package source, publisher, version, install-time behavior, and whether the build is necessary before approving another dependency.

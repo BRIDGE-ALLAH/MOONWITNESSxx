@@ -2,5 +2,18 @@
   "name": "@riotworks/seed-data",
   "version": "0.0.0",
   "private": true,
-  "description": "Reserved synthetic data package. It must remain separate from production data and expose commands only after generator source and tests exist."
+  "description": "RIOTWORKS Demo/Synthetic Data Generator — Clearly labeled prototype data",
+  "main": "src/index.ts",
+  "scripts": {
+    "generate": "tsx src/index.ts",
+    "generate:products": "tsx src/scripts/generate-products.ts",
+    "generate:metrics": "tsx src/scripts/generate-metrics.ts"
+  },
+  "dependencies": {
+    "faker": "^6.6.6"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.2"
+  }
 }

@@ -11,7 +11,6 @@ Characters make RIOTWORKS recognizable and give specialist operations an express
 ## 2. Core cast
 
 ### THE SCOUT
-
 Role: discovery, evidence, and intelligence.
 Personality: curious, fast, analytical, observant.
 Silhouette: agile explorer with signal-finding equipment and practical streetwear.
@@ -19,7 +18,6 @@ Visual motifs: signal rings, maps, evidence tags, scanner shapes.
 Usage: Signal Room, opportunity discovery, trend scan, research empty states.
 
 ### THE MAKER
-
 Role: creation and production.
 Personality: inventive, expressive, experimental, slightly chaotic.
 Silhouette: workshop creator with tools and distinctive creative accessories.
@@ -27,7 +25,6 @@ Visual motifs: modular parts, ink marks, sketch lines, production sparks.
 Usage: The Forge, product creation, asset variations, production states.
 
 ### ZILL
-
 Role: integrity, rights, quality, and protection.
 Personality: silent, precise, disciplined, protective.
 Silhouette: unmistakable guardian with a geometric protective form; avoid copying existing superhero armor or masks.
@@ -35,7 +32,6 @@ Visual motifs: shield geometry, inspection marks, boundary lines, verified stamp
 Usage: ZILL Watch, policy warnings, provenance, quality reports.
 
 ### THE KEEPER
-
 Role: assets, versioning, archives, and portfolio continuity.
 Personality: meticulous, strategic, patient, reliable.
 Silhouette: archivist/engineer hybrid with cataloging instruments.
@@ -45,7 +41,6 @@ Usage: Sidra Archive, version history, product lifecycle, Aftershock.
 ## 3. Character consistency
 
 For every character create:
-
 - Character one-sheet.
 - Front, side, and three-quarter views.
 - Silhouette sheet.
@@ -84,7 +79,6 @@ Avoid generic AI character drift. Use approved canonical source artwork and edit
 ## 6. Use in the product
 
 Use characters as:
-
 - Agent identity portraits.
 - Onboarding guides.
 - Contextual illustrations.

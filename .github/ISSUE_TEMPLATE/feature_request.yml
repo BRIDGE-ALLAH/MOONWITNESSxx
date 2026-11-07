@@ -1,6 +1,6 @@
 name: Feature proposal
 description: Propose a capability with a clear user problem and acceptance criteria.
-title: '[Feature]: '
+title: "[Feature]: "
 labels:
   - enhancement
 body:

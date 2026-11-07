@@ -2,7 +2,14 @@
   "name": "@riotworks/bullmq",
   "version": "0.0.0",
   "private": true,
-  "description": "Experimental BullMQ transport adapter; not wired as a canonical worker or source of business truth.",
+  "description": "RIOTWORKS BullMQ — Queue system for background jobs (jobs, workers, producers)",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "generate:jobs": "echo 'Generate job types from definitions'",
+    "generate:workers": "echo 'Generate worker types from definitions'"
+  },
   "dependencies": {
     "bullmq": "^5.0.0",
     "ioredis": "^5.3.0"

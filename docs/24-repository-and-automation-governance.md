@@ -32,12 +32,12 @@ This document gives every responsibility one owner. Automation must be observabl
 
 ### Canonical workspace
 
-| Path               | Ownership                                                             |
-| ------------------ | --------------------------------------------------------------------- |
-| `apps/headquarter` | Human-facing web application                                          |
-| `apps/arsy`        | Backend HTTP API and orchestration runtime                            |
-| `packages/*`       | Reusable contracts, libraries, adapters, and addon modules            |
-| `services/*`       | Legacy prototypes, excluded from pnpm workspace and runtime ownership |
+| Path | Ownership |
+|---|---|
+| `apps/headquarter` | Human-facing web application |
+| `apps/arsy` | Backend HTTP API and orchestration runtime |
+| `packages/*` | Reusable contracts, libraries, adapters, and addon modules |
+| `services/*` | Legacy prototypes, excluded from pnpm workspace and runtime ownership |
 
 The pnpm workspace intentionally includes only `apps/*` and `packages/*`. Do not add `services/*` to the workspace as a shortcut. First identify unique behavior, move it to the canonical owner, add tests, and then retire/archive the duplicate implementation.
 
@@ -53,75 +53,51 @@ The pnpm workspace intentionally includes only `apps/*` and `packages/*`. Do not
 
 ## 3. Toolchain and package-manager policy
 
-| Tool                                 | Baseline                               |
-| ------------------------------------ | -------------------------------------- |
-| Node.js                              | 22+ locally; Node.js 24 in CI          |
-| pnpm                                 | 12.16.1, pinned in root `package.json` |
-| Workspace orchestration              | Turborepo                              |
-| Formatting                           | Prettier 3                             |
-| Unit tests for repository automation | Node.js built-in test runner           |
+| Tool | Baseline |
+|---|---|
+| Node.js | 22+ locally; Node.js 24 in CI |
+| pnpm | 12.16.1, pinned in root `package.json` |
+| Workspace orchestration | Turborepo |
+| Formatting | Prettier 3 |
+| Unit tests for repository automation | Node.js built-in test runner |
 
 Do not silently upgrade the package manager or lockfile format. A package-manager upgrade is a deliberate toolchain change that includes the manifest, lockfile, CI setup, local instructions, and validation evidence.
 
-### Dependency build-script approvals
-
-pnpm 12 blocks dependency lifecycle/build scripts unless the workspace explicitly approves them. The current allowlist in `pnpm-workspace.yaml` is intentionally narrow:
-
-- `esbuild`
-- `msgpackr-extract`
-- `sharp`
-
-These are required native/build dependencies in the current Next.js toolchain. Do not set a blanket allow-all option. When a new package requests build-script permission, inspect its maintainer, source, version, purpose, and install behavior first, then add only that exact dependency to the allowlist. CI must fail closed when an unapproved build script is introduced.
-
 ### Lockfile integrity
 
-pnpm 12 can write `pnpm-lock.yaml` as a multi-document YAML stream. The first (boot) document records the resolved pnpm version and config dependencies. The last (project) document contains the workspace importer graph and project dependency resolutions. Both documents are intentional; never delete the first document or treat it as an accidental duplicate. The repository audit inspects the **last** document when checking workspace importers. Importer entries are required only for workspace packages that declare `dependencies`, `devDependencies`, `peerDependencies`, or `optionalDependencies`; empty reserved/scaffold packages do not need importer entries. See the official [pnpm lockfile format documentation](https://github.com/pnpm/pnpm/blob/main/pnpm/docs/lockfile.md).
+The current audit found that `pnpm-lock.yaml` does not contain importer entries for the workspace package manifests. This is a concrete lockfile drift defect, not a harmless warning.
 
 The supported workflow is:
 
-1. Run `pnpm run lockfile:refresh`, or let the manifest-change workflow run after a push to `main`.
-2. Review the generated lockfile diff and confirm the project document contains every workspace importer.
-3. Verify with `pnpm run lockfile:check` and `pnpm install --frozen-lockfile`.
-4. The workflow commits only the verified lockfile to `main` without force-pushing, then dispatches CI for the new commit. Never normalize or hand-edit the two-document stream.
+1. Run `pnpm run lockfile:refresh`, or trigger the manual **Refresh pnpm lockfile** workflow.
+2. Review the generated lockfile diff and verify that every workspace importer is represented.
+3. Commit the lockfile with the manifest changes that caused the update.
+4. Confirm `pnpm run lockfile:check` and `pnpm install --frozen-lockfile` pass.
 
-The lockfile check is read-only: it runs `pnpm install --lockfile-only --frozen-lockfile --ignore-scripts` and never rewrites the lockfile. The explicit local refresh command refuses to run when the lockfile already has staged or unstaged changes; it never stages files automatically. Ordinary CI and deployment installs remain frozen.
-
-The lockfile workflow makes one narrow exception to PR governance: the current repository setting does not permit Actions' `GITHUB_TOKEN` to create pull requests. Rather than leaving lockfile synchronization permanently failing, it commits only a generated lockfile after a frozen install has passed. If repository administration later enables Actions PR creation, the workflow may be switched back to a reviewable PR.
+The check script refuses to regenerate the lockfile when it already has staged or unstaged local edits. This preserves local work. Do not make CI silently accept a lockfile that differs from the committed manifests.
 
 ## 4. Command contract
 
-| Command                 | Sole responsibility                                        |
-| ----------------------- | ---------------------------------------------------------- |
-| `pnpm dev`              | Start workspace packages that define a persistent dev task |
-| `pnpm dev:headquarter`  | Start Headquarter                                          |
-| `pnpm dev:arsy`         | Start ARSY                                                 |
-| `pnpm check:repo`       | Read-only workspace and automation audit                   |
-| `pnpm audit:repo`       | Write ignored audit artifacts under `.artifacts/`          |
-| `pnpm format`           | Format modified, staged, and untracked supported files     |
-| `pnpm format:check`     | Verify formatting for changed files only                   |
-| `pnpm format:check:all` | Audit all tracked Prettier-supported files                 |
-| `pnpm lint`             | Repository structure and formatting gate                   |
-| `pnpm type-check`       | Run package-level Turbo type-check tasks                   |
-| `pnpm test`             | Run Node.js automation tests                               |
-| `pnpm lockfile:check`   | Read-only frozen verification of lockfile consistency      |
-| `pnpm lockfile:refresh` | Guarded local lockfile regeneration; preserves local edits |
-| `pnpm validate:repo`    | Run repository integrity, formatting, and automation tests |
-| `pnpm validate`         | Run repository validation, package type-checks, and builds |
+| Command | Sole responsibility |
+|---|---|
+| `pnpm dev` | Start workspace packages that define a persistent dev task |
+| `pnpm dev:headquarter` | Start Headquarter |
+| `pnpm dev:arsy` | Start ARSY |
+| `pnpm check:repo` | Read-only workspace and automation audit |
+| `pnpm audit:repo` | Write ignored audit artifacts under `.artifacts/` |
+| `pnpm format` | Format repository files |
+| `pnpm format:check` | Verify formatting |
+| `pnpm lint` | Repository structure and formatting gate |
+| `pnpm type-check` | Run package-level Turbo type-check tasks |
+| `pnpm test` | Run Node.js automation tests |
+| `pnpm lockfile:check` | Verify lockfile is reproducible from workspace manifests |
+| `pnpm lockfile:refresh` | Deliberately regenerate the pnpm lockfile |
+| `pnpm validate:repo` | Run repository integrity, formatting, and automation tests |
+| `pnpm validate` | Run repository validation, package type-checks, and builds |
 
 A package-level task must be backed by an actual implementation and test target. Do not add scripts that only print success, delegate unrelated work, or swallow failures. Root scripts must not use uncontrolled shell backgrounding (`&`) to simulate parallel execution; Turbo owns workspace parallelism and exit-code propagation.
 
-### Formatting baseline
-
-Formatting checks use a changed-files policy:
-
-- Locally, `pnpm format:check` checks modified, staged, and untracked supported files; `pnpm format` formats those files.
-- In CI, pull requests are checked against their merge-base with the target branch. Push events use the event's `before` commit; manual runs validate the checked-out commit.
-- The pnpm lockfile is excluded from Prettier because pnpm owns its serialization. GitHub workflow files under `.github/workflows/` are excluded from the formatter because the formatting bot is deliberately not granted workflow-edit permission; they are validated independently by actionlint in CI.
-- Pre-commit separately checks staged text/config files, so malformed formatting cannot be committed accidentally.
-
-This avoids turning a new gate into a mass-formatting rewrite of historical prototype code. On `main` and supported work branches, `format-changed.yml` formats only files changed by the triggering push, commits a style-only correction to that same branch when needed, and dispatches CI for that branch. It never changes application behavior, versions, or changelog content. Existing files become compliant as they are changed or through a separately reviewed cleanup. Do not claim the entire historical tree is already formatted.
-
-The current `format:check` command verifies changed supported files; `format:check:all` audits the full tracked source/config/documentation baseline. The `.github/workflows/` directory is excluded from Prettier because workflow syntax is owned by actionlint. The current `lint` command is the repository hygiene/format gate. A full source-code ESLint configuration is not yet established across the workspace; do not describe this command as comprehensive TypeScript linting until that capability is implemented and verified.
+The current `lint` command is the repository hygiene/format gate. A full source-code ESLint configuration is not yet established across the workspace; do not describe this command as comprehensive TypeScript linting until that capability is implemented and verified.
 
 ## 5. Git hooks
 
@@ -160,15 +136,14 @@ A normal commit must not bump versions, update release notes, create tags, gener
 
 ## 6. GitHub Actions ownership
 
-| Workflow               | Trigger                                               | Responsibility                                                                                             | Permissions                                                 |
-| ---------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `ci.yml`               | Push, PR, manual                                      | Lockfile integrity and repository validation; optional full workspace gate                                 | `contents: read`                                            |
-| `weekly-detection.yml` | Weekly, manual                                        | Read-only audit report and automation tests                                                                | `contents: read`                                            |
-| `format-changed.yml`   | Supported pushes to `main`/work branches, manual      | Format changed supported files on the triggering branch, then dispatch CI if a style-only commit is needed | `contents: write`, `actions: write`                         |
-| `codeql.yml`           | Push, PR, weekly                                      | Static security analysis                                                                                   | `contents: read`, `security-events: write`, `actions: read` |
-| `pr-labeler.yml`       | PR updates                                            | Apply path-based labels                                                                                    | `contents: read`, `pull-requests: write`                    |
-| `refresh-lockfile.yml` | Manifest/workspace/lockfile changes on `main`, manual | Regenerate, frozen-verify, commit a lockfile-only bot change to `main`, then dispatch CI                   | `contents: write`, `actions: write`                         |
-| Dependabot             | Weekly                                                | Propose dependency and Actions updates                                                                     | Managed by GitHub                                           |
+| Workflow | Trigger | Responsibility | Permissions |
+|---|---|---|---|
+| `ci.yml` | Push, PR, manual | Lockfile integrity and repository validation; optional full workspace gate | `contents: read` |
+| `weekly-detection.yml` | Weekly, manual | Read-only audit report and automation tests | `contents: read` |
+| `codeql.yml` | Push, PR, weekly | Static security analysis | `contents: read`, `security-events: write`, `actions: read` |
+| `pr-labeler.yml` | PR updates | Apply path-based labels | `contents: read`, `pull-requests: write` |
+| `refresh-lockfile.yml` | Manual | Regenerate lockfile and open/update a reviewable PR | `contents: write`, `pull-requests: write` |
+| Dependabot | Weekly | Propose dependency and Actions updates | Managed by GitHub |
 
 ### CI staging
 

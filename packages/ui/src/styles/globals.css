@@ -7,19 +7,19 @@
 @layer base {
   :root {
     /* Light mode — Paper Bone + ink contrast */
-    --background: 37 30% 93%; /* #F3EBDD paper-bone */
-    --foreground: 210 8% 14%; /* #1f2224 near-obsidian */
+    --background: 37 30% 93%;        /* #F3EBDD paper-bone */
+    --foreground: 210 8% 14%;        /* #1f2224 near-obsidian */
     --card: 37 30% 96%;
     --card-foreground: 210 8% 14%;
     --popover: 37 30% 96%;
     --popover-foreground: 210 8% 14%;
-    --primary: 74 100% 61%; /* #D2FF38 acid-lime */
+    --primary: 74 100% 61%;          /* #D2FF38 acid-lime */
     --primary-foreground: 210 8% 10%;
     --secondary: 210 6% 87%;
     --secondary-foreground: 210 8% 14%;
     --muted: 37 15% 86%;
-    --muted-foreground: 210 5% 46%; /* muted-ink */
-    --accent: 16 100% 58%; /* #FF542D riot-orange */
+    --muted-foreground: 210 5% 46%;  /* muted-ink */
+    --accent: 16 100% 58%;           /* #FF542D riot-orange */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -31,19 +31,19 @@
 
   .dark {
     /* Dark mode — Obsidian industrial */
-    --background: 216 8% 8%; /* #111315 obsidian */
-    --foreground: 37 30% 93%; /* #F3EBDD paper-bone */
-    --card: 212 8% 11%; /* #191C1E deep-industrial */
+    --background: 216 8% 8%;         /* #111315 obsidian */
+    --foreground: 37 30% 93%;        /* #F3EBDD paper-bone */
+    --card: 212 8% 11%;              /* #191C1E deep-industrial */
     --card-foreground: 37 30% 93%;
     --popover: 212 8% 11%;
     --popover-foreground: 37 30% 93%;
-    --primary: 74 100% 61%; /* #D2FF38 acid-lime */
+    --primary: 74 100% 61%;          /* #D2FF38 acid-lime */
     --primary-foreground: 216 8% 8%;
-    --secondary: 210 7% 16%; /* #24282A panel-charcoal */
+    --secondary: 210 7% 16%;         /* #24282A panel-charcoal */
     --secondary-foreground: 37 30% 93%;
     --muted: 210 7% 16%;
-    --muted-foreground: 210 2% 47%; /* #777A76 muted-ink */
-    --accent: 16 100% 58%; /* #FF542D riot-orange */
+    --muted-foreground: 210 2% 47%;  /* #777A76 muted-ink */
+    --accent: 16 100% 58%;           /* #FF542D riot-orange */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -60,12 +60,7 @@
   body {
     @apply bg-background text-foreground font-ui;
   }
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     @apply font-display;
   }
 }

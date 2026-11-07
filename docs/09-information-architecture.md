@@ -15,7 +15,6 @@ Headquarter is the human-facing RIOTWORKS command center. ARSY supplies the back
 ## 2. Navigation model
 
 ### Main navigation
-
 - ARSY DECK
 - SIGNAL ROOM
 - RIOT RADAR
@@ -28,7 +27,6 @@ Headquarter is the human-facing RIOTWORKS command center. ARSY supplies the back
 - RIOT ENGINE
 
 ### Administration
-
 - Policy Center
 - Marketplace Accounts
 - AI Providers
@@ -40,7 +38,6 @@ Headquarter is the human-facing RIOTWORKS command center. ARSY supplies the back
 ## 3. Primary user journeys
 
 ### Journey A — Opportunity to product
-
 1. Open SIGNAL ROOM in Headquarter.
 2. Review source-backed trend/problem signals.
 3. Create an opportunity in RIOT RADAR.
@@ -53,7 +50,6 @@ Headquarter is the human-facing RIOTWORKS command center. ARSY supplies the back
 10. Prepare the listing package in LAUNCH BAY.
 
 ### Journey B — Product to marketplace
-
 1. Select a QA-approved product.
 2. Select a verified channel.
 3. Check account and country eligibility.
@@ -66,7 +62,6 @@ Headquarter is the human-facing RIOTWORKS command center. ARSY supplies the back
 10. Track outcomes in AFTERSHOCK and MIZAN LEDGER.
 
 ### Journey C — Improve or retire
-
 1. Review product cohorts in AFTERSHOCK.
 2. Compare discovery, clicks, conversion, refunds, support burden, and contribution.
 3. Inspect data source, timeframe, and sample size.
@@ -75,7 +70,6 @@ Headquarter is the human-facing RIOTWORKS command center. ARSY supplies the back
 6. Record the experiment and result.
 
 ### Journey D — Weekly owner review
-
 1. View ARSY DECK.
 2. Resolve blocked jobs and approvals.
 3. Review top opportunities.
@@ -85,9 +79,7 @@ Headquarter is the human-facing RIOTWORKS command center. ARSY supplies the back
 7. Approve a bounded next batch.
 
 ### Journey E — Platform operations
-
 Technical operators may inspect:
-
 - ARSY liveness/readiness.
 - Addon installation/version state.
 - ORM model registry.
@@ -100,20 +92,20 @@ These technical diagnostics belong in restricted administration views, not the d
 
 ## 4. Module responsibilities
 
-| Module        | Main object              | Primary actions                                       |
-| ------------- | ------------------------ | ----------------------------------------------------- |
-| ARSY DECK     | Workspace pulse          | Review, prioritize, resolve                           |
-| SIGNAL ROOM   | Evidence / research run  | Search, capture, classify                             |
-| RIOT RADAR    | Opportunity              | Score, compare, decide                                |
-| THE FORGE     | Product / production job | Brief, produce, version                               |
-| ZILL WATCH    | Inspection               | Inspect, block, review                                |
-| LAUNCH BAY    | Channel / listing        | Verify, prepare, publish where permitted              |
-| SIDRA ARCHIVE | Asset                    | Preview, version, trace                               |
-| AFTERSHOCK    | Performance insight      | Compare, improve, retire                              |
-| MIZAN LEDGER  | Financial event          | Reconcile, classify, export                           |
-| RIOT ENGINE   | Workflow / run           | Schedule, pause, inspect                              |
-| Addon Manager | Installed addon          | Inspect, install/upgrade via controlled operator flow |
-| ORM/DB Health | Adapter/model registry   | Diagnose, capability check                            |
+| Module | Main object | Primary actions |
+|---|---|---|
+| ARSY DECK | Workspace pulse | Review, prioritize, resolve |
+| SIGNAL ROOM | Evidence / research run | Search, capture, classify |
+| RIOT RADAR | Opportunity | Score, compare, decide |
+| THE FORGE | Product / production job | Brief, produce, version |
+| ZILL WATCH | Inspection | Inspect, block, review |
+| LAUNCH BAY | Channel / listing | Verify, prepare, publish where permitted |
+| SIDRA ARCHIVE | Asset | Preview, version, trace |
+| AFTERSHOCK | Performance insight | Compare, improve, retire |
+| MIZAN LEDGER | Financial event | Reconcile, classify, export |
+| RIOT ENGINE | Workflow / run | Schedule, pause, inspect |
+| Addon Manager | Installed addon | Inspect, install/upgrade via controlled operator flow |
+| ORM/DB Health | Adapter/model registry | Diagnose, capability check |
 
 ## 5. Global context
 

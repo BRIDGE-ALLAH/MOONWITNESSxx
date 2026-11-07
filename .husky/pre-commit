@@ -2,4 +2,4 @@
 set -eu
 
 # Fast, local-only guard. No network calls, version bumps, changelog edits, or AI calls.
-node scripts/check-staged.mjs
+pnpm exec node scripts/check-staged.mjs

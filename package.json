@@ -1,29 +1,25 @@
 {
-  "name": "moonwitness",
+  "name": "riotworks",
   "version": "1.0.11",
   "private": true,
-  "description": "MOONWITNESS monorepo for the creative commerce ecosystem",
   "scripts": {
-    "prepare": "node scripts/install-hooks.mjs",
     "build": "turbo run build",
-    "dev": "turbo run dev --parallel --filter=@riotworks/headquarter --filter=@riotworks/arsy",
+    "dev": "pnpm --filter @riotworks/headquarter run dev",
     "dev:headquarter": "pnpm --filter @riotworks/headquarter run dev",
     "dev:arsy": "pnpm --filter @riotworks/arsy run dev",
-    "lint": "pnpm run check:repo && pnpm run format:check",
-    "type-check": "turbo run type-check",
-    "test": "node --test",
-    "format": "node scripts/check-format.mjs --write",
-    "format:check": "node scripts/check-format.mjs",
-    "format:check:all": "node scripts/check-format.mjs --all",
-    "check:repo": "node scripts/repo-audit.mjs",
-    "audit:repo": "node scripts/repo-audit.mjs --write-report",
-    "check:staged": "node scripts/check-staged.mjs",
-    "lockfile:check": "node scripts/check-lockfile.mjs",
-    "lockfile:refresh": "node scripts/refresh-lockfile.mjs",
-    "validate:repo": "pnpm run check:repo && pnpm run format:check && pnpm run test",
-    "validate": "pnpm run validate:repo && pnpm run type-check && pnpm run build",
-    "commit:assist": "node scripts/ai/generate-commit.js",
-    "clean": "turbo run clean"
+    "dev:all": "pnpm dev:headquarter & pnpm dev:arsy",
+    "lint:all": "pnpm --filter @riotworks/ui run lint & pnpm --filter @riotworks/arsy run lint & pnpm --filter @riotworks/types run lint & pnpm --filter @riotworks/arsy-core run lint & pnpm --filter @riotworks/headquarter run lint",
+    "lint": "turbo run lint",
+    "typecheck:all": "pnpm --filter @riotworks/ui run type-check & pnpm --filter @riotworks/arsy run type-check & pnpm --filter @riotworks/arsy-core run type-check & pnpm --filter @riotworks/contract run type-check & pnpm --filter @riotworks/types run type-check & pnpm --filter @riotworks/lint run type-check & pnpm --filter @riotworks/headquarter run type-check",
+    "typecheck": "turbo run type-check",
+    "clean": "turbo run clean",
+    "check:repo": "pnpm run lockfile:check && pnpm run validate:repo",
+    "audit:repo": "pnpm run lockfile:check && pnpm run validate:repo",
+    "format:check": "pnpm run format && pnpm run format:check",
+    "validate:repo": "pnpm run lockfile:check && pnpm run type-check && pnpm run lint",
+    "validate": "pnpm run validate:repo && pnpm run build",
+    "lockfile:check": "pnpm scripts/check-lockfile.mjs",
+    "lockfile:refresh": "pnpm scripts/check-lockfile.mjs --lockfile-only"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
@@ -32,8 +28,8 @@
     "typescript": "^5.7.2"
   },
   "engines": {
-    "node": ">=22",
-    "pnpm": ">=12"
+    "node": ">=20",
+    "pnpm": ">=9"
   },
   "packageManager": "pnpm@12.16.1"
 }

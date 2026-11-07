@@ -15,23 +15,22 @@
 
 ## 2. Revised phases
 
-| Phase | Focus                     | Key deliverables                                                                                                             | Exit criteria                                                                     |
-| ----- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| 0     | Repository alignment      | Correct app manifests, workspace graph, scripts, CI, hooks, workflows, duplicate service cleanup                             | Frozen install, build, lint, typecheck and tests reproducible from root           |
-| 1     | Headquarter               | Real Next.js package, responsive shell, design tokens, /id and /en, typed API client, explicit demo mode                     | Next build/typecheck; no dead controls or false live data                         |
-| 2     | ARSY Core + contracts     | Contract schemas, types, Fastify factory/lifecycle, config, errors, logs, health/readiness, shutdown                         | Fastify injection and API contract tests pass                                     |
-| 3     | ORM kernel                | Metadata, fields, registry, addon graph, inheritance/extension, persistent/abstract/transient models, domain AST, recordsets | Deterministic composition and conflict/cycle tests pass                           |
-| 4     | DB runtime + adapters     | Unit-of-work, transaction, provider contract, libSQL, PostgreSQL, schema reconciler and receipts                             | Shared provider suite, idempotency, drift, recovery and capability tests pass     |
-| 5     | Base Platform             | Required core/identity/security/workspace/audit/events; staged optional capabilities and mixins                              | Actor attribution, ACL/record rules, workspace isolation and audit atomicity pass |
-| 6     | Business addons           | Project and Intelligent domains; ZILL policy and MIZAN ledger boundaries                                                     | No duplicated base fields/security/audit/job ownership                            |
-| 7     | Commercial vertical slice | Signal → evidence → opportunity → product → ZILL → listing package → MIZAN                                                   | One real product flow is traceable and financially reconcilable                   |
-| 8     | Jobs and automation       | Queue-independent contracts, outbox, one transport, optional apps/worker, retries/idempotency/approval                       | Replay/recovery/budget/policy tests pass                                          |
-| 9     | Production readiness      | Threat model, backup/restore, observability, deployment, performance, accessibility, release/runbooks                        | Operational readiness review passes                                               |
+| Phase | Focus | Key deliverables | Exit criteria |
+|---|---|---|---|
+| 0 | Repository alignment | Correct app manifests, workspace graph, scripts, CI, hooks, workflows, duplicate service cleanup | Frozen install, build, lint, typecheck and tests reproducible from root |
+| 1 | Headquarter | Real Next.js package, responsive shell, design tokens, /id and /en, typed API client, explicit demo mode | Next build/typecheck; no dead controls or false live data |
+| 2 | ARSY Core + contracts | Contract schemas, types, Fastify factory/lifecycle, config, errors, logs, health/readiness, shutdown | Fastify injection and API contract tests pass |
+| 3 | ORM kernel | Metadata, fields, registry, addon graph, inheritance/extension, persistent/abstract/transient models, domain AST, recordsets | Deterministic composition and conflict/cycle tests pass |
+| 4 | DB runtime + adapters | Unit-of-work, transaction, provider contract, libSQL, PostgreSQL, schema reconciler and receipts | Shared provider suite, idempotency, drift, recovery and capability tests pass |
+| 5 | Base Platform | Required core/identity/security/workspace/audit/events; staged optional capabilities and mixins | Actor attribution, ACL/record rules, workspace isolation and audit atomicity pass |
+| 6 | Business addons | Project and Intelligent domains; ZILL policy and MIZAN ledger boundaries | No duplicated base fields/security/audit/job ownership |
+| 7 | Commercial vertical slice | Signal → evidence → opportunity → product → ZILL → listing package → MIZAN | One real product flow is traceable and financially reconcilable |
+| 8 | Jobs and automation | Queue-independent contracts, outbox, one transport, optional apps/worker, retries/idempotency/approval | Replay/recovery/budget/policy tests pass |
+| 9 | Production readiness | Threat model, backup/restore, observability, deployment, performance, accessibility, release/runbooks | Operational readiness review passes |
 
 ## 3. BaseEntity and Base Platform contract
 
 Every persisted model receives exactly five ORM-managed fields:
-
 - id
 - createdAt
 - createdById
