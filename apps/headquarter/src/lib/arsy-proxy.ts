@@ -9,7 +9,7 @@ import {
 export async function proxyArsyRequest(
   request: Request,
   apiPath: string,
-  method: 'GET' | 'POST' | 'PATCH',
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
 ): Promise<NextResponse> {
   const sessionConfig = getOperatorSessionConfig()
   if (!sessionConfig) {
@@ -37,11 +37,12 @@ export async function proxyArsyRequest(
       headers: {
         accept: 'application/json',
         'x-arsy-operator-token': operatorToken,
-        ...(method !== 'GET' ? { 'content-type': 'application/json' } : {}),
+        ...(method === 'POST' || method === 'PATCH' ? { 'content-type': 'application/json' } : {}),
         ...(request.headers.get('idempotency-key') ? { 'idempotency-key': request.headers.get('idempotency-key') as string } : {}),
       },
-      ...(method !== 'GET' ? { body: await request.text() } : {}),
+      ...(method === 'POST' || method === 'PATCH' ? { body: await request.text() } : {}),
       cache: 'no-store',
+      redirect: 'error',
       signal: AbortSignal.timeout(12_000),
     })
     const payload = response.status === 204 ? null : await response.json().catch(() => ({
