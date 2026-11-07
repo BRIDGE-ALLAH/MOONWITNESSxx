@@ -104,6 +104,11 @@ test('opportunity CRUD and audit persist in PostgreSQL across pool reconnect', {
     assert.equal(persisted?.id, created.id)
     assert.equal(persisted?.evidence[0]?.sourceUrl, input.evidence[0].sourceUrl)
 
+    const updatedInput = opportunityInputSchema.parse({ ...input, title: 'Updated integration-test inventory utility' })
+    const updated = await reconnectedRepository.update(ownerId, actorId, created.id, updatedInput, evaluateOpportunity(updatedInput))
+    assert.equal(updated?.title, updatedInput.title)
+    assert.equal((await reconnectedRepository.get(ownerId, created.id))?.title, updatedInput.title)
+
     const decided = await reconnectedRepository.decide(ownerId, actorId, created.id, 'park', 'Park pending independent evidence corroboration.')
     assert.equal(decided?.evaluation.decision, 'park')
     assert.equal(decided?.decisionRationale, 'Park pending independent evidence corroboration.')
@@ -115,7 +120,7 @@ test('opportunity CRUD and audit persist in PostgreSQL across pool reconnect', {
       'SELECT action FROM arsy_commerce_audit_events WHERE owner_id = $1 AND aggregate_id = $2 ORDER BY occurred_at ASC',
       [ownerId, created.id],
     )
-    assert.deepEqual(audit.rows.map((row) => row.action).sort(), ['archived', 'created', 'decision-changed'].sort())
+    assert.deepEqual(audit.rows.map((row) => row.action).sort(), ['archived', 'created', 'decision-changed', 'updated'].sort())
   } finally {
     if (!poolClosed) {
       await pool.query('DELETE FROM arsy_commerce_audit_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
