@@ -38,12 +38,21 @@ export function assessDecisionGraph(
         message: `Node "${node.id}" confidence must be between 0 and 1`,
       })
     }
-    if (node.kind === 'evidence' && node.validUntil && Date.parse(node.validUntil) < now.getTime()) {
-      issues.push({
-        code: 'expired_evidence',
-        nodeId: node.id,
-        message: `Evidence node "${node.id}" is past its validity window`,
-      })
+    if (node.kind === 'evidence' && node.validUntil) {
+      const expiry = Date.parse(node.validUntil)
+      if (!Number.isFinite(expiry)) {
+        issues.push({
+          code: 'expired_evidence',
+          nodeId: node.id,
+          message: `Evidence node "${node.id}" has an invalid validity timestamp`,
+        })
+      } else if (expiry < now.getTime()) {
+        issues.push({
+          code: 'expired_evidence',
+          nodeId: node.id,
+          message: `Evidence node "${node.id}" is past its validity window`,
+        })
+      }
     }
   }
 
@@ -89,6 +98,6 @@ export function assessDecisionGraph(
     unsubstantiatedDecisions,
     expiredEvidence: issues.filter((issue) => issue.code === 'expired_evidence').length,
     integrityIssues: issues,
-    traceability: decisions === 0 ? 1 : traceableDecisions / decisions,
+    traceability: decisions === 0 ? 0 : traceableDecisions / decisions,
   }
 }
