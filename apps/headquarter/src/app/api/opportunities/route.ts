@@ -4,7 +4,7 @@ import {
   readOperatorSessionCookie,
   requestHasTrustedOrigin,
   verifyOperatorSession,
-} from '../../../../lib/operator-session'
+} from '../../../lib/operator-session'
 
 export const runtime = 'nodejs'
 
