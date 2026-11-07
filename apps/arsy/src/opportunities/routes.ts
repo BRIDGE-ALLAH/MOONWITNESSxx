@@ -18,20 +18,6 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
   const repository = new OpportunityRepository(db)
   const ownerId = env.ARSY_OPERATOR_ID?.trim() || 'primary-owner'
   const actorId = ownerId
-  const token = env.ARSY_OPERATOR_TOKEN?.trim()
-
-  app.addHook('preHandler', async (request, reply) => {
-    if (!request.url.startsWith('/api/v1/')) return
-    if (!hasValidOperatorToken(request, token)) {
-      return reply.code(token ? 401 : 503).send({
-        error: {
-          code: token ? 'UNAUTHORIZED' : 'OPERATOR_AUTH_NOT_CONFIGURED',
-          message: token ? 'Valid operator credentials are required.' : 'Operator authentication is not configured.',
-        },
-      })
-    }
-  })
-
   app.get('/api/v1/opportunities', async (request, reply) => {
     const parsed = listQuerySchema.safeParse(request.query)
     if (!parsed.success) return reply.code(400).send({ error: { code: 'INVALID_QUERY', message: 'Invalid opportunity list query.' } })
