@@ -28,9 +28,20 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
     if (!parsed.success) return reply.code(400).send({
       error: { code: 'VALIDATION_ERROR', message: 'Opportunity input is invalid.', details: parsed.error.flatten() },
     })
+    const idempotencyKey = request.headers['idempotency-key']
+    if (typeof idempotencyKey !== 'string' || idempotencyKey.trim().length < 8 || idempotencyKey.length > 200) {
+      return reply.code(400).send({ error: { code: 'IDEMPOTENCY_KEY_REQUIRED', message: 'A valid Idempotency-Key header is required.' } })
+    }
     const evaluation = evaluateOpportunity(parsed.data)
-    const record = await repository.create(ownerId, actorId, parsed.data, evaluation)
-    return reply.code(201).send({ data: record })
+    try {
+      const result = await repository.create(ownerId, actorId, parsed.data, evaluation, idempotencyKey.trim())
+      return reply.code(result.replayed ? 200 : 201).send({ data: result.opportunity, replayed: result.replayed })
+    } catch (error) {
+      if (error instanceof Error && error.message === 'IDEMPOTENCY_KEY_REUSED') {
+        return reply.code(409).send({ error: { code: 'IDEMPOTENCY_CONFLICT', message: 'This idempotency key was already used for a different opportunity.' } })
+      }
+      throw error
+    }
   })
 
   app.get('/api/v1/opportunities/:id', async (request, reply) => {
