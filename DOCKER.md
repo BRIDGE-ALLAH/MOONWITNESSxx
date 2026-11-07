@@ -52,6 +52,30 @@ docker compose --env-file .env.docker exec arsy pnpm migrate:up
 
 The application does not mutate the database schema on startup. The migration runner tracks numbered migrations and checksums. Apply migrations to an isolated development or staging database first; back up and verify restore before any production migration.
 
+## Troubleshoot an unhealthy ARSY container
+
+The development Compose stack bind-mounts application and shared workspace source trees. A bind mount hides the image's original contents at that path, including pnpm's package-local `node_modules` links. Compose therefore mounts the installed dependency directories separately for ARSY, Headquarter, and the shared workspace packages they consume. Keep these nested dependency volumes in place when changing source mounts.
+
+Application ports inside the Compose network are fixed: ARSY `3001` and Headquarter `3000`. `ARSY_PORT` and `HEADQUARTER_PORT` change only host-side published ports; they must not change the ports used by container healthchecks or Headquarter-to-ARSY service communication.
+
+Inspect the process logs and health history before restarting:
+
+```bash
+docker compose --env-file .env.docker logs --tail=200 arsy
+docker inspect --format '{{json .State.Health}}' moonwitness-arsy
+docker compose --env-file .env.docker ps -a
+```
+
+After changing workspace dependency mounts, rebuild and recreate only the application containers. Renewing anonymous dependency volumes refreshes their contents from the rebuilt images; the named PostgreSQL, Redis, and asset volumes remain intact:
+
+```bash
+docker compose --env-file .env.docker up --build --force-recreate --renew-anon-volumes -d arsy headquarter
+docker compose --env-file .env.docker ps
+docker compose --env-file .env.docker logs --tail=100 arsy
+```
+
+Do **not** use `down --volumes` as a troubleshooting shortcut; that deletes database and asset data. If ARSY remains unhealthy after these changes, the ARSY log and `.State.Health.Log` output above are needed to identify the next startup or PostgreSQL error.
+
 ## Useful commands
 
 ```bash
