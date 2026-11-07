@@ -177,7 +177,7 @@ A document stating a rule is not enforcement. A check that covers only part of a
   - State: Partial: CI active / Phase 3 planned
 - **AUT-03** — Scheduled detection reports findings and does not flood Issues
   - Enforcement: Weekly workflow read-only permissions; Governance Engine check/report; no issue-write step
-  - State: Partial: implementation committed; latest-head CI verification pending
+  - State: Partial: weekly read-only check/report implemented; scheduled event-path verification open
 - **AUT-04** — Hooks are local, fast, deterministic, offline, and credential-independent
   - Enforcement: Hook source review and isolated hook tests
   - State: Partial: Local active / Phase 2 planned
@@ -231,7 +231,7 @@ A document stating a rule is not enforcement. A check that covers only part of a
   - State: CI active
 - **SEC-04** — Scripts/installers do not execute unverified remote code
   - Enforcement: Static script review and installer tests
-  - State: Human review / Phase 4 planned
+  - State: Partial: static review and cross-platform installer tests active / human review pending
 - **SEC-05** — Logs/artifacts redact credentials and sensitive application data
   - Enforcement: Redaction tests and artifact review
   - State: Phase 3/5 planned
