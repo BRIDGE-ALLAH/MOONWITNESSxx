@@ -48,7 +48,7 @@ const researchStatus = [
 
 export default function SignalRoom() {
   return (
-    <main className="min-h-screen bg-obsidian text-paper-bone p-8">
+    <main className="theme-observatory min-h-screen bg-background text-foreground p-8">
       <div className="mx-auto max-w-7xl">
         <header className="border-b border-acid-lime/30 pb-8 mb-8">
           <h1 className="text-5xl font-display uppercase leading-none mb-4">
