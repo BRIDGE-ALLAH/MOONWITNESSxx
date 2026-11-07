@@ -19,7 +19,8 @@
     "fastify-type-provider-zod": "^1.1.0"
   },
   "devDependencies": {
-    "fastify-cli": "^8.0.3"
+    "fastify-cli": "^8.0.3",
+    "@types/node": "^22.10.2"
   },
   "exports": {
     ".": {
