@@ -77,3 +77,11 @@ Owns AIProvider, AIModel, ModelCapability, Agent, AgentRole, AgentRun, AgentTask
 
 ## 16. v1.3 base platform and ORM target (supersedes earlier short description)
 BaseEntity contains id, createdAt, createdById, updatedAt and updatedById. packages/orm-addon-base is one source/release package containing independent addon manifests for core, identity, security, workspace, optional company, audit, events, optional communication/activity, attachment, sequence, settings, localization, transient, import-export, optional integration and taxonomy. The ORM target includes persistent/abstract/transient models, computed/related/translated fields, deterministic extension, domains, recordsets, cache/prefetch, ACL/record rules and field policies. See docs/22 for the canonical ownership/dependency matrix.
+
+
+## 17. Repository topology reconciliation (authoritative with docs/23)
+The canonical workspace globs are apps/* and packages/*. Do not add services/* to pnpm workspace. apps/headquarter is the Next.js frontend; apps/arsy is the only Fastify HTTP backend. An independently deployed worker, if justified, is apps/worker. The tracked services/arsy and services/queue are legacy/stranded duplicates and must be retired only after unique behavior is reviewed. The current apps/headquarter manifest is inconsistent with its Next.js source, apps/arsy currently imports UI unnecessarily, and packages/arsy-core has no source implementation in the audited tree. Repair these before implementing ORM packages.
+
+The target package list is not an implementation inventory. At the audit snapshot packages/orm, orm-db, both SQL adapters and the three ORM addons are absent. docs/23 lists actual package inventory and P0 fixes.
+
+Queue ownership: packages/jobs defines queue-neutral job contracts and idempotency; a future jobs adapter owns BullMQ/Redis specifics. Do not keep a second services/queue service. Do not make Redis/BullMQ mandatory for the first product slice unless asynchronous execution is actually required. The outbox/business record is the source of truth, not the queue transport.
