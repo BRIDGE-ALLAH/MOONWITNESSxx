@@ -65,7 +65,7 @@ The adapter is transport infrastructure, not proof that a backend capability exi
 
 The Money Maker opportunity, product, and finance proxies are protected by a Headquarter-owned operator session. The login endpoint verifies `HEADQUARTER_OPERATOR_PASSWORD`, issues an eight-hour HMAC-signed `HttpOnly`, `SameSite=Strict` cookie, and requires a configured `HEADQUARTER_SESSION_SECRET` (at least 32 bytes) plus exact `HEADQUARTER_PUBLIC_ORIGIN`. Production configuration requires HTTPS. State-changing session and opportunity requests validate the browser `Origin`; the opportunity proxy rejects missing, expired, tampered, or mismatched operator sessions before forwarding to ARSY.
 
-The browser session identity must match the configured `ARSY_OPERATOR_ID`; the privileged `ARSY_OPERATOR_TOKEN` remains server-only and is never a browser credential. This is a single-operator boundary, not a general multi-user identity, role, tenant, or SSO system. New proxy routes must reuse this authorization boundary rather than forwarding service credentials directly.
+The browser session identity must match the configured `ARSY_OPERATOR_ID`; the privileged `ARSY_OPERATOR_TOKEN` remains server-only and is never a browser credential. This is a single-operator boundary, not a general multi-user identity, role, tenant, or SSO system. New proxy routes must reuse this authorization boundary rather than forwarding service credentials directly. Login currently has a five-failure/15-minute process-local throttle as defense in depth; production ingress must add a shared/distributed rate limit before running multiple Headquarter instances.
 
 ## Design-system contract
 
