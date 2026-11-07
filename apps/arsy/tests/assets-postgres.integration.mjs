@@ -14,7 +14,6 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
   const ownerId = `asset-integration-${randomUUID()}`
   const productId = randomUUID()
   const versionId = randomUUID()
-  const assetIdempotency = randomUUID()
   const root = await mkdtemp(path.join(os.tmpdir(), 'arsy-asset-integration-'))
   const storage = new LocalAssetStorage(root)
   let pool = createDatabasePool()
