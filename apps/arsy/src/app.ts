@@ -8,6 +8,7 @@ import { registerOpportunityRoutes } from './opportunities/routes.ts'
 import { registerProductRoutes } from './products/routes.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { registerFinancialRoutes } from './finance/routes.ts'
+import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
@@ -66,6 +67,7 @@ export function createApp(options: CreateAppOptions = {}) {
     registerOpportunityRoutes(instance, databasePool, env)
     registerProductRoutes(instance, databasePool, env)
     registerFinancialRoutes(instance, databasePool, env)
+    registerLoginAttemptRoutes(instance, databasePool, env)
   })
 
   return app
