@@ -27,6 +27,7 @@ const body = {
   policyReviewedAt: '2026-11-08T00:00:00Z',
   policyRecheckAt: '2027-02-08T00:00:00Z',
   payoutRequirements: { supportedCurrency: 'IDR', payoutMethod: 'bank-transfer' },
+  listingRequirements: { acceptedMediaTypes: ['application/pdf'], acceptedProductFamilies: ['digital-utility'], maxAssetBytes: 10485760 },
   payoutSetupStatus: 'configured',
   capability: 'C1',
   grantedScopes: [],
@@ -36,6 +37,7 @@ const body = {
     evidence('official-policy', 'Official channel policy', 'https://example.com/policy'),
     evidence('account-eligibility', 'Account eligibility page', 'https://example.com/account'),
     evidence('payout-requirements', 'Payout requirements', 'https://example.com/payout'),
+    evidence('format-requirements', 'Format requirements', 'https://example.com/formats'),
   ],
 }
 function createPool() {
@@ -50,16 +52,16 @@ function createPool() {
         channel = {
           id: channelId, channel_key: values[2], display_name: values[3], country_code: values[4],
           account_eligibility: values[5], official_policy_url: values[6], policy_reviewed_at: values[7],
-          policy_recheck_at: values[8], payout_requirements: JSON.parse(values[9]), payout_setup_status: values[10],
-          capability: values[11], granted_scopes: JSON.parse(values[12]), quota_notes: JSON.parse(values[13]),
-          channel_status: values[14], revision: 1, created_at: '2026-11-08T00:00:00Z',
-          updated_at: '2026-11-08T00:00:00Z', created_by: values[15], updated_by: values[15],
+          policy_recheck_at: values[8], payout_requirements: JSON.parse(values[9]), listing_requirements: JSON.parse(values[10]), payout_setup_status: values[11],
+          capability: values[12], granted_scopes: JSON.parse(values[13]), quota_notes: JSON.parse(values[14]),
+          channel_status: values[15], revision: 1, created_at: '2026-11-08T00:00:00Z',
+          updated_at: '2026-11-08T00:00:00Z', created_by: values[16], updated_by: values[16],
         }
-        for (const item of JSON.parse(values[16])) evidenceRows.push({
+        for (const item of JSON.parse(values[17])) evidenceRows.push({
           id: item.id, channel_id: channelId, evidence_type: item.evidenceType, source_name: item.sourceName,
           source_url: item.sourceUrl, captured_at: item.capturedAt, reviewed_at: item.reviewedAt,
           evidence_class: item.evidenceClass, summary: item.summary, limitations: item.limitations,
-          created_at: '2026-11-08T00:00:00Z', created_by: values[15],
+          created_at: '2026-11-08T00:00:00Z', created_by: values[16],
         })
         return { rows: [channel] }
       }
