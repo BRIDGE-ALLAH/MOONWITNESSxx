@@ -78,7 +78,9 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
       ['creative-qa', 'independent-review'],
     ]
     for (const [inspectionType, inspectionSource] of required) {
-      const inspection = await repository.appendInspection(ownerId, ownerId, asset.id, {
+      // Repository-level fixture simulates a trusted reviewer/automation principal.
+      // The public operator API cannot impersonate this actor.
+      const inspection = await repository.appendInspection(ownerId, 'trusted-inspection-service', asset.id, {
         inspectionType,
         status: 'pass',
         inspectionSource,
