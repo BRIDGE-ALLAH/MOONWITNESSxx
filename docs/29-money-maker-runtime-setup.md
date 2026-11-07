@@ -77,8 +77,8 @@ Implemented in the current development branch (implementation presence is not eq
 - financial event ingestion with idempotency, event listing, currency-grouped verified summaries, and evidence-backed reconciliation;
 - version-bound asset binary storage, server-computed SHA-256, upload idempotency, provenance, private attachment downloads, append-only inspections, and fail-closed inspection readiness; the current operator API cannot impersonate a trusted reviewer or automated inspection principal;
 - audit events for opportunity, product, and financial operations;
-- explicit PostgreSQL migrations limited to implemented opportunity/product/version/financial-event/audit tables, checksum runner, and isolated integration-test coverage for migration reruns, opportunity/product/finance lifecycle, idempotency, reconciliation, audit events and persistence after reconnect;
-- Playwright browser E2E coverage configured for login → opportunity capture/decision → product brief → financial event/reconciliation → Aftershock metrics → archive → logout. The current-head workflow result is pending.
+- explicit PostgreSQL migrations for opportunity/product/version/financial-event/audit/asset/provenance/inspection tables, checksum runner, and isolated integration-test coverage for migration reruns, lifecycle, idempotency, reconciliation, audit events and persistence after reconnect;
+- Playwright browser E2E coverage configured for login → opportunity capture/review/edit/decision → product brief/version/lifecycle → asset upload/provenance/inspection → financial event/reconciliation → Aftershock metrics → archive → logout. The current-head workflow result is pending.
 
 Not yet implemented or verified:
 - generic opportunity editing and operator-facing detail/evidence-history UI; decision and archive actions are implemented. Product detail UI and version editing beyond version 1 remain incomplete;
@@ -87,6 +87,6 @@ Not yet implemented or verified:
 - current-head CI, CodeQL, container build, PostgreSQL integration and Playwright E2E execution evidence;
 - production deployment, managed secrets, HTTPS ingress, backups, restore drills, rollback and live smoke tests;
 - search/filter/cursor pagination and complete lifetime counts; current portfolio counts are explicitly bounded to the latest 100 records;
-- asset binary storage/provenance, inspection workflows, channel listing/publication receipts, payout provider integrations and verified FX conversion.
+- channel listing/publication receipts, payout provider integrations and verified FX conversion.
 
 No sample transaction, revenue figure, payout, market trend or publication is created by this workflow.
