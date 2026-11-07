@@ -83,3 +83,20 @@ The field is active; these ingredients are not individually unprecedented:
 
 ## Proposed differentiation (hypothesis, not world-first claim)
 **Evidence Flight Recorder**: a reproducible "why did the system believe/act?" bundle containing an anchored event prefix, claim-genome branch, policy decision, counterfactual sensitivity report, and drift alerts. It could be exported as a portable signed bundle for incident review across agent vendors. Prior-art review, threat modelling, and benchmark comparison are required before novelty claims.
+
+
+# WITNESS FABRIC — Phases 7–9 Execution Record
+
+**Date:** 2026-11-08. **Status:** Library prototypes implemented; production key custody and durable integration remain release gates.
+
+## Phase 7 — Bitemporal Truth Query
+Added `queryBitemporalClaims(events, { validAt, knownAt })`. `validAt` asks when a proposition applies in the modeled world; `knownAt` limits the event history to what the system had observed by that time. Supersession edges can end a claim's validity window. This prevents hindsight leakage in historical replay. Source-level validity and late-arriving correction policies remain future work.
+
+## Phase 8 — Signed Witness Checkpoint
+Added Ed25519 signed checkpoints over ledger sequence and head hash. Verification rejects changed event count or head. The private key must remain outside the event log and should be held by a KMS/HSM in production. Signature validity alone does not prove signer identity or factual correctness.
+
+## Phase 9 — Evidence Flight Recorder
+Added portable bundle creation and verification: event prefix, deterministic snapshot, Claim Genome, and signed checkpoint. The verifier reconstructs the ledger, checks hash chain, recomputes projections, and verifies the signature. This enables independent incident replay. Cross-vendor schema/versioning and an offline verifier CLI remain future tasks.
+
+## New differentiator hypothesis
+**Temporal Evidence Twin**: every high-impact claim has two clocks (when it was true vs when the system learned it), a cryptographically anchored history, and a portable replay artifact. Potential use cases: AI incident response, compliance evidence, scientific audit trails, and agent-to-agent trust handoff. This combines known techniques; novelty must be established by benchmarks and prior-art review.

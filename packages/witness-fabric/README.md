@@ -1,25 +1,23 @@
 # WITNESS FABRIC
 
-Experimental deterministic evidence substrate for MOONWITNESS.
+Deterministic evidence substrate for MOONWITNESS.
 
-## Core API
+## API
 - `WitnessLedger`: append-only event ledger, hash-chain verification and deterministic replay.
-- `buildClaimGenome(events)`: claim lineage graph retaining competing claims and explicit support, contradiction, supersession and derivation edges.
-- `runCounterfactual(events, replay, options)`: replay a hypothetical evidence world after excluding selected evidence references or event IDs.
-- `detectRealityDrift(...)`: compare snapshots for confidence regression, status regression, stale claims and disappeared claims.
+- `buildClaimGenome(events)`: provenance graph for competing claims and explicit relations.
+- `runCounterfactual(events, replay, options)`: evidence/event exclusion replay and claim deltas.
+- `detectRealityDrift(...)`: confidence/status regression, stale claims and disappearance.
+- `queryBitemporalClaims(events, { validAt, knownAt })`: query world-valid time separately from system-knowledge time.
+- `createSignedCheckpoint(events, privateKey)` / `verifySignedCheckpoint(...)`: Ed25519 anchor over ledger sequence and head hash.
+- `createEvidenceFlightRecorder(ledger, privateKey)` / `verifyEvidenceFlightRecorder(bundle, publicKey)`: portable signed incident/replay package.
 
-## Counterfactual example
-```ts
-const report = await runCounterfactual(ledger.events(), replayEvents, {
-  excludeEvidenceRefs: ["source:lab-report-7"]
-});
-```
+## Security boundaries
+The Ed25519 private key must be held outside the event ledger (KMS/HSM or deployment secret store). A signature proves possession of the signing key, not the truth of the underlying claims or the identity of an actor unless key custody is separately governed. Bundle verification checks signature, hash-chain reconstruction, deterministic snapshot and claim-genome projection.
 
-## Limits
-- The ledger is currently in-memory; no durable adapter is included.
-- Counterfactual output is event-removal sensitivity analysis, not a causal effect estimate.
-- Staleness currently uses claim last-updated time as a proxy; source-level expiry needs explicit source records.
-- Contradiction edges are explicit assertions, not automatic semantic contradiction detection.
-- Confidence values are recorded assessments, not calibrated probabilities.
-- Hash chaining is tamper-evident only when the head is independently anchored.
-- No ARSY external side effects are executed by this package.
+## Current limitations
+- Ledger persistence is still adapter-driven/in-memory; this package does not yet ship a database adapter.
+- Counterfactual replay is evidence-removal sensitivity analysis, not causal inference.
+- Staleness uses claim update time as a proxy until a source registry supplies expiry/reliability.
+- Contradictions are explicit edges, not automatic semantic inference.
+- Confidence values are assessments, not calibrated probabilities.
+- Bitemporal query supports claim valid-time and event knowledge-time; source-level temporal lifecycle remains future work.

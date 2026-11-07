@@ -1,39 +1,26 @@
 # WITNESS FABRIC — Engineering TODO
 
-## M1 Evidence Spine
-- [x] Append-only typed events, actor, timestamp, evidence references, sequence and SHA-256 chain.
-- [x] Serialize concurrent appends and isolate/freeze nested payloads.
-- [ ] Durable SQL adapter with transactional append and restart recovery.
-- [ ] Authenticated actor identity, tenant scope, retention and redaction policy.
-- [ ] Signed checkpoints and independently anchored head hashes.
+## M1–M3 Evidence, replay and accountability
+- [x] Append-only hash-chained event stream, deterministic replay and policy-gated action lifecycle.
+- [ ] Durable transactional storage adapter, restart recovery and tenant partitioning.
+- [ ] ARSY execution-boundary preflight/postflight middleware, idempotency and transactional outbox.
 
-## M2 Epistemic Replay
-- [x] Deterministic replay of claims, observations, decisions and action lifecycle.
-- [x] Explicit relation events and claim-graph projection.
-- [x] Counterfactual event/evidence exclusion replay and claim deltas.
-- [x] Snapshot drift detection for confidence/status regression and staleness.
-- [ ] Bi-temporal valid-time / observed-time query API.
-- [ ] Source-level reliability and expiry records.
-- [ ] Calibrated confidence evaluation with labelled benchmark outcomes.
+## M4–M6 Knowledge experiments
+- [x] Claim Genome with provenance and explicit relation edges.
+- [x] Counterfactual evidence-removal replay.
+- [x] Reality Drift Radar snapshot comparison.
 
-## M3 Agent Accountability
-- [x] Typed action proposal, policy evaluation, completion and failure records.
-- [x] Replay rejects completion without explicit policy allow.
-- [ ] ARSY tool-boundary preflight/postflight middleware.
-- [ ] Idempotency keys, transactional outbox, signed receipts and approval UI.
-- [ ] Headquarter Evidence-to-Decision Replay interface.
-
-## Research / product experiments
-- [x] Claim Genome: competing claims and provenance edges.
-- [x] Counterfactual Observatory core: evidence exclusion and sensitivity report.
-- [x] Reality Drift Radar core: stale and regressed claim detection.
-- [ ] Benchmark with synthetic adversarial and real labelled evidence.
-- [ ] Visual graph, counterfactual diff and drift inbox in Headquarter.
-- [ ] External prior-art and patent review before any novelty claim.
+## M7–M9 Trust and temporal evidence
+- [x] Bitemporal claim query: world-valid time vs system-knowledge time.
+- [x] Ed25519 signed ledger checkpoint.
+- [x] Evidence Flight Recorder portable bundle with replay and integrity verification.
+- [ ] KMS/HSM key custody, rotation, revocation and signer identity policy.
+- [ ] Durable source registry with source-level observedAt, validUntil, reliability and retrieval status.
+- [ ] Cross-vendor bundle schema, JSON Schema and independent verifier CLI.
 
 ## Release gates
-- [ ] Dedicated tests and type-check pass on latest head.
+- [ ] Latest dedicated tests and type-check pass.
 - [ ] Full repository CI passes.
-- [ ] Security review: tenant isolation, append-only permissions, actor attribution.
-- [ ] Performance benchmarks at 10k/100k/1m events.
-- [ ] API and data-retention review.
+- [ ] Security review, tenant isolation, retention and redaction.
+- [ ] 10k/100k/1m event benchmarks and adversarial tamper tests.
+- [ ] ARSY and Headquarter integration.
