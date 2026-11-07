@@ -139,12 +139,14 @@ export function detectRealityDrift(input: {
   staleAfterMs: number;
   confidenceDropThreshold?: number;
   genome?: ClaimGenome;
+  previousGenome?: ClaimGenome;
 }): RealityDrift[] {
   const nowMs = Date.parse(input.now);
   if (!Number.isFinite(nowMs) || input.staleAfterMs < 0) throw new Error("invalid drift time policy");
   const threshold = input.confidenceDropThreshold ?? 0.2;
   if (threshold < 0 || threshold > 1) throw new Error("confidenceDropThreshold must be between 0 and 1");
-  const contradicted = new Set((input.genome?.conflicts ?? []).flatMap((item) => item.claimIds));
+  const currentConflictKeys = new Set((input.genome?.conflicts ?? []).map((item) => [...item.claimIds].sort().join("|")));
+  const previousConflictKeys = new Set((input.previousGenome?.conflicts ?? []).map((item) => [...item.claimIds].sort().join("|")));
   const results: RealityDrift[] = [];
   for (const [claimId, oldClaim] of Object.entries(input.previous.claims)) {
     const next = input.current.claims[claimId];
@@ -154,7 +156,7 @@ export function detectRealityDrift(input: {
       if (oldClaim.confidence - next.confidence >= threshold) reasons.push("confidence_drop");
       const rank = { proposed: 0, supported: 3, contested: 2, rejected: 1 };
       if (rank[next.status] < rank[oldClaim.status]) reasons.push("status_regression");
-      if (contradicted.has(claimId) && !input.genome?.conflicts.some((item) => item.claimIds.includes(claimId) && input.previous.claims[item.claimIds[0]] && input.previous.claims[item.claimIds[1]])) reasons.push("contradiction_added");
+      if ((input.genome?.conflicts ?? []).some((item) => item.claimIds.includes(claimId) && !previousConflictKeys.has([...item.claimIds].sort().join("|")) && currentConflictKeys.has([...item.claimIds].sort().join("|")))) reasons.push("contradiction_added");
       const age = nowMs - Date.parse(next.lastUpdatedAt);
       if (age >= input.staleAfterMs) reasons.push("stale_evidence");
     }
