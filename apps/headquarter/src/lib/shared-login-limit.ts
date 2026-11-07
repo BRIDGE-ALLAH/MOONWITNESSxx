@@ -68,16 +68,18 @@ export async function requestSharedLoginLimit(
   if (!response.ok) throw new Error('SHARED_LOGIN_LIMIT_UNAVAILABLE')
 
   const payload = await response.json() as { data?: Partial<LoginLimitResult> }
+  const data = payload.data
   if (
-    typeof payload.data?.allowed !== 'boolean' ||
-    typeof payload.data.retryAfterSeconds !== 'number' ||
-    !Number.isSafeInteger(payload.data.retryAfterSeconds) ||
-    payload.data.retryAfterSeconds < 0
+    !data ||
+    typeof data.allowed !== 'boolean' ||
+    typeof data.retryAfterSeconds !== 'number' ||
+    !Number.isSafeInteger(data.retryAfterSeconds) ||
+    data.retryAfterSeconds < 0
   ) {
     throw new Error('SHARED_LOGIN_LIMIT_INVALID_RESPONSE')
   }
   return {
-    allowed: payload.data.allowed,
-    retryAfterSeconds: payload.data.retryAfterSeconds,
+    allowed: data.allowed,
+    retryAfterSeconds: data.retryAfterSeconds,
   }
 }
