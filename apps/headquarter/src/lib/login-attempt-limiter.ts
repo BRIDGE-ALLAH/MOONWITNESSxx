@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto'
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import { isIP } from 'node:net'
 
 export interface LoginAttemptBucketHashes {
