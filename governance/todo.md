@@ -123,13 +123,13 @@
 - [x] Add positive/negative fixtures for valid workspace, forbidden dependency direction, duplicate names, source imports, rule completeness, and read-only reporting.
 - [x] Gate the engine through `check:repo` and `validate:repo`; repository CI invokes the canonical command.
 - [x] Document CLI scope, limitations, output, and exit codes in [engine.md](./engine.md).
-- [ ] Run clean-checkout CI on the final Phase 2 head and resolve formatting/test failures.
+- [x] Run clean-checkout CI on the integrated Phase 0–5 head; repository integrity, governance checks, formatting, tests, asset integrity, and ARSY type-check passed. [Evidence](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42400516848).
 - [ ] Expand fixture coverage for workflow permission failures, missing entrypoints, unknown workspace dependencies, and strict warning exit behavior.
 - [ ] Owner review of the dependency boundary rules and warning policy.
 
 **Acceptance:** offline CLI, passing positive/negative fixtures, deterministic output, no mutation during check/report, and clean-checkout CI evidence.
 
-**Status:** implementation committed to the governance branch; clean-checkout CI verification and owner approval are pending. Import detection is intentionally a lightweight static guard, not a semantic TypeScript AST or security proof.
+**Status:** implementation and clean-checkout CI are passing on the integrated branch. Expanded negative fixtures and independent owner review remain open. Import detection is intentionally a lightweight static guard, not a semantic TypeScript AST or security proof.
 
 ## Phase 3 — GitHub governance and automation
 
@@ -167,7 +167,7 @@
 
 **Acceptance:** read-only doctor, scoped repair, accurate verify, and user files/secrets preserved are implemented. Full two-run install idempotency and interrupted-run tests remain open.
 
-**Status:** implementation is in [developer-installer.md](../docs/developer-installer.md). Cross-platform tests passed on Phase 4–5 commit `9401326636928ce2369e2615a8a0d17f97e2f348` in [run 42399389656](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42399389656). Re-run is pending on the integrated Phase 0–5 branch.
+**Status:** implementation is in [developer-installer.md](../docs/developer-installer.md). Cross-platform tests, installer dry-run, runtime passport, Linux Compose preflight, and POSIX/PowerShell syntax checks passed on the integrated head in [run 42400516741](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42400516741). Repository, Asset, and ARSY integrity passed in [run 42400516848](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42400516848).
 
 ## Phase 5 — Runtime and deployment lifecycle
 
