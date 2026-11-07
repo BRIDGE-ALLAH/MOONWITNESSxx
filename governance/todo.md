@@ -1,8 +1,8 @@
 # MOONWITNESS Governance — Execution TODO
 
 **Repository:** `BRIDGE-ALLAH/MOONWITNESS`  
-**Baseline:** `main@0bdf4290d6c060892f85f6562a41585a2be53e08`  
-**Branch:** `chore/governance-phase-0-1`  
+**Baseline:** `main@efb80d91cac0d0eeab52f2d2edd0b049c476fadb`  
+**Branch:** `chore/governance-phase-0-1-final`  
 **Approach:** programmatic checks + Markdown contracts; no parallel schema framework.
 
 > Checkboxes are evidence-driven. Code committed without a clean-checkout CI run is implemented but not verified.
@@ -25,7 +25,7 @@
 - [x] Node engine aligned to Node 22+.
 - [x] pnpm engine aligned to pinned `12.16.1`.
 - [x] Replace workspace build allowlist placeholders with explicit booleans.
-- [x] Verify clean install with pinned pnpm 12.16.1. **Evidence:** Repository CI run `42395802586` — frozen lockfile and install pass.
+- [x] Verify clean install with pinned pnpm 12.16.1. **Evidence:** [Repository CI run `42397034583`](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42397034583) — frozen lockfile and install pass on the rebased PR head.
 
 ### P0.2 Root command contract
 
@@ -50,7 +50,7 @@
 - [x] Match push filters to slash branches: `feat/**`, `fix/**`, `chore/**`, `docs/**`, `refactor/**`.
 - [x] Keep audit, lockfile check, frozen install, validation observable.
 - [x] Verify CI triggers on `chore/governance-phase-0-1` (push run observed).
-- [x] Verify repository integrity job reaches all steps and passes. **Evidence:** run `42395802586`.
+- [x] Verify repository integrity job reaches all steps and passes. **Evidence:** [run `42397034583`](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42397034583).
 - [x] Verify CodeQL succeeds on the branch (`42395737398`).
 - [ ] Verify Dependabot alerts/update automation remain enabled and healthy.
 - [ ] Administrator applies main ruleset/required checks. **Evidence:** ruleset readback + test PR.
@@ -59,12 +59,13 @@
 
 - [x] `pnpm run check:repo`, `pnpm run format:check`, `pnpm test` pass in Repository CI run `42395045245`.
 - [x] `pnpm install --frozen-lockfile` passes from clean checkout in Repository CI run `42395045245`.
-- [ ] **BLOCKED:** Full workspace type-check/build; separate Asset integrity job reports TS2307 for missing `./demo-data` and `./types` imported by `apps/headquarter/src/features/arsy-deck/repository.ts`.
-- [ ] Review diff, secrets, changed-file scope; record CI SHA/URL.
+- [x] Asset integrity: asset package, shared UI, Headquarter type-check, production build, SVG validation, and asset registry tests pass on [run `42397034583`](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42397034583). The previously missing ARSY Deck fixture modules are now present in current `main` and retained in the rebased PR.
+- [ ] Full workspace type-check/build: **NOT RUN** because repository variable `FULL_QUALITY_CI` is not enabled; the dedicated Asset integrity gate did pass.
+- [x] Review changed-file scope and CI evidence; current PR head: `4f41b8d77a6da739146ebdc4cf1eb90619d69e63`.
 
-**Latest implementation update (2026-11-07):** Restored the ARSY Deck demo fixture and type modules at `apps/headquarter/src/features/arsy-deck/{demo-data.ts,types.ts}` using the existing explicitly synthetic demo contract from the current main tree; formatted the fixture for the changed-file Prettier gate. The first post-fix CI run was still evaluating the previous fixture commit and failed only on the old unformatted copy. A fresh validation run for the current branch head is still required. The enforcement register formatting passed its previous check after normalization.
+**Latest verified status (2026-11-07):** The clean rebased PR is [#37](https://github.com/BRIDGE-ALLAH/MOONWITNESS/pull/37), based directly on current `main` at `efb80d91cac0d0eeab52f2d2edd0b049c476fadb`. On PR head `4f41b8d77a6da739146ebdc4cf1eb90619d69e63`, Repository integrity and Asset integrity both pass in [run `42397034583`](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42397034583): audit, frozen lockfile, install, formatting, tests, asset/UI/Headquarter type-check, Headquarter production build, SVG validation, and asset registry tests. The Full workspace quality job is skipped because `FULL_QUALITY_CI` is not enabled. CodeQL passed on the preceding rebased head; the current-head CodeQL run is pending.
 
-**Latest verified status (2026-11-07):** Repository integrity passes on PR head `75df7d204279f3788be21157c0515dc9f6c85d95` in [run `42395969919`](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42395969919): audit, frozen lockfile check, frozen install, format check, and automation tests all pass. The separate Asset integrity job in that same run fails at Headquarter type-check with TS2307 for missing `./demo-data` and `./types` imported by `apps/headquarter/src/features/arsy-deck/repository.ts`; this is an application blocker, not a governance-check failure. Full workspace type-check/build, Dependabot verification, owner review, and administrator-managed `main` ruleset remain open. Earlier repository-integrity evidence is retained above.
+**Remaining Phase 0 gates:** negative-exit fixture coverage for every root command; Dependabot health verification; administrator-managed `main` ruleset and required-check readback; optional full-workspace quality run. Branch protection API readback is unavailable to the current GitHub integration.
 
 ## Phase 1 — Governance authority and rule contracts
 
