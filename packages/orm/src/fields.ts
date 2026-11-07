@@ -6,6 +6,7 @@ export interface CommonFieldOptions<TValue> {
   readonly readonly?: boolean;
   readonly index?: boolean;
   readonly unique?: boolean;
+  readonly override?: boolean;
   readonly default?: FieldDefault<TValue>;
   readonly label?: string;
   readonly description?: string;
@@ -29,6 +30,7 @@ function descriptor<TValue>(
     readonly: options.readonly ?? false,
     index: options.index ?? options.unique ?? false,
     unique: options.unique ?? false,
+    ...(options.override ? { override: true } : {}),
     ...(options.default !== undefined ? { default: options.default } : {}),
     ...(options.label !== undefined ? { label: options.label } : {}),
     ...(options.description !== undefined ? { description: options.description } : {}),
