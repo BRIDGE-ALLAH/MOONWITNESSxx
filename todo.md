@@ -857,3 +857,62 @@ Use these labels consistently when updating this file:
 
 **Exit gate:** Poisoned evidence fixtures are quarantined before belief promotion; contamination can be traced and rolled back; false-positive rates are measured; safety gates fail closed without blocking unrelated trusted evidence.
 
+
+
+## 24. Phase 18 — Proof-Carrying Completion
+
+**Status:** [~] Deterministic contract evaluator and Node test fixtures authored; CI execution and trusted attestation integration remain.  
+**Goal:** An agent cannot mark work complete using its own success message; every required postcondition needs independent proof.
+
+- [x] Add versioned verification contracts and typed PASS / FAIL / UNVERIFIED outcomes.
+- [x] Require an independent verifier by default; executor self-verification is UNVERIFIED.
+- [x] Require evidence references for required checks by default.
+- [x] Fail closed on missing, duplicate, malformed, or unverified observations.
+- [x] Export public contracts from ARSY Core and add deterministic Node tests.
+- [ ] Bind verifier identities to authenticated service principals and signed attestations.
+- [ ] Resolve evidence references and verify digests/signatures in trusted adapters.
+- [ ] Add adversarial tests for forged, stale, cross-tenant, and replayed attestations.
+
+**Exit gate:** Only independent, evidence-backed PASS observations satisfy every required check; CI and verifier identity are independently trusted.
+
+## 25. Phase 19 — Human Attention Router
+
+**Status:** [~] Deterministic in-memory prioritizer and Node test fixtures authored; persistence, assignment, notification, and authorization remain.  
+**Goal:** Route scarce human attention to the highest-risk exceptions without allowing automation to impersonate human approval.
+
+- [x] Escalate compromised-source reviews to critical priority.
+- [x] Prioritize action-blocking reviews within equal severity.
+- [x] Use age and stable ID as deterministic tie-breakers.
+- [x] Export public API and add tests for ordering and invalid input.
+- [ ] Add tenant-scoped persistent queue and assignment history.
+- [ ] Add configurable SLA/escalation policy and operator-visible reason codes.
+- [ ] Add reviewer capability checks and auditable accept/reject/appeal actions.
+- [ ] Measure reviewer minutes, queue precision, missed critical items, and false escalation.
+
+**Exit gate:** The queue is deterministic and explainable; only an authenticated human with required authority can resolve a review.
+
+## 26. Phase 20 — Continuous Outcome Reconciliation
+
+**Status:** [~] Read-only expected-vs-observed digest evaluator and Node test fixtures authored; provider read-back adapters and scheduler remain.  
+**Goal:** A completed action remains provisional until an independent read-back confirms the actual external state; later drift reopens the outcome.
+
+- [x] Compare expected resource digest with independently observed provider digest.
+- [x] Distinguish confirmed, drift-detected, unavailable, and stale observations.
+- [x] Request re-verification when read-back is missing, stale, or mismatched.
+- [x] Keep the primitive read-only; no implicit retry or compensation.
+- [x] Export public API and add deterministic Node tests.
+- [ ] Add provider adapters that bind observations to tenant, resource, version, and authenticated observer.
+- [ ] Add scheduled reconciliation with idempotent observation receipts and bounded retry.
+- [ ] Add compensation planning behind separate approval and idempotency contracts.
+- [ ] Measure drift detection latency, false alarms, reopen completeness, and recovery success.
+
+**Exit gate:** Provider read-back is authoritative and tenant-scoped; drift reopens decisions; remediation requires a separate approval path.
+
+## 27. Cross-phase verification and release gates
+
+- [ ] Run `pnpm --filter @riotworks/arsy-core test:governance` in CI.
+- [ ] Run workspace typecheck, lint, formatting, and production build.
+- [ ] Add property-based tests for deterministic ordering, duplicate inputs, invalid timestamps, and fail-closed states.
+- [ ] Add fault-injection tests where tools report success without changing remote state.
+- [ ] Keep all three phases in shadow mode until independent verifier and provider adapters are production-ready.
+- [ ] Do not claim production-ready audit, identity, persistence, sandboxing, or global novelty from these framework-neutral primitives.
