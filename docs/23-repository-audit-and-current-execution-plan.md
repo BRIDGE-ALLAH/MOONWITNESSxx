@@ -335,3 +335,82 @@ These are documentation/governance corrections only. No application runtime, pac
 ## 11. Audit limitations
 
 This audit uses the tracked GitHub tree and file contents at the stated commit. It does not have the user's local uncommitted files, secrets, runtime environment, or CI execution results. If the local machine has additional unpushed changes, push them before asking for a new audit. Never infer a successful build from the presence of package manifests or lockfiles.
+
+
+---
+
+## 12. Remote revalidation and execution closeout — 2026-11-08
+
+**Baseline main HEAD audited:** `1bfbae285c2871985487882b4c4ec42915bf422b`  
+**Current main after integration:** `ecb4faf2b85a24f07db2c2a5685ca04d627254f8`  
+**Current HEAD message:** Merge PR #78 — ARSY Phases 33–35 revocation, lineage access and memory integrity.
+
+This addendum supersedes older status statements above wherever they conflict. The older sections remain historical evidence for their stated snapshots.
+
+### 12.1 Confirmed mainline deliveries
+
+- PR #56 — Repository Doctor, Change Planner and Agent Context Compiler: merged.
+- PR #61 — Repository Flight Recorder, Parallel Collision Forecast and Context Leases: merged.
+- PR #66 — Objective Delta Watchdog, Interface Treaties and Resource Passports: merged.
+- PR #59 — Headquarter Sentinel Fabric Phases 14–16: merged after fixing strict TypeScript inference errors.
+- PR #71 — DX Phases 30–32: merged.
+- PR #81 — DX Phases 33–35: Adaptive Swarm, Autonomy Budget and Incident Compiler: merged.
+- PR #79 — ARSY Phases 18–20 security and verification hardening: merged.
+- PR #82 — Divine Phases 18–20 Provenance Assurance: merged.
+- PR #78 — ARSY Phases 33–35 Revocation Propagation, Derivation-Gated Retrieval and Memory Integrity Benchmark: merged.
+- PR #72 and #74 — Divine Phases 12–17: merged.
+- PR #50 and #30 — ARSY/governance foundation and WITNESS FABRIC integration: merged.
+
+### 12.2 Superseded or deferred PRs
+
+- PR #49 — closed as superseded; its alternative Phase 18–20 numbering conflicted with the canonical ARSY roadmap.
+- PR #53 — closed as superseded; DevX doctor, planner, formatting checks and feedback CI are now canonical.
+- PR #55 — closed/deferred; its standalone package-graph CLI overlapped with DevX planning and Headquarter blast-radius capabilities. Package-topology visualization can be reconsidered as a DevX subcommand only if a measured gap remains.
+- PR #77 — closed as superseded by merged PR #79.
+- PR #75 and #80 — closed as duplicate Divine provenance-assurance branches; merged PR #82 is the canonical implementation.
+- PR #15–#41 legacy ARSY ORM/database stack — remains open as a dependency chain. It is not safe to merge individual stacked branches directly into main without revalidating their base commits and checking overlap with the current ARSY packages.
+
+### 12.3 Implemented innovation scope
+
+**Divine 18–20**
+- Transitive source-lineage closure and conservative independence assessment.
+- Fail-closed handling for missing, cyclic or over-budget lineage (512 depth / 10,000 unique nodes per selected source).
+- Deterministic provenance red-team mutation suite.
+- Claim/scope/method/Corpus-release-bound SHA-256 assurance capsule.
+- Explicit limitations: checksum only, no signature, trusted timestamp, source authenticity, truth score or authorization.
+
+**ARSY 18–20**
+- Hardened delegated capability contracts.
+- Approval ordering and duplicate approval detection.
+- Execution attestation binds the execution contract.
+- Safety lab detects malformed/empty traces and avoids misleading perfect scores on empty benchmarks.
+
+**ARSY 33–35**
+- Dependency-aware revocation propagation and decision/action freezing.
+- Field-level derivation-gated access with restrictive classification preservation.
+- Ten-class at-rest memory integrity benchmark with read-time versus audit-time outcomes.
+
+**DX 33–35**
+- Deterministic topology-aware adaptive swarm planning.
+- Risk-bounded autonomy budget recommendations.
+- Data-only incident replay compiler.
+
+### 12.4 Research synthesis and prior-art boundary
+
+- ESEM 2026, *Coordinating Agents on a Shared Git Workspace*: PASC reported about 20% lower cost per resolved task and 47% fewer destructive concurrent edits versus a silent two-agent baseline; preliminary interference increased beyond two agents. This supports peer-aware coordination, not unrestricted agent multiplication. https://doi.org/10.4230/LIPIcs.ESEM.2026.18
+- Nian et al., *Auditable Agents* (arXiv:2604.05485): frames action recoverability, lifecycle coverage, policy checkability, responsibility attribution and evidence integrity. https://arxiv.org/abs/2604.05485
+- Surapani et al., *Authorization Architectures for Tool-Using AI Agents* (arXiv:2609.15906): emphasizes principal hierarchy, delegated scope, runtime enforcement and auditability. https://arxiv.org/abs/2609.15906
+- Shen et al., *Revoked but Still Authoritative* (arXiv:2609.08258): found that revocation labels were not enforced by default across the five tested memory systems. https://arxiv.org/abs/2609.08258
+- Hu & Ramachandran, *The Memory Trust Gap* (arXiv:2609.01852): measured strong over-trust of stale stored facts under the benchmark's conditions. https://arxiv.org/abs/2609.01852
+- Khandelwal, *A Benchmarking Method for the Integrity of AI Agent Memory at Rest*: active individual IETF Internet-Draft, not an IETF standard or endorsement; specifies ten storage-level edits and read-time versus audit-time detection. https://datatracker.ietf.org/doc/draft-khandelwal-bpm-agent-memory-integrity/
+- Sangaraju & Vissa, *Lineage-Aware Memory Governance* (IEEE Access, DOI 10.1109/ACCESS.2026.3730363): derivation-gated field-level retrieval with a conditional guarantee requiring complete lineage. https://doi.org/10.1109/ACCESS.2026.3730363
+- GitHub Trending snapshot (7 Nov 2026) highlighted security-audit skills, persistent agent memory, worktree tooling and autonomous coding harnesses; star velocity is an ecosystem signal, not a quality metric. https://githubtrending.today/topic/ai-agents/
+- Reddit practitioner reports about stale memory and revoked facts are anecdotal, not peer-reviewed evidence. https://www.reddit.com/r/AI_Agents/comments/1wg41et/the_memory_trust_gap_why_your_agent_acts_on_stale/
+
+### 12.5 Quality status and release boundary
+
+- PR #78 and PR #82 passed Repository CI, full workspace typecheck/build and CodeQL before merge.
+- Mainline after both merges has a new Repository CI and CodeQL run in progress at the time of this snapshot. Do not infer post-merge success until those runs complete.
+- The new modules are deterministic domain primitives and benchmark/scoring contracts. Production rollout still requires authenticated identities, trusted adapters, durable transactional persistence, tenant/rights enforcement, key custody, and independent security review.
+- SHA-256 fingerprints are integrity checks only, not signatures or trusted timestamps.
+- No claim of global novelty or patentability is made. Prior-art overlap is documented; the differentiation is the integrated, testable combination and repository-specific contracts.
