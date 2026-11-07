@@ -60,6 +60,16 @@ export function containsSuppressedFailure(command) {
   return /\|\|\s*(?:true|echo\b)|lint-skip/i.test(String(command))
 }
 
+export function parseWorkspaceGlobs(workspaceConfig) {
+  const globs = workspaceConfig
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('- '))
+    .map((line) => line.slice(2).trim().replace(/^['"]|['"]$/g, ''))
+
+  return new Set(globs)
+}
+
 export async function runAudit({ writeReport = process.argv.includes('--write-report') } = {}) {
   const errors = []
   const warnings = []
@@ -119,13 +129,12 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
   }
 
   const workspaceConfig = await readText('pnpm-workspace.yaml')
-  if (!workspaceConfig.includes('"apps/*"') || !workspaceConfig.includes('"packages/*"')) {
+  const workspaceGlobs = parseWorkspaceGlobs(workspaceConfig)
+  if (!workspaceGlobs.has('apps/*') || !workspaceGlobs.has('packages/*')) {
     errors.push('pnpm-workspace.yaml must include apps/* and packages/*.')
   }
-  if (workspaceConfig.includes('"services/*"')) {
-    errors.push(
-      'services/* must not be a workspace until its ownership and runtime boundaries are reconciled.'
-    )
+  if (workspaceGlobs.has('services/*')) {
+    errors.push('services/* must not be a workspace until its ownership and runtime boundaries are reconciled.')
   }
 
   // Pass 1: collect every package manifest before resolving cross-package references.
