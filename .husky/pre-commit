@@ -1,13 +1,14 @@
 #!/bin/sh
-# Pre-commit hook: Version bump, Changelog, and Automation Suite
+# Pre-commit hook: Version bump, Changelog, and Automation Suite with Kilo Gateway AI
 #
 # This hook performs multiple checks and automations:
 # 1. Runs type-check to ensure code quality
-# 2. Auto-bumps patch version in package.json
-# 3. Generates changelog entry using AI-assisted format
-# 4. Lints changed files
-# 5. Prepares GitHub Pages deployment assets
-# 6. Generates Wiki markdown index
+# 2. Generates AI commit message via Kilo Gateway AI
+# 3. Auto-bumps patch version in package.json
+# 4. Generates changelog entry using AI-assisted format
+# 5. Lints changed files
+# 6. Prepares GitHub Pages deployment assets
+# 7. Generates Wiki markdown index
 
 # Exit on any error
 set -e
@@ -24,7 +25,23 @@ if [ -n "$STAGED_FILES" ]; then
   if [ -n "$TS_FILES" ]; then
     pnpm --filter @riotworks/lint run lint --no-error-on-unmatched-pattern 2>/dev/null || true
   fi
-  fi
+fi
+
+echo "?? Generating AI commit message via Kilo Gateway AI..."
+# Load .env if exists
+if [ -f .env ]; then
+  export $(grep -v '^#' .env | xargs)
+fi
+
+# Run AI commit message generator
+node scripts/ai/generate-commit.js 2>/dev/null || true
+
+# Read AI-generated commit message
+AI_COMMIT_MESSAGE=""
+if [ -f scripts/ai/.ai-commit-message.txt ]; then
+  AI_COMMIT_MESSAGE=$(cat scripts/ai/.ai-commit-message.txt)
+  echo "?? AI commit message: $AI_COMMIT_MESSAGE"
+fi
 
 echo "?? Bumping version and generating changelog..."
 CURRENT_VERSION=$(node -e "console.log(require('./package.json').version)" 2>/dev/null || echo "0.0.0")
