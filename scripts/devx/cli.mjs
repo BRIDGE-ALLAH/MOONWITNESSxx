@@ -4,10 +4,13 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import {
+  analyzeObjectiveProgress,
   appendFlightRecord,
   compileRepoContext,
   createChangePlan,
   createContextLease,
+  forecastInterfaceConflicts,
+  forecastResourceCollisions,
   forecastWriteCollisions,
   runDoctor,
   verifyContextLease,
@@ -126,6 +129,23 @@ async function contextVerify() {
   if (!result.valid) process.exitCode = 1
 }
 
+
+async function objectiveWatch() {
+ const p=option('input',null);if(!p)throw new Error('objective-watch requires --input=<observations.json>')
+ const input=JSON.parse(await readFile(resolve(root,p),'utf8'))
+ const report=analyzeObjectiveProgress({steps:input.steps,repeatThreshold:Number(option('repeat','3'))})
+ console.log(JSON.stringify(report,null,2));if(report.stalled)process.exitCode=1
+}
+async function interfaceCheck() {
+ const p=option('plan-file',null);if(!p)throw new Error('interface-check requires --plan-file=<treaties.json>')
+ const input=JSON.parse(await readFile(resolve(root,p),'utf8')),report=forecastInterfaceConflicts({treaties:input.treaties})
+ console.log(JSON.stringify(report,null,2));if(!report.safeToIntegrate)process.exitCode=1
+}
+async function resourceCheck() {
+ const p=option('plan-file',null);if(!p)throw new Error('resource-check requires --plan-file=<resources.json>')
+ const input=JSON.parse(await readFile(resolve(root,p),'utf8')),report=forecastResourceCollisions({agents:input.agents})
+ console.log(JSON.stringify(report,null,2));if(!report.safeToLaunchTogether)process.exitCode=1
+}
 function help() {
   console.log([
     'MOONWITNESS DX',
@@ -139,6 +159,9 @@ function help() {
     '  pnpm devx flight verify',
     '  pnpm devx context-lease [--out=.moonwitness/context-lease.json] [--ttl-ms=3600000]',
     '  pnpm devx context-verify --lease=.moonwitness/context-lease.json',
+    '  pnpm devx objective-watch --input=.moonwitness/objective.json [--repeat=3]',
+    '  pnpm devx interface-check --plan-file=.moonwitness/treaties.json',
+    '  pnpm devx resource-check --plan-file=.moonwitness/resources.json',
     '',
     'Collision plans use { "agents": [{ "id": "agent-a", "writePaths": ["packages/foo"] }] }.',
     'Flight records are local evidence, not signed or tamper-proof attestations.',
@@ -155,6 +178,9 @@ try {
   else if (command === 'flight') await flight()
   else if (command === 'context-lease') await contextLease()
   else if (command === 'context-verify') await contextVerify()
+  else if (command === 'objective-watch') await objectiveWatch()
+  else if (command === 'interface-check') await interfaceCheck()
+  else if (command === 'resource-check') await resourceCheck()
   else help()
 } catch (error) {
   console.error(error.message)
