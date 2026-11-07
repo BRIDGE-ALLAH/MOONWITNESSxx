@@ -987,3 +987,45 @@ See docs/33-phase-8-database-adapters.md. Adapter code is authored but must not 
 - [x] Pass TEST_POSTGRES_URL through Turbo test tasks so PostgreSQL and ARSY lifecycle integration tests actually execute in the repository CI job.
 - [x] Declare apps/arsy as an ESM package to avoid Node test-runner module ambiguity.
 - [ ] Confirm the latest CI run reports the live PostgreSQL and ARSY integration tests as passed (not skipped).
+
+
+## Phase 9 — System Mode control plane and atomic registry activation
+
+**Branch:** `feat/phase-9-system-mode-control-plane`  
+**Status:** Initial SQLite control-store implementation slice; System Mode orchestration and production acceptance gates remain open.
+
+- [~] Add `@riotworks/arsy-system-store-sqlite`: durable plans/receipts, registry snapshots, active pointer, audit, and fenced lease are implemented; addon/module install-state and acceptance tests remain.
+- [ ] Add `@riotworks/arsy-system-mode` orchestration state machine; keep it outside HTTP request handlers.
+- [ ] Implement trusted package discovery and fail-closed signature/integrity/compatibility/permission validation before importing addon code.
+- [~] Implement database-backed lease with owner token, expiry, fencing generation, renewal, and stale-owner rejection; initial implementation and unit test source exist, cross-process stress/recovery tests remain.
+- [~] Persist schema plans and registry snapshots with canonical digest; candidate lifecycle and end-to-end reconciliation orchestration remain.
+- [ ] Bind review/destructive approvals to actor, plan fingerprint, and exact operation IDs.
+- [ ] Reconcile PostgreSQL Business Database only under System Mode policy; preserve SQLite/PostgreSQL transaction separation.
+- [~] Implement atomic registry pointer + receipt + audit event activation with persisted-plan/receipt, actor, provider, and lease checks; failure-injection/recovery tests remain.
+- [ ] Recover incomplete runs without replacing the previous active registry.
+- [ ] Load only verified immutable active snapshots in Runtime Mode; prohibit runtime discovery and DDL.
+- [ ] Gate business API readiness on verified registry and PostgreSQL schema; preserve SQLite control-plane diagnostics during business DB outage.
+- [ ] Add file-backed restart, multi-process contention, lease expiry/renewal, fencing, tamper, approval, recovery, and atomic-activation tests.
+- [ ] Run clean frozen install, lockfile, typecheck, lint, test, adapter integration, and full build CI gates.
+
+### Phase 9 initial code slice
+
+- [x] Add `@riotworks/arsy-system-store-sqlite` package manifest and public entrypoint.
+- [x] Initialize durable SQLite control tables for plans, receipts, registry snapshots, active state, leases, and audit.
+- [x] Persist plans and receipts through the provider-neutral query interface.
+- [x] Add fenced lease acquire/renew/release semantics; released lease rows preserve fencing generation.
+- [x] Verify exact persisted plan + verified PostgreSQL/Business receipt + actor + current lease before activation.
+- [x] Commit active registry pointer and activation audit in one SQLite transaction.
+- [x] Verify active snapshot digest and matching verified receipt when loading active registry.
+- [ ] Run new package typecheck, lint, tests, frozen install, and full workspace CI.
+- [ ] Add multi-process, file-backed restart, crash-recovery, tamper, and failure-injection tests.
+- [ ] Integrate the store into ARSY Core/System Mode bootstrap and readiness gating.
+
+See `docs/34-phase-9-system-mode-control-plane.md`. Implementation source exists; no passing CI or production readiness is claimed for this new package.
+
+### Phase 8 CI evidence
+
+- [x] Repository integrity and full workspace typecheck/build passed on Phase 8 commit `8258e684356822313a9696ff372c396494139dc7` (workflow run 457).
+- [ ] Latest Phase 8 CI revision adds PostgreSQL service-backed provider/ARSY integration tests; confirm these are executed and passing (not skipped).
+
+Evidence: https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42395999916
