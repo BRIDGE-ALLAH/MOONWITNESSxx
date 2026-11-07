@@ -13,7 +13,7 @@ const evidenceSchema = z.object({
   summary: z.string().trim().min(5).max(2000),
   limitations: z.string().trim().min(5).max(1000),
 })
-const channelBaseSchema = z.object({
+const channelObjectSchema = z.object({
   channelKey: z.string().trim().min(2).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   displayName: z.string().trim().min(2).max(160),
   countryCode: z.string().trim().regex(/^[A-Z]{2}$/),
@@ -28,7 +28,8 @@ const channelBaseSchema = z.object({
   quotaNotes: z.record(z.string(), z.unknown()),
   channelStatus: z.enum(['active', 'paused']),
   evidence: z.array(evidenceSchema).max(100),
-}).superRefine((value, context) => {
+})
+const validateChannel = (value: z.infer<typeof channelObjectSchema>, context: z.RefinementCtx) => {
   const types = new Set(value.evidence.map((item) => item.evidenceType))
   if (value.accountEligibility === 'eligible' && !types.has('account-eligibility')) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['evidence'], message: 'Eligible account status requires dated account-eligibility evidence.' })
@@ -44,8 +45,9 @@ const channelBaseSchema = z.object({
       context.addIssue({ code: z.ZodIssueCode.custom, path: ['capability'], message: 'C1 requires current account eligibility and payout setup evidence.' })
     }
   }
-})
-const updateSchema = channelBaseSchema.extend({ expectedRevision: z.number().int().positive() })
+}
+const channelBaseSchema = channelObjectSchema.superRefine(validateChannel)
+const updateSchema = channelObjectSchema.extend({ expectedRevision: z.number().int().positive() }).superRefine(validateChannel)
 const idSchema = z.string().uuid()
 
 export function registerChannelRoutes(app: FastifyInstance, db: DatabasePool, env: NodeJS.ProcessEnv = process.env): void {
