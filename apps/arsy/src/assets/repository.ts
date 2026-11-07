@@ -24,6 +24,8 @@ export interface AssetInput {
   byteSize: number
   storageKey: string
   sha256: string
+  idempotencyKey: string
+  requestHash: string
   provenance: AssetProvenanceInput
 }
 export interface AssetRecord {
@@ -64,6 +66,7 @@ interface AssetRow {
   created_at: Date | string
   created_by: string
   storage_key: string
+  request_hash: string
   source_asset_id: string | null
   source_reference: string | null
   creator: string
@@ -127,7 +130,7 @@ function mapInspection(row: InspectionRow): InspectionRecord {
   }
 }
 const assetColumns = `a.id, a.product_id, a.product_version, a.file_name, a.media_type,
-  a.byte_size::text AS byte_size, a.sha256, a.created_at, a.created_by, a.storage_key,
+  a.byte_size::text AS byte_size, a.sha256, a.created_at, a.created_by, a.storage_key, a.request_hash,
   p.source_asset_id, p.source_reference, p.creator, p.license, p.permission_basis,
   p.tool_model, p.edit_history, p.disclosure`
 const inspectionColumns = 'id, asset_id, inspection_type, status, inspection_source, rationale, findings, evidence, reviewed_at, reviewed_by'
@@ -135,39 +138,52 @@ const inspectionColumns = 'id, asset_id, inspection_type, status, inspection_sou
 export class AssetRepository {
   constructor(private readonly db: DatabasePool) {}
 
-  async create(ownerId: string, actorId: string, input: AssetInput): Promise<AssetRecord | null> {
+  async create(ownerId: string, actorId: string, input: AssetInput): Promise<{ asset: AssetRecord; replayed: boolean } | null> {
     const result = await this.db.query(
       `WITH created AS (
         INSERT INTO arsy_assets
-          (id, owner_id, product_id, product_version, file_name, media_type, byte_size, storage_key, sha256, created_by)
-        SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+          (id, owner_id, product_id, product_version, file_name, media_type, byte_size, storage_key, sha256, idempotency_key, request_hash, created_by)
+        SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
         WHERE EXISTS (
           SELECT 1 FROM arsy_products p
           JOIN arsy_product_versions v ON v.product_id = p.id
           WHERE p.owner_id = $2 AND p.id = $3 AND v.version = $4
         )
+        ON CONFLICT (owner_id, idempotency_key) DO NOTHING
         RETURNING *
       ), provenance AS (
         INSERT INTO arsy_asset_provenance
           (asset_id, owner_id, source_asset_id, source_reference, creator, license, permission_basis, tool_model, edit_history, disclosure, created_by)
-        SELECT id, owner_id, $11, $12, $13, $14, $15, $16, $17::jsonb, $18, $10 FROM created
+        SELECT id, owner_id, $13, $14, $15, $16, $17, $18, $19::jsonb, $20, $12 FROM created
         RETURNING *
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-        SELECT $19, created.owner_id, 'asset', created.id, 'uploaded-with-provenance', $10,
+        SELECT $21, created.owner_id, 'asset', created.id, 'uploaded-with-provenance', $12,
           jsonb_build_object('productId', created.product_id, 'productVersion', created.product_version, 'sha256', created.sha256, 'byteSize', created.byte_size::text)
         FROM created JOIN provenance ON provenance.asset_id = created.id
       )
       SELECT ${assetColumns} FROM created a JOIN provenance p ON p.asset_id = a.id`,
       [randomUUID(), ownerId, input.productId, input.productVersion, input.fileName, input.mediaType,
-        input.byteSize, input.storageKey, input.sha256, actorId, input.provenance.sourceAssetId ?? null,
-        input.provenance.sourceReference ?? null, input.provenance.creator, input.provenance.license,
-        input.provenance.permissionBasis, input.provenance.toolModel ?? null,
-        JSON.stringify(input.provenance.editHistory), input.provenance.disclosure, randomUUID()],
+        input.byteSize, input.storageKey, input.sha256, input.idempotencyKey, input.requestHash, actorId,
+        input.provenance.sourceAssetId ?? null, input.provenance.sourceReference ?? null,
+        input.provenance.creator, input.provenance.license, input.provenance.permissionBasis,
+        input.provenance.toolModel ?? null, JSON.stringify(input.provenance.editHistory),
+        input.provenance.disclosure, randomUUID()],
     )
-    const row = rows<AssetRow>(result)[0]
-    return row ? mapAsset(row) : null
+    const inserted = rows<AssetRow>(result)[0]
+    if (inserted) return { asset: mapAsset(inserted), replayed: false }
+
+    const existingResult = await this.db.query(
+      `SELECT ${assetColumns} FROM arsy_assets a
+       JOIN arsy_asset_provenance p ON p.asset_id = a.id AND p.owner_id = a.owner_id
+       WHERE a.owner_id = $1 AND a.idempotency_key = $2 LIMIT 1`,
+      [ownerId, input.idempotencyKey],
+    )
+    const existing = rows<AssetRow>(existingResult)[0]
+    if (!existing) return null
+    if (existing.request_hash !== input.requestHash) throw new Error('ASSET_IDEMPOTENCY_KEY_REUSED')
+    return { asset: mapAsset(existing), replayed: true }
   }
 
   async list(ownerId: string, productId?: string): Promise<AssetRecord[]> {
