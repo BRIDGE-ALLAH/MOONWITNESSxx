@@ -217,8 +217,22 @@ test('all versioned business API groups reject anonymous requests before databas
   }
 })
 
-test('authenticated opportunity content update rejects stale revisions', async () => {
-  const pool = fakePool()
+test('authenticated opportunity content update returns a conflict for a stale revision', async () => {
+  const record = {
+    id: '11111111-1111-4111-8111-111111111111',
+    title: body.title, buyer_problem: body.buyerProblem, buyer_segment: body.buyerSegment,
+    job_to_be_done: body.jobToBeDone, product_hypothesis: body.productHypothesis,
+    product_family: body.productFamily, candidate_channels: body.candidateChannels,
+    evidence: body.evidence, scores: body.scores, score_details: body.scoreDetails,
+    hard_gates: body.hardGates, hard_gate_details: body.hardGateDetails,
+    score: '80.00', decision: 'prototype-candidate', decision_rationale: null,
+    created_at: '2026-11-08T00:00:00.000Z', updated_at: '2026-11-08T00:00:00.000Z', revision: 3,
+  }
+  let calls = 0
+  const pool = {
+    query: async () => { calls += 1; return { rows: calls === 1 ? [] : [record] } },
+    end: async () => undefined,
+  }
   const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
   const app = await createApp({ databasePool: pool, logger: false, env })
   try {
@@ -230,6 +244,7 @@ test('authenticated opportunity content update rejects stale revisions', async (
     })
     assert.equal(response.statusCode, 409)
     assert.equal(response.json().error.code, 'REVISION_CONFLICT')
+    assert.equal(response.json().data.revision, 3)
   } finally {
     await app.close()
   }
