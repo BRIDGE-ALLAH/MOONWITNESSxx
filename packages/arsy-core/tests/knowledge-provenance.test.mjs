@@ -29,7 +29,7 @@ test('counts independent origins, not duplicate mirrors', () => {
 
 test('quarantine returns dependent claims and decisions', () => {
   const index = new ContaminationIndex()
-  index.linkEvidence({ evidenceId: 'source-1', claimId: 'claim-1', decisionIds: ['decision-1'] })
+  index.linkEvidence({ sourceId: 'source-1', evidenceId: 'evidence-1', claimId: 'claim-1', decisionIds: ['decision-1'] })
   const result = index.quarantineSource('source-1')
   assert.deepEqual(result.affectedClaimIds, ['claim-1'])
   assert.deepEqual(result.frozenDecisionIds, ['decision-1'])
