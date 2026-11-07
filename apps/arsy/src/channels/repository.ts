@@ -5,7 +5,7 @@ type QueryResult<T> = { rows: T[] }
 export type ChannelCapability = 'C0' | 'C1'
 export type ChannelEligibility = 'eligible' | 'ineligible' | 'unknown'
 export type PayoutSetupStatus = 'configured' | 'not-configured' | 'unavailable' | 'unknown'
-export type ChannelEvidenceType = 'official-policy' | 'account-eligibility' | 'payout-requirements' | 'api-capability' | 'other'
+export type ChannelEvidenceType = 'official-policy' | 'account-eligibility' | 'payout-requirements' | 'format-requirements' | 'api-capability' | 'other'
 export type ChannelEvidenceClass = 'observed-fact' | 'operator-attestation' | 'inference' | 'unknown'
 
 export interface ChannelEvidenceInput {
@@ -27,6 +27,7 @@ export interface ChannelInput {
   policyReviewedAt?: string | null
   policyRecheckAt?: string | null
   payoutRequirements: Record<string, unknown>
+  listingRequirements: Record<string, unknown>
   payoutSetupStatus: PayoutSetupStatus
   capability: ChannelCapability
   grantedScopes: string[]
@@ -58,6 +59,7 @@ interface ChannelRow {
   policy_reviewed_at: Date | string | null
   policy_recheck_at: Date | string | null
   payout_requirements: Record<string, unknown>
+  listing_requirements: Record<string, unknown>
   payout_setup_status: PayoutSetupStatus
   capability: ChannelCapability
   granted_scopes: string[]
@@ -96,6 +98,7 @@ function mapChannel(row: ChannelRow): ChannelRecord {
     policyReviewedAt: iso(row.policy_reviewed_at),
     policyRecheckAt: iso(row.policy_recheck_at),
     payoutRequirements: row.payout_requirements,
+    listingRequirements: row.listing_requirements,
     payoutSetupStatus: row.payout_setup_status,
     capability: row.capability,
     grantedScopes: row.granted_scopes,
@@ -125,7 +128,7 @@ function mapEvidence(row: EvidenceRow): ChannelEvidenceRecord {
   }
 }
 const channelColumns = `id, channel_key, display_name, country_code, account_eligibility,
-  official_policy_url, policy_reviewed_at, policy_recheck_at, payout_requirements,
+  official_policy_url, policy_reviewed_at, policy_recheck_at, payout_requirements, listing_requirements,
   payout_setup_status, capability, granted_scopes, quota_notes, channel_status,
   revision, created_at, updated_at, created_by, updated_by`
 const evidenceColumns = `id, channel_id, evidence_type, source_name, source_url, captured_at,
@@ -140,9 +143,9 @@ export class ChannelRepository {
       `WITH created AS (
         INSERT INTO arsy_channels
           (id, owner_id, channel_key, display_name, country_code, account_eligibility,
-           official_policy_url, policy_reviewed_at, policy_recheck_at, payout_requirements,
+           official_policy_url, policy_reviewed_at, policy_recheck_at, payout_requirements, listing_requirements,
            payout_setup_status, capability, granted_scopes, quota_notes, channel_status, created_by, updated_by)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13::jsonb, $14::jsonb, $15, $16, $16)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11::jsonb, $12, $13, $14::jsonb, $15::jsonb, $16, $17, $17)
         RETURNING *
       ), evidence_rows AS (
         INSERT INTO arsy_channel_evidence
@@ -151,19 +154,19 @@ export class ChannelRepository {
           e.item->>'sourceUrl', (e.item->>'capturedAt')::timestamptz,
           NULLIF(e.item->>'reviewedAt', '')::timestamptz, e.item->>'evidenceClass',
           e.item->>'summary', e.item->>'limitations', $16
-        FROM created CROSS JOIN LATERAL jsonb_array_elements($17::jsonb) AS e(item)
+        FROM created CROSS JOIN LATERAL jsonb_array_elements($18::jsonb) AS e(item)
         RETURNING *
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-        SELECT $18, $2, 'channel', created.id, 'channel-registered', $16,
+        SELECT $19, $2, 'channel', created.id, 'channel-registered', $17,
           jsonb_build_object('channelKey', created.channel_key, 'capability', created.capability, 'evidenceCount', (SELECT count(*) FROM evidence_rows))
         FROM created
       )
       SELECT ${channelColumns} FROM created`,
       [randomUUID(), ownerId, input.channelKey, input.displayName, input.countryCode, input.accountEligibility,
         input.officialPolicyUrl ?? null, input.policyReviewedAt ?? null, input.policyRecheckAt ?? null,
-        JSON.stringify(input.payoutRequirements), input.payoutSetupStatus, input.capability,
+        JSON.stringify(input.payoutRequirements), JSON.stringify(input.listingRequirements), input.payoutSetupStatus, input.capability,
         JSON.stringify(input.grantedScopes), JSON.stringify(input.quotaNotes), input.channelStatus,
         actorId, JSON.stringify(evidence), randomUUID()],
     )
@@ -208,10 +211,11 @@ export class ChannelRepository {
         UPDATE arsy_channels SET
           channel_key = $3, display_name = $4, country_code = $5, account_eligibility = $6,
           official_policy_url = $7, policy_reviewed_at = $8, policy_recheck_at = $9,
-          payout_requirements = $10::jsonb, payout_setup_status = $11, capability = $12,
-          granted_scopes = $13::jsonb, quota_notes = $14::jsonb, channel_status = $15,
-          revision = revision + 1, updated_at = now(), updated_by = $16
-        WHERE owner_id = $1 AND id = $2 AND revision = $17
+          payout_requirements = $10::jsonb, listing_requirements = $11::jsonb,
+          payout_setup_status = $12, capability = $13,
+          granted_scopes = $14::jsonb, quota_notes = $15::jsonb, channel_status = $16,
+          revision = revision + 1, updated_at = now(), updated_by = $17
+        WHERE owner_id = $1 AND id = $2 AND revision = $18
         RETURNING *
       ), evidence_rows AS (
         INSERT INTO arsy_channel_evidence
@@ -220,19 +224,19 @@ export class ChannelRepository {
           e.item->>'sourceUrl', (e.item->>'capturedAt')::timestamptz,
           NULLIF(e.item->>'reviewedAt', '')::timestamptz, e.item->>'evidenceClass',
           e.item->>'summary', e.item->>'limitations', $16
-        FROM changed CROSS JOIN LATERAL jsonb_array_elements($18::jsonb) AS e(item)
+        FROM changed CROSS JOIN LATERAL jsonb_array_elements($19::jsonb) AS e(item)
         RETURNING *
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-        SELECT $19, $1, 'channel', changed.id, 'channel-updated', $16,
+        SELECT $20, $1, 'channel', changed.id, 'channel-updated', $17,
           jsonb_build_object('revision', changed.revision, 'capability', changed.capability, 'evidenceCount', (SELECT count(*) FROM evidence_rows))
         FROM changed
       )
       SELECT ${channelColumns} FROM changed`,
       [ownerId, id, input.channelKey, input.displayName, input.countryCode, input.accountEligibility,
         input.officialPolicyUrl ?? null, input.policyReviewedAt ?? null, input.policyRecheckAt ?? null,
-        JSON.stringify(input.payoutRequirements), input.payoutSetupStatus, input.capability,
+        JSON.stringify(input.payoutRequirements), JSON.stringify(input.listingRequirements), input.payoutSetupStatus, input.capability,
         JSON.stringify(input.grantedScopes), JSON.stringify(input.quotaNotes), input.channelStatus,
         actorId, expectedRevision, JSON.stringify(evidence), randomUUID()],
     )
