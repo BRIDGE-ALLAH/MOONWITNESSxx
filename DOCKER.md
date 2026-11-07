@@ -50,7 +50,9 @@ A standalone Go network infrastructure runtime. Phase 1 includes only process he
 - Network: existing `moonwitness` bridge
 - Image: multi-stage Go build with a distroless non-root runtime
 
-## Development commands
+## Development workflow
+
+Edit files in `apps/headquarter`, `apps/arsy`, `apps/aegis`, or `packages/`.
 
 ```sh
 docker compose up --build aegis
@@ -59,6 +61,8 @@ cd apps/aegis && go test ./...
 ```
 
 After changing AEGIS source or its Dockerfile, rebuild its image with `docker compose up --build aegis`.
+
+The ARSY and Headquarter source bind mounts retain nested anonymous `node_modules` volumes. These are intentional: source mounts otherwise hide the pnpm package-local dependency links baked into the image.
 
 ## Production warning
 

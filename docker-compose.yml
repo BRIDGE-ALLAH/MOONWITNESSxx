@@ -1,7 +1,6 @@
 version: '3.9'
 
 services:
-  # PostgreSQL database — local development service
   postgres:
     image: postgres:16-alpine
     container_name: moonwitness-postgres
@@ -23,7 +22,6 @@ services:
       - moonwitness
     restart: unless-stopped
 
-  # Redis for queue/cache (optional — used by BullMQ if needed)
   redis:
     image: redis:7-alpine
     container_name: moonwitness-redis
@@ -49,7 +47,8 @@ services:
     command: ['pnpm', 'dev']
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${ARSY_PORT:-3001}
+      # ARSY always listens on the internal container port; ARSY_PORT is host-only.
+      PORT: 3001
       HOST: 0.0.0.0
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-moonwitness}
@@ -63,7 +62,9 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/arsy:/app/apps/arsy
+      - /app/apps/arsy/node_modules
       - ./packages:/app/packages
+      - /app/packages/arsy-core/node_modules
       - /app/node_modules
     networks:
       - moonwitness
@@ -74,7 +75,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # AEGIS is a Go network-execution runtime; ARSY remains its future caller/authority.
+  # AEGIS executes network operations authorized by ARSY; it is not a control plane.
   aegis:
     build:
       context: ./apps/aegis
@@ -103,7 +104,6 @@ services:
     tmpfs:
       - /tmp:size=16m,noexec,nosuid
 
-  # Headquarter frontend — Next.js application
   headquarter:
     build:
       context: .
@@ -112,7 +112,8 @@ services:
     command: ['pnpm', 'dev']
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${HEADQUARTER_PORT:-3000}
+      # Headquarter always listens on the internal container port; HEADQUARTER_PORT is host-only.
+      PORT: 3000
       NEXT_PUBLIC_ARSY_URL: ${NEXT_PUBLIC_ARSY_URL:-http://arsy:3001}
     ports:
       - '127.0.0.1:${HEADQUARTER_PORT:-3000}:3000'
@@ -121,7 +122,10 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/headquarter:/app/apps/headquarter
+      - /app/apps/headquarter/node_modules
       - ./packages:/app/packages
+      - /app/packages/ui/node_modules
+      - /app/packages/assets/node_modules
       - /app/node_modules
     networks:
       - moonwitness
