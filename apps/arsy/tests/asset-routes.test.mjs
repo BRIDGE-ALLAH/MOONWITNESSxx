@@ -257,6 +257,13 @@ test('asset upload rejects unsupported media and malformed base64 before storage
       payload: { productId, productVersion, fileName: 'payload.svg', mediaType: 'image/svg+xml', contentBase64: 'YWJjZA==', provenance },
     })
     assert.equal(response.statusCode, 400)
+    const malformed = await app.inject({
+      method: 'POST', url: '/api/v1/assets',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'malformed-base64-0001' },
+      payload: { productId, productVersion, fileName: 'bad.txt', mediaType: 'text/plain', contentBase64: '!!!!', provenance },
+    })
+    assert.equal(malformed.statusCode, 400)
+    assert.equal(malformed.json().error.code, 'INVALID_ASSET_BYTES')
     assert.equal(storage.files.size, 0)
     assert.equal(database.calls.length, 0)
   } finally {
