@@ -68,8 +68,14 @@ export class InspectionRepository {
         RETURNING *
       ), latest AS (
         SELECT DISTINCT ON (inspection_type) inspection_type, status
-        FROM arsy_inspections
-        WHERE product_version_id = $7
+        FROM (
+          SELECT i.inspection_type, i.status, i.inspected_at, i.id
+          FROM arsy_inspections i
+          WHERE i.product_version_id = $7
+          UNION ALL
+          SELECT inserted.inspection_type, inserted.status, inserted.inspected_at, inserted.id
+          FROM inserted
+        ) inspection_history
         ORDER BY inspection_type, inspected_at DESC, id DESC
       ), readiness AS (
         SELECT COUNT(*) = 4 AND COALESCE(BOOL_AND(status = 'pass'), false) AS ready
