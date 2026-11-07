@@ -84,7 +84,7 @@
 - [x] Evaluasi route grouping untuk workspace dan administration; keputusan Phase 1 adalah mempertahankan URL saat ini sampai locale/auth/workspace routing siap.
 - [x] Tetapkan keputusan locale: target URL `/id` dan `/en` didokumentasikan; implementasi routing ditunda sampai platform localization siap.
 - [ ] Pastikan root layout, locale layout, dan workspace layout memiliki tanggung jawab berbeda.
-- [ ] Tambahkan not-found, error boundary, dan loading boundary pada level yang tepat.
+- [x] Tambahkan not-found, error boundary, dan loading boundary pada level route App Router.
 - [ ] Pastikan deep-link, refresh halaman, dan navigasi browser berfungsi konsisten.
 - [x] Pastikan navigasi mobile dan desktop menggunakan sumber konfigurasi yang sama.
 
@@ -115,11 +115,11 @@
 **Tujuan:** menyediakan kapabilitas lintas-feature yang aman dan konsisten.
 
 ### 2.1 API integration
-- [ ] Tetapkan satu API client/integration boundary untuk komunikasi dengan ARSY.
-- [ ] Definisikan kontrak request/response, error envelope, pagination, filtering, sorting, dan correlation/request ID.
-- [ ] Standarkan timeout, cancellation, retry policy, dan penanganan network failure.
-- [ ] Retry hanya untuk operasi yang aman/idempotent atau memiliki idempotency key.
-- [ ] Pisahkan server-side API access dan browser-side API access.
+- [x] Tetapkan satu browser-safe API client/integration boundary untuk komunikasi dengan ARSY (`src/platform/arsy`).
+- [ ] Finalisasi kontrak request/response dan error envelope bersama public API ARSY; adapter frontend saat ini hanya menyediakan typed baseline, bukan klaim kontrak backend sudah final.
+- [x] Standarkan timeout, cancellation, retry policy, dan penanganan network failure pada browser client.
+- [x] Batasi retry otomatis hanya untuk GET; mutation tidak pernah di-retry otomatis.
+- [ ] Tambahkan server-only API adapter terpisah setelah kebutuhan Server Component/BFF dan model session ARSY dipastikan.
 - [ ] Hindari fetch langsung yang tersebar di komponen presentational.
 - [ ] Pastikan error backend ditampilkan sebagai pesan yang aman dan actionable; jangan membocorkan stack trace atau secret.
 
@@ -159,9 +159,9 @@
 
 ### 2.6 Observability dan resilience
 - [ ] Standarkan structured client logging tanpa data sensitif.
-- [ ] Propagasikan correlation/request ID bila tersedia dari backend.
+- [x] Kirim `x-request-id` pada setiap request dan baca request ID dari response/error envelope bila tersedia.
 - [ ] Integrasikan error reporting sesuai platform.
-- [ ] Tambahkan route-level error boundaries dan fallback UI.
+- [x] Tambahkan route-level error boundary, loading skeleton, dan not-found fallback UI.
 - [ ] Pastikan operasi async memiliki pending, success, failure, dan cancellation behavior.
 - [ ] Definisikan strategi cache, invalidation, dan stale data per jenis data.
 
@@ -178,34 +178,34 @@
 **Tujuan:** menjadikan UI konsisten, khas MOONWITNESS/RIOTWORKS, dan tetap nyaman untuk penggunaan operasional jangka panjang.
 
 ### 3.1 Audit dan kontrak design system
-- [ ] Audit exports, API, styling, token, dan accessibility primitive pada `packages/ui`.
-- [ ] Tentukan ownership token: source of truth berada di design system, bukan salinan per aplikasi.
-- [ ] Definisikan semantic tokens untuk surface, text, border, accent, focus, status, overlay, dan interactive state.
-- [ ] Pastikan komponen menggunakan semantic token, bukan hardcoded color per halaman.
-- [ ] Definisikan spacing, radius, elevation, border, motion, typography, dan z-index scale.
-- [ ] Dokumentasikan aturan kapan memakai primitive UI dan kapan membuat domain pattern.
+- [x] Audit exports, API, styling, token, dan primitive inti `packages/ui` pada scope yang digunakan Headquarter.
+- [x] Tetapkan ownership token: source of truth berada di `packages/ui`, bukan salinan per aplikasi.
+- [x] Definisikan semantic tokens untuk surface, text, border, accent, focus, status, overlay, dan interactive state.
+- [ ] Migrasikan seluruh komponen/halaman agar memakai semantic token; migrasi awal tersedia pada global foundation dan Badge/Button.
+- [ ] Finalisasi spacing, radius, elevation, border, motion, typography, dan z-index scale secara menyeluruh.
+- [x] Dokumentasikan aturan kapan memakai primitive UI dan kapan membuat domain pattern di `packages/ui/DESIGN-TOKENS.md`.
 
 ### 3.2 Visual identity
 - [ ] Pertahankan DNA Extreme Riot, MoonWitness comic universe, punk-zine energy, industrial brutalism, dan premium game HUD.
 - [ ] Gunakan identitas visual secara terarah; jangan menjadikan semua panel penuh dekorasi atau efek.
-- [ ] Finalisasi semantic mapping palette Night Riot dan Paper Riot.
-- [ ] Pastikan theme switch mengubah token semantik secara menyeluruh, bukan sekadar membalik background.
+- [x] Finalisasi semantic mapping awal palette Night Riot dan Paper Riot.
+- [x] Pastikan theme switch mengubah token semantik untuk surface, content, focus, dan status, bukan sekadar membalik background.
 - [ ] Definisikan typography hierarchy: display, heading, body, label, data, dan monospace.
 - [ ] Gunakan display type yang kuat untuk identitas, sans yang mudah dibaca untuk operasional, dan monospace untuk data teknis.
 - [ ] Standarkan iconography, illustration, brand mark, dan penggunaan character artwork.
-- [ ] Tetapkan motion language yang cepat, purposeful, dan menghormati reduced-motion preference.
+- [x] Tetapkan baseline motion yang cepat dan purposeful serta menghormati reduced-motion preference.
 
 ### 3.3 Component primitives dan patterns
 - [ ] Audit/standarkan Button, IconButton, Input, Select, Checkbox, Switch, Tabs, Badge, Tooltip, Dialog, Drawer, Dropdown, Popover, dan Toast.
 - [ ] Standarkan DataTable, pagination, filter bar, search, detail panel, action menu, status indicator, dan empty state.
-- [ ] Pastikan setiap interactive primitive memiliki keyboard behavior, focus state, accessible name, dan disabled state.
+- [ ] Pastikan setiap interactive primitive memiliki keyboard behavior, focus state, accessible name, dan disabled state (Button dan command palette sudah mendapat perbaikan awal; audit menyeluruh belum).
 - [ ] Standarkan form validation, helper text, error message, dan dirty/submitting state.
 - [ ] Pastikan komponen memiliki API yang konsisten dan tidak terlalu banyak variant yang tumpang tindih.
 - [ ] Tambahkan contoh penggunaan dan dokumentasi singkat untuk pattern utama.
 
 ### 3.4 Accessibility dan responsive
 - [ ] Audit WCAG 2.2 AA untuk kontras, keyboard, focus, label, dan struktur heading pada area inti.
-- [ ] Dialog/drawer harus mendukung focus management, Escape, focus return, dan semantics yang tepat.
+- [ ] Dialog/drawer harus mendukung focus management, Escape, focus return, dan semantics yang tepat (command palette sudah memiliki focus containment, Escape, focus return, dan dialog semantics; browser verification pending).
 - [ ] Pastikan command palette mendukung keyboard navigation dan screen reader announcement.
 - [ ] Pastikan sidebar/topbar tidak menghalangi konten pada viewport kecil.
 - [ ] Uji zoom, text wrapping, reduced motion, dan touch target.
@@ -218,7 +218,7 @@
 - [ ] Dokumentasikan cara memperbarui baseline tanpa menutupi regresi.
 
 **Gate Phase 3**
-- [ ] Semantic token menjadi satu sumber kebenaran.
+- [x] Semantic token menjadi satu sumber kebenaran di `packages/ui`.
 - [ ] Primitive dan pattern inti konsisten pada minimal satu feature representatif.
 - [ ] Accessibility dan visual regression checks berjalan di CI.
 
@@ -388,6 +388,14 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 
 - [x] Phase 0 source audit recorded in [AUDIT.md](./AUDIT.md).
 - [x] Phase 1 shell decomposition and folder conventions recorded in [ARCHITECTURE.md](./ARCHITECTURE.md).
-- [ ] Clean-checkout lint, type-check, and Next.js build verified in CI or local environment.
+- [x] Phase 2 browser-safe ARSY API boundary added in `src/platform/arsy` (public endpoint contracts and authentication flows remain gated on ARSY implementation).
+- [x] Phase 3 semantic Night Riot/Paper Riot token foundation, status tokens, reduced-motion baseline, and focus treatment added to `packages/ui`.
+- [x] Command palette keyboard focus containment added; manual browser/screen-reader verification remains pending.
+- [x] Route-level loading, error recovery, and not-found UI added; browser verification remains pending.
+- [x] Shared design-token contract documented in `packages/ui/DESIGN-TOKENS.md`.
+- [ ] Feature pages migrated to live ARSY endpoints; current module content remains demo/static.
+- [ ] Identity/session, authorization, workspace context, and route-aware localization implemented against approved backend contracts.
+- [ ] Complete primitive audit, responsive/contrast checks, and visual regression baseline verified.
+- [ ] Clean-checkout lint, type-check, tests, and Next.js build verified in CI or local environment.
 - [ ] Browser-level responsive and accessibility checks verified.
 - [ ] Route-aware `/id` and `/en` localization implemented; current locale toggle remains prototype-only.
