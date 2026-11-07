@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - main
-      - "feat-*"
-      - "fix-*"
-      - "chore-*"
+      - "feat/**"
+      - "fix/**"
+      - "chore/**"
   pull_request:
     branches:
       - main
@@ -125,3 +125,22 @@ jobs:
 
       - name: Run full validation
         run: pnpm run validate
+
+  witness-fabric:
+    name: WITNESS FABRIC integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Test evidence ledger, replay, and policy-gated actions
+        run: node --experimental-strip-types --test packages/witness-fabric/tests/*.test.mjs
+
+      - name: Type-check WITNESS FABRIC
+        run: pnpm --filter @moonwitness/witness-fabric type-check
