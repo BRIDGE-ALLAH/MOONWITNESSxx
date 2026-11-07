@@ -1,0 +1,65 @@
+name: RIOTWORKS Weekly Auto-Detection
+
+on:
+  schedule:
+    # Run every Monday at 02:30 WIB (09:30 UTC)
+    - cron: '30 9 * * 1'
+  workflow_dispatch:
+    # Allow manual trigger from Actions tab
+    inputs:
+      reason:
+        description: 'Reason for manual trigger'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  auto-detection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: 📂 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name 📋 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: 📦 Install Dependencies
+        run: |
+          cd RIOTWORKS
+          pnpm install --frozen-lockfile
+          
+      - name: 🔍 Run Auto-Detection Script
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          cd RIOTWORKS
+          node scripts/auto-detect.js
+          
+      - name: 📝 Create GitHub Issues
+        if: always()
+        uses: peter-evans/create-issue-from-markdown@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          title: '[Auto] Weekly Detection Report - ${{ github.run_number }}'
+          content: '.github/auto-detection-report.md'
+          labels: ['auto-generated', 'detection', 'triage']
+          
+      - name: 📤 Comment on Created Issues
+        if: always()
+        run: |
+          echo "✅ Auto-detection completed for run #${github.run_number}"
+          echo "Check the Issues tab for newly created issues"
+          
+      - name: 📧 Notify via GitHub Discussion (Optional)
+        if: false()  # Disable by default, enable if needed
+        run: |
+          echo "Consider creating a discussion post for the detection results"
+          # Uncomment to post to discussion:
+          # gh discussion create --body "RIOTWORKS Weekly Detection Report - Run #${github.run_number}" --title "Weekly Detection Report"
+```
