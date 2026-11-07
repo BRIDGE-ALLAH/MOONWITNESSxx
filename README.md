@@ -2,7 +2,7 @@
 
 MOONWITNESS is an evidence-first, agent-governed workspace and product-engineering monorepo. RIOTWORKS is a product division within the ecosystem. The repository contains Headquarter (human-facing web prototype), ARSY (backend runtime and governance primitives), shared packages, WITNESS FABRIC, Divine research tooling, and repository automation.
 
-**Product truth:** Headquarter currently contains prototype/demo screens. Static sample metrics, placeholder accounts, financial rows, and marketplace states are not live production data. ARSY runtime and integration readiness are tracked separately from UI prototypes.
+**Product truth:** MOONWITNESS now contains a persisted Money Maker foundation under active development: owner-scoped opportunities, product briefs, financial events and an asset/provenance workflow are being connected through ARSY and Headquarter. This is not a production commerce platform yet. No sample metric, placeholder account, unverified inspection, pending financial event, or unpublished listing may be presented as a real sale or verified marketplace result.
 
 ## Repository map
 
@@ -10,7 +10,7 @@ MOONWITNESS is an evidence-first, agent-governed workspace and product-engineeri
 - `apps/arsy` — Fastify HTTP API and orchestration runtime.
 - `packages/*` — shared UI, contracts, assets, ARSY core, evidence and research capabilities.
 - `services/*` — legacy prototypes, intentionally excluded from the pnpm workspace.
-- `docs/` and `todo.md` — architecture decisions, research and implementation status.
+- `docs/` and `todo.md` — architecture decisions, research and implementation status.\n- [Money Maker runtime setup](./docs/29-money-maker-runtime-setup.md) and [asset storage / inspection contract](./docs/30-money-maker-asset-storage-and-inspection.md) — current commerce runtime boundary.
 - `.agents/skills/`, `AGENTS.md`, and `GOAL.txt` — Codex engineering workflow pack included in this repository.
 
 ## Development workflow pack
