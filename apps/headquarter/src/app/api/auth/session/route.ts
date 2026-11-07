@@ -8,45 +8,23 @@ import {
   requestHasTrustedOrigin,
   verifyOperatorSession,
 } from '../../../../lib/operator-session'
+import {
+  callSharedLoginLimiter,
+  createLoginAttemptBucketHashes,
+  resolveTrustedClientNetworkIdentity,
+} from '../../../../lib/login-attempt-limiter'
 
 export const runtime = 'nodejs'
 
-// Single-operator, process-local fallback throttle. Production ingress must also
-// enforce a shared rate limit if the service is ever scaled beyond one process.
-const LOGIN_FAILURE_LIMIT = 5
-const LOGIN_WINDOW_MS = 15 * 60 * 1000
-let loginWindowStartedAt = 0
-let loginFailureCount = 0
-let loginBlockedUntil = 0
-
-function loginRetryAfter(now = Date.now()): number {
-  if (loginBlockedUntil > now) return Math.ceil((loginBlockedUntil - now) / 1000)
-  if (loginWindowStartedAt && now - loginWindowStartedAt >= LOGIN_WINDOW_MS) {
-    loginWindowStartedAt = 0
-    loginFailureCount = 0
-    loginBlockedUntil = 0
-  }
-  return 0
+function unavailable(code: string) {
+  return NextResponse.json({ error: { code, message: 'Login protection is temporarily unavailable. Try again later.' } }, { status: 503 })
 }
 
-function recordLoginFailure(now = Date.now()): number {
-  if (!loginWindowStartedAt || now - loginWindowStartedAt >= LOGIN_WINDOW_MS) {
-    loginWindowStartedAt = now
-    loginFailureCount = 0
-  }
-  loginFailureCount += 1
-  if (loginFailureCount >= LOGIN_FAILURE_LIMIT) {
-    loginBlockedUntil = now + LOGIN_WINDOW_MS
-    loginFailureCount = 0
-    return LOGIN_WINDOW_MS / 1000
-  }
-  return 0
-}
-
-function clearLoginFailures(): void {
-  loginWindowStartedAt = 0
-  loginFailureCount = 0
-  loginBlockedUntil = 0
+function rateLimited(retryAfterSeconds: number) {
+  return NextResponse.json(
+    { error: { code: 'LOGIN_RATE_LIMITED', message: 'Too many failed login attempts. Try again later.' } },
+    { status: 429, headers: { 'retry-after': String(Math.max(1, retryAfterSeconds)) } },
+  )
 }
 
 export async function GET(request: Request) {
@@ -70,13 +48,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: { code: 'ORIGIN_REJECTED' } }, { status: 403 })
   }
 
-  const retryAfter = loginRetryAfter()
-  if (retryAfter > 0) {
-    return NextResponse.json(
-      { error: { code: 'LOGIN_RATE_LIMITED', message: 'Too many failed login attempts. Try again later.' } },
-      { status: 429, headers: { 'retry-after': String(retryAfter) } },
-    )
-  }
+  const clientIdentity = resolveTrustedClientNetworkIdentity(request, config.trustedProxyHops, config.proxyIdentitySecret ?? undefined)
+  if (!clientIdentity) return unavailable('TRUSTED_CLIENT_IDENTITY_UNAVAILABLE')
+  const buckets = createLoginAttemptBucketHashes(config.operatorId, clientIdentity, config.secret)
+  const currentLimit = await callSharedLoginLimiter('check', buckets)
+  if (!currentLimit.ok) return unavailable('LOGIN_PROTECTION_UNAVAILABLE')
+  if (currentLimit.retryAfterSeconds > 0) return rateLimited(currentLimit.retryAfterSeconds)
 
   let body: unknown
   try {
@@ -88,16 +65,15 @@ export async function POST(request: Request) {
     ? body.password
     : ''
   if (!password || !operatorPasswordMatches(password, config.password, config.secret)) {
-    const blockedFor = recordLoginFailure()
-    if (blockedFor > 0) {
-      return NextResponse.json(
-        { error: { code: 'LOGIN_RATE_LIMITED', message: 'Too many failed login attempts. Try again later.' } },
-        { status: 429, headers: { 'retry-after': String(blockedFor) } },
-      )
-    }
+    const recorded = await callSharedLoginLimiter('failure', buckets)
+    if (!recorded.ok) return unavailable('LOGIN_PROTECTION_UNAVAILABLE')
+    if (recorded.retryAfterSeconds > 0) return rateLimited(recorded.retryAfterSeconds)
     return NextResponse.json({ error: { code: 'INVALID_CREDENTIALS' } }, { status: 401 })
   }
-  clearLoginFailures()
+
+  // A successful authentication clears both shared buckets before a session is issued.
+  const cleared = await callSharedLoginLimiter('success', buckets)
+  if (!cleared.ok) return unavailable('LOGIN_PROTECTION_UNAVAILABLE')
 
   const response = NextResponse.json({ data: { authenticated: true, operatorId: config.operatorId } })
   response.cookies.set(OPERATOR_SESSION_COOKIE, createOperatorSession(config.operatorId, config.secret), {
