@@ -69,7 +69,7 @@ export function registerAssetRoutes(app: FastifyInstance, db: DatabasePool, env:
       throw error
     }
 
-    let asset
+    let asset: Awaited<ReturnType<AssetRepository['create']>>
     try {
       asset = await repository.create(ownerId, actorId, {
         id: assetId,
