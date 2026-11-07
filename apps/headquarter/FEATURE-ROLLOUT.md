@@ -8,14 +8,14 @@
 | Module | Route | Owner | Current maturity | Production gate |
 |---|---|---|---|---|
 | ARSY DECK | `/arsy-deck` | Headquarter / ARSY | Reference UI, demo repository | Public workspace-pulse contract, workspace permission checks, source timestamps, contract tests |
-| SIGNAL ROOM | `/signal-room` | Signal domain / ARSY | Prototype | Evidence/search contracts, provenance, pagination, source freshness |
-| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Prototype | Opportunity lifecycle, evidence provenance, decision permissions |
-| THE FORGE | `/the-forge` | Production domain / ARSY | Prototype | Brief/product/job contracts, versioning, artifact storage |
-| ZILL WATCH | `/zill-watch` | Quality & policy / ARSY | Prototype | Inspection contract, rights/policy enforcement, review audit |
-| LAUNCH BAY | `/launch-bay` | Distribution / ARSY | Prototype | Verified account/capability contract, allowed publication workflow, external receipt |
+| SIGNAL ROOM | `/signal-room` | Signal domain / ARSY | Truthful empty state; no live market source or fabricated trend metrics | Approved source connectors, evidence/search contracts, provenance, pagination and source freshness |
+| RIOT RADAR | `/riot-radar` | Opportunity domain / ARSY | Operator-authenticated opportunity capture/list, evidence and score review, operator-assessed hard gates, idempotent create, decision changes and archive. Product promotion is wired through The Forge. PostgreSQL and browser E2E workflows are configured; current-head results are pending. | Opportunity edit/detail history, search/filter/pagination, real PostgreSQL and browser E2E PASS, complete product/version lifecycle, asset provenance/storage, inspections and channel listing |
+| THE FORGE | `/the-forge` | Production domain / ARSY | Operator-authenticated product portfolio with persisted version-1 brief creation from eligible opportunities, acceptance criteria and product detail API. No product editing or artifact storage. | Product detail UI, version update/lifecycle, artifact storage/provenance, inspection/approval workflows, browser E2E PASS and production persistence verification |
+| ZILL WATCH | `/zill-watch` | Quality & policy / ARSY | Truthful empty state; no fabricated inspection results | Real inspection ingestion, rights/policy enforcement and review audit |
+| LAUNCH BAY | `/launch-bay` | Distribution / ARSY | Truthful empty state; no channel accounts or publication receipts connected | Verified account/capability contract, allowed publication workflow and external receipt |
 | SIDRA ARCHIVE | `/sidra-archive` | Asset domain / ARSY | Prototype | Asset/version/provenance contract and storage authorization |
-| AFTERSHOCK | `/aftershock` | Analytics / ARSY | Prototype | Source-backed event/metric definitions, timeframe, sample size |
-| MIZAN LEDGER | `/mizan-ledger` | Finance domain / ARSY | Prototype | Financial event contract, reconciliation, export permissions and audit |
+| AFTERSHOCK | `/aftershock` | Analytics / ARSY | Operator-authenticated persisted counts for the latest 100 opportunities/products and verified financial summary by currency. Counts are explicitly bounded; conversion/cohort metrics are shown as unavailable. | Cursor pagination/full counts, source-backed cohorts, defined denominators/timeframes and lifecycle events |
+| MIZAN LEDGER | `/mizan-ledger` | Finance domain / ARSY | Operator-authenticated manual financial-event ledger, retry-safe idempotency, evidence-backed reconciliation, and summaries computed from verified persisted events using integer minor units. No FX conversion or payout provider is simulated. PostgreSQL and browser E2E workflows are configured; current-head results are pending. | Provider integrations, FX contracts, payout lifecycle, export permissions, shared login throttling, reconciliation E2E PASS and verified production database operations |
 | RIOT ENGINE | `/riot-engine` | Workflow / ARSY | Prototype | Workflow/run lifecycle, idempotent actions, operator permission, audit |
 
 ## Administration
@@ -36,7 +36,7 @@
 2. Prototype routes remain visibly marked as demo/prototype and must not imply live status.
 3. No navigation visibility decision is a security boundary; ARSY must authorize every protected request.
 4. Do not show connected/healthy/running/approved states without a source-backed status and timestamp.
-5. Before production promotion, each feature must satisfy the Definition of Done in `TODO.md`, including contract, permission, failure-state, accessibility, test, and observability evidence.
+5. Before production promotion, each feature must satisfy its documented acceptance criteria, including contract, permission, failure-state, accessibility, test, and observability evidence.
 6. Keep the IA aligned with the approved product journey; technical internals belong in restricted administration, not the daily command surface.
 
 

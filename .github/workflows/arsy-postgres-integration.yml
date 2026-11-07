@@ -1,0 +1,153 @@
+name: ARSY PostgreSQL Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feat/money-maker-mainline-20261108
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arsy-postgres-integration-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  postgres-integration:
+    name: ARSY PostgreSQL and Headquarter browser E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: arsy
+          POSTGRES_PASSWORD: arsy_test_password
+          POSTGRES_DB: arsy_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arsy -d arsy_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgres://arsy:arsy_test_password@localhost:5432/arsy_test
+      ARSY_OPERATOR_TOKEN: ci-arsy-operator-token-with-32-characters
+      ARSY_OPERATOR_ID: ci-operator
+      ARSY_API_BASE_URL: http://127.0.0.1:3001
+      HEADQUARTER_OPERATOR_PASSWORD: ci-operator-password-with-strong-entropy
+      HEADQUARTER_SESSION_SECRET: ci-headquarter-session-secret-at-least-32-bytes
+      HEADQUARTER_PUBLIC_ORIGIN: https://localhost:3000
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations to isolated PostgreSQL
+        run: |
+          pnpm --filter @riotworks/arsy migrate:up
+          pnpm --filter @riotworks/arsy migrate:up
+
+      - name: Verify persistence across database reconnects
+        run: pnpm --filter @riotworks/arsy test:integration
+
+      - name: Build Headquarter for browser E2E
+        run: pnpm --filter @riotworks/headquarter build
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --prefix /tmp/mw-playwright --no-save --no-package-lock playwright@1.56.1
+          /tmp/mw-playwright/node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Start ARSY API
+        env:
+          HOST: 127.0.0.1
+          PORT: 3001
+        run: nohup pnpm --filter @riotworks/arsy start > /tmp/arsy.log 2>&1 &
+
+      - name: Start Headquarter production server
+        env:
+          PORT: 3002
+          HOSTNAME: 127.0.0.1
+        run: nohup pnpm --filter @riotworks/headquarter start > /tmp/headquarter.log 2>&1 &
+
+      - name: Create ephemeral HTTPS certificate for production-origin session checks
+        run: |
+          openssl req -x509 -nodes -newkey rsa:2048 -keyout /tmp/headquarter.key -out /tmp/headquarter.crt -days 1 -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost"
+
+      - name: Start local HTTPS ingress for Headquarter
+        run: |
+          nohup node --input-type=module -e '
+            import https from "node:https";
+            import http from "node:http";
+            import fs from "node:fs";
+            const server = https.createServer({
+              key: fs.readFileSync("/tmp/headquarter.key"),
+              cert: fs.readFileSync("/tmp/headquarter.crt")
+            }, (request, response) => {
+              const upstream = http.request({
+                hostname: "127.0.0.1",
+                port: 3002,
+                path: request.url,
+                method: request.method,
+                headers: { ...request.headers, host: "localhost:3000", "x-forwarded-proto": "https" }
+              }, (upstreamResponse) => {
+                response.writeHead(upstreamResponse.statusCode ?? 502, upstreamResponse.headers);
+                upstreamResponse.pipe(response);
+              });
+              upstream.on("error", () => {
+                response.writeHead(502);
+                response.end("Headquarter upstream unavailable");
+              });
+              request.pipe(upstream);
+            });
+            server.listen(3000, "127.0.0.1");
+          ' > /tmp/headquarter-proxy.log 2>&1 &
+
+      - name: Wait for application readiness
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3001/health/ready >/dev/null && curl --fail --silent --insecure https://localhost:3000/login >/dev/null; then
+              echo "ARSY and HTTPS Headquarter are ready."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Application readiness timed out."
+          cat /tmp/arsy.log || true
+          cat /tmp/headquarter.log || true
+          cat /tmp/headquarter-proxy.log || true
+          exit 1
+
+      - name: Run browser end-to-end commerce workflow
+        env:
+          PLAYWRIGHT_MODULE: /tmp/mw-playwright/node_modules/playwright/index.mjs
+          BASE_URL: https://localhost:3000
+        run: node apps/headquarter/tests/money-maker.e2e.mjs
+
+      - name: Print application logs on failure
+        if: failure()
+        run: |
+          cat /tmp/arsy.log || true
+          cat /tmp/headquarter.log || true
+          cat /tmp/headquarter-proxy.log || true

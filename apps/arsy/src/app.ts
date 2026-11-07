@@ -4,19 +4,26 @@ import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
+import { registerOpportunityRoutes } from './opportunities/routes.ts'
+import { registerProductRoutes } from './products/routes.ts'
+import { registerOperatorApiAuth } from './auth/operator-token.ts'
+import { registerFinancialRoutes } from './finance/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
   logger?: boolean
+  env?: NodeJS.ProcessEnv
 }
 
 export function createApp(options: CreateAppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? true })
-  const databasePool = options.databasePool ?? createDatabasePool()
+  const env = options.env ?? process.env
+  const databasePool = options.databasePool ?? createDatabasePool(env)
+  registerOperatorApiAuth(app, env)
 
   app.register(async (instance) => {
     // Register the onRoute hook before declaring routes in this encapsulated scope.
-    await instance.register(rateLimit, { global: false })
+    await instance.register(rateLimit, { global: true, max: 120, timeWindow: '1 minute' })
     instance.setValidatorCompiler(validatorCompiler)
     instance.setSerializerCompiler(serializerCompiler)
 
@@ -56,6 +63,9 @@ export function createApp(options: CreateAppOptions = {}) {
     )
 
     setupDatabase(instance, databasePool)
+    registerOpportunityRoutes(instance, databasePool, env)
+    registerProductRoutes(instance, databasePool, env)
+    registerFinancialRoutes(instance, databasePool, env)
   })
 
   return app
