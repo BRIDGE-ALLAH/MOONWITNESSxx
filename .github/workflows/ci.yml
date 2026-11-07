@@ -65,7 +65,6 @@ jobs:
 
   full-workspace-quality:
     name: Full workspace typecheck and build
-    if: ${{ vars.FULL_QUALITY_CI == 'true' }}
     needs: repository-integrity
     runs-on: ubuntu-latest
     timeout-minutes: 30
