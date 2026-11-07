@@ -12,7 +12,7 @@ const querySchema = z.object({ limit: z.coerce.number().int().min(1).max(100).de
 
 export function registerProductRoutes(app: FastifyInstance, db: DatabasePool, env: NodeJS.ProcessEnv = process.env): void {
   const repository = new ProductRepository(db)
-  const ownerId = env.ARSY_OPERATOR_ID?.trim() || 'primary-owner'
+  const ownerId = env.ARSY_OPERATOR_ID?.trim() ?? ''
   const actorId = ownerId
   app.get('/api/v1/products', async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
