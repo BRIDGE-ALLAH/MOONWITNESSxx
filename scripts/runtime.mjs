@@ -56,8 +56,12 @@ function report(value) {
 }
 
 function readEnvValue(content, key) {
-  const line = content.split(/\\r?\\n/).find((entry) => entry.match(/^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*=/)?.[1] === key)
-  return line ? line.slice(line.indexOf('=') + 1).trim().replace(/^['\"]|['\"]$/g, '') : null
+  const line = content
+    .split(/\r?\n/)
+    .find((entry) => entry.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=/)?.[1] === key)
+  return line
+    ? line.slice(line.indexOf('=') + 1).trim().replace(/^['"]|['"]$/g, '')
+    : null
 }
 
 async function readEnv(root) {
