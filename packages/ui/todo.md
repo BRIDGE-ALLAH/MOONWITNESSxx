@@ -346,3 +346,12 @@ A component is not complete until all applicable checks pass:
 
 - The first CI attempt after the lockfile was synchronized reached dependency installation and failed because pnpm's `allowBuilds` entries were placeholders. The workspace now explicitly allows `esbuild` (required build tooling) and denies `msgpackr-extract` (optional native acceleration); rerun CI to verify the policy.
 - Added `scripts/check-theme-tokens.mjs` and wired it into the UI package test command. It statically checks that all required semantic tokens are present in both theme blocks; it does not replace browser-level visual or contrast verification.
+
+
+## Current branch verification snapshot
+
+- [ ] Re-run Repository CI after the explicit pnpm build-script allow policy change.
+- [ ] Confirm the frozen lockfile remains unchanged after pnpm's policy-aware lockfile check.
+- [ ] Run UI package type-check, build, theme-token check, consumer smoke test, and Headquarter production build.
+- [ ] Render both themes and verify all text/non-text contrast states in a browser.
+- The previous CI run confirms the lockfile is synchronized; its next failure was the unconfigured pnpm build-script policy, now explicitly configured in `pnpm-workspace.yaml`.
