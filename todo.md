@@ -775,7 +775,7 @@ Use these labels consistently when updating this file:
 
 ## 19. Phase 14 — Living Evidence Graph & Epistemic Memory
 
-**Status:** [~] Initial code vertical slice in `packages/arsy-core/src/evidence/`; persistence, graph projections, source-span provenance, policy integration, and automated tests remain. See implementation PR.  
+**Status:** [~] Event ledger + PostgreSQL transactional adapter/migration + native tests authored; System Mode migration orchestration, evidence graph projections, source-span capture, and runtime wiring remain. See implementation PR.  
 **Goal:** Make every consequential ARSY conclusion reconstructable from the evidence, assumptions, decisions, and system state that existed at the time.
 
 - [ ] Define a versioned Evidence Graph schema: Evidence, Claim, Source, Observation, Belief, Decision, Action, Outcome, Counterevidence, and Supersession edges.
@@ -825,10 +825,10 @@ Use these labels consistently when updating this file:
 
 ## 22. Phase 16 — Causal Blast-Radius Mesh & Change Digital Twin
 
-**Status:** Research proposal; do not mark implemented until evaluated against real workflows.  
+**Status:** [~] Framework-neutral impact graph traversal and tests authored; trace ingestion, scenario runner, calibration, and real workflow benchmark remain.  
 **Goal:** Predict the downstream impact of a proposed change across data, policies, agents, integrations, and user-visible workflows before it is applied.
 
-- [ ] Build a typed dependency/causality graph from observed events, model relations, policy decisions, tool calls, and deployment manifests.
+- [~] Add framework-neutral typed impact graph and conservative blast-radius traversal in `packages/arsy-core/src/causal/impact.ts`; event ingestion and production graph projection remain.
 - [ ] Distinguish correlation, declared dependency, and experimentally supported causal edge; attach confidence and provenance to each edge.
 - [ ] Create a Change Impact Capsule containing proposed diff, affected entities, policy/registry fingerprints, and current evidence snapshot.
 - [ ] Run bounded counterfactual scenarios against isolated fixtures; estimate blast radius, reversibility, affected tenants, and recovery cost.
@@ -841,12 +841,12 @@ Use these labels consistently when updating this file:
 
 ## 23. Phase 17 — Knowledge Immune System & Adversarial Provenance Defense
 
-**Status:** Research proposal; prior art review required.  
+**Status:** [~] Evidence quality vector, trust disposition, independent-source corroboration, contamination index, and tests authored; persistent source registry, adversarial corpus, operator review, and calibrated policy remain.  
 **Goal:** Detect poisoned, manipulated, stale, coordinated, or context-stripped evidence before it contaminates beliefs and downstream actions.
 
-- [ ] Maintain source identity, acquisition method, content hash, signature status, trust history, and freshness separately from semantic relevance.
+- [~] Add separate authenticity/authority/freshness/context/signature dimensions and fail-closed quarantine evaluation in `packages/arsy-core/src/knowledge/provenance.ts`; persistent source identity and signed acquisition remain.
 - [ ] Detect near-duplicate campaigns, sudden source behavior changes, quote/context mismatch, temporal anomalies, and conflicting independent observations.
-- [ ] Track claim contamination paths so one compromised source cannot silently promote dependent claims or decisions.
+- [~] Add in-memory source → evidence → claim → decision contamination index; durable dependency graph and action gate integration remain.
 - [ ] Introduce quarantined evidence state and reversible belief promotion; never delete counterevidence during conflict resolution.
 - [ ] Use independent corroboration classes and diversity constraints; multiple copies of one origin do not count as independent sources.
 - [ ] Add adversarial fixtures for prompt injection in retrieved content, forged citations, source spoofing, replayed stale evidence, and coordinated repetition.
