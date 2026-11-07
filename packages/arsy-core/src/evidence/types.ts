@@ -79,6 +79,15 @@ export class EvidenceLedger {
     }
     if (Number.isNaN(Date.parse(input.occurredAt))) throw new Error('occurredAt must be an ISO date')
     const history = await this.store.list(input.aggregateId)
+    const existing = history.find((item) => item.id === input.id)
+    if (existing) {
+      const sameInput = existing.kind === input.kind && existing.aggregateId === input.aggregateId &&
+        existing.occurredAt === input.occurredAt && existing.actorId === input.actorId &&
+        canonicalJson(existing.payload) === canonicalJson(input.payload) &&
+        canonicalJson(existing.evidenceIds) === canonicalJson([...new Set(input.evidenceIds ?? [])])
+      if (sameInput) return existing
+      throw new Error('Event id collision')
+    }
     const previous = history.at(-1) ?? null
     const base = {
       ...input,
@@ -89,6 +98,10 @@ export class EvidenceLedger {
     const event = { ...base, hash: hashEvent(base) }
     await this.store.append(event)
     return event
+    } finally {
+      release()
+      if (this.locks.get(input.aggregateId) === queuedLock) this.locks.delete(input.aggregateId)
+    }
   }
 
   async verify(aggregateId: string): Promise<{ valid: boolean; eventId?: string; reason?: string }> {
