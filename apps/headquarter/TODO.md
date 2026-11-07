@@ -463,3 +463,14 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 - [x] Research notes recorded in `PHASE-9-10-RESEARCH.md` covering papers, GitHub projects, community discussions, product hypotheses, and evaluation metrics.
 - [ ] Browser E2E, keyboard/screen-reader verification, visual regression, and live ARSY contracts remain open.
 - [ ] No live data, persistence, authorization, or production mutation has been claimed or implemented by these UI phases.
+
+
+## Phase 11–13 execution record — 2026-11-08
+
+- [x] Phase 11 Replay Capsule: canonical JSON serialization, SHA-256 content digest, input snapshot, ordered scenario operations, deterministic result, digest verification, and replay recomputation.
+- [x] Phase 12 Decision Debt Compiler: deterministic findings for missing support, stale support, invalid provenance, unresolved contradictions, and downstream `causes` impact traversal.
+- [x] Phase 13 Uncertainty & Governance Gate: low/base/high envelopes, source-quality checks, evidence coverage, stale/contradiction/assumption checks, and fail-closed human-review eligibility.
+- [x] Governance Lab prototype route `/governance-lab` demonstrates all three engines using explicitly synthetic fixtures.
+- [x] Added domain tests for capsule tamper detection/replay, decision debt, downstream impact, and governance gate states.
+- [ ] ARSY versioned read contracts, identity/workspace authorization, append-only persistence, trusted signatures/timestamps, and audit event integration remain production gates.
+- [ ] Browser E2E, keyboard/screen-reader verification, visual regression, and deployment smoke/rollback remain open.

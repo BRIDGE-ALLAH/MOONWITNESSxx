@@ -27,6 +27,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { href: '/mizan-ledger', label: 'MIZAN LEDGER', group: 'Operations', status: 'prototype', description: 'Financial records and reconciliation' },
   { href: '/riot-engine', label: 'RIOT ENGINE', group: 'Operations', status: 'prototype', description: 'Workflow and run operations' },
   { href: '/scenario-forge', label: 'SCENARIO ARENA', group: 'Operations', status: 'prototype', description: 'Shadow-only counterfactual planning and comparison' },
+  { href: '/governance-lab', label: 'GOVERNANCE LAB', group: 'Command', status: 'prototype', description: 'Replay integrity, decision debt, and uncertainty review' },
   { href: '/settings-policy', label: 'WORKSPACE SETTINGS / POLICY', group: 'Administration', status: 'prototype', description: 'Prototype workspace and policy placeholders' },
   { href: null, label: 'POLICY CENTER', group: 'Administration', status: 'planned', description: 'Policy and configuration governance' },
   { href: null, label: 'MARKETPLACE ACCOUNTS', group: 'Administration', status: 'planned', description: 'Connected account lifecycle and verification' },
