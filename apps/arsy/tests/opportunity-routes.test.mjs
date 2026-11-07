@@ -253,6 +253,13 @@ test('updates an existing opportunity with optimistic concurrency and forces a f
   const app = await createApp({ databasePool: fakePool(), logger: false, env })
   const id = '11111111-1111-4111-8111-111111111111'
   try {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/v1/opportunities',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': idempotencyKey },
+      payload: body,
+    })
+    assert.equal(created.statusCode, 201)
     const updatedInput = { ...body, title: 'Updated localized inventory utility' }
     const response = await app.inject({
       method: 'PATCH',
