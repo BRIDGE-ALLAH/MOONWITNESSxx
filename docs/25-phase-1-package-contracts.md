@@ -4,7 +4,7 @@
 **Updated:** 2026-11-07  
 **Scope:** Package ownership, dependency direction and provider-neutral public TypeScript contracts.
 
-This document records the first implementation slice of Phase 1. It is not evidence that database drivers, the model engine, registry composer, transaction manager or schema reconciler are implemented.
+This document records the initial implementation slice of Phase 1. Workspace manifests and export maps now exist for the three contract packages. This is not evidence that database drivers, the model engine, transaction manager or schema reconciler are implemented.
 
 ## 1. Package ownership
 
@@ -110,3 +110,10 @@ Before Phase 1 is complete:
 7. Update `docs/23` and `todo.md` with the actual command results.
 
 Until those checks pass, Phase 1 remains in progress.
+
+
+## 7. Follow-up — workspace manifests and registry subpath
+
+The three contract packages now have workspace `package.json` manifests and explicit export maps. `@riotworks/orm` exposes `.` and `./registry`; the adapter SPI and persistence orchestration expose their root entrypoints. These package exports have not yet been checked through a clean pnpm install or consumer fixture.
+
+The registry composer is being developed as a separate Phase 3 slice and is documented in `docs/26-phase-3-registry-foundation.md`. This does not close Phase 1: concrete PostgreSQL/SQLite adapters, ARSY Core integration, automated contract tests, lockfile validation and CI evidence remain open.
