@@ -87,9 +87,13 @@ Truth rules:
 - [x] MM-0202 Promote only approved opportunities into product briefs.
 - [x] MM-0203 Record buyer/job, differentiator, product family, target channel, format and acceptance criteria.
 - [x] MM-0204 Add append-only product version revisions without overwriting previously approved artifacts.
-- [ ] MM-0205 Add Asset and ProvenanceRecord with author/owner, source asset, license, tool/model, edit history, checksum, disclosure and derivative links.
+- [x] MM-0205 Add Asset and ProvenanceRecord with owner, source/original declaration, license, tool/model, edit history, checksum, disclosure and derivative links.
 - [x] MM-0206 Add append-only Inspection records for rights, policy, technical QA and creative QA; product READY requires the latest four inspections to pass.
 - [x] MM-0207 Replace The Forge sample products and placeholder previews with persisted product briefs and honest empty states. and Picsum previews with persisted records and honest empty states.
+
+### Asset storage
+- [x] MM-0208 Add bounded local filesystem storage, upload/download/archive APIs, SHA-256 verification and persistent Docker volume.
+- [ ] MM-0209 Add malware scanning and S3-compatible object storage/replication before multi-node production.
 
 ### Finance
 - [x] MM-0210 Define FinancialEvent and Payout persistence contracts using exact amount, currency, event type, occurred/recorded time, provider reference, source evidence and reconciliation state.
@@ -102,7 +106,7 @@ Truth rules:
 
 ### Verification
 - [x] MM-0220 Unit tests for integer minor-unit precision, idempotency and verified contribution formula. FX conversion remains out of scope.
-- [ ] MM-0221 Integration tests for product promotion, versioning, provenance and audit history.
+- [x] MM-0221 Integration tests for product promotion, versioning, asset provenance, checksum and audit history.
 - [x] MM-0222 Integration tests for duplicate financial event idempotency and reconciliation behavior.
 - [ ] MM-0223 E2E: approved opportunity → product brief/version → record cost/receipt → refresh → verify ledger totals.
 - [x] MM-0224 Verify financial aggregates against underlying events in isolated PostgreSQL.
