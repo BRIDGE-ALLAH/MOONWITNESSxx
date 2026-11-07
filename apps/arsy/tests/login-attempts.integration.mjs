@@ -64,8 +64,10 @@ test('shared login throttling survives separate ARSY instances, restart, and win
        WHERE bucket_type = 'operator' AND bucket_hash = $1`,
       [operatorBucketHash],
     )
-    assert.equal((await request(appB, 'check', hash())).retryAfterSeconds, 0, 'expired windows release the operator bucket')
-    assert.equal((await request(appB, 'failure', hash())).retryAfterSeconds, 0, 'the next failure starts a fresh window')
+    const afterExpiryNetworkHash = hash()
+    networkBuckets.push(afterExpiryNetworkHash)
+    assert.equal((await request(appB, 'check', afterExpiryNetworkHash)).retryAfterSeconds, 0, 'expired windows release the operator bucket')
+    assert.equal((await request(appB, 'failure', afterExpiryNetworkHash)).retryAfterSeconds, 0, 'the next failure starts a fresh window')
   } finally {
     try {
       await poolA.query('DELETE FROM arsy_login_attempt_buckets WHERE bucket_hash = ANY($1::char(64)[])', [[operatorBucketHash, ...networkBuckets]])
