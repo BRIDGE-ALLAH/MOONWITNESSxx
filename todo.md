@@ -1051,3 +1051,21 @@ Use these labels consistently when updating this file:
 - [x] Phase 20: detect empty traces, malformed context, duplicate policy decisions and cross-tenant terminal receipts; mark undefined benchmark metrics as null rather than perfect.
 - [ ] Authenticated issuer registry, signed attestation envelope/KMS, actual tool-gateway enforcement, licensed benchmark import and calibrated CI thresholds remain open.
 See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract checks, not production security enforcement.
+
+
+---
+
+## Phases 36–38 — Product integrity, UX truth and release readiness
+
+**Status:** implementation is in branch fix/arsy-app-runtime-and-product-integrity; required CI and release verification remain pending.
+
+- [x] ARSY application owns its build/type-check and HTTP composition; framework-neutral core no longer owns app lifecycle scripts.
+- [x] Inject database pools for tests and close them through Fastify lifecycle hooks.
+- [x] Add liveness, readiness, and database health behavior with 503 on dependency failure.
+- [x] Keep Headquarter prototype/demo status visible and accessible on mobile and desktop.
+- [x] Add DevX workspace, navigation, and release-readiness audit with tests.
+- [x] Add container image build verification for ARSY and Headquarter.
+- [ ] Pass branch CI, typecheck, tests, lint, and both container builds.
+- [ ] Configure approved release and production deployment workflows; verify credentials, migrations, backups, ingress, health, and smoke tests.
+
+**Release boundary:** a green local audit or image build is not evidence of a published release or live production deployment.
