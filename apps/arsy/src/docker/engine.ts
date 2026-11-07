@@ -25,11 +25,29 @@ function requestBuffer(connection: DockerConnection, path: string, timeoutMs = 5
   return new Promise((resolve, reject) => {
     const remoteUrl = connection.kind === 'remote' ? new URL(connection.endpointUrl) : null
     const pinnedLookup = connection.kind === 'remote'
-      ? (( _hostname, options, callback) => {
-          const requestedFamily = typeof options === 'object' && options ? options.family : 0
-          const selected = connection.addresses.find((item) => !requestedFamily || item.family === requestedFamily) ?? connection.addresses[0]
-          if (!selected) return callback(new Error('Docker endpoint has no validated address'), '', 0)
-          callback(null, selected.address, selected.family)
+      ? ((_hostname, options, callback) => {
+          const lookupOptions = typeof options === 'object' && options ? options : {}
+          const requestedFamily = lookupOptions.family ?? 0
+          const candidates = connection.addresses.filter(
+            (item) => !requestedFamily || item.family === requestedFamily,
+          )
+          if (candidates.length === 0) {
+            const error = new Error('Docker endpoint has no validated address')
+            return lookupOptions.all
+              ? callback(error, [])
+              : callback(error, '', 0)
+          }
+
+          // Node's lookup callback has two contracts. In all-address mode the
+          // callback must receive LookupAddress[]; otherwise it receives one
+          // address and its family. Keep candidates DNS-pinned to addresses
+          // that passed the endpoint policy check.
+          if (lookupOptions.all) {
+            callback(null, candidates.map(({ address, family }) => ({ address, family })))
+          } else {
+            const selected = candidates[0]
+            callback(null, selected.address, selected.family)
+          }
         }) as NonNullable<https.RequestOptions['lookup']>
       : undefined
     const options: https.RequestOptions & http.RequestOptions = connection.kind === 'local'
