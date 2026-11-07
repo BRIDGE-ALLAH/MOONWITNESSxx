@@ -46,11 +46,37 @@ The shell was coupled to local prototype state. The workspace label is static de
 - `src/app/globals.css` imports `@riotworks/ui/styles`.
 - `packages/ui/src/index.ts` exports Badge, Button, Card family, Separator, and `cn`; it is still a small primitive library.
 
+### Feature status inventory
+
+| Module | Observed status | Evidence |
+|---|---|---|
+| ARSY DECK | Prototype | Hardcoded metrics, agent rows, channel states, activity and insights |
+| SIGNAL ROOM | Prototype | Hardcoded trends, sources, category counts and evidence |
+| RIOT RADAR | Prototype | Hardcoded opportunity records and recommendation labels |
+| THE FORGE | Prototype | Hardcoded product briefs, asset names and tool provenance |
+| ZILL WATCH | Prototype | Hardcoded inspection checks and product metadata |
+| LAUNCH BAY | Prototype | Hardcoded channel capability and publication history |
+| SIDRA ARCHIVE | Prototype | Hardcoded asset catalog and provenance metadata |
+| MIZAN LEDGER | Prototype | Hardcoded financial rows and payout labels |
+| AFTERSHOCK | Prototype | Hardcoded conversion and portfolio insight values |
+| RIOT ENGINE | Prototype | Hardcoded agent state, task and budget labels |
+| SETTINGS / POLICY | Prototype | Hardcoded workspace, eligibility and consent placeholders |
+
+No module is evidenced as production-ready in this source snapshot. The five early modules that do not consistently show a demo banner should be corrected during the feature rollout; their static content must not be interpreted as live business data.
+
+### Shared component and dependency inventory
+
+- Shared UI exports currently include Badge, Button, Card family, Separator, and `cn`; no duplicate Headquarter primitive library was found.
+- The shell import graph is acyclic at this scope: AppShell composes shell modules; Sidebar and CommandPalette consume navigation metadata; shell components consume `@riotworks/ui` primitives.
+- No Headquarter-specific `process.env` reads or private credentials were found in the inspected application source/config. Runtime environment requirements are not yet defined.
+- No app-local public asset directory or custom font file is present in the Headquarter tree. Theme fonts/tokens are inherited from the shared UI styling layer.
+
 ### Data and UX truth
 
 - Feature pages use local constants and static example values; no live ARSY API adapter is present.
 - Some pages explicitly mark demo content, but the demo disclosure is not consistently present across all module pages.
 - There are no established authentication, authorization, persisted workspace, or route-aware locale flows.
+- Lifecycle coverage is minimal: no shared loading, empty, error, forbidden, offline, stale, or partial-data patterns are established.
 - The approved IA lists additional restricted administration destinations that are not implemented as routes; they must not be represented as operational modules.
 - Static data includes duplicate React list keys in parts of SIGNAL ROOM and malformed dynamic Tailwind class strings in ARSY DECK and SIGNAL ROOM; these need focused feature-level fixes.
 
