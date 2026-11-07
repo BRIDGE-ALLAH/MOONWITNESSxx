@@ -30,7 +30,7 @@ export function registerOpportunityRoutes(app: FastifyInstance, db: DatabasePool
   const token = env.ARSY_OPERATOR_TOKEN?.trim()
 
   app.addHook('preHandler', async (request, reply) => {
-    if (!request.url.startsWith('/api/v1/opportunities')) return
+    if (!request.url.startsWith('/api/v1/')) return
     if (!authorized(request, token)) {
       return reply.code(token ? 401 : 503).send({
         error: {
