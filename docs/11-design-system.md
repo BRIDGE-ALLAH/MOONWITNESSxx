@@ -25,7 +25,7 @@ Source of truth:
 
 Messaging:
 - Core Promise: **SEE MORE. KNOW MORE.**
-- Brand Manifesto: **WHEN THE MOON RISES, WE SHARE WHAT MATTERS.**
+- Brand Manifesto: **WHEN THE MOON RISES, WE SHARE MESSAGES.**
 - Operational verbs: OBSERVE · RECORD · VERIFY · CONNECT · UNDERSTAND · SHARE.
 
 The Core Promise belongs in product signatures and compact identity contexts. The Manifesto belongs in editorial storytelling, campaign, About, and selected onboarding contexts. Do not repeat both lines in every component.
