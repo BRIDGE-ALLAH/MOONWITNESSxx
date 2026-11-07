@@ -68,10 +68,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24
+
+      - name: Install asset package dependencies
+        run: pnpm install --filter @riotworks/assets --no-frozen-lockfile --ignore-scripts
+
+      - name: Type-check asset package
+        run: pnpm --filter @riotworks/assets type-check
 
       - name: Validate registry and SVG source assets
         run: node --experimental-strip-types packages/assets/scripts/validate-assets.mjs
