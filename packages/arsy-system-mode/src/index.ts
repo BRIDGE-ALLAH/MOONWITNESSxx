@@ -6,7 +6,7 @@ import type { ReconciliationPolicy, ReconciliationReceipt, SchemaPlan, SchemaPla
 export const SYSTEM_MODE_STAGES = [
   "control-bootstrap", "recovery-check", "package-discovery", "trust-validation",
   "registry-composition", "persistence-preflight", "approval-gate", "reconciliation",
-  "candidate-verification", "atomic-activation", "runtime-handoff", "complete",
+  "candidate-verification", "runtime-preparation", "atomic-activation", "runtime-handoff", "complete",
 ] as const;
 export type SystemModeStage = typeof SYSTEM_MODE_STAGES[number];
 export interface SystemModeLease { readonly name: string; readonly ownerToken: string; readonly fencingGeneration: number; readonly expiresAt: number }
@@ -38,6 +38,7 @@ export interface SystemModePorts {
   readonly planner: SchemaPlanner;
   readonly reconciler: SchemaReconciler;
   readonly policy: ReconciliationPolicy;
+  bootstrapControlPlane(): Promise<void>;
   readonly leaseName?: string;
   readonly leaseTtlMs?: number;
   readonly now?: () => Date;
@@ -47,6 +48,7 @@ export interface SystemModePorts {
   recover(incomplete: readonly SystemModeRun[]): Promise<void>;
   inspectBusiness(): Promise<DatabaseSnapshot>;
   approve(plan: SchemaPlan, actorId: string): Promise<ReconciliationPolicy>;
+  prepareRuntime(snapshot: RegistrySnapshot): Promise<void>;
   handoff(snapshot: RegistrySnapshot): Promise<void>;
   setReadiness(ready: boolean, reason?: string): Promise<void>;
 }
@@ -78,6 +80,7 @@ export class SystemModeOrchestrator {
     let stage: SystemModeStage = "control-bootstrap";
     let journalStarted = false;
     try {
+      await this.#ports.bootstrapControlPlane();
       lease = await this.#ports.store.acquireLease(leaseName, ttl);
       if (!lease) throw new Error("Another System Mode process owns the deployment lease.");
       const incomplete = (await this.#ports.journal.incomplete()).filter((run) => run.runId !== runId);
@@ -115,6 +118,8 @@ export class SystemModeOrchestrator {
       if (!await this.#ports.reconciler.verify(this.#ports.businessAdapter, registry)) {
         throw new Error("Business Database schema does not match the candidate registry.");
       }
+      await this.#ports.journal.transition(runId, stage, "runtime-preparation"); stage = "runtime-preparation";
+      await this.#ports.prepareRuntime(registry);
       await this.#ports.journal.transition(runId, stage, "atomic-activation"); stage = "atomic-activation";
       lease = await this.#ports.store.renewLease(lease, ttl);
       const activation = await this.#ports.store.activateRegistry(registry, receipt, lease, actorId);
