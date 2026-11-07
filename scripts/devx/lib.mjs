@@ -517,3 +517,170 @@ export function forecastResourceCollisions({agents}={}) {
   const collisions=[...owners.entries()].filter(([,ids])=>ids.length>1).map(([resource,ids])=>({resource,agents:ids.sort(),severity:resource.startsWith('port:')?'critical':'high'})).sort((a,b)=>a.resource.localeCompare(b.resource))
   return {safeToLaunchTogether:collisions.length===0,agentCount:agents.length,declaredResourceCount:owners.size,collisions,note:'Advisory only: does not reserve ports, provision databases, isolate containers, or enforce namespaces.'}
 }
+
+
+// Phase 30: objective control plane. A criterion is complete only with verified evidence.
+export function buildObjectiveControlPlane({ objectives, observations = [], now = new Date().toISOString() } = {}) {
+  if (!Array.isArray(objectives) || objectives.length === 0) throw new Error('objectives must be a non-empty array')
+  if (!Array.isArray(observations)) throw new Error('observations must be an array')
+  const nowMs = Date.parse(now)
+  if (!Number.isFinite(nowMs)) throw new Error('now must be a valid timestamp')
+  const seen = new Set()
+  const normalized = objectives.map((objective) => {
+    if (!objective || typeof objective.id !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$/.test(objective.id)) throw new Error('each objective needs a safe id')
+    if (seen.has(objective.id)) throw new Error('duplicate objective id: ' + objective.id)
+    seen.add(objective.id)
+    if (!Array.isArray(objective.acceptanceCriteria) || objective.acceptanceCriteria.length === 0) throw new Error('objective ' + objective.id + ' needs acceptanceCriteria')
+    const criterionIds = new Set()
+    const criteria = objective.acceptanceCriteria.map((criterion) => {
+      if (!criterion || typeof criterion.id !== 'string' || !criterion.id.trim()) throw new Error('acceptance criteria need ids')
+      if (criterionIds.has(criterion.id)) throw new Error('duplicate criterion id: ' + criterion.id)
+      criterionIds.add(criterion.id)
+      const history = observations.filter((item) => item?.objectiveId === objective.id && item?.criterionId === criterion.id)
+        .map((item) => {
+          const timestamp = Date.parse(item.recordedAt)
+          if (!Number.isFinite(timestamp) || timestamp > nowMs) throw new Error('invalid or future observation timestamp')
+          if (!['passed', 'failed', 'unknown'].includes(item.status)) throw new Error('observation status must be passed, failed or unknown')
+          return { ...item, timestamp }
+        }).sort((a, b) => b.timestamp - a.timestamp)
+      const latest = history[0] ?? null
+      const verified = Boolean(latest && latest.status === 'passed' && latest.verified === true &&
+        typeof latest.evidenceId === 'string' && latest.evidenceId.trim())
+      return {
+        id: criterion.id,
+        description: String(criterion.description ?? criterion.id),
+        owner: String(criterion.owner ?? objective.owner ?? 'unassigned'),
+        status: verified ? 'satisfied' : 'open',
+        latestObservation: latest ? { status: latest.status, verified: latest.verified === true, evidenceId: latest.evidenceId ?? null, recordedAt: latest.recordedAt } : null,
+        reason: verified ? null : !latest ? 'no_observation' : latest.status === 'passed' ? 'missing_verified_evidence' : 'criterion_not_passed',
+      }
+    })
+    const blockers = normalizedSet(objective.blockers ?? [], 'objective.blockers')
+    const openCriteria = criteria.filter((criterion) => criterion.status !== 'satisfied')
+    const gap = { openCriteria: openCriteria.map((criterion) => criterion.id).sort(), blockers }
+    return {
+      id: objective.id, title: String(objective.title ?? objective.id), owner: String(objective.owner ?? 'unassigned'),
+      priority: Number.isFinite(objective.priority) ? objective.priority : 0,
+      status: openCriteria.length === 0 && blockers.length === 0 ? 'complete' : 'active',
+      criteria, openCriteria, blockers,
+      gapFingerprint: createHash('sha256').update(canonicalJson(gap)).digest('hex'),
+      nextActions: openCriteria.map((criterion) => ({ criterionId: criterion.id, owner: criterion.owner, action: 'obtain_verified_evidence' })),
+    }
+  }).sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id))
+  const completed = normalized.filter((objective) => objective.status === 'complete').length
+  return {
+    schemaVersion: 1, generatedAt: new Date(nowMs).toISOString(),
+    objectiveCount: normalized.length, completedCount: completed, openCount: normalized.length - completed,
+    ready: completed === normalized.length,
+    objectives: normalized,
+    nextActions: normalized.flatMap((objective) => objective.nextActions.map((action) => ({ objectiveId: objective.id, ...action }))),
+    note: 'A criterion is complete only when its latest observation is passed, explicitly verified, timestamp-valid and linked to an evidenceId. This report does not authenticate the evidence source.',
+  }
+}
+
+// Phase 31: breaking interface changes are escrowed until every declared consumer acknowledges the exact contract fingerprint.
+function interfaceEscrowFingerprint(contract, treaties) {
+  return createHash('sha256').update(canonicalJson({
+    contract,
+    treaties: treaties.map((treaty) => ({
+      id: treaty.id, owner: treaty.owner,
+      provides: [...(treaty.provides ?? [])].map(String).sort(),
+      consumes: [...(treaty.consumes ?? [])].map(String).sort(),
+      breakingChanges: [...(treaty.breakingChanges ?? [])].map(String).sort(),
+    })).sort((a, b) => a.id.localeCompare(b.id)),
+  })).digest('hex')
+}
+
+export function createInterfaceEscrow({ treaties, changeSet, now = new Date().toISOString() } = {}) {
+  if (!Array.isArray(treaties)) throw new Error('treaties must be an array')
+  if (!changeSet || typeof changeSet.id !== 'string' || !changeSet.id.trim()) throw new Error('changeSet needs an id')
+  if (!Array.isArray(changeSet.breakingInterfaces) || changeSet.breakingInterfaces.length === 0) throw new Error('changeSet needs breakingInterfaces')
+  const expiry = Date.parse(changeSet.expiresAt), nowMs = Date.parse(now)
+  if (!Number.isFinite(expiry) || !Number.isFinite(nowMs) || expiry <= nowMs) throw new Error('changeSet expiry must be in the future')
+  const report = forecastInterfaceConflicts({ treaties, now })
+  if (report.violations.length) throw new Error('invalid interface treaties: ' + report.violations.map((item) => item.code).join(','))
+  const interfaces = normalizedSet(changeSet.breakingInterfaces, 'breakingInterfaces').map((name) => name.toLowerCase())
+  const consumers = [...new Set(treaties.filter((treaty) =>
+    (treaty.consumes ?? []).some((name) => interfaces.includes(String(name).toLowerCase()))
+  ).map((treaty) => treaty.owner))].sort()
+  const contract = { id: changeSet.id, version: String(changeSet.version ?? 'unspecified'), breakingInterfaces: interfaces, expiresAt: new Date(expiry).toISOString() }
+  const treatySnapshot = treaties.map((treaty) => ({
+    id: treaty.id, owner: treaty.owner,
+    provides: [...(treaty.provides ?? [])].map(String).sort(),
+    consumes: [...(treaty.consumes ?? [])].map(String).sort(),
+    breakingChanges: [...(treaty.breakingChanges ?? [])].map(String).sort(),
+  })).sort((a, b) => a.id.localeCompare(b.id))
+  const contractFingerprint = interfaceEscrowFingerprint(contract, treatySnapshot)
+  return {
+    schemaVersion: 1, state: consumers.length ? 'awaiting-consumer-acknowledgements' : 'ready',
+    contract, treatySnapshot, contractFingerprint, consumers, acknowledgements: [],
+    createdAt: new Date(nowMs).toISOString(),
+    note: 'Acknowledgements bind to this exact declared contract snapshot; no runtime API/schema compatibility is inferred.',
+  }
+}
+
+export function acknowledgeInterfaceEscrow({ escrow, consumer, contractFingerprint, acknowledgedAt = new Date().toISOString() } = {}) {
+  if (!escrow || escrow.schemaVersion !== 1) throw new Error('unsupported interface escrow')
+  if (contractFingerprint !== escrow.contractFingerprint) throw new Error('acknowledgement fingerprint does not match escrow contract')
+  if (!escrow.consumers.includes(consumer)) throw new Error('consumer is not in the escrow impact set')
+  const timestamp = Date.parse(acknowledgedAt), expiry = Date.parse(escrow.contract.expiresAt)
+  if (!Number.isFinite(timestamp) || timestamp >= expiry || timestamp < Date.parse(escrow.createdAt)) throw new Error('acknowledgement timestamp is outside escrow validity')
+  if (escrow.acknowledgements.some((item) => item.consumer === consumer)) throw new Error('consumer already acknowledged this escrow')
+  const acknowledgements = [...escrow.acknowledgements, { consumer, contractFingerprint, acknowledgedAt: new Date(timestamp).toISOString() }].sort((a, b) => a.consumer.localeCompare(b.consumer))
+  return { ...escrow, acknowledgements, state: acknowledgements.length === escrow.consumers.length ? 'acknowledged' : 'awaiting-consumer-acknowledgements' }
+}
+
+export function verifyInterfaceEscrow({ escrow, now = new Date().toISOString() } = {}) {
+  if (!escrow || escrow.schemaVersion !== 1 || !escrow.contract || !Array.isArray(escrow.consumers) || !Array.isArray(escrow.acknowledgements)) return { safeToMerge: false, reason: 'malformed_escrow' }
+  const nowMs = Date.parse(now), expiry = Date.parse(escrow.contract.expiresAt)
+  if (!Number.isFinite(nowMs) || !Number.isFinite(expiry) || nowMs >= expiry) return { safeToMerge: false, reason: 'escrow_expired' }
+  if (!Array.isArray(escrow.treatySnapshot) || interfaceEscrowFingerprint(escrow.contract, escrow.treatySnapshot) !== escrow.contractFingerprint) return { safeToMerge: false, reason: 'escrow_fingerprint_mismatch' }
+  const expectedConsumers = [...new Set(escrow.treatySnapshot.filter((treaty) =>
+    (treaty.consumes ?? []).some((name) => escrow.contract.breakingInterfaces.includes(String(name).toLowerCase()))
+  ).map((treaty) => treaty.owner))].sort()
+  if (canonicalJson(expectedConsumers) !== canonicalJson([...escrow.consumers].sort())) return { safeToMerge: false, reason: 'escrow_consumer_set_mismatch' }
+  const valid = escrow.acknowledgements.filter((item) => escrow.consumers.includes(item.consumer) &&
+    item.contractFingerprint === escrow.contractFingerprint && Number.isFinite(Date.parse(item.acknowledgedAt)) &&
+    Date.parse(item.acknowledgedAt) >= Date.parse(escrow.createdAt) && Date.parse(item.acknowledgedAt) < expiry)
+  const acknowledged = [...new Set(valid.map((item) => item.consumer))].sort()
+  const duplicateAcknowledgements = valid.length !== acknowledged.length
+  const missingConsumers = escrow.consumers.filter((consumer) => !acknowledged.includes(consumer)).sort()
+  return { safeToMerge: missingConsumers.length === 0 && !duplicateAcknowledgements, duplicateAcknowledgements, contractFingerprint: escrow.contractFingerprint, consumers: escrow.consumers, acknowledgedConsumers: acknowledged, missingConsumers, reason: missingConsumers.length ? 'consumer_acknowledgement_missing' : null }
+}
+
+// Phase 32: assemble a fail-closed merge evidence packet. Supplied check statuses are assertions, not live GitHub attestations.
+export function createMergeEvidencePacket({ commitSha, objectives, observations = [], interfaceEscrow, agents, checks, evidence, rollback, now = new Date().toISOString() } = {}) {
+  const failures = []
+  if (typeof commitSha !== 'string' || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(commitSha)) failures.push('invalid_commit_sha')
+  let objectiveReport
+  try { objectiveReport = buildObjectiveControlPlane({ objectives, observations, now }) }
+  catch (error) { failures.push('objective_report_invalid:' + error.message) }
+  if (objectiveReport && !objectiveReport.ready) failures.push('objectives_not_complete')
+  const escrowReport = verifyInterfaceEscrow({ escrow: interfaceEscrow, now })
+  if (!escrowReport.safeToMerge) failures.push('interface_escrow_not_satisfied:' + escrowReport.reason)
+  let resourceReport
+  try { resourceReport = forecastResourceCollisions({ agents }) }
+  catch (error) { failures.push('resource_manifest_invalid:' + error.message) }
+  if (resourceReport && !resourceReport.safeToLaunchTogether) failures.push('resource_collisions_detected')
+  const requiredChecks = ['repository-integrity', 'asset-integrity', 'developer-experience', 'full-workspace-quality']
+  if (!Array.isArray(checks)) failures.push('checks_must_be_an_array')
+  const normalizedChecks = Array.isArray(checks) ? checks : []
+  for (const required of requiredChecks) if (!normalizedChecks.some((check) => check?.name === required && check.status === 'success')) failures.push('required_check_missing_or_failed:' + required)
+  if (!Array.isArray(evidence) || evidence.length === 0) failures.push('evidence_required')
+  else for (const item of evidence) if (!item || typeof item.id !== 'string' || !item.id.trim() || !/^[a-f0-9]{64}$/i.test(String(item.sha256 ?? ''))) failures.push('invalid_evidence_reference')
+  if (!rollback || typeof rollback.strategy !== 'string' || !rollback.strategy.trim() || typeof rollback.owner !== 'string' || !rollback.owner.trim() || rollback.verified !== true) failures.push('verified_rollback_plan_required')
+  const generatedMs = Date.parse(now)
+  if (!Number.isFinite(generatedMs)) failures.push('invalid_now_timestamp')
+  const payload = {
+    schemaVersion: 1, commitSha, generatedAt: Number.isFinite(generatedMs) ? new Date(generatedMs).toISOString() : null,
+    ready: failures.length === 0, failures,
+    objectiveSummary: objectiveReport ? { ready: objectiveReport.ready, completed: objectiveReport.completedCount, total: objectiveReport.objectiveCount } : null,
+    interfaceSummary: escrowReport,
+    resourceSummary: resourceReport ? { safe: resourceReport.safeToLaunchTogether, collisions: resourceReport.collisions.length } : null,
+    checks: normalizedChecks, evidence: Array.isArray(evidence) ? evidence : [], rollback: rollback ?? null,
+    requiredChecks,
+    note: 'Local evidence packet only. It does not query GitHub branch protection, authenticate supplied CI statuses, sign provider receipts, or merge a pull request.',
+  }
+  const digest = createHash('sha256').update(canonicalJson(payload)).digest('hex')
+  return { ...payload, digest }
+}

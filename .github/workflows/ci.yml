@@ -140,6 +140,18 @@ jobs:
           printf '%s\n' '{"agents":[{"id":"api","resources":{"ports":[3101],"databases":["api"]}},{"id":"web","resources":{"ports":[3102],"databases":["web"]}}]}' > /tmp/moonwitness-resources.json
           pnpm devx resource-check --plan-file=/tmp/moonwitness-resources.json
 
+      - name: Smoke test objective control plane
+        run: |
+          node --input-type=module -e "import {writeFileSync} from 'node:fs'; writeFileSync('/tmp/moonwitness-objectives.json', JSON.stringify({objectives:[{id:'release',acceptanceCriteria:[{id:'tests'}]}],observations:[{objectiveId:'release',criterionId:'tests',status:'passed',verified:true,evidenceId:'ci',recordedAt:new Date().toISOString()}]}));"
+          pnpm devx objective-plane --input=/tmp/moonwitness-objectives.json
+
+      - name: Smoke test interface escrow and merge evidence packet
+        run: |
+          node --input-type=module -e "import {createInterfaceEscrow,acknowledgeInterfaceEscrow} from './scripts/devx/lib.mjs'; import {writeFileSync} from 'node:fs'; const treaties=[{id:'api',owner:'api',provides:['User.v2'],breakingChanges:['User.v1'],expiresAt:'2099-01-01T00:00:00Z'},{id:'web',owner:'web',consumes:['User.v1'],expiresAt:'2099-01-01T00:00:00Z'}]; let escrow=createInterfaceEscrow({treaties,changeSet:{id:'api-v2',breakingInterfaces:['User.v1'],expiresAt:'2099-01-01T00:00:00Z'}}); escrow=acknowledgeInterfaceEscrow({escrow,consumer:'web',contractFingerprint:escrow.contractFingerprint}); writeFileSync('/tmp/moonwitness-escrow.json',JSON.stringify(escrow));"
+          pnpm devx interface-escrow --input=/tmp/moonwitness-escrow.json
+          node --input-type=module -e "import {writeFileSync,readFileSync} from 'node:fs'; const escrow=JSON.parse(readFileSync('/tmp/moonwitness-escrow.json')); const input={commitSha:'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',objectives:[{id:'release',acceptanceCriteria:[{id:'tests'}]}],observations:[{objectiveId:'release',criterionId:'tests',status:'passed',verified:true,evidenceId:'ci',recordedAt:new Date().toISOString()}],interfaceEscrow:escrow,agents:[{id:'api',resources:{ports:[3101]}},{id:'web',resources:{ports:[3102]}}],checks:['repository-integrity','asset-integrity','developer-experience','full-workspace-quality'].map(name=>({name,status:'success',runId:1})),evidence:[{id:'ci',sha256:'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'}],rollback:{strategy:'revert',owner:'release-agent',verified:true}}; writeFileSync('/tmp/moonwitness-merge.json',JSON.stringify(input));"
+          pnpm devx merge-proof --input=/tmp/moonwitness-merge.json
+
   asset-integrity:
     name: Asset integrity
     runs-on: ubuntu-latest
