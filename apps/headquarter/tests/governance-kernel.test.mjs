@@ -70,3 +70,15 @@ test('Governance gate permits human review only when inputs satisfy configured t
   assert.equal(ready.status, 'eligible_for_human_review')
   assert.equal(ready.requiresHumanApproval, true)
 })
+
+
+test('Governance gate fails closed on negative counters and invalid thresholds', () => {
+  const invalid = assessGovernanceReadiness({
+    metrics: [{ id: 'x', label: 'Measured', low: 1, base: 2, high: 3, sourceQuality: 'verified' }],
+    requiredEvidenceCount: -1, verifiedEvidenceCount: 1, staleEvidenceCount: 0,
+    contradictionCount: 0, unresolvedAssumptionCount: 0,
+  }, { minimumEvidenceCoverage: 1.2, maximumRelativeRange: -1, blockOnStaleEvidence: true })
+  assert.equal(invalid.status, 'blocked')
+  assert.equal(invalid.evidenceCoverage, 0)
+  assert.ok(invalid.reasons.some((reason) => reason.code === 'invalid_governance_counters'))
+})
