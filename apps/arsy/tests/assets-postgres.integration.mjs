@@ -103,8 +103,52 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
     assert.deepEqual(await storage.get(reloaded.storageKey), bytes)
     assert.equal((await persisted.inspections(ownerId, asset.id))?.length, 5)
     assert.equal((await persisted.readiness(ownerId, asset.id))?.ready, true)
-    assert.equal((await persisted.list(ownerId, productId)).length, 1)
+
+    const derivativeBytes = Buffer.from('Derivative asset bytes linked to the original asset.')
+    const derivativeStorageKey = randomUUID()
+    await storage.put(derivativeStorageKey, derivativeBytes)
+    const derivativeCreated = await persisted.create(ownerId, ownerId, {
+      productId,
+      productVersion: 1,
+      fileName: 'derivative.txt',
+      mediaType: 'text/plain',
+      byteSize: derivativeBytes.length,
+      storageKey: derivativeStorageKey,
+      sha256: createHash('sha256').update(derivativeBytes).digest('hex'),
+      idempotencyKey: randomUUID(),
+      requestHash: createHash('sha256').update('asset-derivative-request').digest('hex'),
+      provenance: {
+        sourceAssetId: asset.id,
+        sourceReference: asset.id,
+        creator: 'Integration fixture author',
+        license: 'Derivative permitted by original fixture terms',
+        permissionBasis: 'Derivative is linked to the original owner-scoped fixture asset.',
+        toolModel: 'Node.js test fixture',
+        editHistory: [{ action: 'Created derivative', actor: ownerId, occurredAt: new Date().toISOString() }],
+        disclosure: 'Derivative fixture linked to the original source asset.',
+      },
+    })
+    assert.ok(derivativeCreated)
+    assert.equal(derivativeCreated.asset.provenance.sourceAssetId, asset.id)
+    assert.equal((await persisted.list(ownerId, productId)).length, 2)
+
+    const audit = await pool.query(
+      'SELECT action FROM arsy_commerce_audit_events WHERE owner_id = $1',
+      [ownerId],
+    )
+    const actions = audit.rows.map((row) => row.action)
+    assert.ok(actions.includes('uploaded-with-provenance'))
+    assert.equal(actions.filter((action) => action === 'inspection-recorded').length, 5)
   } finally {
+    await pool.query('DELETE FROM arsy_commerce_audit_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_asset_inspections WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_asset_provenance WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_assets WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    await pool.query(
+      'DELETE FROM arsy_product_versions WHERE product_id IN (SELECT id FROM arsy_products WHERE owner_id = $1)',
+      [ownerId],
+    ).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_products WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.end()
     await rm(root, { recursive: true, force: true })
   }
