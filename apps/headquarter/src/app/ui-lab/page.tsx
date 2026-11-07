@@ -11,6 +11,8 @@ import {
   RiotAtmosphere,
   RiotLiveIndicator,
   RiotSignalHeader,
+  RiotSignalConstellation,
+  RiotDecisionTrail,
 } from '@riotworks/ui'
 
 export default function UiLabPage() {
@@ -33,7 +35,7 @@ export default function UiLabPage() {
           actions={<Button variant="electric">Explore the system</Button>}
         />
         <div className="mt-8 flex flex-wrap items-center gap-6 border-t border-border/60 pt-5">
-          <RiotLiveIndicator state="live" label="Signal active" />
+          <RiotLiveIndicator state="idle" label="Illustrative state" />
           <RiotLiveIndicator state="idle" label="Standby" />
           <RiotLiveIndicator state="alert" label="Attention required" />
         </div>
@@ -105,7 +107,48 @@ export default function UiLabPage() {
         </div>
       </section>
 
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+
+      <section className="space-y-4">
+        <RiotSignalHeader
+          level={2}
+          eyebrow="03 // Signal intelligence"
+          index="MILESTONE 08"
+          title="See the relationships."
+          description="A constellation makes connections inspectable. Every position, source, and confidence value is supplied by the host."
+        />
+        <RiotSignalConstellation
+          nodes={[
+            { id: 'signal-a', label: 'Emerging ritual', detail: 'A repeated behavior is appearing across independent communities.', x: 180, y: 300, source: 'Community observation set', observedAt: 'Demo · 09:10', confidence: 82, evidence: '3 independent observations' },
+            { id: 'signal-b', label: 'Creator shift', detail: 'Creators are moving from polished output toward process-led storytelling.', x: 500, y: 150, source: 'Editorial scan', observedAt: 'Demo · 09:18', confidence: 74, evidence: '5 sampled posts' },
+            { id: 'signal-c', label: 'Commerce gap', detail: 'A mismatch appears between audience intent and available product education.', x: 820, y: 310, source: 'Journey review', observedAt: 'Demo · 09:25', confidence: 68, evidence: '2 journey friction points' },
+            { id: 'signal-d', label: 'New format', detail: 'A possible format opportunity connects the behavior and creator shift.', x: 490, y: 500, source: 'Analyst hypothesis', observedAt: 'Demo · 09:31', confidence: 51, evidence: 'Hypothesis; validation pending' },
+          ]}
+          links={[
+            { from: 'signal-a', to: 'signal-b' },
+            { from: 'signal-b', to: 'signal-c' },
+            { from: 'signal-a', to: 'signal-d' },
+            { from: 'signal-d', to: 'signal-c' },
+          ]}
+        />
+      </section>
+
+      <section className="space-y-4">
+        <RiotSignalHeader
+          level={2}
+          eyebrow="04 // Decision memory"
+          index="MILESTONE 09"
+          title="Understand why it changed."
+          description="A human-readable trace from observation to decision—with rationale and evidence attached."
+        />
+        <RiotDecisionTrail
+          events={[
+            { id: 'event-1', kind: 'observed', title: 'Behavior detected', summary: 'A repeated community ritual entered the observation set.', at: '09:10 · DEMO', actor: 'Signal Room', evidence: ['Three independent community observations'] },
+            { id: 'event-2', kind: 'interpreted', title: 'Pattern connected', summary: 'The ritual was connected to a creator-format shift.', at: '09:18 · DEMO', actor: 'ARSY Deck', rationale: 'The behavior and format shift appear together, but causality is not established.', evidence: ['Five sampled creator posts', 'Cross-community recurrence'] },
+            { id: 'event-3', kind: 'decided', title: 'Validation prioritized', summary: 'The team chose a small validation experiment before production.', at: '09:31 · DEMO', actor: 'The Forge', rationale: 'Confidence is promising, but evidence is not yet sufficient for a full launch.' },
+          ]}
+        />
+      </section>
+\n      <footer className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         <span>MOONWITNESS // SEE MORE. KNOW MORE.</span>
         <span>Design lab · Demo content only</span>
       </footer>
