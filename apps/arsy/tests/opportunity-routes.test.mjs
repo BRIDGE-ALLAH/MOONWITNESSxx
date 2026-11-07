@@ -11,6 +11,8 @@ const evidence = [{
   evidenceClass: 'observed-fact',
   summary: 'Public official docs describe the required format.',
   reliability: 'high',
+  limitations: 'Single official source; no independent corroboration yet.',
+  evidenceId: 'evidence-1',
   collectionMethod: 'Manual review of public documentation',
   permissionBasis: 'Publicly accessible official documentation',
 }]
@@ -34,7 +36,17 @@ const body = {
   candidateChannels: ['Gumroad'],
   evidence,
   scores,
+  scoreDetails: Object.fromEntries(Object.keys(scores).map((key) => [key, {
+    rationale: 'The score is supported by the cited public documentation and review notes.',
+    confidence: 'medium',
+    evidenceIds: ['evidence-1'],
+  }])),
   hardGates,
+  hardGateDetails: Object.fromEntries(Object.entries(hardGates).map(([key, status]) => [key, {
+    status,
+    rationale: 'Reviewed against current official documentation; recheck before publication.',
+    evidenceIds: ['evidence-1'],
+  }])),
 }
 
 function fakePool() {
