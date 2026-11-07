@@ -113,7 +113,7 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
           warnings.push(`Declared package entrypoint does not exist: ${targetPath} (${manifest.name})`)
         }
       }
-
+    }
   }
 
   for (const { manifest } of workspacePackages) {
