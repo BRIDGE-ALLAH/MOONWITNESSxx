@@ -45,6 +45,14 @@ const inspectionSchema = z.object({
     url: z.string().url().max(2048).optional(),
     reference: z.string().trim().max(500).optional(),
   })).max(100),
+}).superRefine((value, context) => {
+  if (value.status !== 'unknown' && value.evidence.length === 0) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['evidence'],
+      message: 'A pass or blocked inspection must include supporting evidence.',
+    })
+  }
 })
 const idSchema = z.string().uuid()
 const listSchema = z.object({ productId: idSchema.optional() })
