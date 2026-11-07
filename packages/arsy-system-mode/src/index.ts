@@ -140,3 +140,80 @@ export class SystemModeOrchestrator {
     }
   }
 }
+
+
+function journalParams(...values: unknown[]) { return values.map((value) => ({ value })); }
+async function journalQuery<T>(adapter: DatabaseAdapter, text: string, values: unknown[] = [], operation: "read" | "write" | "schema" = "write") {
+  return adapter.query<T>({ text, parameters: journalParams(...values), operation });
+}
+
+/** SQLite-backed deployment journal. It stores control metadata, never business data or secrets. */
+export class SqliteSystemRunJournal implements SystemRunJournal {
+  readonly #adapter: DatabaseAdapter;
+  readonly #now: () => Date;
+  #initialized = false;
+  constructor(adapter: DatabaseAdapter, now: () => Date = () => new Date()) {
+    if (adapter.identity.provider !== "sqlite" || adapter.identity.role !== "system") {
+      throw new TypeError("System run journal requires the SQLite/System adapter.");
+    }
+    this.#adapter = adapter;
+    this.#now = now;
+  }
+  async initialize(): Promise<void> {
+    if (this.#initialized) return;
+    await journalQuery(this.#adapter, \`CREATE TABLE IF NOT EXISTS mw_system_runs (
+      run_id TEXT PRIMARY KEY,
+      actor_id TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      status TEXT NOT NULL,
+      registry_fingerprint TEXT,
+      plan_id TEXT,
+      error TEXT,
+      started_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )\`, [], "schema");
+    await journalQuery(this.#adapter, "CREATE INDEX IF NOT EXISTS idx_mw_system_runs_status ON mw_system_runs(status, updated_at)", [], "schema");
+    this.#initialized = true;
+  }
+  async begin(runId: string, actorId: string, at: string): Promise<void> {
+    this.#assertReady();
+    if (!runId.trim() || !actorId.trim()) throw new TypeError("Run and actor identifiers are required.");
+    await journalQuery(this.#adapter,
+      "INSERT INTO mw_system_runs(run_id, actor_id, stage, status, started_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+      [runId, actorId, "control-bootstrap", "running", at, at]);
+  }
+  async transition(runId: string, expected: SystemModeStage, next: SystemModeStage, details: Readonly<{ registryFingerprint?: string; planId?: string }> = {}): Promise<void> {
+    this.#assertReady();
+    const result = await journalQuery(this.#adapter,
+      "UPDATE mw_system_runs SET stage = ?, registry_fingerprint = COALESCE(?, registry_fingerprint), plan_id = COALESCE(?, plan_id), updated_at = ? WHERE run_id = ? AND status = 'running' AND stage = ?",
+      [next, details.registryFingerprint ?? null, details.planId ?? null, this.#now().toISOString(), runId, expected]);
+    if (result.rowCount !== 1) throw new Error("System run transition rejected: run is missing, inactive, or at a different stage.");
+  }
+  async finish(runId: string, status: "failed" | "completed", error?: string): Promise<void> {
+    this.#assertReady();
+    const result = await journalQuery(this.#adapter,
+      "UPDATE mw_system_runs SET status = ?, stage = CASE WHEN ? = 'completed' THEN 'complete' ELSE stage END, error = ?, updated_at = ? WHERE run_id = ? AND status = 'running'",
+      [status, status, error ?? null, this.#now().toISOString(), runId]);
+    if (result.rowCount !== 1) throw new Error("System run finish rejected: run is missing or no longer active.");
+  }
+  async incomplete(): Promise<readonly SystemModeRun[]> {
+    this.#assertReady();
+    const result = await journalQuery<Record<string, unknown>>(this.#adapter,
+      "SELECT run_id, actor_id, stage, status, registry_fingerprint, plan_id, error, started_at, updated_at FROM mw_system_runs WHERE status = 'running' ORDER BY started_at, run_id",
+      [], "read");
+    return Object.freeze(result.rows.map((row) => Object.freeze({
+      runId: String(row.run_id),
+      actorId: String(row.actor_id),
+      stage: String(row.stage) as SystemModeStage,
+      status: String(row.status) as SystemModeRun["status"],
+      ...(typeof row.registry_fingerprint === "string" ? { registryFingerprint: row.registry_fingerprint } : {}),
+      ...(typeof row.plan_id === "string" ? { planId: row.plan_id } : {}),
+      ...(typeof row.error === "string" ? { error: row.error } : {}),
+      startedAt: String(row.started_at),
+      updatedAt: String(row.updated_at),
+    })));
+  }
+  #assertReady(): void {
+    if (!this.#initialized) throw new Error("SqliteSystemRunJournal.initialize() must be called before use.");
+  }
+}
