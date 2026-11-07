@@ -104,8 +104,6 @@ test('release preflight accepts local scaffolding but states its remote verifica
   } finally { await rm(root, { recursive: true, force: true }) }
 })
 
-import { fileURLToPath } from 'node:url'
-import { dirname } from 'node:path'
 
 test('current repository workspace and Headquarter navigation contracts are coherent', async () => {
   const root = new URL('../..', import.meta.url).pathname
