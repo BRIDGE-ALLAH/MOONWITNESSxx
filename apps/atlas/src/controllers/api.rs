@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, Json};
+use axum::{Json, http::StatusCode};
 use loco_rs::prelude::*;
 use serde::Serialize;
 

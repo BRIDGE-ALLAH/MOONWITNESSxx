@@ -1,6 +1,6 @@
 use std::env;
 
-use redis::{aio::MultiplexedConnection, Client, RedisError};
+use redis::{Client, RedisError, aio::MultiplexedConnection};
 use tokio::sync::OnceCell;
 
 static CLIENT: OnceCell<Client> = OnceCell::const_new();
