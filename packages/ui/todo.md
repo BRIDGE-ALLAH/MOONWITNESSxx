@@ -277,7 +277,17 @@ A component is not complete until all applicable checks pass:
 
 ## 12. Suggested implementation order
 
-- [ ] **Milestone 1 — Stabilize package:** audit, exports, build, declarations, typecheck, consumer smoke test.
+- [ ] **Milestone 1 — Stabilize package:** implementation is in progress; final verification is still required.
+  - [x] Audit current package entry points, dependencies, consumer usage, and existing component exports.
+  - [x] Define explicit public exports and point package metadata at generated distribution output.
+  - [x] Add a TypeScript build configuration that emits JavaScript and declaration files to `dist/`.
+  - [x] Add package build and consumer smoke-test commands.
+  - [x] Correct the CardTitle heading ref/prop type mismatch.
+  - [ ] Run clean install / lockfile validation in the repository environment.
+  - [ ] Run UI package build and type-check; confirm generated JS and `.d.ts` artifacts.
+  - [ ] Run package consumer smoke test.
+  - [ ] Run Headquarter production build against the built package.
+  - [ ] Record passing command output before marking the milestone complete.
 - [ ] **Milestone 2 — Lock visual foundation:** semantic tokens, themes, typography, spacing, density, motion, assets.
 - [ ] **Milestone 3 — Complete core primitives:** actions, inputs, selection, navigation, overlays, feedback.
 - [ ] **Milestone 4 — Operational UI:** FormField, DataTable, FilterBar, EmptyState, ErrorState, ActivityTimeline.
@@ -306,3 +316,13 @@ A component is not complete until all applicable checks pass:
 - Keep tasks unchecked until implementation and verification are complete.
 - Add links to issues/PRs beside tasks when work is scheduled.
 - Revisit priorities after auditing actual consumers and repository CI.
+
+
+## Milestone 1 implementation notes
+
+- Package entry points now target `dist/index.js` and `dist/index.d.ts`; styles and the Tailwind preset remain available through their existing subpaths.
+- `tsconfig.build.json` emits CommonJS JavaScript, source maps, and TypeScript declarations without changing the source type-check configuration.
+- `smoke-test.mjs` checks the public component/function exports using the package name.
+- The CardTitle ref and prop types now both describe an HTML heading element.
+- The Google Fonts import was moved ahead of Tailwind directives so it remains a valid leading CSS import.
+- Build and consumer commands have been added but have **not yet been executed in a repository checkout**. Do not treat the milestone as complete until the unchecked verification tasks pass.
