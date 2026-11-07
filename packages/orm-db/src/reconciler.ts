@@ -1,4 +1,6 @@
 import type { DatabaseAdapter, DatabaseSnapshot, SchemaOperation } from "@riotworks/orm-db-adaptor";
+import type { RegistrySnapshot } from "@riotworks/orm";
+import { schemaPlanner } from "./schema-planner.ts";
 import type {
   ReconciliationPolicy,
   ReconciliationReceipt,
@@ -158,9 +160,9 @@ export class ApprovalBoundSchemaReconciler implements SchemaReconciler {
     return receipt;
   }
 
-  async verify(adapter: DatabaseAdapter, registry: Parameters<SchemaReconciler["verify"]>[1]): Promise<boolean> {
+  async verify(adapter: DatabaseAdapter, registry: RegistrySnapshot): Promise<boolean> {
     const snapshot = await adapter.inspectSchema();
-    const pending = await import("./schema-planner.js").then(({ schemaPlanner }) => schemaPlanner.plan(registry, snapshot));
+    const pending = schemaPlanner.plan(registry, snapshot);
     return pending.operations.length === 0;
   }
 }
