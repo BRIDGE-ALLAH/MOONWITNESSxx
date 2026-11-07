@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createHash } from 'node:crypto'
+import { createHmac } from 'node:crypto'
 import { DELETE, GET, POST } from '../src/app/api/auth/session/route.ts'
 import { resolveLoginNetworkHash } from '../src/lib/shared-login-limit.ts'
 import { OPERATOR_SESSION_COOKIE } from '../src/lib/operator-session.ts'
@@ -20,6 +20,7 @@ function configureEnvironment() {
     HEADQUARTER_OPERATOR_PASSWORD: password,
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: origin,
+    HEADQUARTER_TRUSTED_PROXY_HOPS: '0',
   }
   const previous = Object.fromEntries(Object.keys(values).map((key) => [key, process.env[key]]))
   Object.assign(process.env, values)
@@ -140,17 +141,41 @@ test('login limiter ignores spoofed forwarding headers unless one trusted ingres
   const spoofed = new Request(`${origin}/api/auth/session`, {
     headers: { 'x-forwarded-for': '203.0.113.99' },
   })
-  const localHash = resolveLoginNetworkHash(spoofed, { NODE_ENV: 'test' })
-  assert.equal(localHash, createHash('sha256').update('local-development-network').digest('hex'))
-  assert.equal(resolveLoginNetworkHash(spoofed, { NODE_ENV: 'production' }), null)
+  const localHash = resolveLoginNetworkHash(spoofed, {
+    NODE_ENV: 'test',
+    HEADQUARTER_SESSION_SECRET: secret,
+  })
+  const expectedLocal = createHmac('sha256', secret)
+    .update('moonwitness-login-network-v1:')
+    .update('local-development-network')
+    .digest('hex')
+  assert.equal(localHash, expectedLocal)
+
+  assert.equal(resolveLoginNetworkHash(spoofed, {
+    NODE_ENV: 'production',
+    HEADQUARTER_SESSION_SECRET: secret,
+  }), null)
+
   const trustedHash = resolveLoginNetworkHash(spoofed, {
     NODE_ENV: 'production',
     HEADQUARTER_TRUSTED_PROXY_HOPS: '1',
+    HEADQUARTER_SESSION_SECRET: secret,
   })
-  assert.equal(trustedHash, createHash('sha256').update('203.0.113.99').digest('hex'))
-  assert.equal(resolveLoginNetworkHash(new Request(`${origin}/api/auth/session`, {
-    headers: { 'x-forwarded-for': 'bad-ip, 203.0.113.99' },
-  }), { NODE_ENV: 'production', HEADQUARTER_TRUSTED_PROXY_HOPS: '1' }), null)
+  assert.equal(
+    trustedHash,
+    createHmac('sha256', secret).update('moonwitness-login-network-v1:203.0.113.99').digest('hex'),
+  )
+
+  for (const forwarded of ['bad-ip, 203.0.113.99', 'not-an-ip']) {
+    const request = new Request(`${origin}/api/auth/session`, {
+      headers: { 'x-forwarded-for': forwarded },
+    })
+    assert.equal(resolveLoginNetworkHash(request, {
+      NODE_ENV: 'production',
+      HEADQUARTER_TRUSTED_PROXY_HOPS: '1',
+      HEADQUARTER_SESSION_SECRET: secret,
+    }), null)
+  }
 })
 
 test('login fails closed if the shared limiter is unavailable', async () => {
