@@ -1,11 +1,12 @@
 import http from 'node:http'
 import https from 'node:https'
 import type { IncomingMessage } from 'node:http'
+import { isIP } from 'node:net'
 import type { DockerTlsCredentials } from './security.ts'
 
 export type DockerConnection =
   | { kind: 'local'; socketPath: string }
-  | { kind: 'remote'; endpointUrl: string; tls: DockerTlsCredentials }
+  | { kind: 'remote'; endpointUrl: string; address: string; tls: DockerTlsCredentials }
 
 export interface DockerContainer {
   id: string
@@ -35,6 +36,10 @@ function requestBuffer(connection: DockerConnection, path: string, timeoutMs = 5
           key: connection.tls.key,
           rejectUnauthorized: true,
           servername: new URL(connection.endpointUrl).hostname,
+          // Pin the address resolved and checked by the security boundary to prevent DNS rebinding.
+          lookup: (( _hostname: string, _options: unknown, callback: (error: NodeJS.ErrnoException | null, address: string, family: number) => void) => {
+            callback(null, connection.address, isIP(connection.address))
+          }) as unknown as https.RequestOptions['lookup'],
         }
 
     const onResponse = (response: IncomingMessage) => {
