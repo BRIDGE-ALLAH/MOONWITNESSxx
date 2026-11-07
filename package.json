@@ -23,7 +23,8 @@
     "type-check": "pnpm run typecheck",
     "repo:lab": "node scripts/counterfactual-repo-lab.mjs",
     "repo:lab:scenario": "node scripts/repo-lab-scenario.mjs scripts/fixtures/repo-lab-scenarios.example.json",
-    "test:repo-lab": "node --test scripts/tests/counterfactual-repo-lab.test.mjs scripts/tests/repo-lab-scenario.test.mjs"
+    "test:repo-lab": "node --test scripts/tests/counterfactual-repo-lab.test.mjs scripts/tests/repo-lab-scenario.test.mjs scripts/tests/repo-lab-intelligence.test.mjs",
+    "repo:lab:cycles": "node scripts/counterfactual-repo-lab.mjs --cycles"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
