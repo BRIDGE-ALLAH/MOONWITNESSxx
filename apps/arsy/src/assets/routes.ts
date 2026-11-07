@@ -10,6 +10,13 @@ const allowedMediaTypes = new Set([
   'application/pdf', 'application/zip', 'application/json', 'text/plain',
   'image/png', 'image/jpeg', 'image/webp',
 ])
+function isSafeAssetFilename(value: string): boolean {
+  return !value.includes('/') && !value.includes('\\') && !Array.from(value).some((character) => {
+    const code = character.charCodeAt(0)
+    return code < 32 || code === 127
+  })
+}
+
 const provenanceSchema = z.object({
   creator: z.string().trim().min(2).max(200),
   license: z.string().trim().min(2).max(300),
@@ -22,7 +29,7 @@ const provenanceSchema = z.object({
 })
 const uploadSchema = z.object({
   productVersionId: z.string().uuid(),
-  filename: z.string().trim().min(1).max(180).refine((value) => !/[\\/\u0000-\u001f]/.test(value), 'Filename must not contain path separators or control characters.'),
+  filename: z.string().trim().min(1).max(180).refine(isSafeAssetFilename, 'Filename must not contain path separators or control characters.'),
   mediaType: z.string().min(1).max(120),
   contentBase64: z.string().min(4).max(7 * 1024 * 1024).regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/),
   provenance: provenanceSchema,
