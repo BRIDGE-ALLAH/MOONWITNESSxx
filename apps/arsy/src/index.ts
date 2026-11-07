@@ -35,7 +35,7 @@ export function registerGracefulShutdown(
 }
 
 export async function startServer() {
-  const app = await createApp()
+  const app = createApp()
 
   try {
     const { host, port } = resolveServerConfig()
