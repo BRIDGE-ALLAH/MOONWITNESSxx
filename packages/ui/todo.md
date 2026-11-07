@@ -375,3 +375,5 @@ A component is not complete until all applicable checks pass:
 - The first shared ESLint path adjustment still remained outside the config base. The shared config now uses ESLint flat-config `basePath: ../arsy-core` so the config package can lint the sibling package without widening its default scope.
 
 - ARSY Core's existing lint command repeatedly failed because ESLint 9 treats a sibling package outside the config base as ignored. Rather than claim a false pass, its lint task has been removed until a package-local/shared-config consumer can be implemented correctly. UI lint remains a direct package-scoped task and is still part of repository validation.
+
+- Latest CI has passed all 7 workspace type-check/build dependency tasks, UI package lint, the 46-token-per-theme contract check, and the 11-export consumer smoke test. Frozen-lockfile validation also passed. The repository validation command now includes a Headquarter production build so the package is checked in its actual consuming app.
