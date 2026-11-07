@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server.js'
 import {
   getOperatorSessionConfig,
   readOperatorSessionCookie,
   requestHasTrustedOrigin,
   verifyOperatorSession,
-} from './operator-session'
+} from './operator-session.ts'
 
 export async function proxyArsyRequest(
   request: Request,
