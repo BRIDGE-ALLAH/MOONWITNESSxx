@@ -38,7 +38,7 @@ No ClickHouse or DuckDB component is part of ATLAS. VictoriaMetrics stores metri
 
 ### RADIUS boundary
 
-FreeRADIUS is the RADIUS data-plane engine. ATLAS owns NAS inventory, subscriber profiles, authentication credentials, session visibility, accounting views, and engine lifecycle operations. Group-based VLAN/rate-limit policy management is a follow-up slice.
+FreeRADIUS is the RADIUS data-plane engine. ATLAS owns NAS inventory, subscriber profiles, authentication credentials, session visibility, accounting views, and engine lifecycle operations. Group-based VLAN/rate-limit reply policies are managed through the RADIUS group policy API.
 
 FreeRADIUS runs from a derived official 3.2.10 image with SQL authentication/accounting enabled. Its management Status-Server is isolated on the internal Docker network and accepts probes only from ATLAS. The RADIUS status secret is separate from NAS shared secrets. The upstream sample EAP certificates remain development-only and must be replaced before production.
 
@@ -85,7 +85,10 @@ The dashboard is served at http://127.0.0.1:5150/.
 - GET/POST /api/v1/radius/nas — list or create NAS clients (Bearer token required).
 - PUT /api/v1/radius/nas/{id} — update a NAS client and rotate its shared secret (Bearer token required).
 - DELETE /api/v1/radius/nas/{id} — remove a NAS client (Bearer token required).
-- GET/POST /api/v1/radius/subscribers — list or create/update subscriber credentials and optional group (Bearer token required). The POST body accepts `username`, `password`, optional `groupname`, and optional `credential_mode` (`bcrypt` default or `nt_hash`).
+- GET/POST /api/v1/radius/subscribers — list or create/update subscriber credentials and optional group (Bearer token required).
+- GET /api/v1/radius/groups/policies — list RADIUS group reply policies (Bearer token required).
+- PUT /api/v1/radius/groups/policy — replace a group's VLAN, rate-limit, timeout, or address-pool policies (Bearer token required).
+- DELETE /api/v1/radius/groups/{groupname}/policy — remove a group's reply policies (Bearer token required). The POST body accepts `username`, `password`, optional `groupname`, and optional `credential_mode` (`bcrypt` default or `nt_hash`).
 - DELETE /api/v1/radius/subscribers/{username} — remove subscriber authentication/policy rows (accounting history is retained).
 - GET /api/v1/radius/sessions/active — inspect active sessions from radacct (Bearer token required).
 - GET /api/v1/radius/accounting/summary — accounting totals and octet counters (Bearer token required).
@@ -129,7 +132,7 @@ The migrations create the engine registry, add non-secret adapter configuration 
 - Required Redis connectivity probe; readiness fails when Redis is unavailable.
 - Separate RADIUS database connection probe; readiness fails if the AAA database is unavailable.
 - Automatic embedded SQLx migrations and local engine seed records at Compose startup.
-- NAS CRUD, subscriber credential provisioning, active session listing, and accounting summaries including RADIUS gigawords. Passwords are stored as bcrypt or NT hashes, never clear text.
+- NAS CRUD, subscriber credential provisioning, group-based VLAN/rate-limit/session policies, active session listing, and accounting summaries including RADIUS gigawords. Passwords are stored as bcrypt or NT hashes, never clear text.
 - Compose services for MariaDB, Redis, VictoriaMetrics, VictoriaLogs, and a derived FreeRADIUS image wired to a dedicated SQL database.
 - FreeRADIUS SQL authentication/accounting schema and SQL module activation in default and inner-tunnel virtual servers.
 - PowerDNS zone and RRset management adapter with strict zone/record input validation.

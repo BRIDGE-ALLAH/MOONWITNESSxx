@@ -275,6 +275,108 @@ pub async fn delete_subscriber(username: &str) -> Result<bool, sqlx::Error> {
     Ok(changed > 0)
 }
 
+
+#[derive(Debug, Serialize, FromRow)]
+pub struct GroupPolicy {
+    pub groupname: String,
+    pub attribute: String,
+    pub op: String,
+    pub value: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GroupPolicyItem {
+    pub attribute: String,
+    pub op: String,
+    pub value: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GroupPolicyWriteRequest {
+    pub groupname: String,
+    pub policies: Vec<GroupPolicyItem>,
+}
+
+pub fn validate_group_policy(input: &GroupPolicyWriteRequest) -> Result<(), &'static str> {
+    if input.groupname.trim().is_empty()
+        || input.groupname.len() > 64
+        || input.groupname.chars().any(char::is_control)
+    {
+        return Err("groupname must contain 1 to 64 non-control characters");
+    }
+    if input.policies.is_empty() || input.policies.len() > 64 {
+        return Err("a group policy must contain between 1 and 64 attributes");
+    }
+    let allowed = [
+        "Tunnel-Type",
+        "Tunnel-Medium-Type",
+        "Tunnel-Private-Group-Id",
+        "Mikrotik-Rate-Limit",
+        "WISPr-Bandwidth-Max-Up",
+        "WISPr-Bandwidth-Max-Down",
+        "Session-Timeout",
+        "Idle-Timeout",
+        "Acct-Interim-Interval",
+        "Framed-Pool",
+        "Framed-IP-Address",
+        "Filter-Id",
+    ];
+    for policy in &input.policies {
+        if !allowed.contains(&policy.attribute.as_str()) {
+            return Err("group policy contains an unsupported RADIUS attribute");
+        }
+        if !matches!(policy.op.as_str(), ":=" | "+=" | "==") {
+            return Err("group policy operator must be :=, +=, or ==");
+        }
+        if policy.value.trim().is_empty()
+            || policy.value.len() > 253
+            || policy.value.chars().any(char::is_control)
+        {
+            return Err("group policy value must contain 1 to 253 non-control characters");
+        }
+    }
+    Ok(())
+}
+
+pub async fn list_group_policies() -> Result<Vec<GroupPolicy>, sqlx::Error> {
+    sqlx::query_as::<_, GroupPolicy>(
+        "SELECT groupname, attribute, op, value FROM radgroupreply ORDER BY groupname, id",
+    )
+    .fetch_all(radius_db::pool().await?)
+    .await
+}
+
+pub async fn replace_group_policy(
+    input: &GroupPolicyWriteRequest,
+) -> Result<(), sqlx::Error> {
+    let pool = radius_db::pool().await?;
+    let mut tx = pool.begin().await?;
+    sqlx::query("DELETE FROM radgroupreply WHERE groupname = ?")
+        .bind(input.groupname.trim())
+        .execute(&mut *tx)
+        .await?;
+    for policy in &input.policies {
+        sqlx::query(
+            "INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES (?, ?, ?, ?)",
+        )
+        .bind(input.groupname.trim())
+        .bind(&policy.attribute)
+        .bind(&policy.op)
+        .bind(&policy.value)
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await
+}
+
+pub async fn delete_group_policy(groupname: &str) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query("DELETE FROM radgroupreply WHERE groupname = ?")
+        .bind(groupname)
+        .execute(radius_db::pool().await?)
+        .await?;
+    Ok(result.rows_affected() > 0)
+}
+
 pub async fn active_sessions() -> Result<Vec<ActiveSession>, sqlx::Error> {
     sqlx::query_as::<_, ActiveSession>(
         "SELECT acctsessionid, username, nasipaddress, framedipaddress, CAST(acctstarttime AS CHAR) AS acctstarttime, acctsessiontime, acctinputoctets, acctoutputoctets, acctinputgigawords, acctoutputgigawords FROM radacct WHERE acctstoptime IS NULL ORDER BY acctstarttime DESC LIMIT 500",

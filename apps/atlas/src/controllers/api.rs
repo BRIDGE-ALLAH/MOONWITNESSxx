@@ -14,7 +14,9 @@ use crate::{
     database::{self, DatabaseStatus},
     dns::{self, PowerDnsClient, RrsetPatchRequest, ZoneCreateRequest},
     engine::{self, EngineWriteRequest},
-    radius::{self, NasWriteRequest, SubscriberWriteRequest},
+    radius::{
+        self, GroupPolicyWriteRequest, NasWriteRequest, SubscriberWriteRequest,
+    },
     radius_db,
 };
 
@@ -696,6 +698,65 @@ async fn patch_dns_rrsets(
     }
 }
 
+
+async fn list_radius_group_policies(headers: HeaderMap) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    match radius::list_group_policies().await {
+        Ok(items) => (StatusCode::OK, Json(items)).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to list RADIUS group policies");
+            database_error().into_response()
+        }
+    }
+}
+
+async fn replace_radius_group_policy(
+    headers: HeaderMap,
+    Json(input): Json<GroupPolicyWriteRequest>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    if let Err(message) = radius::validate_group_policy(&input) {
+        return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
+    }
+    match radius::replace_group_policy(&input).await {
+        Ok(()) => (
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "groupname": input.groupname,
+                "policy_count": input.policies.len()
+            })),
+        ).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to replace RADIUS group policy");
+            database_error().into_response()
+        }
+    }
+}
+
+async fn delete_radius_group_policy(
+    headers: HeaderMap,
+    Path(groupname): Path<String>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    match radius::delete_group_policy(&groupname).await {
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiError { error: "RADIUS group policy not found" }),
+        ).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to delete RADIUS group policy");
+            database_error().into_response()
+        }
+    }
+}
+
 pub fn routes() -> Routes {
     Routes::new()
         .prefix("/api/v1")
@@ -726,6 +787,9 @@ pub fn routes() -> Routes {
             get(list_subscribers).post(upsert_subscriber),
         )
         .add("/radius/subscribers/{username}", delete(delete_subscriber))
+        .add("/radius/groups/policies", get(list_radius_group_policies))
+        .add("/radius/groups/policy", put(replace_radius_group_policy))
+        .add("/radius/groups/{groupname}/policy", delete(delete_radius_group_policy))
         .add("/radius/sessions/active", get(active_sessions))
         .add("/radius/accounting/summary", get(accounting_summary))
 }
