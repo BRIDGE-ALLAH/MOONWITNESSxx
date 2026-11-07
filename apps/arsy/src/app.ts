@@ -4,10 +4,12 @@ import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
+import { registerOpportunityRoutes } from './opportunities/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
   logger?: boolean
+  env?: NodeJS.ProcessEnv
 }
 
 export async function createApp(options: CreateAppOptions = {}) {
@@ -16,7 +18,7 @@ export async function createApp(options: CreateAppOptions = {}) {
   app.setSerializerCompiler(serializerCompiler)
 
   const typedApp = app.withTypeProvider<ZodTypeProvider>()
-  const databasePool = options.databasePool ?? createDatabasePool()
+  const databasePool = options.databasePool ?? createDatabasePool(options.env)
 
   // The rate-limit plugin is wrapped with fastify-plugin. Register it at the
   // application root before declaring routes so its onRoute hook can see the
