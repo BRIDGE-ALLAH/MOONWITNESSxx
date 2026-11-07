@@ -15,6 +15,7 @@ export class RevocationPropagationGraph {
   private readonly outgoing = new Map<string, Set<string>>()
   private readonly states = new Map<string, RevocationState>()
   private readonly revocations = new Map<string, RevocationImpact>()
+  private readonly revocationRequests = new Map<string, RevocationRequest>()
 
   registerNode(node: DependencyNode): void {
     if (!node.id.trim() || !node.tenantId.trim()) throw new Error('node id and tenantId are required')
@@ -37,7 +38,11 @@ export class RevocationPropagationGraph {
     if (!this.nodes.has(request.sourceId)) throw new Error('unknown revocation source: ' + request.sourceId)
     const prior = this.revocations.get(request.revocationId)
     if (prior) {
-      if (prior.sourceId !== request.sourceId) throw new Error('revocation id collision')
+      const original = this.revocationRequests.get(request.revocationId)!
+      if (original.sourceId !== request.sourceId || original.actorId !== request.actorId ||
+          original.reason !== request.reason || original.occurredAt !== request.occurredAt) {
+        throw new Error('revocation id collision')
+      }
       return structuredClone(prior)
     }
     const tenantId = this.nodes.get(request.sourceId)!.tenantId
@@ -65,14 +70,26 @@ export class RevocationPropagationGraph {
       propagationPaths: Object.fromEntries(affectedNodeIds.map((id) => [id, paths[id]]))
     }
     this.revocations.set(request.revocationId, structuredClone(impact))
+    this.revocationRequests.set(request.revocationId, { ...request })
     return impact
   }
   stateOf(nodeId: string): RevocationState | 'unknown' { return this.states.get(nodeId) ?? 'unknown' }
   canServe(nodeId: string): boolean { return this.states.get(nodeId) === 'active' }
   /** Rebuild requires fresh evidence and actor; descendants stay revoked until separately rebuilt. */
-  rebuildNode(nodeId: string, evidenceIds: readonly string[], actorId: string): void {
-    if (!this.nodes.has(nodeId)) throw new Error('unknown dependency node: ' + nodeId)
-    if (!actorId.trim() || evidenceIds.length === 0 || evidenceIds.some((id) => !id.trim())) throw new Error('rebuild requires an actor and fresh evidence references')
+  rebuildNode(
+    nodeId: string,
+    evidenceIds: readonly string[],
+    actorId: string,
+    verifyEvidence: (node: DependencyNode, evidenceIds: readonly string[]) => boolean,
+  ): void {
+    const node = this.nodes.get(nodeId)
+    if (!node) throw new Error('unknown dependency node: ' + nodeId)
+    if (!actorId.trim() || evidenceIds.length === 0 || evidenceIds.some((id) => !id.trim())) {
+      throw new Error('rebuild requires an actor and fresh evidence references')
+    }
+    if (typeof verifyEvidence !== 'function' || !verifyEvidence(node, evidenceIds)) {
+      throw new Error('rebuild evidence verification failed')
+    }
     this.states.set(nodeId, 'active')
   }
 }

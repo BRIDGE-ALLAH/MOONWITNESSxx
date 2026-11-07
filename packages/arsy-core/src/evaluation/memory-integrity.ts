@@ -12,7 +12,7 @@ export const MEMORY_INTEGRITY_ATTACKS = [
 ] as const
 export type MemoryIntegrityAttackId = typeof MEMORY_INTEGRITY_ATTACKS[number]['id']
 export type IntegrityDetectionPoint = 'read' | 'audit' | 'none'
-export type IntegrityVerdict = 'blocked_at_read' | 'served_then_flagged' | 'served_undetected' | 'control_passed' | 'control_false_alarm'
+export type IntegrityVerdict = 'blocked_at_read' | 'blocked_without_read_detection' | 'blocked_without_signal' | 'served_then_flagged' | 'served_after_detection' | 'served_undetected' | 'control_passed' | 'control_false_alarm'
 export interface MemoryIntegrityTrial { caseId: string; attackId: MemoryIntegrityAttackId | 'control_pristine'; attacked: boolean; served: boolean; detectedAt: IntegrityDetectionPoint }
 export interface ScoredMemoryIntegrityTrial extends MemoryIntegrityTrial { verdict: IntegrityVerdict; score: number }
 export interface MemoryIntegrityBenchmarkReport {
@@ -35,7 +35,10 @@ export function scoreMemoryIntegrityBenchmark(trials: readonly MemoryIntegrityTr
     let verdict: IntegrityVerdict, score: number
     if (!trial.attacked) { verdict = trial.served && trial.detectedAt === 'none' ? 'control_passed' : 'control_false_alarm'; score = verdict === 'control_passed' ? 1 : 0 }
     else if (!trial.served && trial.detectedAt === 'read') { verdict = 'blocked_at_read'; score = 1 }
+    else if (!trial.served && trial.detectedAt === 'audit') { verdict = 'blocked_without_read_detection'; score = 0.5 }
+    else if (!trial.served && trial.detectedAt === 'none') { verdict = 'blocked_without_signal'; score = 0 }
     else if (trial.served && trial.detectedAt === 'audit') { verdict = 'served_then_flagged'; score = 0.5 }
+    else if (trial.served && trial.detectedAt === 'read') { verdict = 'served_after_detection'; score = 0 }
     else { verdict = 'served_undetected'; score = 0 }
     return { ...trial, verdict, score }
   })

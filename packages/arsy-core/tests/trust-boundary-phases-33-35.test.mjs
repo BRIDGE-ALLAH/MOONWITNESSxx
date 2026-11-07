@@ -15,6 +15,7 @@ test('revocation propagates through evidence, claim, memory, summary, cache and 
   assert.deepEqual(impact.frozenActionIds, ['action:1'])
   assert.equal(graph.canServe('cache:1'), false)
   assert.deepEqual(graph.revoke(request), impact)
+  assert.throws(() => graph.revoke({ ...request, reason: 'different reason' }), /revocation id collision/)
 })
 
 test('revocation graph rejects cross-tenant edges and unknown references', () => {
@@ -28,8 +29,9 @@ test('rebuilding a revoked node requires fresh evidence and an explicit actor', 
   const graph = new RevocationPropagationGraph()
   graph.registerNode({ id: 'claim:1', kind: 'claim', tenantId: 't' })
   graph.revoke({ revocationId: 'r1', sourceId: 'claim:1', actorId: 'reviewer', reason: 'withdrawn', occurredAt: '2026-11-08T00:00:00Z' })
-  assert.throws(() => graph.rebuildNode('claim:1', [], 'reviewer'), /fresh evidence/)
-  graph.rebuildNode('claim:1', ['evidence:new'], 'reviewer')
+  assert.throws(() => graph.rebuildNode('claim:1', [], 'reviewer', () => true), /fresh evidence/)
+  assert.throws(() => graph.rebuildNode('claim:1', ['evidence:new'], 'reviewer', () => false), /verification failed/)
+  graph.rebuildNode('claim:1', ['evidence:new'], 'reviewer', () => true)
   assert.equal(graph.canServe('claim:1'), true)
 })
 
