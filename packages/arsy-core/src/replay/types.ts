@@ -69,9 +69,11 @@ export function assertReplaySafe(event: ReplayTraceEvent): void {
 
 export function createReplayCapsule(input: Omit<ReplayCapsule, 'trace'> & { trace?: ReplayTraceEvent[] }): ReplayCapsule {
   const trace = [...(input.trace ?? [])].sort((a, b) => a.sequence - b.sequence)
+  const seenIds = new Set<string>()
   for (let index = 0; index < trace.length; index += 1) {
     if (trace[index].sequence !== index) throw new Error('Replay trace sequence must be contiguous from zero')
-    if (index > 0 && trace[index].id === trace[index - 1].id) throw new Error('Replay trace event ids must be unique')
+    if (seenIds.has(trace[index].id)) throw new Error('Replay trace event ids must be unique')
+    seenIds.add(trace[index].id)
   }
   return { ...input, trace }
 }
