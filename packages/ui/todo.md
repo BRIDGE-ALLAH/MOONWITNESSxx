@@ -411,3 +411,30 @@ Still deferred and intentionally not claimed complete:
 - Domain-specific list/detail/form/timeline/board compositions.
 - Server authorization, approval policy, persistence, job orchestration, retry/cancel policy, and audit logging remain application/backend responsibilities.
 - Full keyboard/screen-reader/browser QA and interaction tests.
+
+
+## Milestone 7 — maturity and visual identity delivery
+
+**Implemented on `feat-ui-package-milestone-1-2`; CI verification pending.**
+
+Delivered in this pass:
+- [x] Add a practical component workbench at `apps/headquarter/src/app/ui-lab/page.tsx`, rendering the real shared package in the actual host shell.
+- [x] Add MOONWITNESS visual DNA contract: nocturnal intelligence, signal energy, editorial scale, instrument language, and living-but-not-noisy motion (`VISUAL-DNA.md`).
+- [x] Add `RiotSignalHeader`, `RiotLiveIndicator`, and `RiotAtmosphere` as reusable, typed, public brand-language components.
+- [x] Add restrained signal pulse, ambient drift, grid, and grain treatments with reduced-motion fallbacks.
+- [x] Add Node built-in test coverage for semantic theme tokens, focus visibility, reduced motion, accessible live status, public exports, and workbench presence.
+- [x] Add a 600 KiB uncompressed JavaScript output budget check after package build.
+- [x] Expand consumer smoke coverage for the new public exports.
+- [x] Document visual language and workbench operation in `VISUAL-DNA.md`, `WORKBENCH.md`, and README.
+
+Still open (not represented as completed):
+- [ ] Run visual review in a real browser at desktop/tablet/mobile widths in both Night Riot and Paper Riot.
+- [ ] Run axe-core/WCAG 2.2 AA automated and manual checks; static contract tests are not a substitute.
+- [ ] Add screenshot-based visual regression after selecting and adopting browser automation.
+- [ ] Decide on self-hosted font assets after license, privacy, and performance review.
+- [ ] Measure and optimize the production CSS payload separately from the JavaScript budget.
+- [ ] Add keyboard/screen-reader interaction tests for dialogs, command palette, data table, and shell navigation.
+
+### Quality gate boundary
+
+The workbench is an in-app component inventory, not Storybook. The new Node tests are static contract tests, not browser interaction or screenshot tests. The bundle budget measures emitted JavaScript bytes only and does not represent compressed transfer size or CSS size. CI results will determine whether the implemented package gate passes.
