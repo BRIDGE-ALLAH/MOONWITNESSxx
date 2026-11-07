@@ -98,12 +98,12 @@ The lockfile workflow makes one narrow exception to PR governance: the current r
 | `pnpm check:repo`       | Read-only workspace and automation audit                   |
 | `pnpm audit:repo`       | Write ignored audit artifacts under `.artifacts/`          |
 | `pnpm format`           | Format modified, staged, and untracked supported files     |
-| `pnpm format:check`     | Verify formatting for changed files only                  |
+| `pnpm format:check`     | Verify formatting for changed files only                   |
 | `pnpm format:check:all` | Audit all tracked Prettier-supported files                 |
 | `pnpm lint`             | Repository structure and formatting gate                   |
 | `pnpm type-check`       | Run package-level Turbo type-check tasks                   |
 | `pnpm test`             | Run Node.js automation tests                               |
-| `pnpm lockfile:check`   | Read-only frozen verification of lockfile consistency     |
+| `pnpm lockfile:check`   | Read-only frozen verification of lockfile consistency      |
 | `pnpm lockfile:refresh` | Guarded local lockfile regeneration; preserves local edits |
 | `pnpm validate:repo`    | Run repository integrity, formatting, and automation tests |
 | `pnpm validate`         | Run repository validation, package type-checks, and builds |
@@ -160,15 +160,15 @@ A normal commit must not bump versions, update release notes, create tags, gener
 
 ## 6. GitHub Actions ownership
 
-| Workflow               | Trigger                                               | Responsibility                                                                                     | Permissions                                                 |
-| ---------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `ci.yml`               | Push, PR, manual                                      | Lockfile integrity and repository validation; optional full workspace gate                         | `contents: read`                                            |
-| `weekly-detection.yml` | Weekly, manual                                        | Read-only audit report and automation tests                                                        | `contents: read`                                            |
-| `format-changed.yml`   | Supported pushes to `main`/work branches, manual     | Format changed supported files on the triggering branch, then dispatch CI if a style-only commit is needed | `contents: write`, `actions: write` |
-| `codeql.yml`           | Push, PR, weekly                                      | Static security analysis                                                                           | `contents: read`, `security-events: write`, `actions: read` |
-| `pr-labeler.yml`       | PR updates                                            | Apply path-based labels                                                                            | `contents: read`, `pull-requests: write`                    |
-| `refresh-lockfile.yml` | Manifest/workspace/lockfile changes on `main`, manual | Regenerate, frozen-verify, commit a lockfile-only bot change to `main`, then dispatch CI           | `contents: write`, `actions: write`                         |
-| Dependabot             | Weekly                                                | Propose dependency and Actions updates                                                             | Managed by GitHub                                           |
+| Workflow               | Trigger                                               | Responsibility                                                                                             | Permissions                                                 |
+| ---------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `ci.yml`               | Push, PR, manual                                      | Lockfile integrity and repository validation; optional full workspace gate                                 | `contents: read`                                            |
+| `weekly-detection.yml` | Weekly, manual                                        | Read-only audit report and automation tests                                                                | `contents: read`                                            |
+| `format-changed.yml`   | Supported pushes to `main`/work branches, manual      | Format changed supported files on the triggering branch, then dispatch CI if a style-only commit is needed | `contents: write`, `actions: write`                         |
+| `codeql.yml`           | Push, PR, weekly                                      | Static security analysis                                                                                   | `contents: read`, `security-events: write`, `actions: read` |
+| `pr-labeler.yml`       | PR updates                                            | Apply path-based labels                                                                                    | `contents: read`, `pull-requests: write`                    |
+| `refresh-lockfile.yml` | Manifest/workspace/lockfile changes on `main`, manual | Regenerate, frozen-verify, commit a lockfile-only bot change to `main`, then dispatch CI                   | `contents: write`, `actions: write`                         |
+| Dependabot             | Weekly                                                | Propose dependency and Actions updates                                                                     | Managed by GitHub                                           |
 
 ### CI staging
 
