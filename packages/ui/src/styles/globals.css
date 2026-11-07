@@ -20,7 +20,7 @@
     --secondary: 210 6% 87%;
     --secondary-foreground: 210 8% 14%;
     --accent: 16 100% 42%;
-    --accent-foreground: 210 8% 10%;
+    --accent-foreground: 0 0% 100%;
 
     --success: 145 62% 29%;
     --success-foreground: 0 0% 100%;
@@ -55,7 +55,7 @@
     --disabled: 210 5% 65%;
 
     --muted: 37 15% 86%;
-    --muted-foreground: 210 5% 40%;
+    --muted-foreground: 210 5% 35%;
     --radius: 0.25rem;
     --radius-control: 0.25rem;
     --radius-panel: 0.375rem;
