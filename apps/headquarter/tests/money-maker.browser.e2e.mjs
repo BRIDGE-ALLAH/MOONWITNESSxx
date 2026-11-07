@@ -257,7 +257,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await payoutForm.getByLabel('Amount · minor units').fill('3000')
     await payoutForm.getByLabel('Currency').fill('IDR')
     await payoutForm.getByLabel('Expected at (optional)').fill(localDateTime(-15_000))
-    await payoutForm.getByLabel('Source').fill(payoutSource)
+    await payoutForm.getByPlaceholder('Provider statement / payout notice').fill(payoutSource)
     await payoutForm.getByLabel('Provider reference').fill(`e2e-payout-${runId}`)
     await payoutForm.getByLabel('Source evidence URL').fill(`https://example.com/e2e-payout-${runId}`)
     await payoutForm.getByLabel('Evidence summary').fill('Synthetic CI-only pending payout evidence; not a real provider payment.')
