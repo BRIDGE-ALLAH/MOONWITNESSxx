@@ -7,6 +7,7 @@ on:
       - "feat-*"
       - "feat/**"
       - "fix-*"
+      - "fix/**"
       - "chore-*"
       - "headquarter/**"
   pull_request:
