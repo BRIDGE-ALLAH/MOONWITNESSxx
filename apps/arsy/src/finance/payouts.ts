@@ -53,6 +53,7 @@ interface PayoutRow {
   paid_at: Date | string | null
   source: string
   source_evidence: PayoutEvidence
+  request_hash: string
   reconciliation_evidence: Record<string, unknown>
   created_at: Date | string
   updated_at: Date | string
@@ -152,7 +153,7 @@ function mapFx(row: FxConversionRow): FxConversionRecord {
 
 const payoutColumns = `p.id, p.channel_id, c.display_name AS channel_name,
   p.amount_minor::text AS amount_minor, p.currency, p.status, p.provider_reference,
-  p.expected_at, p.paid_at, p.source, p.source_evidence, p.reconciliation_evidence,
+  p.expected_at, p.paid_at, p.source, p.source_evidence, p.request_hash, p.reconciliation_evidence,
   p.created_at, p.updated_at,
   COALESCE((
     SELECT jsonb_agg(jsonb_build_object(
