@@ -48,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Test Divine core and Corpus adapter
+        run: pnpm --filter @riotworks/divine test
+
       - name: Validate repository, formatting, and automation tests
         run: pnpm run validate:repo
 
