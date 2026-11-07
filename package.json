@@ -22,7 +22,9 @@
     "validate:repo": "pnpm run check:repo && pnpm run format:check && pnpm test",
     "validate": "pnpm run validate:repo && pnpm run type-check && pnpm run build",
     "lockfile:check": "pnpm exec node scripts/check-lockfile.mjs",
-    "lockfile:refresh": "pnpm exec node scripts/check-lockfile.mjs --lockfile-only"
+    "lockfile:refresh": "pnpm exec node scripts/check-lockfile.mjs --lockfile-only",
+    "check:commit": "node scripts/check-commit-message.mjs",
+    "check:staged": "node scripts/check-staged.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.6.2",
