@@ -26,7 +26,7 @@ export function parseComposePs(output) {
   }
 }
 
-export function assessChangeRisk({ blastRadius, reversibility, uncertainty }) {
+export function assessChangeRisk({ blastRadius, irreversibility, uncertainty }) {
   const dimensions = { blastRadius, reversibility, uncertainty }
   for (const [name, value] of Object.entries(dimensions)) {
     if (!Number.isInteger(value) || value < 0 || value > 3) {
