@@ -27,13 +27,13 @@ export function parseComposePs(output) {
 }
 
 export function assessChangeRisk({ blastRadius, irreversibility, uncertainty }) {
-  const dimensions = { blastRadius, reversibility, uncertainty }
+  const dimensions = { blastRadius, irreversibility, uncertainty }
   for (const [name, value] of Object.entries(dimensions)) {
     if (!Number.isInteger(value) || value < 0 || value > 3) {
       throw new Error(`${name} must be an integer from 0 to 3`)
     }
   }
-  const score = blastRadius + reversibility + uncertainty
+  const score = blastRadius + irreversibility + uncertainty
   return {
     score,
     dimensions,
