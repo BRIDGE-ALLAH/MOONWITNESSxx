@@ -77,8 +77,10 @@ test('production session configuration requires HTTPS', () => {
 })
 
 test('operator password comparison and same-origin validation', () => {
-  assert.equal(operatorPasswordMatches('correct horse', 'correct horse'), true)
-  assert.equal(operatorPasswordMatches('incorrect', 'correct horse'), false)
+  assert.equal(operatorPasswordMatches('correct horse', 'correct horse', secret), true)
+  assert.equal(operatorPasswordMatches('incorrect', 'correct horse', secret), false)
+  assert.equal(operatorPasswordMatches('correct horse', 'correct horse', 'another-session-secret-that-is-32-bytes'), false)
+  assert.equal(operatorPasswordMatches('x'.repeat(1025), password, secret), false)
   const request = new Request('https://hq.example/api/opportunities', {
     method: 'POST',
     headers: { origin: 'https://hq.example' },
