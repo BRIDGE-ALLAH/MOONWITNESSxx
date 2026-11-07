@@ -38,6 +38,8 @@ export function OpportunityBoard() {
   const [message, setMessage] = useState('')
   const [actionId, setActionId] = useState<string | null>(null)
   const [decisionDrafts, setDecisionDrafts] = useState<Record<string, DecisionDraft>>({})
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState<OpportunityEditDraft | null>(null)
   const [scores, setScores] = useState(emptyScores)
   const [scoreRationales, setScoreRationales] = useState(emptyRationales)
   const [hardGates, setHardGates] = useState(emptyGates)
@@ -138,6 +140,37 @@ export function OpportunityBoard() {
     }
   }
 
+  function beginEdit(item: Opportunity) {
+    setEditingId(item.id)
+    setEditDraft({
+      title: item.title, buyerProblem: item.buyerProblem, buyerSegment: item.buyerSegment,
+      jobToBeDone: item.jobToBeDone, productHypothesis: item.productHypothesis,
+      productFamily: item.productFamily, candidateChannels: item.candidateChannels,
+      evidence: item.evidence, scores: item.scores, scoreDetails: item.scoreDetails,
+      hardGates: item.hardGates, hardGateDetails: item.hardGateDetails,
+    })
+  }
+
+  async function saveOpportunityEdit(item: Opportunity) {
+    if (!editDraft) return
+    setActionId(item.id); setError(''); setMessage('')
+    try {
+      const response = await fetch(`/api/opportunities/${item.id}`, {
+        method: 'PATCH', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...editDraft, expectedRevision: item.revision }),
+      })
+      const payload = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (response.status === 409) throw new Error('This opportunity changed in another session. Refresh and review the latest record before editing again.')
+      if (!response.ok) throw new Error(payload.error?.message || 'Unable to update opportunity.')
+      setEditingId(null); setEditDraft(null)
+      setMessage(`Opportunity updated to revision ${payload.data.revision}. Audit history recorded.`)
+      await refresh()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to update opportunity.')
+    } finally { setActionId(null) }
+  }
+
   async function archiveOpportunity(item: Opportunity) {
     if (!window.confirm(`Archive "${item.title}"? The record will be retained in the audit history.`)) return
     setActionId(item.id); setError(''); setMessage('')
@@ -169,6 +202,28 @@ export function OpportunityBoard() {
           && item.evaluation.missingScoreDimensions.length === 0
         const draft = decisionDrafts[item.id] ?? { decision: item.evaluation.decision as Decision, rationale: '' }
         return <article data-testid="opportunity-card" key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><h3 className="font-display text-xl uppercase">{item.title}</h3><span className="font-mono text-xs text-acid-lime">{item.evaluation.score === null ? 'UNSCORED' : `${item.evaluation.score}/100`}</span></div><p className="mt-2 text-sm text-muted-ink">{item.buyerSegment}</p><p className="mt-3 text-sm">{item.buyerProblem}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase"><span className="border border-acid-lime/30 px-2 py-1">{item.evaluation.decision}</span>{item.evaluation.blockedGates.map((g) => <span key={g} className="border border-red-500/50 px-2 py-1 text-red-300">BLOCKED: {g}</span>)}{item.evaluation.unknownGates.map((g) => <span key={g} className="border border-orange-400/50 px-2 py-1 text-orange-200">UNKNOWN: {g}</span>)}</div>
+          <details className="mt-4 border-t border-acid-lime/15 pt-3">
+            <summary className="cursor-pointer font-mono text-xs uppercase text-acid-lime">Evidence & decision review · revision {item.revision}</summary>
+            <div className="mt-3 space-y-4 text-xs">
+              <div><h4 className="font-mono uppercase text-muted-ink">Product hypothesis</h4><p className="mt-1">{item.productHypothesis}</p><p className="mt-1 text-muted-ink">Job: {item.jobToBeDone}</p><p className="mt-1 text-muted-ink">Family: {item.productFamily} · Channels: {item.candidateChannels.join(', ') || 'None recorded'}</p></div>
+              <div className="space-y-2"><h4 className="font-mono uppercase text-muted-ink">Evidence sources</h4>{item.evidence.map((evidence) => <div key={evidence.evidenceId} className="border-l border-acid-lime/40 pl-3"><p className="font-semibold">{evidence.sourceName} · {evidence.evidenceClass} · {evidence.reliability}</p><a href={evidence.sourceUrl} target="_blank" rel="noreferrer" className="break-all text-acid-lime underline">{evidence.sourceUrl}</a><p className="mt-1">{evidence.summary}</p><p className="mt-1 text-muted-ink">Captured {new Date(evidence.capturedAt).toLocaleString()} · {evidence.collectionMethod}</p><p className="mt-1 text-muted-ink">Permission basis: {evidence.permissionBasis}</p><p className="mt-1 text-muted-ink">Limitations: {evidence.limitations}</p>{evidence.recheckAt && <p className="mt-1 text-muted-ink">Recheck: {new Date(evidence.recheckAt).toLocaleString()}</p>}</div>)}</div>
+              <div><h4 className="font-mono uppercase text-muted-ink">Score breakdown & rationale</h4><div className="mt-2 grid gap-2">{dimensions.map(([key, label, max]) => <div key={key} className="border border-acid-lime/10 p-2"><p className="font-mono">{label}: {item.scores[key] ?? 'UNKNOWN'} / {max} · {item.scoreDetails[key]?.confidence ?? 'unknown'} confidence</p><p className="mt-1 text-muted-ink">{item.scoreDetails[key]?.rationale ?? 'No rationale recorded.'}</p></div>)}</div></div>
+              <div><h4 className="font-mono uppercase text-muted-ink">Hard gates</h4><div className="mt-2 grid gap-2 md:grid-cols-2">{gates.map(([key, label]) => <div key={key} className="border border-acid-lime/10 p-2"><p className="font-mono">{label}: {item.hardGates[key]}</p><p className="mt-1 text-muted-ink">{item.hardGateDetails[key]?.rationale ?? 'No rationale recorded.'}</p></div>)}</div></div>
+              {item.decisionRationale && <p className="text-muted-ink">Last decision: {item.decisionRationale}</p>}
+              <button type="button" onClick={() => beginEdit(item)} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase">Edit opportunity record</button>
+            </div>
+          </details>
+          {editingId === item.id && editDraft && <section className="mt-3 space-y-3 border border-acid-lime/30 p-3">
+            <h4 className="font-mono text-xs uppercase text-acid-lime">Edit opportunity · expected revision {item.revision}</h4>
+            <label className="block text-[10px] font-mono uppercase">Title<input value={editDraft.title} onChange={(event) => setEditDraft({ ...editDraft, title: event.target.value })} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-sm normal-case" /></label>
+            <label className="block text-[10px] font-mono uppercase">Buyer segment<input value={editDraft.buyerSegment} onChange={(event) => setEditDraft({ ...editDraft, buyerSegment: event.target.value })} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-sm normal-case" /></label>
+            <label className="block text-[10px] font-mono uppercase">Buyer problem<textarea value={editDraft.buyerProblem} onChange={(event) => setEditDraft({ ...editDraft, buyerProblem: event.target.value })} rows={3} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-sm normal-case" /></label>
+            <label className="block text-[10px] font-mono uppercase">Job to be done<textarea value={editDraft.jobToBeDone} onChange={(event) => setEditDraft({ ...editDraft, jobToBeDone: event.target.value })} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-sm normal-case" /></label>
+            <label className="block text-[10px] font-mono uppercase">Product hypothesis<textarea value={editDraft.productHypothesis} onChange={(event) => setEditDraft({ ...editDraft, productHypothesis: event.target.value })} rows={3} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-sm normal-case" /></label>
+            <label className="block text-[10px] font-mono uppercase">Candidate channels<input value={editDraft.candidateChannels.join(', ')} onChange={(event) => setEditDraft({ ...editDraft, candidateChannels: event.target.value.split(',').map((value) => value.trim()).filter(Boolean) })} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-sm normal-case" /></label>
+            <p className="text-[10px] text-muted-ink">Evidence, score rationales and hard gates are preserved by this edit. Add new evidence or revise assessments through a new reviewed record, not by silently changing the source history.</p>
+            <div className="flex gap-2"><button type="button" disabled={actionId === item.id} onClick={() => void saveOpportunityEdit(item)} className="bg-acid-lime px-3 py-2 font-mono text-[10px] font-bold uppercase text-obsidian disabled:opacity-40">{actionId === item.id ? 'Saving…' : 'Save revision'}</button><button type="button" onClick={() => { setEditingId(null); setEditDraft(null) }} className="border border-acid-lime/30 px-3 py-2 font-mono text-[10px] uppercase">Cancel</button></div>
+          </section>}
           {eligible ? <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs"><Link href="/the-forge" className="font-mono uppercase text-acid-lime underline">Ready for product brief in The Forge →</Link></p>
             : <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs text-muted-ink">Product promotion is locked until every score dimension is complete and all hard gates are passed.</p>}
           <div className="mt-4 space-y-2 border-t border-acid-lime/15 pt-4">
