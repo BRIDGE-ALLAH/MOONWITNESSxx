@@ -1,8 +1,8 @@
 # MONEY MAKER — Execution Plan
 
 **Issue:** #100 — https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/100  
-**Branch:** `feat/money-maker-final`  
-**Baseline:** `main` at `01af20609452e922506dc80e85ed361b469627c9` (recheck before every implementation batch)  
+**Branch:** `feat/money-maker-delivery`  
+**Baseline:** `main` at `465331ab6e958117e22954eadeec20721d0d20c3` (recheck before every implementation batch)  
 **Scope:** Real creative-commerce workflows only. This plan does not reopen ARSY ORM, replace the backend, or duplicate PRs #93/#98/#24.
 
 ## Product contract
