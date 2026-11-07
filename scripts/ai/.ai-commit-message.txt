@@ -1,1 +1,1 @@
-chore: update package.json, scripts/ai/.ai-changelog-entry.txt, scripts/ai/.ai-commit-message.txt
+chore: update 4 files across packages
