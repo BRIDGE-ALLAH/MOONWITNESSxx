@@ -203,6 +203,8 @@ try {
   await page.getByLabel('Policy evidence summary').fill('Official public policy page captured by the isolated test operator.')
   await page.getByLabel('Account eligibility evidence URL').fill('https://example.com/direct-operator-account')
   await page.getByLabel('Payout setup evidence URL').fill('https://example.com/direct-operator-payout')
+  await page.getByLabel('Format requirements evidence URL').fill('https://example.com/direct-operator-formats')
+  await page.getByLabel('Listing format requirements JSON').fill('{"acceptedMediaTypes":["text/plain"],"acceptedProductFamilies":["digital-utility"],"maxAssetBytes":10485760,"maxTitleLength":180,"maxDescriptionLength":2000,"requiredMetadata":["buyerProblem","buyerSegment","jobToBeDone","productHypothesis"]}')
   await page.getByLabel('Payout requirements JSON').fill('{"supportedCurrencies":["IDR"],"payoutMethods":["bank-transfer"]}')
   await page.getByLabel('Quota notes JSON').fill('{}')
   await page.getByRole('button', { name: 'Register evidence-backed channel' }).click()
