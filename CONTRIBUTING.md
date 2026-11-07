@@ -57,9 +57,9 @@ A command is only a reliable quality gate when the affected package actually def
 
 Use short-lived branches with one of these prefixes:
 
-- `feat-*` for a new capability.
-- `fix-*` for a defect.
-- `chore-*` for tooling, documentation, refactoring, and maintenance.
+- `feat/*` for a new capability.
+- `fix/*` for a defect.
+- `chore/*` for tooling, documentation, refactoring, and maintenance.
 
 The current default integration target is `main`. Do not assume a `dev` branch exists; if a protected `dev` branch is introduced later, update this policy and CI targets together.
 
@@ -95,4 +95,4 @@ Commits must never bump versions or rewrite `CHANGELOG.md`. Release notes and ve
 - GitHub Actions must use least-privilege `GITHUB_TOKEN` permissions. Never put personal tokens or API secrets in committed files.
 - Local AI commit assistance is optional and must never be part of pre-commit or CI.
 
-See [docs/24](./docs/24-repository-and-automation-governance.md) for the complete automation ownership and escalation rules.
+See [governance/README.md](./governance/README.md) for canonical rule contracts and [docs/24](./docs/24-repository-and-automation-governance.md) for detailed operational automation guidance.
