@@ -24,7 +24,7 @@ ipnet = "2"
 bcrypt = "0.17"
 md-4 = "0.10"
 hex = "0.4"
-tokio = { version = "1.45", default-features = false, features = ["macros", "rt-multi-thread", "sync"] }
+tokio = { version = "1.45", default-features = false, features = ["macros", "rt-multi-thread", "sync", "time", "process", "fs", "io-util"] }
 tracing = "0.1"
 
 [[bin]]

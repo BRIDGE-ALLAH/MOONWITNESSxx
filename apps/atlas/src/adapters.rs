@@ -1,8 +1,18 @@
-use std::{env, time::Duration};
+use std::{
+    env,
+    os::unix::fs::PermissionsExt,
+    process::Stdio,
+    time::Duration,
+};
+
+use tokio::{io::AsyncWriteExt, process::Command};
 
 use crate::engine::{EngineHealth, EngineInstance};
 
 pub async fn probe(engine: &EngineInstance) -> EngineHealth {
+    if engine.engine_type == "freeradius" {
+        return probe_freeradius(engine).await;
+    }
     if !engine.enabled {
         return EngineHealth {
             engine_id: engine.id.clone(),
@@ -41,13 +51,7 @@ pub async fn probe(engine: &EngineInstance) -> EngineHealth {
         }
         "victoriametrics" => client.get(format!("{}/health", engine.endpoint)),
         "victorialogs" => client.get(format!("{}/metrics", engine.endpoint)),
-        "freeradius" => {
-            return result(
-                engine,
-                "probe_unsupported",
-                "RADIUS is UDP; configure a Status-Server probe or validate with radclient before marking it healthy",
-            );
-        }
+        "freeradius" => unreachable!("FreeRADIUS probe is handled before HTTP adapter dispatch"),
         "unbound" | "dnsdist" => {
             return result(
                 engine,
@@ -89,5 +93,73 @@ fn result(engine: &EngineInstance, state: &'static str, detail: &'static str) ->
         engine_type: engine.engine_type.clone(),
         state,
         detail,
+    }
+}
+
+async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
+    if !engine.enabled {
+        return result(engine, "disabled", "engine instance is disabled");
+    }
+    let Some(secret_key) = engine.secret_env_key.as_ref() else {
+        return result(engine, "not_configured", "RADIUS Status-Server secret reference is missing");
+    };
+    let Ok(secret) = env::var(secret_key) else {
+        return result(engine, "not_configured", "RADIUS Status-Server secret environment variable is missing");
+    };
+    let Ok(url) = reqwest::Url::parse(&engine.endpoint) else {
+        return result(engine, "invalid_endpoint", "RADIUS endpoint URL is invalid");
+    };
+    let Some(host) = url.host_str() else {
+        return result(engine, "invalid_endpoint", "RADIUS endpoint host is missing");
+    };
+    let port = url.port().unwrap_or(18121);
+    let secret_path = env::temp_dir().join(format!("atlas-radius-{}.secret", ulid::Ulid::new()));
+    if tokio::fs::write(&secret_path, format!("{secret}\n")).await.is_err() {
+        return result(engine, "error", "could not prepare protected RADIUS probe secret");
+    }
+    if tokio::fs::set_permissions(&secret_path, std::fs::Permissions::from_mode(0o600)).await.is_err() {
+        let _ = tokio::fs::remove_file(&secret_path).await;
+        return result(engine, "error", "could not secure temporary RADIUS probe secret");
+    }
+    let child = Command::new("radclient")
+        .arg("-q")
+        .arg("-S")
+        .arg(&secret_path)
+        .arg(format!("{host}:{port}"))
+        .arg("status")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .kill_on_drop(true)
+        .spawn();
+    let outcome = match child {
+        Ok(mut child) => {
+            let write_result = if let Some(mut stdin) = child.stdin.take() {
+                stdin.write_all(
+                    b"FreeRADIUS-Statistics-Type = 1\nMessage-Authenticator = 0x00\n",
+                ).await
+            } else {
+                Err(std::io::Error::other("radclient stdin unavailable"))
+            };
+            if write_result.is_err() {
+                let _ = child.kill().await;
+                false
+            } else {
+                matches!(
+                    tokio::time::timeout(Duration::from_secs(4), child.wait()).await,
+                    Ok(Ok(status)) if status.success()
+                )
+            }
+        }
+        Err(error) => {
+            tracing::warn!(engine_id = %engine.id, %error, "radclient could not be started");
+            false
+        }
+    };
+    let _ = tokio::fs::remove_file(&secret_path).await;
+    if outcome {
+        result(engine, "healthy", "FreeRADIUS answered a Status-Server request")
+    } else {
+        result(engine, "unreachable", "FreeRADIUS Status-Server probe did not receive a valid response")
     }
 }

@@ -65,15 +65,18 @@ pub fn validate(input: &EngineWriteRequest) -> Result<(), &'static str> {
         return Err("endpoint must not exceed 2048 characters");
     }
     let url = reqwest::Url::parse(&input.endpoint)
-        .map_err(|_| "endpoint must be an absolute HTTP or HTTPS URL")?;
-    if !matches!(url.scheme(), "http" | "https")
+        .map_err(|_| "endpoint must be an absolute engine URL")?;
+    let valid_scheme = if input.engine_type == "freeradius" {
+        url.scheme() == "radius"
+    } else {
+        matches!(url.scheme(), "http" | "https")
+    };
+    if !valid_scheme
         || url.host_str().is_none()
         || !url.username().is_empty()
         || url.password().is_some()
     {
-        return Err(
-            "endpoint must use HTTP(S), include a host, and contain no embedded credentials",
-        );
+        return Err("endpoint scheme must match engine type and must not contain embedded credentials");
     }
     if let Some(key) = &input.secret_env_key {
         if !key.starts_with("ATLAS_ENGINE_SECRET_")
