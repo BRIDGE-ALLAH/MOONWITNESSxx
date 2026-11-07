@@ -66,7 +66,7 @@ export const assetRegistry = {
 
 export type AssetId = keyof typeof assetRegistry;
 export type IllustrationName = Extract<AssetId, `illustration.${string}`>;
-export type TextureName = Extract<AssetId, `texture.${string}>;
+export type TextureName = Extract<AssetId, `texture.${string}`>;
 
 export function getAsset<TAsset extends AssetId>(id: TAsset): (typeof assetRegistry)[TAsset] {
   return assetRegistry[id];
