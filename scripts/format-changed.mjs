@@ -32,7 +32,9 @@ export async function runFormatCheck() {
   } else {
     if (branch !== 'main' && run('git', ['rev-parse', '--verify', 'origin/main']).status === 0) {
       const mergeBase = gitFiles(['merge-base', 'origin/main', 'HEAD'])[0]
-      changed.push(...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${mergeBase}...HEAD`]))
+      changed.push(
+        ...gitFiles(['diff', '--name-only', '--diff-filter=ACMR', `${mergeBase}...HEAD`])
+      )
     }
     changed.push(
       ...gitFiles(['diff', '--name-only', '--diff-filter=ACMR']),
