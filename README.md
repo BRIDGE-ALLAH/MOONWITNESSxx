@@ -4,7 +4,7 @@
 
 MOONWITNESS is an evidence-first knowledge, intelligence, and operations ecosystem. Its purpose is to help people observe carefully, preserve sources and context, verify claims, connect knowledge, make accountable decisions, and share useful discoveries.
 
-MOONWITNESS is the master product identity within the wider **GODPROMISE → EMPIRE OF THE LIGHT** narrative universe. **A-L-L-A-H.COM** is the intended unified public home. **ROCKSOUL** is a distinct creative/narrative identity and runtime direction. **E-ISP.ID** is the connectivity business identity. **RIOTWORKS** is a separately governed creative/engineering studio and operating division associated with the initial creative-commerce workflow; it is not the MOONWITNESS master brand.
+MOONWITNESS is the master product identity within the wider **GODPROMISE → EMPIRE OF THE LIGHT** narrative universe. **A-L-L-A-H.COM** is the intended unified public home. **ROCKSOUL** is a distinct creative/narrative identity and runtime direction. **E-ISP.ID** is the connectivity business identity. **RIOTWORKS** is the product and operating division within MOONWITNESS, associated with the initial creative-commerce workflow; it is not a competing master brand.
 
 > **Repository truth:** this monorepo currently has two canonical application workspaces—HEADQUARTER and ARSY. The wider product universe contains additional target application identities, but those are not all implemented or deployed here. See the [Universe & Product Architecture Registry](./docs/32-universe-and-product-architecture-registry.md).
 
