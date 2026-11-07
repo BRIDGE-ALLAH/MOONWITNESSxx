@@ -12,7 +12,8 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts",
-    "lint": "../lint/node_modules/.bin/eslint src --config ../lint/eslint.config.mjs --max-warnings 0"
+    "lint": "../lint/node_modules/.bin/eslint src --config ../lint/eslint.config.mjs --max-warnings 0",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
   },
   "dependencies": {
     "@riotworks/orm-db-adaptor": "workspace:*",
