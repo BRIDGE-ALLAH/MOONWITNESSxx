@@ -1,1 +1,2 @@
 export * from "./types.ts"; export {validateWitnessGraph,traverseWitnessPaths,serializeWitnessGraph,classifyWitnessRelation} from "./engine.ts";
+export * from "./independence.ts";export * from "./proof-carrying.ts";

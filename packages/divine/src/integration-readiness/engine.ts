@@ -1,0 +1,10 @@
+import type {AdapterDescriptor,IntegrationReadinessInput,IntegrationReadinessReport} from "./types.ts";
+const version=(v:string)=>v.split(".").map(x=>Number.parseInt(x,10)||0);
+const atLeast=(actual:string,minimum:string)=>{const a=version(actual),m=version(minimum);for(let i=0;i<Math.max(a.length,m.length);i++){if((a[i]??0)>(m[i]??0))return true;if((a[i]??0)<(m[i]??0))return false;}return true;};
+export function assessIntegrationReadiness(input:IntegrationReadinessInput):IntegrationReadinessReport{
+ const blockers:string[]=[],missing:string[]=[],incompatible:string[]=[],unverified:string[]=[],satisfied:string[]=[],deferred:string[]=[];
+ const ids=new Set<string>();for(const p of input.ports){if(ids.has(p.id))blockers.push("Duplicate port declaration: "+p.id);ids.add(p.id);const matches=input.adapters.filter(a=>a.port===p.id);if(matches.length>1){incompatible.push(p.id);blockers.push("Multiple adapters claim the same platform port: "+p.id);continue;}const a=matches[0];if(!a){if(p.required)missing.push(p.id);else deferred.push(p.id);continue;}const missingCaps=p.capabilities.filter(c=>!a.capabilities.includes(c));if((p.minimumVersion&&!atLeast(a.version,p.minimumVersion))||missingCaps.length){incompatible.push(p.id);blockers.push(p.id+" adapter is incompatible"+(missingCaps.length?"; missing capabilities: "+missingCaps.join(", "):""));continue;}if(!a.contractVerified){unverified.push(p.id);blockers.push(p.id+" contract has not been verified");continue;}satisfied.push(p.id);if(!a.productionReady)deferred.push(p.id);}
+ if(missing.length)blockers.push("Required platform ports are not connected: "+missing.join(", "));
+ if(unverified.length)blockers.push("Platform contracts require verification: "+unverified.join(", "));
+ return {ready:missing.length===0&&incompatible.length===0&&unverified.length===0,productionReady:missing.length===0&&incompatible.length===0&&unverified.length===0&&deferred.length===0,satisfiedPorts:satisfied.sort(),missingPorts:missing.sort(),incompatiblePorts:incompatible.sort(),unverifiedPorts:unverified.sort(),blockers,deferredAdapters:deferred.sort()};
+}
