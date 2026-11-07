@@ -26,5 +26,5 @@ export { RiotAppShell,RiotSidebar,RiotTopbar,RiotWorkspace,RiotContextPanel,Riot
 export type { RiotAppShellProps,RiotSidebarProps,RiotCommand,RiotCommandPaletteProps } from './components/application-shell'
 export { ApprovalCard,JobMonitor,RecordInspector } from './components/platform'
 export type { ApprovalCardProps,ApprovalStatus,JobMonitorProps,JobStatus,RecordInspectorProps } from './components/platform'
-export { createActionRegistry,createCommandRegistry,createPluginSlotRegistry,sortPluginSlots } from './platform'
+export { createActionRegistry,createCommandRegistry,createPluginSlotRegistry,sortPluginSlots } from './platform/index'
 export type { MaybePromise,ActionContext,ActionDefinition,CommandDefinition,PluginSlotDefinition,Registry } from './platform'
