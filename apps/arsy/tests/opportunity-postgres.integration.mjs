@@ -141,6 +141,8 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.ok(product)
     assert.equal(product.version, 1)
     assert.equal(product.lifecycleState, 'brief')
+    const promotedOpportunity = await new OpportunityRepository(pool).get(ownerId, created.id)
+    assert.equal(promotedOpportunity?.version, 4, 'creating a product brief must lock the opportunity version')
     assert.equal(await products.createFromOpportunity(ownerId, ownerId, created.id, ['Duplicate must be blocked']), null)
 
 
@@ -262,7 +264,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const reloadedOpportunity = await new OpportunityRepository(pool).get(ownerId, created.id)
     assert.ok(reloadedOpportunity)
     assert.equal(reloadedOpportunity.title, revisedInput.title)
-    assert.equal(reloadedOpportunity.version, 3)
+    assert.equal(reloadedOpportunity.version, 4)
     const financialEvents = await persistedFinance.list(ownerId)
     assert.equal(financialEvents.length, 2)
     assert.equal(financialEvents.find((event) => event.id === gross.event.id)?.amountMinor, '5000')
@@ -294,6 +296,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
       'updated',
       'decision-changed',
       'created-from-opportunity',
+      'promoted-to-product-brief',
       'version-created',
       'recorded-pending-reconciliation',
       'reconciled',
