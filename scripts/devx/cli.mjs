@@ -4,13 +4,21 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import {
+  acknowledgeInterfaceEscrow,
+  analyzeObjectiveProgress,
+  buildObjectiveControlPlane,
   appendFlightRecord,
   compileRepoContext,
   createChangePlan,
   createContextLease,
+  createInterfaceEscrow,
+  createMergeEvidencePacket,
+  forecastInterfaceConflicts,
+  forecastResourceCollisions,
   forecastWriteCollisions,
   runDoctor,
   verifyContextLease,
+  verifyInterfaceEscrow,
   verifyFlightRecorder,
 } from './lib.mjs'
 
@@ -126,6 +134,45 @@ async function contextVerify() {
   if (!result.valid) process.exitCode = 1
 }
 
+
+async function objectiveWatch() {
+ const p=option('input',null);if(!p)throw new Error('objective-watch requires --input=<observations.json>')
+ const input=JSON.parse(await readFile(resolve(root,p),'utf8'))
+ const report=analyzeObjectiveProgress({steps:input.steps,repeatThreshold:Number(option('repeat','3'))})
+ console.log(JSON.stringify(report,null,2));if(report.stalled)process.exitCode=1
+}
+async function interfaceCheck() {
+ const p=option('plan-file',null);if(!p)throw new Error('interface-check requires --plan-file=<treaties.json>')
+ const input=JSON.parse(await readFile(resolve(root,p),'utf8')),report=forecastInterfaceConflicts({treaties:input.treaties})
+ console.log(JSON.stringify(report,null,2));if(!report.safeToIntegrate)process.exitCode=1
+}
+async function resourceCheck() {
+ const p=option('plan-file',null);if(!p)throw new Error('resource-check requires --plan-file=<resources.json>')
+ const input=JSON.parse(await readFile(resolve(root,p),'utf8')),report=forecastResourceCollisions({agents:input.agents})
+ console.log(JSON.stringify(report,null,2));if(!report.safeToLaunchTogether)process.exitCode=1
+}
+
+async function objectivePlane() {
+  const p=option('input',null);if(!p)throw new Error('objective-plane requires --input=<objectives.json>')
+  const input=JSON.parse(await readFile(resolve(root,p),'utf8'))
+  const report=buildObjectiveControlPlane({objectives:input.objectives,observations:input.observations??[]})
+  console.log(JSON.stringify(report,null,2));if(!report.ready)process.exitCode=1
+}
+async function interfaceEscrow() {
+  const p=option('input',null);if(!p)throw new Error('interface-escrow requires --input=<escrow.json>')
+  const input=JSON.parse(await readFile(resolve(root,p),'utf8'))
+  const precomputed=input.schemaVersion===1
+  let escrow=precomputed ? input : createInterfaceEscrow({treaties:input.treaties,changeSet:input.changeSet})
+  if(!precomputed) for(const ack of input.acknowledgements??[]) escrow=acknowledgeInterfaceEscrow({escrow,...ack})
+  const report=verifyInterfaceEscrow({escrow})
+  console.log(JSON.stringify({escrow,verification:report},null,2));if(!report.safeToMerge)process.exitCode=1
+}
+async function mergeProof() {
+  const p=option('input',null);if(!p)throw new Error('merge-proof requires --input=<merge-evidence.json>')
+  const input=JSON.parse(await readFile(resolve(root,p),'utf8'))
+  const packet=createMergeEvidencePacket(input)
+  console.log(JSON.stringify(packet,null,2));if(!packet.ready)process.exitCode=1
+}
 function help() {
   console.log([
     'MOONWITNESS DX',
@@ -139,6 +186,12 @@ function help() {
     '  pnpm devx flight verify',
     '  pnpm devx context-lease [--out=.moonwitness/context-lease.json] [--ttl-ms=3600000]',
     '  pnpm devx context-verify --lease=.moonwitness/context-lease.json',
+    '  pnpm devx objective-watch --input=.moonwitness/objective.json [--repeat=3]',
+    '  pnpm devx interface-check --plan-file=.moonwitness/treaties.json',
+    '  pnpm devx resource-check --plan-file=.moonwitness/resources.json',
+    '  pnpm devx objective-plane --input=.moonwitness/objectives.json',
+    '  pnpm devx interface-escrow --input=.moonwitness/escrow.json',
+    '  pnpm devx merge-proof --input=.moonwitness/merge-evidence.json',
     '',
     'Collision plans use { "agents": [{ "id": "agent-a", "writePaths": ["packages/foo"] }] }.',
     'Flight records are local evidence, not signed or tamper-proof attestations.',
@@ -155,6 +208,12 @@ try {
   else if (command === 'flight') await flight()
   else if (command === 'context-lease') await contextLease()
   else if (command === 'context-verify') await contextVerify()
+  else if (command === 'objective-watch') await objectiveWatch()
+  else if (command === 'interface-check') await interfaceCheck()
+  else if (command === 'resource-check') await resourceCheck()
+  else if (command === 'objective-plane') await objectivePlane()
+  else if (command === 'interface-escrow') await interfaceEscrow()
+  else if (command === 'merge-proof') await mergeProof()
   else help()
 } catch (error) {
   console.error(error.message)
