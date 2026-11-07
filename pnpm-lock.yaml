@@ -376,6 +376,25 @@ importers:
         specifier: ^8.15.5
         version: 8.23.1
 
+  packages/arsy-system-store-sqlite:
+    dependencies:
+      '@riotworks/orm':
+        specifier: workspace:*
+        version: link:../orm
+      '@riotworks/orm-db':
+        specifier: workspace:*
+        version: link:../orm-db
+      '@riotworks/orm-db-adaptor':
+        specifier: workspace:*
+        version: link:../orm-db-adaptor
+      '@riotworks/orm-db-adaptor-sqlite':
+        specifier: workspace:*
+        version: link:../orm-db-adaptor-sqlite
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.5
+
   packages/orm-db-adaptor-sqlite:
     dependencies:
       '@riotworks/orm-db-adaptor':
