@@ -30,7 +30,7 @@ const sortedUnique = (values: readonly string[]) => [...new Set(values)].sort();
 const hex = (bytes: ArrayBuffer) => [...new Uint8Array(bytes)].map((value) => value.toString(16).padStart(2, "0")).join("");
 function canonical(value: unknown): string {
   if (value === undefined) return "null";
-  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
   if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
   const record = value as Record<string, unknown>;
   return "{" + Object.keys(record).filter((key) => record[key] !== undefined).sort().map((key) => JSON.stringify(key) + ":" + canonical(record[key])).join(",") + "}";
