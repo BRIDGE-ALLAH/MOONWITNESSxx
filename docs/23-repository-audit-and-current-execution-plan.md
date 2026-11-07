@@ -391,3 +391,10 @@ The following changes have been committed to the Phase 0 working branch:
 - A Node test for the repository governance audit added.
 
 **Not yet verified:** no local pnpm install, lockfile refresh, lint, typecheck, test, Next build, Fastify startup, Docker build or CI run was available during this edit. These changes must not be described as passing until the branch is run in a clean checkout. ARSY Core/app integration, its undeclared runtime imports, DB pool lifecycle, duplicate legacy service retirement, workflow validation, and lockfile verification remain open.
+
+
+### 12.5 ARSY app/core script ownership correction
+
+- `apps/arsy` now owns its own Fastify CLI `build` and `start` commands. Its scripts no longer delegate app build/start to the ARSY Core package.
+- `packages/arsy-core` no longer declares server `dev`/`start`/`build` scripts; it is a reusable library boundary, not a second deployable HTTP server.
+- The app/core runtime integration remains open: the current ARSY app source still constructs Fastify directly, and the Core package's dependency/type/build contract still needs a dedicated implementation pass.
