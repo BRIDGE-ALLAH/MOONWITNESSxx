@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
+import { createHmac, scrypt, timingSafeEqual } from 'node:crypto'
 
 export const OPERATOR_SESSION_COOKIE = 'mw_operator_session'
 const SESSION_TTL_SECONDS = 8 * 60 * 60
@@ -92,8 +92,22 @@ export function requestHasTrustedOrigin(request: Request, publicOrigin: string):
   }
 }
 
-export function operatorPasswordMatches(supplied: string, expected: string): boolean {
-  const actualDigest = createHash('sha256').update(supplied).digest()
-  const expectedDigest = createHash('sha256').update(expected).digest()
+const PASSWORD_KDF_OPTIONS = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }
+const PASSWORD_DERIVED_KEY_LENGTH = 64
+
+function deriveOperatorPassword(password: string, salt: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, PASSWORD_DERIVED_KEY_LENGTH, PASSWORD_KDF_OPTIONS, (error, derivedKey) => {
+      if (error) reject(error)
+      else resolve(derivedKey)
+    })
+  })
+}
+
+/** Memory-hard password verification; never use a fast general-purpose hash for login secrets. */
+export async function operatorPasswordMatches(supplied: string, expected: string, salt: string): Promise<boolean> {
+  if (!supplied || supplied.length > 1024 || !salt || Buffer.byteLength(salt, 'utf8') < 32) return false
+  const actualDigest = await deriveOperatorPassword(supplied, salt)
+  const expectedDigest = await deriveOperatorPassword(expected, salt)
   return timingSafeEqual(actualDigest, expectedDigest)
 }
