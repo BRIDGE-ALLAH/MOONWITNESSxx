@@ -29,7 +29,7 @@
     "type-check": "tsc --noEmit",
     "clean": "node ./scripts/clean-dist.mjs",
     "smoke-test": "pnpm run build && node ./scripts/smoke-test.mjs",
-    "test": "pnpm run theme:check && pnpm run smoke-test",
+    "test": "pnpm run theme:check && pnpm run smoke-test && node --test ./tests/*.test.mjs && node ./scripts/check-bundle-budget.mjs",
     "theme:check": "node ./scripts/check-theme-tokens.mjs"
   },
   "dependencies": {
