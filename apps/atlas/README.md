@@ -62,6 +62,7 @@ Install Rust 1.94+ and the Loco CLI:
     cargo install loco --version 1.3.1
     export DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas'
     export REDIS_URL='redis://:password@127.0.0.1:6379/0'
+    export RADIUS_DATABASE_URL='mysql://radius:password@127.0.0.1:3306/radius'
     export ATLAS_CONTROL_TOKEN='replace-with-a-long-random-control-token'
     cargo loco start
 
@@ -101,7 +102,7 @@ Install SQLx CLI and apply versioned migrations:
     cargo install sqlx-cli --no-default-features --features mysql,rustls
     DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas' sqlx migrate run --source migrations
 
-The migrations create the engine registry, add non-secret adapter configuration and secret environment-variable references, and seed the local Compose FreeRADIUS, VictoriaMetrics, and VictoriaLogs endpoints. Apply all migrations in order. Application readiness checks MariaDB with a real SELECT 1 and Redis with PING; it does not imply that every future domain is implemented.
+The migrations create the engine registry, add non-secret adapter configuration and secret environment-variable references, and seed the local Compose FreeRADIUS, VictoriaMetrics, and VictoriaLogs endpoints. Apply all migrations in order. Application readiness checks the ATLAS database, the separate RADIUS database, and Redis with real connection probes.
 
 ## Development checks
 
@@ -119,10 +120,13 @@ The migrations create the engine registry, add non-secret adapter configuration 
 - ATLAS dashboard shell with DNS, RADIUS, database, Redis, and observability status surfaces.
 - Versioned health, readiness, version, and engine catalog endpoints.
 - Persistent engine registry CRUD (list, create, retrieve, update, delete) with input validation.
-- Bearer-token protection for engine management and health probes; control routes remain disabled until ATLAS_CONTROL_TOKEN is configured.
-- Live HTTP health probes for PowerDNS Authoritative, VictoriaMetrics, and VictoriaLogs; unsupported native protocols are reported as unsupported rather than falsely healthy.
+- Bearer-token protection for engine and RADIUS management and health probes; control routes remain disabled until a 32+ character ATLAS_CONTROL_TOKEN is configured.
+- Live HTTP health probes for PowerDNS Authoritative, VictoriaMetrics, and VictoriaLogs; native FreeRADIUS Status-Server probe via radclient. Unbound and dnsdist are explicitly reported as unsupported until their native adapters land.
 - MariaDB connectivity probe with bounded connection pool configuration.
 - Required Redis connectivity probe; readiness fails when Redis is unavailable.
+- Separate RADIUS database connection probe; readiness fails if the AAA database is unavailable.
+- Automatic embedded SQLx migrations and local engine seed records at Compose startup.
+- NAS CRUD, subscriber credential provisioning, active session listing, and accounting summaries. Passwords are stored as bcrypt or NT hashes, never clear text.
 - Compose services for MariaDB, Redis, VictoriaMetrics, VictoriaLogs, and a derived FreeRADIUS image wired to a dedicated SQL database.
 - FreeRADIUS SQL authentication/accounting schema and SQL module activation in default and inner-tunnel virtual servers.
 - Initial engine registry schema migration.
@@ -131,7 +135,7 @@ The migrations create the engine registry, add non-secret adapter configuration 
 ### Planned; not yet implemented
 
 - Unbound and dnsdist native control adapters.
-- FreeRADIUS Status-Server probing from ATLAS and SQL-backed NAS/subscriber/session/accounting management APIs.
+
 - Full PowerDNS zone/record management API adapter.
 - VictoriaMetrics and VictoriaLogs query/configuration APIs beyond basic health probes.
 - Production certificate rotation, RadSec listener profile, and dynamic NAS reload without restarting FreeRADIUS.

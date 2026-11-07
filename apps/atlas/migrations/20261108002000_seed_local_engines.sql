@@ -31,7 +31,7 @@ INSERT INTO engine_instances (
     'http://victorialogs:9428',
     TRUE,
     JSON_OBJECT('managed_by', 'atlas-compose'),
-    JSON_OBJECT(),
+    NULL,
     NULL
 )
 ON DUPLICATE KEY UPDATE
