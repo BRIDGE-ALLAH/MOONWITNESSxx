@@ -10,6 +10,7 @@ export async function proxyArsyRequest(
   request: Request,
   apiPath: string,
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  responseMode: 'json' | 'binary' = 'json',
 ): Promise<NextResponse> {
   const sessionConfig = getOperatorSessionConfig()
   if (!sessionConfig) {
@@ -45,6 +46,14 @@ export async function proxyArsyRequest(
       redirect: 'error',
       signal: AbortSignal.timeout(12_000),
     })
+    if (responseMode === 'binary') {
+      const headers = new Headers()
+      for (const name of ['content-type', 'content-length', 'content-disposition', 'cache-control', 'x-content-type-options']) {
+        const value = response.headers.get(name)
+        if (value) headers.set(name, value)
+      }
+      return new NextResponse(await response.arrayBuffer(), { status: response.status, headers })
+    }
     const payload = response.status === 204 ? null : await response.json().catch(() => ({
       error: { code: 'INVALID_ARSY_RESPONSE', message: 'ARSY returned an unreadable response.' },
     }))
