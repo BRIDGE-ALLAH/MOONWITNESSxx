@@ -8,13 +8,17 @@
 
 MOONWITNESS is the master ecosystem and product identity. It exists within the broader EMPIRE OF THE LIGHT — A-L-L-A-H narrative universe. This is a product and story relationship, not a claim that software has divine authority or supernatural capability.
 
-- **EMPIRE OF THE LIGHT** is the overarching vision and values narrative.
-- **MOONWITNESS** is the master brand: observe, record, verify, connect, understand, and share.
+- **GODPROMISE** is the vision, promise, and ethical commitment narrative.
+- **EMPIRE OF THE LIGHT** is the overarching institutional, enterprise, knowledge, creative, and community universe.
+- **MOONWITNESS** is the master product and technology identity: observe, record, verify, connect, understand, and share.
+- **A-L-L-A-H.COM** is the intended unified public home and gateway to the wider universe.
 - **MOONWITNESS Observatory** is the research and evidence experience.
 - **MOONWITNESS Archive** is the durable knowledge, records, provenance, and retrieval experience.
-- **RIOTWORKS** is an independent creative/engineering studio identity and possible delivery partner. It is not the MOONWITNESS product brand.
-- **ARSY** is the backend command/orchestration runtime.
-- **ZILL** represents guardianship, integrity, and protection.
+- **ROCKSOUL** is a distinct creative/narrative identity and technical runtime direction; ROCKSOUL DNA and ROCKSOUL Runtime are separate concerns.
+- **E-ISP.ID** is the connectivity business identity and service ecosystem.
+- **RIOTWORKS** is a separately governed creative/engineering studio and operating division associated with the initial creative-commerce workflow. It is not the MOONWITNESS master brand.
+- **ARSY** is the backend application authority and orchestration runtime.
+- **ZILL** represents guardianship, integrity, rights, quality, and protection.
 - **MIZAN** represents balance, accounting, and accountability.
 
 RIOTWORKS may retain its own studio identity in its own portfolio and attribution. It must not appear in MOONWITNESS product lockups or be used as the default visual language of MoonWitness applications.
@@ -62,7 +66,9 @@ We correct the record when evidence changes.
 - **Brand Manifesto:** WHEN THE MOON RISES, WE SHARE MESSAGES.
 - **Category:** Evidence-first observatory and human knowledge-sharing ecosystem.
 - **Experience families:** Observatory and Archive.
-- **Operating/studio attribution:** RIOTWORKS, only where its separately governed operating or studio role is relevant.\n\nThe wider product catalog and its application/module/platform boundaries are recorded in [docs/32 — Universe & Product Architecture Registry](./32-universe-and-product-architecture-registry.md). Its additional product experiences are targets, not claims of current implementation.
+- **Operating/studio attribution:** RIOTWORKS, only where its separately governed operating or studio role is relevant.
+
+The wider product catalog and its application/module/platform boundaries are recorded in [docs/32 — Universe & Product Architecture Registry](./32-universe-and-product-architecture-registry.md). Its additional product experiences are targets, not claims of current implementation.
 
 ## 7. Tone of voice
 
