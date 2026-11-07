@@ -76,7 +76,7 @@ Channels are enabled only after current country eligibility, payout, policy, fee
 - **packages/feature-flags** — early feature-flag prototype.
 - **packages/seed-data** — seed/demo tooling scaffold.
 - **packages/bullmq** — experimental queue/worker code; not the canonical job architecture.
-- **packages/lint** — tooling package requiring repair.
+- **packages/lint** — reserved shared ESLint configuration package; no lint task is exposed until a real flat config and tests exist.
 
 ### Planned core packages (not yet implemented)
 

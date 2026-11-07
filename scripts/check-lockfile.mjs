@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
 
 function run(command, args, options = {}) {
-  return spawnSync(command, args, { encoding: 'utf8', ...options })
+  return spawnSync(command, args, { encoding: 'utf8', windowsHide: true, ...options })
 }
 
 const stagedStatus = run('git', ['diff', '--cached', '--quiet', '--', 'pnpm-lock.yaml'])
@@ -19,13 +19,14 @@ if (stagedStatus.status !== 0 || worktreeStatus.status !== 0) {
 }
 
 const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
-const install = run(pnpm, ['install', '--lockfile-only', '--ignore-scripts'], {
-  stdio: 'inherit',
-  shell: process.platform === 'win32'
-})
+const install = run(
+  pnpm,
+  ['install', '--lockfile-only', '--no-frozen-lockfile', '--ignore-scripts'],
+  { stdio: 'inherit', shell: process.platform === 'win32' }
+)
 
 if (install.error || install.status !== 0) {
-  console.error(install.error?.message ?? 'pnpm could not validate or regenerate the lockfile.')
+  console.error(install.error?.message ?? 'pnpm could not regenerate the lockfile.')
   process.exit(install.status ?? 1)
 }
 

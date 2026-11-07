@@ -63,18 +63,28 @@ The pnpm workspace intentionally includes only `apps/*` and `packages/*`. Do not
 
 Do not silently upgrade the package manager or lockfile format. A package-manager upgrade is a deliberate toolchain change that includes the manifest, lockfile, CI setup, local instructions, and validation evidence.
 
+### Dependency build-script approvals
+
+pnpm 12 blocks dependency lifecycle/build scripts unless the workspace explicitly approves them. The current allowlist in `pnpm-workspace.yaml` is intentionally narrow:
+
+- `esbuild`
+- `msgpackr-extract`
+- `sharp`
+
+These are required native/build dependencies in the current Next.js toolchain. Do not set a blanket allow-all option. When a new package requests build-script permission, inspect its maintainer, source, version, purpose, and install behavior first, then add only that exact dependency to the allowlist. CI must fail closed when an unapproved build script is introduced.
+
 ### Lockfile integrity
 
-The current audit found that `pnpm-lock.yaml` does not contain importer entries for the workspace package manifests. This is a concrete lockfile drift defect, not a harmless warning.
+pnpm 12 can write `pnpm-lock.yaml` as a multi-document YAML stream. The first (boot) document records the resolved pnpm version and config dependencies. The last (project) document contains the workspace importer graph and the normal project dependency resolutions. Both documents are intentional; never delete the first document or treat it as an accidental duplicate. The repository audit must inspect the **last** document when checking workspace importers. See the official [pnpm lockfile format documentation](https://github.com/pnpm/pnpm/blob/main/pnpm/docs/lockfile.md).
 
 The supported workflow is:
 
-1. Run `pnpm run lockfile:refresh`, or trigger the manual **Refresh pnpm lockfile** workflow.
-2. Review the generated lockfile diff and verify that every workspace importer is represented.
-3. Commit the lockfile with the manifest changes that caused the update.
-4. Confirm `pnpm run lockfile:check` and `pnpm install --frozen-lockfile` pass.
+1. Run `pnpm run lockfile:refresh`, or let the manifest-change workflow run after a push to `main).
+2. Review the generated lockfile diff and confirm the project document contains every workspace importer.
+3. Verify with `pnpm run lockfile:check` and `pnpm install --frozen-lockfile`.
+4. Merge the dedicated lockfile PR; never normalize or hand-edit the two-document stream.
 
-The check script refuses to regenerate the lockfile when it already has staged or unstaged local edits. This preserves local work. Do not make CI silently accept a lockfile that differs from the committed manifests.
+The check script refuses to regenerate the lockfile when it already has staged or unstaged local edits. This preserves local work. Ordinary CI and deployment installs remain frozen.
 
 ## 4. Command contract
 
@@ -142,7 +152,7 @@ A normal commit must not bump versions, update release notes, create tags, gener
 | `weekly-detection.yml` | Weekly, manual | Read-only audit report and automation tests | `contents: read` |
 | `codeql.yml` | Push, PR, weekly | Static security analysis | `contents: read`, `security-events: write`, `actions: read` |
 | `pr-labeler.yml` | PR updates | Apply path-based labels | `contents: read`, `pull-requests: write` |
-| `refresh-lockfile.yml` | Manual | Regenerate lockfile and open/update a reviewable PR | `contents: write`, `pull-requests: write` |
+| `refresh-lockfile.yml` | Manifest/workspace/lockfile changes on `main`, manual | Regenerate lockfile and open/update a reviewable PR | `contents: write`, `pull-requests: write` |
 | Dependabot | Weekly | Propose dependency and Actions updates | Managed by GitHub |
 
 ### CI staging

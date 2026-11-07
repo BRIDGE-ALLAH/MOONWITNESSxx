@@ -1,7 +1,9 @@
 import Fastify from 'fastify'
 import Zod from 'zod'
 import fastifyTypeProviderZod from 'fastify-type-provider-zod'
-// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
+
+// ARSY's HTTP application is the canonical backend entrypoint.
+// Reusable lifecycle/configuration modules will be extracted when implemented and tested.
 
 const app = Fastify({
   logger: true
@@ -9,7 +11,6 @@ const app = Fastify({
 
 app.register(fastifyTypeProviderZod)
 
-// Example route
 app.get(
   '/',
   {
@@ -22,7 +23,7 @@ app.get(
       }
     }
   },
-  async (request, reply) => {
+  async () => {
     return {
       status: 'ok',
       message: 'ARSY Command Center is running'

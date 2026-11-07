@@ -25,7 +25,7 @@ Keep backend packages independent from UI packages. Keep queue transport, databa
 - pnpm 12.16.1, pinned in the root `package.json`.
 - Use the committed pnpm lockfile as the dependency source of truth.
 
-The current repository audit has identified missing workspace importer entries in `pnpm-lock.yaml`. Before relying on a frozen install, refresh and review the lockfile:
+pnpm 12 uses a two-document lockfile: the first boot document records the package-manager/config dependency state, while the last document contains the real workspace dependency graph. Both are intentional. When a manifest changes, refresh and review the project lockfile:
 
 ```bash
 pnpm run lockfile:refresh
@@ -33,9 +33,9 @@ git diff -- pnpm-lock.yaml
 pnpm install --frozen-lockfile
 ```
 
-Do not use `--no-frozen-lockfile` as a routine CI or deployment workaround. The manual GitHub Action **Refresh pnpm lockfile** can also create a reviewable pull request.
+Do not use `--no-frozen-lockfile` as a routine CI or deployment workaround. The **Refresh pnpm lockfile** workflow runs after manifest/workspace changes on `main` and can also be triggered manually to create a reviewable pull request.
 
-## Common commands
+## Local Git hooks\n\nAfter `pnpm install`, the root `prepare` script configures `core.hooksPath=.husky` for the local checkout. It does not run in CI. A pre-existing custom `core.hooksPath` is preserved rather than overwritten.\n\n## Common commands
 
 | Command | Purpose |
 |---|---|

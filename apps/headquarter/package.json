@@ -7,7 +7,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "pnpm exec eslint . --ext .ts,.tsx --max-warnings 0 || echo lint-skip",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -29,4 +28,3 @@
     "typescript": "^5.7.2"
   }
 }
-

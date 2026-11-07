@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 set -eu
 
-pnpm exec node scripts/check-commit-message.mjs "$1"
+node scripts/check-commit-message.mjs "$1"

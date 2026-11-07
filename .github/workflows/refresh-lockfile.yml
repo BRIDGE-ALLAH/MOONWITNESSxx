@@ -1,11 +1,25 @@
 name: Refresh pnpm lockfile
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - "pnpm-lock.yaml"
+      - "apps/**/package.json"
+      - "packages/**/package.json"
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
+
+concurrency:
+  group: refresh-pnpm-lockfile
+  cancel-in-progress: false
 
 jobs:
   refresh:
@@ -15,6 +29,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -27,9 +43,13 @@ jobs:
           node-version: 24
 
       - name: Regenerate lockfile from workspace manifests
-        run: pnpm install --lockfile-only --ignore-scripts
+        run: pnpm install --lockfile-only --no-frozen-lockfile --ignore-scripts
+
+      - name: Verify generated lockfile with a frozen install
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Open or update lockfile pull request
+        id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -45,6 +65,17 @@ jobs:
             ## Validation
 
             - Generated with pnpm 12.16.1.
+            - A frozen install passed before this PR was opened.
             - No application source files are changed.
             - Review the dependency graph diff before merging.
+
           add-paths: pnpm-lock.yaml
+
+      # GITHUB_TOKEN-created PR events do not automatically start other workflows.
+      # Dispatch the ordinary CI workflow against the generated PR branch explicitly.
+      - name: Dispatch CI for generated lockfile branch
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run ci.yml --ref chore-refresh-pnpm-lockfile
