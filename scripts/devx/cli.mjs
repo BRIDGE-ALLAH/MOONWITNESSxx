@@ -1,8 +1,18 @@
 #!/usr/bin/env node
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
-import { compileRepoContext, createChangePlan, runDoctor } from './lib.mjs'
+import {
+  appendFlightRecord,
+  compileRepoContext,
+  createChangePlan,
+  createContextLease,
+  forecastWriteCollisions,
+  runDoctor,
+  verifyContextLease,
+  verifyFlightRecorder,
+} from './lib.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const [command = 'help', ...args] = process.argv.slice(2)
@@ -16,18 +26,15 @@ function run(commandName, parameters) {
 async function doctor() {
   const version = run(process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm', ['--version'])
   const report = await runDoctor({ root, pnpmVersion: version.status === 0 ? version.stdout.trim() : null })
-  if (has('json')) {
-    console.log(JSON.stringify(report, null, 2))
-  } else {
-    console.log([
-      'MOONWITNESS Developer Environment Doctor',
-      'Node: ' + report.nodeVersion + ' | pnpm: ' + (report.pnpmVersion ?? 'not found') + ' | packages: ' + report.packageCount,
-      '',
-      ...report.findings.map((item) => item.status.toUpperCase().padEnd(5) + ' ' + item.id + ': ' + item.message + (item.status === 'fail' || item.status === 'warn' ? '\n      Fix: ' + item.fix : '')),
-      '',
-      'Summary: ' + report.counts.pass + ' pass, ' + report.counts.warn + ' warn, ' + report.counts.fail + ' fail',
-    ].join('\n'))
-  }
+  if (has('json')) console.log(JSON.stringify(report, null, 2))
+  else console.log([
+    'MOONWITNESS Developer Environment Doctor',
+    'Node: ' + report.nodeVersion + ' | pnpm: ' + (report.pnpmVersion ?? 'not found') + ' | packages: ' + report.packageCount,
+    '',
+    ...report.findings.map((item) => item.status.toUpperCase().padEnd(5) + ' ' + item.id + ': ' + item.message + (item.status === 'fail' || item.status === 'warn' ? '\n      Fix: ' + item.fix : '')),
+    '',
+    'Summary: ' + report.counts.pass + ' pass, ' + report.counts.warn + ' warn, ' + report.counts.fail + ' fail',
+  ].join('\n'))
   if (!report.ok) process.exitCode = 1
 }
 
@@ -50,29 +57,73 @@ async function plan() {
     }
   }
   const result = await createChangePlan({ root, changedFiles })
-  if (has('json')) {
-    console.log(JSON.stringify(result, null, 2))
-  } else {
-    console.log([
-      'Change-aware plan (base: ' + base + ')',
-      'Changed files: ' + result.changedFiles.length,
-      'Direct packages: ' + (result.directPackages.join(', ') || 'none'),
-      'Impacted packages: ' + (result.impactedPackages.join(', ') || 'none'),
-      '',
-      ...result.tasks.map((task) => '- ' + task.command + '\n  because: ' + task.reason.join('; ')),
-      ...result.notes,
-      '',
-      'Review this plan before running commands. It is advisory and does not execute tasks.',
-    ].join('\n'))
-  }
+  if (has('json')) console.log(JSON.stringify(result, null, 2))
+  else console.log([
+    'Change-aware plan (base: ' + base + ')',
+    'Changed files: ' + result.changedFiles.length,
+    'Direct packages: ' + (result.directPackages.join(', ') || 'none'),
+    'Impacted packages: ' + (result.impactedPackages.join(', ') || 'none'),
+    '',
+    ...result.tasks.map((task) => '- ' + task.command + '\n  because: ' + task.reason.join('; ')),
+    ...result.notes,
+    '',
+    'Review this plan before running commands. It is advisory and does not execute tasks.',
+  ].join('\n'))
 }
 
 async function context() {
   const maxChars = Math.max(1000, Number(option('max-chars', '12000')) || 12000)
-  const format = has('json') ? 'json' : 'markdown'
-  const result = await compileRepoContext({ root, maxChars, format })
+  const result = await compileRepoContext({ root, maxChars, format: has('json') ? 'json' : 'markdown' })
   console.log(result.content)
   if (result.truncated) console.error('Context truncated; fingerprint ' + result.fingerprint)
+}
+
+async function collision() {
+  const path = option('plan-file', null)
+  if (!path) throw new Error('collision requires --plan-file=<json-file>')
+  const input = JSON.parse(await readFile(resolve(root, path), 'utf8'))
+  const report = forecastWriteCollisions({ agents: input.agents })
+  console.log(JSON.stringify(report, null, 2))
+  if (!report.safeToParallelize) process.exitCode = 1
+}
+
+async function flight() {
+  const subcommand = args[0] ?? 'verify'
+  if (subcommand !== 'verify') throw new Error('flight supports: verify')
+  const report = await verifyFlightRecorder({ root })
+  console.log(JSON.stringify({ valid: report.valid, count: report.records.length, headHash: report.headHash, reason: report.reason ?? null }, null, 2))
+  if (!report.valid) process.exitCode = 1
+}
+
+async function record() {
+  const path = option('input', null)
+  if (!path) throw new Error('record requires --input=<json-file>')
+  const recordInput = JSON.parse(await readFile(resolve(root, path), 'utf8'))
+  const entry = await appendFlightRecord({ root, record: recordInput })
+  console.log(JSON.stringify({ sequence: entry.sequence, hash: entry.hash, recordedAt: entry.recordedAt }, null, 2))
+}
+
+async function contextLease() {
+  const output = option('out', '.moonwitness/context-lease.json')
+  const ttlMs = Math.max(1000, Number(option('ttl-ms', '3600000')) || 3600000)
+  const contextResult = await compileRepoContext({ root, maxChars: Number.MAX_SAFE_INTEGER, format: 'json' })
+  const parsed = JSON.parse(contextResult.content)
+  const lease = createContextLease({ fingerprint: parsed.fingerprint, ttlMs })
+  const outputPath = resolve(root, output)
+  await mkdir(dirname(outputPath), { recursive: true })
+  await writeFile(outputPath, JSON.stringify(lease, null, 2) + '\n', { encoding: 'utf8', flag: 'wx' })
+  console.log(JSON.stringify(lease, null, 2))
+}
+
+async function contextVerify() {
+  const path = option('lease', null)
+  if (!path) throw new Error('context-verify requires --lease=<lease-file>')
+  const lease = JSON.parse(await readFile(resolve(root, path), 'utf8'))
+  const contextResult = await compileRepoContext({ root, maxChars: Number.MAX_SAFE_INTEGER, format: 'json' })
+  const parsed = JSON.parse(contextResult.content)
+  const result = verifyContextLease({ lease, currentFingerprint: parsed.fingerprint })
+  console.log(JSON.stringify(result, null, 2))
+  if (!result.valid) process.exitCode = 1
 }
 
 function help() {
@@ -80,16 +131,32 @@ function help() {
     'MOONWITNESS DX',
     '',
     'Commands:',
-    '  pnpm devx doctor [--json]              Diagnose local toolchain and workspace readiness',
-    '  pnpm devx plan [--base=main] [--json]   Plan checks for changed and dependent packages',
+    '  pnpm devx doctor [--json]',
+    '  pnpm devx plan [--base=main] [--json]',
     '  pnpm devx context [--json] [--max-chars=12000]',
-    '                                         Compile safe, bounded repository context for coding agents',
+    '  pnpm devx collision --plan-file=.moonwitness/agents.json',
+    '  pnpm devx record --input=.moonwitness/task-result.json',
+    '  pnpm devx flight verify',
+    '  pnpm devx context-lease [--out=.moonwitness/context-lease.json] [--ttl-ms=3600000]',
+    '  pnpm devx context-verify --lease=.moonwitness/context-lease.json',
     '',
-    'Planning commands never install packages, modify files, or execute suggested checks.',
+    'Collision plans use { "agents": [{ "id": "agent-a", "writePaths": ["packages/foo"] }] }.',
+    'Flight records are local evidence, not signed or tamper-proof attestations.',
+    'Context lease creation is explicit and refuses to overwrite an existing lease.',
   ].join('\n'))
 }
 
-if (command === 'doctor') await doctor()
-else if (command === 'plan') await plan()
-else if (command === 'context') await context()
-else help()
+try {
+  if (command === 'doctor') await doctor()
+  else if (command === 'plan') await plan()
+  else if (command === 'context') await context()
+  else if (command === 'collision') await collision()
+  else if (command === 'record') await record()
+  else if (command === 'flight') await flight()
+  else if (command === 'context-lease') await contextLease()
+  else if (command === 'context-verify') await contextVerify()
+  else help()
+} catch (error) {
+  console.error(error.message)
+  process.exitCode = 2
+}
