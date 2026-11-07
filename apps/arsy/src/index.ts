@@ -5,7 +5,7 @@ import { setupDatabase } from "./db.js";
 /** Fastify CLI entrypoint. The core plugin owns shared HTTP behavior. */
 const app: FastifyPluginAsync = async (fastify) => {
   await fastify.register(arsyCorePlugin);
-  setupDatabase(fastify);
+  await setupDatabase(fastify);
 };
 
 export default app;
