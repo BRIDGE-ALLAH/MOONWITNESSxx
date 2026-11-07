@@ -1,966 +1,227 @@
-# MASTER PROMPT v1.0 — MOONWITNESS / RIOTWORKS
+# MASTER PROMPT v2.0 — MOONWITNESS // RIOTWORKS
 
-## 1. YOUR MISSION
+**Purpose:** Generate the first high-fidelity, interactive, frontend-only RIOTWORKS prototype in v0.  
+**Canonical product definition:** Read README.md and all applicable documents under docs/ before designing. This prompt is an execution brief, not a replacement for the product, business, or design specifications.
 
-Build a visually exceptional, high-fidelity, responsive, interactive web application prototype named:
+## 1. Mission
 
-# MOONWITNESS // RIOTWORKS
+Build **MOONWITNESS // RIOTWORKS**, the **Creative Commerce Engine**.
 
-**Product category:** Autonomous Digital Business OS  
-**Product descriptor:** The Creative Commerce Engine  
-**Primary tagline:** MAKE WORK THAT OUTLIVES THE FEED.  
-**Secondary tagline:** Read the Signal. Forge the Work. Let It Travel.
+Primary line: **MAKE WORK THAT OUTLIVES THE FEED.**  
+Secondary line: **READ THE SIGNAL. FORGE THE WORK. LET IT TRAVEL.**
 
-This is a product within the larger MOONWITNESS ecosystem, part of the broader narrative universe called EMPIRE OF THE LIGHT — A-L-L-A-H.
+RIOTWORKS is the creative commerce division of the MoonWitness ecosystem. It helps one operator manage a portfolio of original digital products and media using evidence-led market research, AI-assisted production, strict quality and rights controls, marketplace distribution preparation, and portfolio learning.
 
-RIOTWORKS is the creative commerce and digital production division of the ecosystem.
+This is not a generic AI dashboard, content spam generator, agency CRM, dropshipping system, or passive-income guarantee.
 
-It is designed to help one operator manage an AI-assisted digital business portfolio across multiple marketplaces.
+Its defining loop is:
 
-The application helps discover market demand, research opportunities, create original digital products, manage creative assets, validate quality, prepare marketplace distribution, and analyze business performance.
+SIGNALS → EVIDENCE → OPPORTUNITIES → ORIGINAL WORK → INSPECTION → DISTRIBUTION → REVENUE → AFTERSHOCK → IMPROVEMENT.
 
-**This is NOT a generic AI dashboard.**
+## 2. Read the canonical documentation
 
-It must feel like entering an underground futuristic creative headquarters: a fusion of punk art, alternative comic books, industrial creative workshops, neo-brutalist interfaces, and premium game command-center design.
+Treat these files as authoritative and consistent:
 
-The result must have a strong visual personality, a recognizable identity, and a coherent interaction system.
+- docs/01-ecosystem-narrative.md
+- docs/02-product-charter.md
+- docs/03-business-model.md
+- docs/04-marketplace-portfolio.md
+- docs/05-market-intelligence.md
+- docs/06-product-factories.md
+- docs/07-autonomy-operating-model.md
+- docs/08-technical-architecture.md
+- docs/09-information-architecture.md
+- docs/10-design-dna.md
+- docs/11-design-system.md
+- docs/12-character-art-bible.md
+- docs/13-domain-and-data-model.md
+- docs/14-governance-and-risk.md
+- docs/15-roadmap-and-acceptance.md
 
-Do not generate a generic SaaS template.
+Do not invent capabilities that contradict these documents. When a detail is not specified, choose the simplest reversible frontend-only implementation and record assumptions.
 
----
+## 3. Ecosystem position
 
-# 2. PRODUCT PHILOSOPHY AND NARRATIVE
+EMPIRE OF THE LIGHT → MOONWITNESS → RIOTWORKS.
 
-The internet is becoming increasingly noisy.
+RIOTWORKS is the digital creative commerce and asset-business division. It cooperates conceptually with:
+- ARSY: command and orchestration.
+- ZILL: integrity, protection, quality, and policy guardrails.
+- MIZAN: financial accountability and balance.
 
-People publish endless content, chase algorithms, reproduce trends, and compete for attention.
+Use sacred or spiritual language respectfully. Do not turn it into fake authority, decorative noise, character clothing, or claims of divine endorsement.
 
-RIOTWORKS follows a different philosophy:
+## 4. Non-negotiable RIOT ART DNA
 
-- Demand before production.
-- Quality before quantity.
-- Originality before repetition.
-- Evidence before assumptions.
-- Responsible automation before reckless automation.
-- Long-term asset ownership before short-lived attention.
+Visual direction: **EXTREME RIOT + ORIGINAL MOONWITNESS COMIC + INDUSTRIAL BRUTALISM + PREMIUM GAME HUD + PUNK ZINE.**
 
-The system transforms:
+The product must feel like a living underground creative headquarters—not a safe, generic SaaS template.
 
-MARKET SIGNALS → OPPORTUNITIES → ORIGINAL PRODUCTS → MARKETPLACE DISTRIBUTION → REVENUE → LEARNING → GROWTH.
+Use:
+- Xerox / photocopy grain and restrained distressed ink.
+- Original comic illustrations and asymmetric panel composition.
+- Strong editorial typography and oversized condensed headlines.
+- Hard-edged geometry, graphic borders, offset shadows, torn-paper accents.
+- Industrial technical markings and game-HUD information patterns.
+- Expressive street-art energy used with discipline.
+- Strong whitespace and readable operational zones.
 
-The central philosophy:
+Never simply scatter effects everywhere. The interface must stay usable, accessible, and precise.
 
-"WE DON'T BUILD NOISE FACTORIES. WE BUILD WORKS THAT MATTER."
+### Core palette
 
-The experience should communicate creativity, rebellion, intelligence, productivity, and accountability.
+- Obsidian #111315
+- Deep Industrial #191C1E
+- Panel Charcoal #24282A
+- Paper Bone #F3EBDD
+- Acid Lime #D2FF38 — primary brand accent
+- Riot Orange #FF542D — action / creative energy
+- Electric Blue #40D9FF — informational accent
+- Riot Pink #F047A4 — expressive accent
+- Muted Ink #777A76
 
----
+Create a true dual theme. Dark is not simply inverted light mode. Light mode uses Paper Bone and ink-like contrast with intentional accent behavior.
 
-# 3. ECOSYSTEM POSITIONING
+### Typography
 
-Respect this ecosystem structure:
+- Display: Archivo Black, Anton, or a suitable condensed display face.
+- Interface: Space Grotesk or equivalent.
+- Technical: IBM Plex Mono or equivalent.
 
-EMPIRE OF THE LIGHT
-└── MOONWITNESS
-    ├── RIOTWORKS — Creative commerce and digital business
-    ├── ARSY — Command and orchestration metaphor
-    ├── ZILL — Guardian, integrity and protection
-    └── MIZAN — Financial balance and accountability
+Use resilient font fallbacks. Keep dense data, tables, forms, and finance views legible.
 
-RIOTWORKS is the primary product being designed.
+### Graphic system
 
-Internal module identities:
+Create reusable SVG/CSS components for halftone, ink marks, technical labels, offset shadows, comic panels, stamps, divider motifs, and character containers. Do not depend on random hotlinked images for core brand art.
 
-- ARSY DECK — Command center.
-- SIGNAL ROOM — Market intelligence.
-- RIOT RADAR — Opportunity discovery.
-- THE FORGE — Product creation.
-- ZILL WATCH — Quality and compliance.
-- LAUNCH BAY — Distribution.
-- SIDRA ARCHIVE — Digital asset library.
-- MIZAN LEDGER — Financial management.
-- AFTERSHOCK — Results and portfolio intelligence.
-- RIOT ENGINE — Automation and AI workforce.
+## 5. Original character universe
 
-These names must be used consistently in navigation, page titles, section labels, mock data, and product storytelling.
+Create consistent, original artwork for:
+- THE SCOUT — market discovery and intelligence.
+- THE MAKER — creative production.
+- ZILL — integrity and protection.
+- THE KEEPER — assets, versions, and portfolio.
 
-Do not present spiritual or sacred terms as decorative gimmicks. Respect their cultural and spiritual significance.
+Respect docs/12-character-art-bible.md. Characters need coherent silhouettes, roles, expressions, and reusable SVG/vector assets. No copied franchise characters, generic emoji replacements, or the word ALLAH on clothing.
 
----
+## 6. Global product layout
 
-# 4. NON-NEGOTIABLE DESIGN DNA
+Desktop-first, responsive on laptop, tablet, and mobile.
 
-## Art direction
+Global shell:
+- Branded left navigation with grouped modules.
+- Top command bar with search, command palette, workspace, notifications, locale, theme, and profile.
+- Main canvas with bold editorial page headers and contextual workspaces.
+- Optional right-side context/agent panel, collapsible at narrow widths.
 
-Combine these six visual influences:
+Build consistent navigation, accessible controls, keyboard focus, toasts, dialogs, tabs, filters, sort, loading, empty, error, and skeleton states.
 
-1. EXTREME PUNK ZINE
-   - Photocopied textures.
-   - Torn paper.
-   - Distressed ink.
-   - Collage.
-   - Rebellious poster composition.
-
-2. UNDERGROUND COMIC BOOK
-   - Original characters.
-   - Halftone.
-   - Thick ink outlines.
-   - Asymmetric comic panels.
-   - Expressive artwork.
-
-3. NEO-BRUTALISM
-   - Bold borders.
-   - Hard-edged geometry.
-   - Unexpected composition.
-   - Graphic typography.
-   - Strong spatial hierarchy.
+## 7. Required modules and first-class pages
 
-4. FUTURISTIC GAME HUD
-   - Command-center interaction patterns.
-   - Contextual status panels.
-   - Tactical visual organization.
-   - Motion feedback.
-   - High-quality operational widgets.
+Build the following five fully realized core pages first. Every visible control must have a working local prototype behavior.
 
-5. INDUSTRIAL FUTURISM
-   - Mechanical details.
-   - Workshop references.
-   - Technical markings.
-   - Engineering-inspired components.
+### A. ARSY DECK — Command Center
+Headline: **THE WORK NEVER STOPS.**
+Show clearly labeled demo metrics for active products, pipeline, marketplace readiness, gross receipts, net contribution, active agents, and experiments. Include Business Pulse, Opportunity Radar, Production Pipeline, AI Workforce, Channel Health, Activity Feed, and AFTERSHOCK insights. Never present demo revenue as real.
 
-6. STREET RIOT / POP ART
-   - Expressive graphics.
-   - High-energy accents.
-   - Unusual layouts.
-   - Playful visual interruptions.
+### B. SIGNAL ROOM — Market Intelligence
+Headline: **READ THE SIGNAL.**
+Show trend and category discovery, source stream, keyword observations, buyer problems, marketplace observations, seasonal radar, evidence dates, source links, confidence, and research status. Distinguish sourced evidence from hypotheses and model-generated synthesis. No invented search volumes or competitor sales.
 
-### IMPORTANT DESIGN RULE
+### C. RIOT RADAR — Opportunity Lab
+Provide opportunity detail: buyer problem, source evidence, demand signals, competition gap, product differentiation, channel suitability, unit economics assumptions, production complexity, policy gate, confidence, and recommendation. Include Go / Research More / Reject actions. A policy hard-stop cannot be overridden by a high score.
 
-Do not apply every effect to every component.
+### D. THE FORGE — Product Workshop
+Support the product families defined in docs/06-product-factories.md. Show creative brief, formats, generated preview placeholders, version, source assets, model/tool provenance, assigned specialist, production state, quality state, and distribution package. Use original demo artwork and coherent assets.
 
-Build a disciplined design language where expressive illustrations and textures create personality while information, navigation, forms, tables and financial information remain readable.
+### E. ZILL WATCH — Quality & Integrity
+Show IP/licensing, source provenance, similarity, technical specifications, completeness, metadata, platform disclosures, and policy checks. States: PASS, WARNING, BLOCKED, NEEDS REVIEW. Explain every finding. Policy violations are hard blocks, not just score deductions.
 
-The application must look like a designed product, not an assortment of random effects.
+### Secondary modules
+Create useful, consistent pages or clearly scoped previews for:
+- LAUNCH BAY — channel capability, listing prep, manual package, official API, publication history.
+- SIDRA ARCHIVE — asset catalog, versions, licenses, provenance.
+- MIZAN LEDGER — gross, fees, refunds, variable cost, tax reserve, net contribution, payout.
+- AFTERSHOCK — discovery, conversion, product lifetime, cohort and portfolio learning.
+- RIOT ENGINE — specialist agents, runs, schedules, budgets, queue, approvals, logs.
+- SETTINGS / POLICY CENTER — country, timezone, currencies, platform eligibility checks, credentials placeholders, consent, data controls, policy review dates.
 
-## Color system
+## 8. Business truth and marketplace boundaries
 
-Use the following core color tokens:
+Marketplace names must be treated as candidate channels, not verified live connections.
 
-- Obsidian: #111315
-- Deep Industrial: #191C1E
-- Panel Charcoal: #24282A
-- Paper Bone: #F3EBDD
-- Acid Lime: #D2FF38
-- Riot Orange: #FF542D
-- Electric Blue: #40D9FF
-- Riot Pink: #F047A4
-- Muted Ink: #777A76
+Show connection states honestly:
+- NOT CONNECTED
+- ELIGIBILITY CHECK REQUIRED
+- MANUAL WORKFLOW
+- OFFICIAL API AVAILABLE (only when verified for the exact action)
+- LIMITED OFFICIAL INTEGRATION
+- PAUSED / POLICY REVIEW
 
-Color principles:
+Never imply KDP, Adobe Stock, Etsy, Gumroad, Shopee, TikTok Shop, YouTube, Roblox, or itch.io is connected or publishing successfully in the demo.
 
-- Acid Lime is the primary identity accent.
-- Riot Orange represents creative energy and important actions.
-- Electric Blue is used sparingly for informational signals.
-- Pink is an expressive supporting accent.
-- Obsidian and Paper Bone anchor the two themes.
-- Avoid excessive neon.
-- Avoid generic blue-purple AI gradients.
+No fake transactions, fake reviews, artificial downloads, engagement manipulation, scraping behind login, CAPTCHA bypass, rate-limit evasion, or undisclosed automated posting.
 
-## Typography
+The product's promise is reduced repetitive work and evidence-based portfolio decisions—not guaranteed income or zero owner responsibility.
 
-Build a three-level typography system:
+## 9. Prototype interactions
 
-DISPLAY:
-- Archivo Black, Anton or an equivalent bold condensed display typeface.
-- Oversized editorial headlines.
-- Strong uppercase hierarchy.
+Implement with local state and clearly labeled synthetic data:
+1. Navigation among modules.
+2. Functional dark/light toggle.
+3. Basic English/Indonesian UI locale toggle.
+4. Search and command palette.
+5. Opportunity filters and sorting.
+6. Opportunity detail and decision actions.
+7. Product creation dialog and category choice.
+8. Local production status simulation.
+9. ZILL inspection report.
+10. Channel readiness / capability details.
+11. Asset preview and version selection.
+12. Demo chart period filters.
+13. Agent activity and task detail.
+14. Notifications and status toasts.
+15. Finance ledger filter and currency display.
+16. Responsive navigation.
 
-INTERFACE:
-- Space Grotesk or a comparable modern geometric sans.
-- Readable labels and interface text.
+No dead buttons. Every simulated action must say it is a prototype action. Do not simulate real publication, payment, marketplace account authorization, or external data retrieval as if it happened.
 
-TECHNICAL:
-- IBM Plex Mono or an equivalent monospace font.
-- Used for IDs, timestamps, metrics, statuses and technical details.
+## 10. Technical scope
 
-Use appropriate fallbacks if font loading fails.
-
-## Texture and graphical elements
-
-Create original reusable graphic elements:
-
-- Halftone patterns.
-- Photocopy grain.
-- Comic speech bubbles.
-- Offset ink shadows.
-- Industrial dividers.
-- Stamped status labels.
-- Torn-edge visual accents.
-- Technical measurement marks.
-- Comic panel backgrounds.
-- Distressed typography decorations.
-
-Textures should be subtle enough that text remains readable.
-
-Use CSS and original SVG artwork wherever possible.
-
-Do not depend on random external image URLs.
-
----
-
-# 5. CHARACTER UNIVERSE
-
-Build an original RIOTWORKS character family consistent with the MOONWITNESS comic identity.
-
-Four characters:
-
-### THE SCOUT
-Role: Discovery and intelligence.
-
-Personality:
-Curious, observant, fast and analytical.
-
-Visual direction:
-Underground comic explorer, dark streetwear, technical equipment, signal-detection accessories.
-
-### THE MAKER
-Role: Creative production.
-
-Personality:
-Inventive, expressive, experimental and slightly chaotic.
-
-Visual direction:
-Comic inventor, workshop accessories, creative tools, mechanical details.
-
-### ZILL
-Role: Protection and integrity.
-
-Personality:
-Silent, precise, disciplined and protective.
-
-Visual direction:
-Distinctive masked guardian, industrial armor language, graphic shield motifs.
-
-### THE KEEPER
-Role: Asset and portfolio management.
-
-Personality:
-Meticulous, strategic, reliable.
-
-Visual direction:
-Archivist and engineer hybrid, technical accessories, cataloging instruments.
-
-Character requirements:
-
-- Original artwork only.
-- No copied comic or game characters.
-- Consistent silhouettes and proportions.
-- Reusable vector/SVG artwork.
-- Front, side, and three-quarter visual identity direction.
-- Multiple expressions and poses.
-- Light and dark background compatibility.
-- Distinct visual identity for each character.
-
-Use characters in onboarding, empty states, agent activity, product storytelling, loading sequences, and selected dashboard panels.
-
-Do not put the word ALLAH on character clothing.
-
-Do not use sacred terminology as clothing graphics or decorative ornaments.
-
-Never substitute generic emoji for the character artwork.
-
----
-
-# 6. PRODUCT EXPERIENCE AND GLOBAL LAYOUT
-
-Create a polished desktop-first application with responsive tablet and mobile support.
-
-The desktop application should use a distinctive operational workspace, not a conventional template dashboard.
-
-### Global layout
-
-LEFT NAVIGATION:
-- Branded RIOTWORKS identity.
-- Character-inspired navigation accents.
-- Module categories.
-- Expandable navigation.
-- Active module visual indication.
-
-TOP COMMAND BAR:
-- Global search.
-- Command palette shortcut.
-- Current workspace.
-- Notifications.
-- Language selector.
-- Dark/light theme toggle.
-- User profile.
-
-MAIN CANVAS:
-- Contextual module titles.
-- Editorial page headers.
-- Rich asymmetric compositions.
-- Clear operational hierarchy.
-- Carefully designed visual panels.
-
-RIGHT CONTEXT PANEL:
-- Optional activity and agent information.
-- Evidence details.
-- Task status.
-- Contextual recommendations.
-
-Use responsive behavior. Right panels can collapse on narrower screens.
-
-Include:
-
-- Keyboard-accessible command palette.
-- Global search interaction.
-- Toast notifications.
-- Tooltips.
-- Tabs.
-- Filters.
-- Sort controls.
-- Dialogs.
-- Confirmation states.
-- Empty states.
-- Loading states.
-- Error states.
-- Skeleton loaders.
-
-The application should feel alive without distracting the operator.
-
----
-
-# 7. CORE PAGES — BUILD THESE FIRST
-
-Build five fully realized pages and a coherent navigation system.
-
-Other modules can exist as visually consistent secondary placeholder pages.
-
-## PAGE 01 — ARSY DECK
-### Main Command Center
-
-This is the home page and the most important screen.
-
-It should communicate the complete business situation at a glance.
-
-Header:
-
-"THE WORK NEVER STOPS."
-
-Subtitle:
-
-"Your creative economy. One command center."
-
-Core metrics:
-
-- Active products.
-- Products under review.
-- Published products.
-- Total sales.
-- Gross revenue.
-- Net revenue.
-- Marketplace performance.
-- Active AI agents.
-- Production queue.
-- Current experiments.
-
-Dashboard sections:
-
-A. BUSINESS PULSE
-
-Show important performance metrics using distinct editorial chart design.
-
-B. OPPORTUNITY RADAR
-
-Display interesting market opportunities with scores, confidence and evidence indicators.
-
-C. PRODUCTION PIPELINE
-
-Show stages:
-
-RESEARCH → PLAN → BUILD → QA → READY → PUBLISHED → LEARN.
-
-D. AI WORKFORCE
-
-Show the four original characters and their activities.
-
-E. MARKETPLACE HEALTH
-
-Show connected marketplace cards and simulated connection status.
-
-F. RECENT ACTIVITY
-
-Display recent product creation, inspection, publication and learning events.
-
-G. AFTERSHOCK
-
-Display recent product performance insights.
-
-Use realistic sample information.
-
-Mark all revenue, sales, and product numbers as DEMO DATA. Never imply simulated numbers are real financial results.
-
-## PAGE 02 — SIGNAL ROOM
-### Market Intelligence
-
-This is the research laboratory.
-
-Header:
-
-"READ THE SIGNAL."
-
-Subtitle:
-
-"Find demand before creating the supply."
-
-Core capabilities shown in the interface:
-
-- Market trend discovery.
-- Keyword intelligence.
-- Reddit discussion insights.
-- Marketplace category research.
-- Competitor listing observations.
-- Buyer problem discovery.
-- Product review analysis.
-- Seasonal opportunity discovery.
-- Market saturation estimates.
-- Research evidence.
-
-Interface sections:
-
-A. TREND RADAR
-
-Visual exploration of growing topics and categories.
-
-B. SOURCE STREAM
-
-Cards displaying:
-
-- Source name.
-- Date collected.
-- Source link.
-- Short insight.
-- Relevance.
-- Evidence confidence.
-
-C. OPPORTUNITY BOARD
-
-Opportunities with:
-
-- Opportunity name.
-- Marketplace fit.
-- Demand signals.
-- Competition.
-- Differentiation.
-- Production feasibility.
-- Risk.
-- Overall score.
-
-D. RESEARCH WORKBENCH
-
-Detail panel showing the evidence behind each opportunity.
-
-Every score must be explainable.
-
-Do not invent search volumes, revenue estimates or competitor statistics.
-
-Use explicit DEMO or SIMULATED labels for prototype content.
-
-## PAGE 03 — RIOT RADAR
-### Opportunity Lab
-
-The user investigates a particular opportunity.
-
-Create a sophisticated research detail workspace.
-
-Sections:
-
-- Opportunity overview.
-- Buyer problem.
-- Evidence timeline.
-- Market observations.
-- Competitor landscape.
-- Existing product limitations.
-- Product differentiation.
-- Marketplace suitability.
-- Estimated production complexity.
-- Unit economics assumptions.
-- Policy considerations.
-- Risk assessment.
-
-Opportunity score breakdown:
-
-- Demand signals.
-- Competition gap.
-- Product differentiation.
-- Marketplace fit.
-- Production feasibility.
-- Revenue potential.
-- Policy and intellectual property risk.
-
-Include:
-
-- Evidence links.
-- Confidence indicators.
-- Research history.
-- AI analyst recommendations.
-- Go / Research More / Reject actions.
-
-Create a strong visual distinction between evidence, assumptions, and AI-generated recommendations.
-
-## PAGE 04 — THE FORGE
-### Creative Product Workshop
-
-This is the main creation environment.
-
-Header:
-
-"TURN IDEAS INTO REAL WORK."
-
-Create a visually impressive production workspace.
-
-Include product categories:
-
-- Digital Utility.
-- Stock Assets.
-- Affiliate Media.
-- Ebooks and Publishing.
-- Video and Media.
-- Game Assets.
-- Workflow Products.
-- Micro Games.
-
-Production workflow:
-
-1. Select an opportunity.
-2. Define the product.
-3. Select output format.
-4. Create product brief.
-5. Generate content.
-6. Preview.
-7. Inspect.
-8. Package.
-9. Prepare distribution.
-
-Provide a visual production panel with:
-
-- Product concept.
-- Output format.
-- Asset previews.
-- Version number.
-- Creative brief.
-- AI agent assignment.
-- Production progress.
-- Quality status.
-
-Show mock assets with original CSS/SVG artwork and tasteful image placeholders.
-
-Include an asset variation system and version history.
-
-The UI should communicate a high-end creative workshop rather than a conventional file manager.
-
-## PAGE 05 — ZILL WATCH
-### Quality, Safety and Integrity
-
-Header:
-
-"NOTHING LEAVES UNCHECKED."
-
-The guardian system protects the business from low-quality or non-compliant output.
-
-Inspection categories:
-
-- Intellectual property.
-- Originality.
-- Similarity.
-- Content quality.
-- Technical specifications.
-- File completeness.
-- Metadata accuracy.
-- AI disclosure.
-- Marketplace rules.
-- Licensing and provenance.
-
-Provide an inspection report with:
-
-- PASS.
-- WARNING.
-- BLOCKED.
-- NEEDS REVIEW.
-
-Include a sample inspection timeline and a visible scorecard.
-
-Important:
-
-A high score cannot override an actual policy violation.
-
-Provide a clear reason for every warning or blocked item.
-
-Use ZILL character artwork appropriately.
-
----
-
-# 8. SECONDARY MODULES
-
-Build coherent navigation entries and consistent secondary pages or useful placeholder views for:
-
-### LAUNCH BAY
-Marketplace distribution and publication preparation.
-
-Platforms to represent:
-
-- Adobe Stock.
-- Etsy.
-- Gumroad.
-- Shopee Affiliate.
-- TikTok Shop Affiliate.
-- Amazon KDP.
-- YouTube.
-- Roblox.
-- itch.io.
-
-Do not claim that real account integrations exist.
-
-### SIDRA ARCHIVE
-Digital asset repository.
-
-Features:
-- Product library.
-- Preview.
-- Versions.
-- Metadata.
-- Licenses.
-- Provenance.
-- Tags.
-- File organization.
-
-### MIZAN LEDGER
-Financial overview.
-
-Features:
-- Sales.
-- Affiliate commissions.
-- Royalties.
-- Platform fees.
-- Production costs.
-- Refunds.
-- Net revenue.
-- Payout tracking.
-
-### AFTERSHOCK
-Portfolio intelligence.
-
-Features:
-- Product performance.
-- Discovery metrics.
-- Click-through rates.
-- Conversion.
-- Downloads.
-- Revenue trends.
-- Product lifetime.
-- Improvement recommendations.
-- Retirement recommendations.
-
-### RIOT ENGINE
-Automation and AI workforce.
-
-Features:
-- Agent cards.
-- Workflow status.
-- Jobs running.
-- Completed jobs.
-- Scheduled jobs.
-- Error logs.
-- Resource consumption.
-- Automation history.
-
-These secondary modules should look like genuine parts of one product, not disconnected template screens.
-
----
-
-# 9. INTERACTION REQUIREMENTS
-
-The prototype must be interactive.
-
-Implement frontend interactions using local state and mock data.
-
-Minimum required interactions:
-
-1. Navigation between all primary modules.
-2. Dark/light theme switch.
-3. Indonesian/English language selector with a functional basic UI translation.
-4. Global command palette.
-5. Search.
-6. Opportunity filters.
-7. Sort controls.
-8. Opportunity detail interactions.
-9. Product creation dialog.
-10. Product category selection.
-11. Production progress simulation.
-12. Quality inspection result display.
-13. Marketplace channel status.
-14. Notification interaction.
-15. Agent activity states.
-16. Demo analytics chart filtering.
-17. Asset preview dialog.
-18. Product status updates in local state.
-
-All buttons must perform a meaningful prototype action.
-
-No decorative or broken buttons.
-
-Use realistic local mock data.
-
-Do not pretend that a publication, sale, payment, account connection, or external API action has actually taken place.
-
-Provide clear feedback when an interaction is simulated.
-
----
-
-# 10. DESIGN SYSTEM AND COMPONENT ARCHITECTURE
-
-Implement reusable components instead of duplicating page-specific styles.
-
-Required foundations:
-
-- Design tokens.
-- Typography tokens.
-- Theme tokens.
-- Spacing scale.
-- Border and shadow system.
-- Surface variants.
-- Button variants.
-- Status badge system.
-- Chart styles.
-- Data table styles.
-- Dialog patterns.
-- Form controls.
-- Navigation components.
-- Empty-state components.
-- Illustration container components.
-- Comic panel components.
-- Technical metadata components.
-
-Build reusable UI components:
-
-- RiotPanel.
-- RiotCard.
-- RiotButton.
-- RiotBadge.
-- SignalCard.
-- OpportunityScore.
-- EvidencePanel.
-- AgentCard.
-- CharacterIllustration.
-- ProductionStage.
-- AssetPreview.
-- InspectionReport.
-- MarketplaceCard.
-- MetricDisplay.
-- AftershockInsight.
-- ComicHeader.
-- CommandPalette.
-
-Do not simply install a component library and leave its default styling unchanged.
-
-Use accessible, well-tested primitives when useful, but create a distinctive RIOTWORKS visual identity on top.
-
-Use Lucide SVG icons as the baseline where appropriate, with original custom SVG illustrations for brand artwork.
-
----
-
-# 11. TECHNICAL IMPLEMENTATION
-
-Frontend only.
-
-Preferred stack:
-
+Frontend only:
 - Next.js App Router.
-- React.
-- TypeScript.
+- React + TypeScript.
 - Tailwind CSS.
-- Reusable React components.
+- Reusable typed components.
 - Local mock data.
-- Lightweight chart visualization.
-- Lucide icons.
-- CSS/SVG for original graphic artwork.
+- Lightweight charts.
+- Lucide icons plus original SVG brand artwork.
 
-Implementation requirements:
+Do not build a backend, database, payment system, OAuth connection, credential storage, real agent runtime, or external marketplace integration in this phase. Keep components modular and ready for later API contracts without over-engineering.
 
-- Organized component structure.
-- Strong TypeScript typing.
-- Responsive layouts.
-- Accessible controls.
-- No dead navigation links.
-- No unnecessary dependencies.
-- No unnecessary global CSS hacks.
-- Consistent design tokens.
-- Maintainable and modular code.
-- Clean console.
-- Reasonable loading states.
-- Graceful empty states.
-- No horizontal overflow.
+If a repository already exists, inspect it before changing conventions. Avoid unnecessary dependencies. Ensure no broken routes, TypeScript errors, console errors, overflow, inaccessible dialogs, or nonfunctional controls.
 
-If an existing repository or project structure is provided, inspect and preserve its established conventions before modifying it.
+## 11. Required output quality
 
----
+The prototype must:
+- Be unmistakably RIOTWORKS without relying only on the logo.
+- Show coherent MoonWitness ecosystem positioning.
+- Integrate punk, comic, grunge, riot, industrial, and game-HUD aesthetics.
+- Include original character artwork and consistent graphic assets.
+- Have intentionally designed dark and light themes.
+- Deliver all five core pages at high fidelity.
+- Make secondary modules feel like the same product.
+- Use readable tables and financial data.
+- Be responsive and accessible.
+- Clearly mark demo data and simulated integrations.
+- Contain no dead or misleading controls.
 
-# 12. STRICT SCOPE BOUNDARIES
+## 12. Execution instruction
 
-This phase is a visual and interaction prototype only.
+Build the application, not a description or wireframe. Start with the global visual system and ARSY DECK, then complete SIGNAL ROOM, RIOT RADAR, THE FORGE, and ZILL WATCH. Finish secondary module previews and test every interaction.
 
-DO NOT:
+Do not dilute the design into a generic SaaS interface. Do not add unrequested backend work.
 
-- Build the real production backend.
-- Create database infrastructure.
-- Integrate real marketplace credentials.
-- Implement real payments.
-- Store API secrets in the frontend.
-- Implement real autonomous publishing.
-- Implement actual account authorization.
-- Build complex agent orchestration.
-- Generate fake real-world business analytics.
-- Claim real connections to marketplaces.
-- Add unnecessary features outside the defined product direction.
-
-Use local state, static mock records and simulated interactions.
-
-The architecture should be ready for future backend integration, but do not over-engineer the frontend.
-
----
-
-# 13. USER EXPERIENCE AND ACCESSIBILITY
-
-This is a desktop-first creative business command center.
-
-It must nevertheless work on:
-
-- Desktop.
-- Laptop.
-- Tablet.
-- Mobile.
-
-Requirements:
-
-- Keyboard navigation.
-- Visible focus states.
-- Sufficient color contrast.
-- Readable font sizes.
-- Semantic page hierarchy.
-- Proper dialog behavior.
-- Reduced-motion support.
-- Functional theme switching.
-- Consistent responsive behavior.
-
-Motion should communicate activity, not create distraction.
-
-Provide sound design as a future-ready optional feature, but do not force audio playback.
-
-Respect the user's preference for reduced motion and disabled sound.
-
----
-
-# 14. VISUAL QUALITY ACCEPTANCE CRITERIA
-
-Before considering the prototype complete, verify:
-
-[ ] The application looks unmistakably like RIOTWORKS.
-
-[ ] The MoonWitness ecosystem identity is visible but not overwhelming.
-
-[ ] It does not look like a generic SaaS dashboard.
-
-[ ] Punk, grunge, comic, riot and industrial visual languages are integrated coherently.
-
-[ ] Both dark and light themes are designed intentionally.
-
-[ ] Original character artwork appears consistently.
-
-[ ] Typography has a recognizable identity.
-
-[ ] Navigation and content hierarchy are clear.
-
-[ ] All five primary pages feel fully designed.
-
-[ ] Secondary modules use the same design system.
-
-[ ] All visible interactions work.
-
-[ ] No fake marketplace integrations are claimed.
-
-[ ] No simulated financial information is presented as real.
-
-[ ] Mobile layout is usable.
-
-[ ] No broken components, overflow, missing assets or console errors.
-
-[ ] Design tokens and reusable components are established.
-
-[ ] The UI is ready to become the visual foundation for the next development phase.
-
----
-
-# 15. FINAL CREATIVE DIRECTION
-
-Think like a world-class creative director, product designer, comic art director and experienced SaaS UX architect working together.
-
-Do not settle for a safe or ordinary design.
-
-Be bold.
-
-Create expressive layouts.
-
-Use strong art direction.
-
-Build distinctive visual compositions.
-
-Give RIOTWORKS its own graphic language.
-
-Make the application feel like a living creative operation, not a static admin panel.
-
-At the same time, never sacrifice usability, clarity, accessibility or data accuracy for decoration.
-
-The final experience must feel:
-
-- Funky.
-- Underground.
-- Rebellious.
-- Futuristic.
-- Comic-driven.
-- Industrial.
-- Premium.
-- Experimental.
-- Intelligent.
-- Operational.
-
-The visual identity must be memorable enough that someone can recognize a RIOTWORKS screen without seeing its logo.
-
-# FINAL BRAND MESSAGE
-
-MOONWITNESS // RIOTWORKS
-
-THE CREATIVE COMMERCE ENGINE.
-
-NO EMPTY NOISE.
-
-MAKE SOMETHING REAL.
-
-MAKE WORK THAT OUTLIVES THE FEED.
-
----
-
-## EXECUTION INSTRUCTIONS
-
-Build the application, not just a description of it.
-
-Prioritize the complete global design system and the five primary pages.
-
-Make the initial landing experience the ARSY DECK command center.
-
-Use coherent mock data and build working interactions.
-
-Do not stop after generating a basic dashboard or wireframe.
-
-Do not replace the requested identity with standard SaaS components.
-
-The output should be an immediately viewable, high-fidelity, interactive RIOTWORKS application prototype that can be refined in subsequent design iterations.
+**MOONWITNESS // RIOTWORKS**  
+**NO EMPTY NOISE. MAKE SOMETHING REAL.**  
+**MAKE WORK THAT OUTLIVES THE FEED.**
