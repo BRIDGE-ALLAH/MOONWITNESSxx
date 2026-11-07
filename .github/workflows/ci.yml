@@ -9,7 +9,7 @@ on:
       - 'chore/**'
       - 'docs/**'
       - 'refactor/**'
-      - "headquarter/**"
+      - 'headquarter/**'
   pull_request:
     branches:
       - main
