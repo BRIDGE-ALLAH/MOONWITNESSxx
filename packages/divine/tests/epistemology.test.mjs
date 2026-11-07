@@ -7,7 +7,15 @@ test("unknown, not-recorded and not-applicable never become false",()=>{for(cons
 test("metaphysical and normative questions abstain",()=>{for(const questionClass of ["metaphysical","normative"]){const r=evaluateEpistemicInput(input({query:{id:"q",questionClass,requestedScope:scope}}),policy);assert.equal(r.outcome,"abstain")}});
 test("insufficient evidence and missing provenance abstain",()=>{assert.equal(evaluateEpistemicInput(input({assessment:{methodId:"m",outcome:"insufficient",evidenceRefs:[],rationale:""} }),policy).outcome,"abstain");assert.equal(evaluateEpistemicInput(input({provenanceRefs:[]}),policy).outcome,"abstain")});
 test("unobservable and unverifiable states abstain with distinct reasons",()=>{assert.equal(evaluateEpistemicInput(input({knowledgeState:"unobservable"}),policy).reason,"UNOBSERVABLE");assert.equal(evaluateEpistemicInput(input({knowledgeState:"unverifiable"}),policy).reason,"UNVERIFIABLE")});
-test("cross-tradition comparison requires explicit method and mapping",()=>{const query={id:"q",questionClass:"historical",requestedScope:{tradition:"mw:tradition:b"},comparisonRule:{id:"cmp",methodId:"historical-comparison-v1",mappingRefs:["mw:assertion:map"],traditions:["mw:tradition:a","mw:tradition:b"]}};assert.equal(evaluateEpistemicInput(input({query}),policy).outcome,"answer");assert.equal(evaluateEpistemicInput(input({query:{...query,comparisonRule:{...query.comparisonRule,mappingRefs:[]}}),policy).reason,"CROSS_TRADITION_NOT_AUTHORIZED");assert.equal(evaluateEpistemicInput(input({query:{...query,comparisonRule:undefined}}),policy).reason,"CROSS_TRADITION_NOT_AUTHORIZED")});
+test("cross-tradition comparison requires explicit method and mapping",()=>{
+  const rule={id:"cmp",methodId:"historical-comparison-v1",mappingRefs:["mw:assertion:map"],traditions:["mw:tradition:a","mw:tradition:b"]};
+  const query={id:"q",questionClass:"historical",requestedScope:{tradition:"mw:tradition:b"},comparisonRule:rule};
+  assert.equal(evaluateEpistemicInput(input({query}),policy).outcome,"answer");
+  const noMappings={...query,comparisonRule:{...rule,mappingRefs:[]}};
+  assert.equal(evaluateEpistemicInput(input({query:noMappings}),policy).reason,"CROSS_TRADITION_NOT_AUTHORIZED");
+  const noRule={...query,comparisonRule:undefined};
+  assert.equal(evaluateEpistemicInput(input({query:noRule}),policy).reason,"CROSS_TRADITION_NOT_AUTHORIZED");
+});
 test("claim scope cannot be widened by a broader request",()=>{const narrow={tradition:"mw:tradition:a",community:"mw:community:a"};const r=evaluateEpistemicInput(input({claimScope:narrow,query:{id:"q",questionClass:"historical",requestedScope:scope}}),policy);assert.equal(r.reason,"SCOPE_MISMATCH")});
 
 test("unscoped claims cannot be promoted into scoped claims",()=>{const r=evaluateEpistemicInput(input({claimScope:{},query:{id:"q",questionClass:"historical",requestedScope:scope,allowNarrowing:true}}),policy);assert.equal(r.reason,"SCOPE_MISMATCH")});
