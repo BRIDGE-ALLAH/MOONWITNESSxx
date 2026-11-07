@@ -265,7 +265,7 @@ A component is not complete until all applicable checks pass:
 
 ## 11. Documentation
 
-- [ ] **P0** Add package README with installation, stylesheet setup, peer requirements, and basic usage.
+- [x] **P0** Add package README with installation, stylesheet setup, peer requirements, and basic usage.
 - [ ] **P1** Document theme setup and theme switching.
 - [ ] **P1** Document token names and semantic usage.
 - [ ] **P1** Document component props, variants, accessibility behavior, and examples.
