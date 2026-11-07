@@ -116,7 +116,8 @@ test('unknown hard gates prevent prototype promotion', () => {
 })
 
 test('missing score dimensions remain unknown rather than becoming zero', () => {
-  const { distributionReadiness: _omitted, ...partialScores } = completeScores
+  const partialScores = { ...completeScores }
+  delete partialScores.distributionReadiness
   const result = evaluateOpportunity({
     scores: partialScores,
     hardGates: passingGates,
