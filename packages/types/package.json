@@ -5,7 +5,7 @@
   "description": "RIOTWORKS shared TypeScript configuration and utility types",
   "scripts": {
     "type-check": "tsc --noEmit",
-    "lint": "pnpm --filter @riotworks/lint exec eslint ../types/src --config eslint.config.mjs --max-warnings 0"
+    "lint": "../lint/node_modules/.bin/eslint src --config ../lint/eslint.config.mjs --max-warnings 0"
   },
   "dependencies": {
     "zod": "^3.23.8"
