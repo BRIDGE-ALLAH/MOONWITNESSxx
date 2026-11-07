@@ -87,9 +87,7 @@ pub fn validate(input: &EngineWriteRequest) -> Result<(), &'static str> {
                 .chars()
                 .all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit() || ch == '_'))
     {
-        return Err(
-            "secret_env_key must be an environment variable named ATLAS_ENGINE_SECRET_*",
-        );
+        return Err("secret_env_key must be an environment variable named ATLAS_ENGINE_SECRET_*");
     }
     Ok(())
 }
