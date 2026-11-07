@@ -108,24 +108,28 @@
 - [ ] Verify no schema/manifest duplication.
 - [ ] Run audit, format, and automation tests; record exceptions and owners.
 
-**Status:** canonical index, nine separate contracts, detailed rule-ID enforcement register, agent/Codex instruction reconciliation, and initial CI checks are implemented. Owner review, rule-by-rule enforcement mapping, decision records, and final acceptance remain open. Repository integrity passes; the separate Headquarter Asset integrity job remains blocked by missing local modules.
+**Status:** canonical index, nine separate contracts, detailed rule-ID enforcement register, agent/Codex instruction reconciliation, and initial CI checks are implemented. Owner review, decision records, and final acceptance remain open. The rebased PR #37 has passing Repository integrity and Asset integrity evidence; see the current PR body for the verified head and workflow run.
 
 ## Phase 2 — Programmatic Governance Engine
 
 **Goal:** deterministic objective enforcement, not a generic schema platform. **Dependencies:** Phase 0 + Phase 1.
 
-- [ ] Choose canonical tooling owner; avoid second root toolchain.
-- [ ] Implement `governance check`, `doctor`, `report`.
-- [ ] Check identity, manifests, unique names, entrypoints, workspace topology.
-- [ ] Validate dependency graph (no app-to-app, package-to-app, backend-to-UI edges).
-- [ ] Check ownership/public entrypoints and agent instruction precedence.
-- [ ] Check workflow permissions, triggers, concurrency, action pinning.
-- [ ] Generate contract-to-enforcement coverage report.
-- [ ] Add positive/negative fixtures and actionable deterministic output.
-- [ ] Gate critical invariants in CI; warnings stay advisory until approved.
-- [ ] Document CLI output and exit codes.
+- [x] Choose canonical tooling owner: repository tooling maintainers; reuse Node built-ins and existing root toolchain.
+- [x] Implement `governance:check`, `governance:doctor`, and `governance:report` in `scripts/governance.mjs`.
+- [x] Check root identity, Node/pnpm pins, workspace roots, manifests, unique names, declared entrypoints, and governance authority precedence.
+- [x] Validate declared workspace dependency edges and recognizable scoped source imports; reject package-to-app, app-to-app, Headquarter-to-database, and ARSY-to-UI edges.
+- [x] Check rule-ID uniqueness and explicit enforcement/state fields; report contract coverage counts.
+- [x] Scan workflow permission declarations, reject `write-all`, and flag potentially unsafe `pull_request_target` execution patterns.
+- [x] Add positive/negative fixtures for valid workspace, forbidden dependency direction, duplicate names, source imports, rule completeness, and read-only reporting.
+- [x] Gate the engine through `check:repo` and `validate:repo`; repository CI invokes the canonical command.
+- [x] Document CLI scope, limitations, output, and exit codes in [engine.md](./engine.md).
+- [ ] Run clean-checkout CI on the final Phase 2 head and resolve formatting/test failures.
+- [ ] Expand fixture coverage for workflow permission failures, missing entrypoints, unknown workspace dependencies, and strict warning exit behavior.
+- [ ] Owner review of the dependency boundary rules and warning policy.
 
-**Acceptance:** offline CLI, tests for pass/fail fixtures, no mutation during check/report.
+**Acceptance:** offline CLI, passing positive/negative fixtures, deterministic output, no mutation during check/report, and clean-checkout CI evidence.
+
+**Status:** implementation committed to the Phase 0/1 branch; CI verification and owner approval are pending. Import detection is intentionally a lightweight static guard, not a semantic TypeScript AST or security proof.
 
 ## Phase 3 — GitHub governance and automation
 
