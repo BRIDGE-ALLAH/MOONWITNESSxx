@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
-import { hasValidOperatorToken } from '../auth/operator-token.ts'
 import { evaluateOpportunity, opportunityInputSchema } from './domain.ts'
 import { OpportunityRepository } from './repository.ts'
 
