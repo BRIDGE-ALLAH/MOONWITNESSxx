@@ -253,6 +253,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     assert.ok(versionedProduct)
 
     const versionedProductCard = page.locator('article').filter({ hasText: title }).first()
+    await versionedProductCard.getByText('Create next version', { exact: true }).click()
     await versionedProductCard.getByPlaceholder('Describe what changes in this revision').fill('Add a reviewable immutable version history to the product brief.')
     await versionedProductCard.getByRole('button', { name: 'Create v2' }).click()
     await page.getByRole('status').filter({ hasText: 'New immutable product version created: v2' }).waitFor()
