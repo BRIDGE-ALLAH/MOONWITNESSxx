@@ -48,7 +48,7 @@ const shutdown = async (signal: string): Promise<void> => {
 process.once('SIGTERM', () => void shutdown('SIGTERM'))
 process.once('SIGINT', () => void shutdown('SIGINT'))
 
-const port = Number(process.env.PORT ?? 3000)
+const port = Number(process.env.PORT ?? process.env.ARSY_PORT ?? 3000)
 const host = process.env.HOST ?? '0.0.0.0'
 
 app
