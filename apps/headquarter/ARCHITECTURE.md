@@ -126,8 +126,8 @@ The Money Maker development vertical slice lives in `src/features/money-maker`. 
 - `/the-forge` promotes only an opportunity with a complete score of at least 80 and all four hard gates passed into a product brief, and creates append-only revisions.
 - `/mizan-ledger` records exact integer minor-unit financial events, keeps them pending until evidence-backed reconciliation, and reads currency-grouped verified totals.
 - `/aftershock` shows persisted opportunity/product counts and reconciled contribution; conversion and lifetime metrics remain unavailable without defined cohorts and source events.
-- `/signal-room` and `/sidra-archive` show truthful disconnected states until source connectors and binary asset storage are implemented.
+- `/signal-room` remains a truthful disconnected state until market-source connectors exist; `/sidra-archive` provides authenticated local-volume asset upload/download/archive with SHA-256 and provenance metadata.
 
 Headquarter server-side BFF routes use `src/lib/arsy-proxy` and the signed operator session in `src/lib/operator-session`. Never expose `ARSY_OPERATOR_TOKEN` to browser code. Mutating requests require the configured same-origin check. The session is a single-owner bootstrap only; it is not a substitute for multi-user RBAC or tenant isolation.
 
-The opportunity/product/inspection/channel/listing/finance APIs are covered by ARSY unit, route-injection, and isolated PostgreSQL integration tests. Browser E2E, production operations, asset binary storage, official marketplace APIs, and cohort analytics remain release gates.
+The opportunity/product/inspection/channel/listing/finance APIs are covered by ARSY unit, route-injection, and isolated PostgreSQL integration tests. Browser E2E, production operations, object-storage replication/malware scanning, official marketplace APIs, and cohort analytics remain release gates.
