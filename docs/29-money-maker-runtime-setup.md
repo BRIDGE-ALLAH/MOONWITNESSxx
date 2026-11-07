@@ -36,15 +36,17 @@
 | `HEADQUARTER_SESSION_SECRET` | Yes | Random signing secret of at least 32 characters |
 | `HEADQUARTER_PUBLIC_ORIGIN` | Yes | Exact browser-facing origin, without a path |
 
-Generate independent random values for the operator token and session secret. Store them in the deployment secret manager. Never commit actual credentials or use `NEXT_PUBLIC_` for server secrets.
+Generate independent random values for the operator token and session secret. Store them in the deployment secret manager. Never commit actual credentials or use `NEXT_PUBLIC_` for server secrets. The Compose default `ARSY_API_BASE_URL=http://arsy:3001` is for container-to-container traffic; override it to `http://127.0.0.1:3001` when running Headquarter directly on the host.
 
 ## Apply database migrations
 
-From the repository root, with the ARSY database URL supplied to the command environment:
+With the Docker Compose ARSY service running and its internal `DATABASE_URL` configured, apply migrations inside the service:
 
 ```sh
-pnpm --filter @riotworks/arsy migrate:up
+docker compose exec arsy pnpm migrate:up
 ```
+
+For a host-run ARSY process, run `pnpm --filter @riotworks/arsy migrate:up` from the repository root with `DATABASE_URL` pointing to the same PostgreSQL database.
 
 The runner applies numbered SQL migrations in lexical order, records their SHA-256 checksums, skips only an already-applied migration with an unchanged checksum, and uses a transaction per migration. It fails when an applied migration file has been edited. It is not called during application startup.
 
