@@ -7,7 +7,7 @@ type Opportunity = {
   title: string
   buyerProblem: string
   buyerSegment: string
-  evaluation: { score: number | null; decision: string; blockedGates: string[]; unknownGates: string[] }
+  evaluation: { score: number | null; decision: string; blockedGates: string[]; unknownGates: string[]; missingScoreDimensions: string[] }
 }
 type Product = { id: string; opportunityId: string | null; title: string; productFamily: string; lifecycleState: string; version: number; acceptanceCriteria: string[] }
 
@@ -68,6 +68,7 @@ export function ProductBoard() {
     opportunity.evaluation.score >= 80 &&
     opportunity.evaluation.blockedGates.length === 0 &&
     opportunity.evaluation.unknownGates.length === 0 &&
+    opportunity.evaluation.missingScoreDimensions.length === 0 &&
     !productOpportunityIds.has(opportunity.id),
   )
 
