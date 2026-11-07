@@ -69,3 +69,14 @@ The interfaces are operator-facing prototypes. No scenario can be promoted to a 
 | Uncertainty & Governance Gate | `/governance-lab` | Pure low/base/high uncertainty assessment and fail-closed human-review gate | Domain-calibrated thresholds, metric contracts/units, evidence coverage semantics, policy enforcement and approval audit |
 
 The Governance Lab is a read-only prototype. `eligible_for_human_review` is not approval; all states require human approval and ARSY enforcement. SHA-256 is an integrity checksum, not a digital signature or proof of authorship/time.
+
+
+## Emerging governance modules (Phase 14–16)
+
+| Module | Current maturity | Production gate |
+|---|---|---|
+| Belief Drift Sentinel | Pure snapshot comparator; descriptive drift findings only | Versioned belief/event contract, source lineage, calibrated review thresholds, temporal evaluation set |
+| Counterfactual Blast-Radius Map | Deterministic traversal of explicit `causes` edges; no causal inference | ARSY-owned causal edge provenance, cycle/scale tests, incident-postmortem validation |
+| Evidence Expiry Budget | Pure validity-window prioritization and dependent-decision exposure count | Evidence-class-specific validity contracts, trusted timestamps, tenant isolation, append-only expiry/revocation events |
+
+All are prototype domain kernels, not production enforcement. A result can prioritize human review but cannot approve, reject, or mutate a decision.
