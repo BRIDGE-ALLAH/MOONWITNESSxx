@@ -18,11 +18,12 @@ apps/headquarter/
     app/                 # Next.js routes, layouts, global stylesheet
     components/          # compatibility location for AppShell export
     shell/               # application-wide navigation and shell composition
-      navigation.ts      # one source of truth for navigation metadata
+      navigation.ts      # one IA registry with route and availability metadata
       sidebar.tsx        # responsive primary navigation
       topbar.tsx         # global actions and workspace context presentation
       command-palette.tsx
-    features/            # add domain-owned modules when extraction is justified
+    features/            # domain-owned modules and read models
+      arsy-deck/         # reference feature: types, repository, demo fixture, view
     platform/            # cross-feature integrations
       arsy/              # public ARSY HTTP client and frontend-safe contracts
 ```
@@ -65,10 +66,22 @@ The adapter is transport infrastructure, not proof that a backend capability exi
 
 The App Router root now provides route-level `loading.tsx`, `error.tsx`, and `not-found.tsx` fallbacks. Error UI intentionally avoids rendering raw exception messages. These boundaries are baseline recovery UX; they do not replace feature-specific empty, forbidden, stale, or partial-data states.
 
+## Feature implementation pattern
+
+ARSY DECK is the reference feature. Its App Router page is a thin composition layer. Domain types, repository selection, explicit demo fixtures, and feature view are owned by `src/features/arsy-deck`.
+
+The current ARSY app exposes a root status response and a database health route only. It does not publish the workspace-pulse contract required by ARSY DECK. The feature therefore uses a visibly disclosed demo repository and intentionally exposes no mutation controls. Do not add a guessed endpoint or infer connected/healthy states from sample data.
+
+## Navigation and rollout
+
+`shell/navigation.ts` follows the approved product information architecture and records each entry as `prototype` or `planned`. Existing prototype routes remain navigable and visibly marked. Administration capabilities without a real route are disabled roadmap entries, not links to placeholder pages. This is presentation metadata only; ARSY must enforce all authorization.
+
+See `FEATURE-ROLLOUT.md` for ownership, production gates, and administration readiness.
+
 ## Current known limitations
 
-- Feature pages still contain local/static demo data; the API adapter is ready for integration but no feature endpoint has been connected.
+- Feature pages still contain local/static demo data. ARSY DECK now has a domain-owned repository boundary and explicit fixture; no production feature endpoint is connected.
 - Authentication, authorization, workspace persistence, and locale routing are not implemented because their authoritative ARSY contracts are not yet verified.
-- The administration navigation is incomplete relative to the approved information architecture; do not expose placeholder routes as working functionality.
+- Administration is aligned with the approved IA at the navigation/roadmap level only; planned entries remain disabled until routes, contracts, and authorization exist.
 - Browser-level responsive, keyboard, screen-reader, contrast, and theme verification remains a release task.
-- Lint, type-check, tests, and production build have not been executed in this environment.
+- CI previously passed Headquarter type-check, shared UI type-check, and Headquarter production build for the Phase 2/3 branch. Phase 4/5 changes still require a fresh CI run; repository integrity remains blocked by the pre-existing lockfile mismatch and incorrect lockfile-check invocation.
