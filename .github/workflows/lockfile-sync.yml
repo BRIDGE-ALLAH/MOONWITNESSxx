@@ -1,0 +1,59 @@
+name: Workspace lockfile sync
+
+on:
+  push:
+    branches:
+      - "feat/**"
+      - "fix/**"
+      - "chore/**"
+
+concurrency:
+  group: lockfile-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Regenerate workspace lockfile
+        run: pnpm install --lockfile-only --ignore-scripts
+
+      - name: Commit generated lockfile
+        shell: bash
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "Lockfile is already synchronized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "chore(lockfile): synchronize workspace importers"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Install from synchronized lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Run repository validation
+        run: pnpm run validate:repo
