@@ -5,7 +5,7 @@ import { AppShell } from '../components/AppShell'
 
 export const metadata: Metadata = {
   title: 'MOONWITNESS — See More. Know More.',
-  description: 'When the Moon rises, we share what matters. An evidence-first observatory for discovery, knowledge, and human understanding.',
+  description: 'When the Moon rises, we share messages. An evidence-first observatory for discovery, knowledge, and human understanding.',
   applicationName: 'MOONWITNESS',
 }
 
