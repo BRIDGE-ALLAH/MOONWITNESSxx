@@ -32,24 +32,24 @@ const requiredSemanticTokens = [
 ];
 
 function readVariable(rule, name) {
-  const match = rule.match(new RegExp(\`--\${name}\\s*:\\s*([^;]+);\`));
-  assert.ok(match, \`Missing semantic token --\${name}\`);
+  const escapedName = name.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&");
+  const match = rule.match(new RegExp("--" + escapedName + "\\\\s*:\\\\s*([^;]+);"));
+  assert.ok(match, "Missing semantic token --" + name);
   return match[1].trim();
 }
 
 test("default light root matches the canonical Archive semantic tokens", () => {
   const root = readRule(":root");
   const archive = readRule(".theme-archive");
-  assert.match(root, /color-scheme:\s*light/);
+  assert.match(root, /color-scheme:\\s*light/);
   for (const token of requiredSemanticTokens) {
     assert.equal(
       readVariable(root, token),
       readVariable(archive, token),
-      \`Default root --\${token} must match the Archive theme\`,
+      "Default root --" + token + " must match the Archive theme",
     );
   }
 });
-
 test("Archive overrides inherited dark tokens and defines the semantic surface contract", () => {
   const archive = readRule(".theme-archive");
   assert.match(archive, /color-scheme:\s*light/);
