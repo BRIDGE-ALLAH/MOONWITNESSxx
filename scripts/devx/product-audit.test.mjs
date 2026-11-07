@@ -103,3 +103,14 @@ test('release preflight accepts local scaffolding but states its remote verifica
     assert.match(report.note, /cannot verify remote tags/)
   } finally { await rm(root, { recursive: true, force: true }) }
 })
+
+import { fileURLToPath } from 'node:url'
+import { dirname } from 'node:path'
+
+test('current repository workspace and Headquarter navigation contracts are coherent', async () => {
+  const root = new URL('../..', import.meta.url).pathname
+  const workspace = await auditWorkspaceContracts({ root })
+  const experience = await auditHeadquarterExperience({ root })
+  assert.equal(workspace.ok, true, JSON.stringify(workspace.findings))
+  assert.equal(experience.ok, true, JSON.stringify(experience.findings))
+})
