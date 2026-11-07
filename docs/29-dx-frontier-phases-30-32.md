@@ -48,3 +48,36 @@ No claim is made that these ideas are globally unprecedented. Differentiation re
 - Merge packet false-ready rate; percentage of packets bound to authenticated commit checks.
 - Agent throughput versus destructive collision rate as swarm size increases.
 - Rollback recovery time and side-effect containment.
+
+
+## Updated frontier scan — 2026-11-08
+
+### Papers reviewed in this pass
+- [Soei: Structured Observability of Evidence and Intent for Multi-Agent AI Software Engineering](https://arxiv.org/abs/2610.39468) (29 Oct 2026). Its 45-session prototype reports 23.4% of code-editing episodes had no independent check after the last edit and 57.8% of agent-marked-complete to-dos lacked proof in between. It proposes acknowledgement-aware traces, a hash-chained ledger, W3C PROV-aligned lineage and separation of completion claims from proof. **Design consequence:** prioritize evidence gates and independent verification; the sample is limited and its estimates are not universal prevalence.
+- [Coordinating Agents on a Shared Git Workspace (PASC)](https://doi.org/10.4230/LIPIcs.ESEM.2026.18) (ESEM 2026). On the evaluated SWE-Bench Pro Python subset, peer-aware two-agent coordination reduced destructive concurrent edits by about 47% and cost per resolved task by about 20% versus the silent two-agent baseline; preliminary observations show interference grows beyond two agents. **Design consequence:** make swarm size adaptive to coupling and collision density; two agents are not a universal optimum.
+- [A Domain-Agnostic Agentic Architecture for Structured Extraction of Engineering Knowledge (RCP)](https://doi.org/10.1080/08839514.2026.2712892) (28 Aug 2026). A SQL-backed orchestration state and verify-before-summarize loop reduced hallucinations in two industrial case studies. **Design consequence:** persist intermediate validation state and expose unmet evidence as explicit failures.
+- [Design Problems, Decisions, and Evidence in Agentic Software Engineering: A Systematic Mapping Study](https://doi.org/10.3390/electronics15215121) (2026). Across 94 included studies and 1,018 design decisions, only 19.8% of evaluation records attributed evidence to an individual decision while 52.3% evaluated complete systems. **Design consequence:** benchmark each MOONWITNESS gate with ablations; don't infer a component's value from whole-system success.
+
+### GitHub trending / ecosystem snapshot
+The Nov 7, 2026 snapshots show fast growth in verification, skills, persistent memory and orchestration:
+- [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill): +2,548 stars in the daily snapshot; emphasizes multi-phase audits with independently verified machine-readable findings.
+- [google/skills](https://github.com/google/skills): +534 daily stars; skills are becoming portable operational interfaces.
+- [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem): +8,726 weekly stars; persistent cross-session context is in high demand.
+- [Donchitos/Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios): +6,018 weekly stars; a large agent/skill studio pattern.
+- [stablyai/orca](https://github.com/stablyai/orca), [deeplethe/sandstorm](https://github.com/deeplethe/sandstorm), [paperclipai/paperclip](https://github.com/paperclipai/paperclip), and [deepseek-ai/dsh-superagent-prototype](https://github.com/deepseek-ai/dsh-superagent-prototype) show demand for agent fleet orchestration, cheap sandbox lifecycle, and proactive repository agents.
+- Popularity is not proof of reliability, security or license compatibility. Benchmark and audit dependencies before adopting them.
+
+### Reddit practitioner evidence (anecdotal)
+- [Verification is now the bottleneck](https://www.reddit.com/r/devsecops/comments/1vzbpln/coding_agents_shifted_the_bottleneck_to/): a practitioner describes integration bugs that survive ordinary CI and adds failure-scenario sandbox runs before release.
+- [Multi-agent output is hard to verify](https://www.reddit.com/r/AI_Agents/comments/1tx24s8/i_keep_abandoning_multiagent_setups_because_i/): a practitioner reports that many PRs and green CI still do not establish that real user flows work.
+These are field reports, not controlled studies. They reinforce testing real workflows, not just compilation and unit checks.
+
+### Additional high-risk/high-upside hypotheses
+1. **Autonomy Thermostat:** each agent receives a bounded capability/risk budget. Unexplained writes, evidence debt, interface drift and collision density reduce its permitted autonomy; independently verified objective progress restores it. This turns trust from a static role label into a measured, reversible control.
+2. **Counterfactual Incident Compiler:** convert each operator-approved incident into a minimized replay capsule, fault-injection variants and regression tests; replay only in isolated fixtures, never live integrations.
+3. **Causal Credit Ledger:** attribute agent contribution by verified objective delta and downstream regression outcomes, not commits, lines changed, tokens or self-reported completion.
+4. **Adaptive Swarm Topology:** choose serial, peer-aware two-agent, or isolated multi-agent execution from interface coupling, resource overlap and historical interference. Add agents only when measured marginal value exceeds collision and coordination cost.
+5. **Epistemic Quorum:** high-impact beliefs require independent evidence origins plus an independent verifier; multiple agents repeating the same source do not count as corroboration.
+6. **Evidence-Debt Interest:** unverified claims acquire dependency-weighted cost and expiry; a claim used by many downstream decisions becomes more urgent to verify or quarantine.
+
+These are research hypotheses, not claims of global novelty. The literature and trending repositories already cover adjacent ideas such as agent observability, persistent memory, skills, orchestration, sandboxing and peer coordination. The differentiated work must be demonstrated through reproducible benchmarks, decision-level ablations and a systematic prior-art review.
