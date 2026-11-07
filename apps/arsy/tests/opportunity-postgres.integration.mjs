@@ -149,7 +149,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal(product.lifecycleState, 'brief')
     const transitionedProduct = await products.transitionLifecycle(ownerId, ownerId, product.id, 'brief', 'production')
     assert.equal(transitionedProduct?.lifecycleState, 'production')
-    assert.deepEqual(transitionedProduct?.allowedNextLifecycleStates, ['review'])
+    assert.deepEqual(transitionedProduct?.allowedNextLifecycleStates, ['review', 'retired'])
     const promotedOpportunity = await new OpportunityRepository(pool).get(ownerId, created.id)
     assert.equal(promotedOpportunity?.version, 4, 'creating a product brief must advance the opportunity version')
     assert.equal(await products.createFromOpportunity(ownerId, ownerId, created.id, ['Duplicate must be blocked']), null)
@@ -412,6 +412,11 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.ok(reloadedOpportunity)
     assert.equal(reloadedOpportunity.title, revisedInput.title)
     assert.equal(reloadedOpportunity.version, 4)
+    const promotionMarker = await pool.query(
+      'SELECT product_promoted_at FROM arsy_opportunities WHERE owner_id = $1 AND id = $2',
+      [ownerId, created.id],
+    )
+    assert.ok(promotionMarker.rows[0]?.product_promoted_at, 'promotion marker must persist after reconnect')
     const financialEvents = await persistedFinance.list(ownerId)
     assert.equal(financialEvents.length, 3)
     assert.equal(financialEvents.find((event) => event.id === gross.event.id)?.amountMinor, '5000')
