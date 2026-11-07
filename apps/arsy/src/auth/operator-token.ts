@@ -18,13 +18,22 @@ export function hasValidOperatorToken(request: OperatorRequest, token: string | 
 /** Protect every versioned business API consistently; health and liveness remain public. */
 export function registerOperatorApiAuth(app: FastifyInstance, env: NodeJS.ProcessEnv = process.env): void {
   const token = env.ARSY_OPERATOR_TOKEN?.trim()
+  const operatorId = env.ARSY_OPERATOR_ID?.trim()
   app.addHook('preHandler', async (request, reply) => {
     if (!request.url.startsWith('/api/v1/')) return
-    if (!hasValidOperatorToken(request, token)) {
-      return reply.code(token ? 401 : 503).send({
+    if (!token || !operatorId) {
+      return reply.code(503).send({
         error: {
-          code: token ? 'UNAUTHORIZED' : 'OPERATOR_AUTH_NOT_CONFIGURED',
-          message: token ? 'Valid operator credentials are required.' : 'Operator authentication is not configured.',
+          code: 'OPERATOR_AUTH_NOT_CONFIGURED',
+          message: 'A deliberate operator identity and server-side operator token are required.',
+        },
+      })
+    }
+    if (!hasValidOperatorToken(request, token)) {
+      return reply.code(401).send({
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Valid operator credentials are required.',
         },
       })
     }
