@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
-import { proxyArsyRequest } from '../../../../../../../../../lib/arsy-proxy'
+import { NextResponse } from 'next/server.js'
+import { proxyArsyRequest } from ''../../../../../../../../../lib/arsy-proxy.ts'
 
 export const runtime = 'nodejs'
 type RouteContext = { params: Promise<{ id: string; containerId: string }> }
