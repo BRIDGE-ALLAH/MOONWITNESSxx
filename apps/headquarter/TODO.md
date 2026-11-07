@@ -410,7 +410,7 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 
 ## Phase 6 execution record — 2026-11-08
 
-- [x] Tambahkan `apps/headquarter/tests/arsy-client.test.mjs` menggunakan Node 24 built-in test runner dan native TypeScript stripping.
+- [x] Tambahkan `apps/headquarter/tests/arsy-client.test.mjs` menggunakan Node 24 built-in test runner dan native TypeScript stripping; termasuk guard terhadap absolute URL, backslash, dan parent-directory traversal.
 - [x] Tambahkan `apps/headquarter/tests/arsy-deck.test.mjs` untuk menjaga demo disclosure, uniqueness, confidence bounds, dan sample-only agent states.
 - [x] Tambahkan script `pnpm --filter @riotworks/headquarter test` tanpa dependency framework tambahan.
 - [x] Tambahkan test command ke Asset Integrity CI; branch `headquarter/phase-6-testing-foundation` juga dimasukkan ke trigger push CI.
