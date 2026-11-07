@@ -86,23 +86,37 @@ No module is evidenced as production-ready in this source snapshot. The five ear
 |---|---|---|---|
 | HQ-001 | High | AppShell mixes unrelated shell responsibilities | Addressed in Phase 1 by extracting navigation, sidebar, topbar, and command palette modules |
 | HQ-002 | High | Navigation metadata is embedded in shell rendering | Addressed in Phase 1 with one typed navigation registry |
-| HQ-003 | High | Command palette has incomplete dialog semantics and dismissal behavior | Improved in Phase 1: labelled dialog, Escape/backdrop dismissal, and focus restoration; full focus trap not yet verified |
+| HQ-003 | High | Command palette has incomplete dialog semantics and dismissal behavior | Improved: labelled dialog, Escape/backdrop dismissal, focus restoration, and keyboard focus containment; manual browser verification remains pending |
 | HQ-004 | High | Lint script suppresses ESLint failures | Addressed in Phase 1 with a Next ESLint config and fail-fast command |
 | HQ-005 | Medium | Home page describes architecture as `apps/headquarter + packages/ui` and says workspace active | Corrected in Phase 1 |
 | HQ-006 | Medium | Route-aware locale and workspace persistence are absent | Deferred; requires platform decisions/integration |
-| HQ-007 | Medium | Demo disclosure varies across pages | Deferred to feature rollout |
+| HQ-007 | Medium | Demo disclosure varies across pages | ARSY DECK now has a persistent demo disclosure and navigation labels all current routes as prototype; remaining legacy module pages still need a consistent page-level disclosure pass |
 | HQ-008 | Medium | Duplicate list keys and invalid dynamic classes exist in static feature pages | Deferred to feature-specific quality fixes |
-| HQ-009 | Medium | No local test runner or browser-level accessibility/responsive evidence is established for Headquarter | Not verified in this execution environment |
+| HQ-009 | Medium | No Headquarter-specific browser E2E or accessibility test suite | Repository CI now verifies workspace type-check/lint, Headquarter build, and asset registry tests; browser/screen-reader evidence remains open |
 
-## Validation boundary
+## Phase 2–5 execution update
 
-The GitHub repository interface used for this change can inspect and commit source files, but it cannot run the repository's local Node/pnpm commands or a browser. Therefore no claim is made that lint, type-check, Next build, responsive behavior, or keyboard/screen-reader tests pass. Those checks must run from a clean local checkout or CI before Phase 1 is considered fully released.
+PR [#35](https://github.com/BRIDGE-ALLAH/MOONWITNESS/pull/35) was merged to `main` as `51bfe984cde513f5190ab192491681fe41f96aab`.
 
-Recommended commands from repository root:
+- Phase 2: browser-safe ARSY client boundary established. Authentication, workspace, permission, and feature contracts remain gated on backend implementation.
+- Phase 3: semantic Night Riot/Paper Riot token foundation, shared Badge/Button mappings, and reduced-motion baseline added.
+- Phase 4: ARSY DECK feature structure established with a replaceable repository interface and explicit synthetic demo fixture. No live workspace-pulse API exists yet, so this is a reference UI/data-boundary pattern, not a production end-to-end feature.
+- Phase 5: navigation aligned to the approved IA. Existing prototype routes are marked DEMO; unimplemented administration capabilities are disabled and documented in `ADMINISTRATION-IA.md` and `FEATURE-ROLLOUT.md`.
+- Repository baseline fixes: lockfile checker invocation, pnpm lockfile, native build-script allowlist, root type-check alias, ARSY Node/PostgreSQL type declarations, Fastify Zod compiler registration, pg pool option, and shared lint toolchain.
 
-```bash
-pnpm install --frozen-lockfile
-pnpm --filter @riotworks/headquarter lint
-pnpm --filter @riotworks/headquarter type-check
-pnpm --filter @riotworks/headquarter build
-```
+## CI evidence
+
+For PR #35 head `ab15d1f163bdc4cc98388ac5b884f5cb551f9ebc`:
+- Repository CI: passed — lockfile check, dependency installation, workspace TypeScript checks, and repository lint/validation.
+- Asset Integrity: passed — asset, shared UI, and Headquarter TypeScript checks; Headquarter production build; source asset validation; asset registry tests.
+- CodeQL: passed.
+
+The separate full-workspace typecheck/build workflow was skipped by workflow configuration. The asset workflow built Headquarter successfully. No browser, screen-reader, visual regression, or feature API E2E verification is claimed.
+
+## Remaining release gates
+
+- Implement and approve ARSY identity/session, workspace, permission, and workspace-pulse contracts before live feature wiring.
+- Migrate each static module to its domain-owned repository and real API contract; do not relabel synthetic values as production.
+- Complete route-aware localization and workspace persistence.
+- Verify focus containment, contrast, responsive behavior, theme behavior, and screen-reader announcements in a real browser.
+- Add feature-level contract/unit/E2E tests once the backend contract and test harness are available.
