@@ -51,8 +51,6 @@ function map(row: InspectionRow): InspectionRecord {
     productReady: row.product_ready ?? false,
   }
 }
-const columns = 'id, product_version_id, inspection_type, status, findings, inspected_at, inspected_by'
-
 export class InspectionRepository {
   constructor(private readonly db: DatabasePool) {}
 
