@@ -29,7 +29,7 @@ const eventTypes = [
   ['gross-receipt', 'Gross receipt'], ['platform-fee', 'Platform fee'],
   ['refund', 'Refund'], ['chargeback', 'Chargeback'], ['variable-cost', 'Variable cost'],
   ['production-cost', 'Production cost'], ['tax-reserve', 'Tax reserve'],
-  ['fx-adjustment', 'FX adjustment'], ['payout', 'Payout'], ['payout-reversal', 'Payout reversal'],
+  ['payout', 'Payout'], ['payout-reversal', 'Payout reversal'],
 ] as const
 
 export function FinancialLedger() {
@@ -49,7 +49,7 @@ export function FinancialLedger() {
     setError('')
     try {
       const [eventResponse, summaryResponse, productResponse] = await Promise.all([
-        fetch('/api/financial-events', { cache: 'no-store' }),
+        fetch('/api/financial-events?limit=100', { cache: 'no-store' }),
         fetch('/api/financial-summary', { cache: 'no-store' }),
         fetch('/api/products', { cache: 'no-store' }),
       ])
