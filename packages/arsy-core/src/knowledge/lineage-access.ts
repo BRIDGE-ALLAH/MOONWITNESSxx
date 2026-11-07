@@ -17,7 +17,7 @@ export function evaluateLineageAccess(lineage: DerivedArtifactLineage, context: 
   const sources = context.allowedSourceIds ? new Set(context.allowedSourceIds) : null
   for (const source of lineage.sourceFields) {
     let reason: string | undefined
-    if (source.tenantId !== context.tenantId) reason = 'source_tenant_mismatch'
+    if (!source.sourceId.trim() || !source.fieldPath.trim() || !source.tenantId.trim() || !Object.hasOwn(CLASSIFICATION_RANK, source.classification)) reason = 'source_field_metadata_invalid'\n    else if (source.tenantId !== context.tenantId) reason = 'source_tenant_mismatch'
     else if (!classes.has(source.classification)) reason = 'classification_not_authorized'
     else if (sources && !sources.has(source.sourceId)) reason = 'source_not_authorized'
     if (reason) { denied.push({ sourceId: source.sourceId, fieldPath: source.fieldPath, reason }); reasons.push(reason) }
