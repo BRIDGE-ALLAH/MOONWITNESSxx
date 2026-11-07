@@ -1,47 +1,11 @@
-import Fastify from 'fastify'
-import Zod from 'zod'
-import fastifyTypeProviderZod from 'fastify-type-provider-zod'
-// ARSY app routes (prototype/local). Core modules live in @riotworks/arsy-core.
+import type { FastifyPluginAsync } from "fastify";
+import { arsyCorePlugin } from "@riotworks/arsy-core";
+import { setupDatabase } from "./db.js";
 
-const app = Fastify({
-  logger: true,
-})
+/** Fastify CLI entrypoint. The core plugin owns shared HTTP behavior. */
+const app: FastifyPluginAsync = async (fastify) => {
+  await fastify.register(arsyCorePlugin);
+  setupDatabase(fastify);
+};
 
-app.register(fastifyTypeProviderZod)
-
-// Example route
-app.get(
-  '/',
-  {
-    schema: {
-      response: {
-        200: Zod.object({
-          status: Zod.string(),
-          message: Zod.string(),
-        }),
-      },
-    },
-  },
-  async (request, reply) => {
-    return {
-      status: 'ok',
-      message: 'ARSY Command Center is running',
-    }
-  }
-)
-
-// Database connector setup
-import { setupDatabase } from './db'
-setupDatabase(app)
-
-app
-  .listen({ port: 3000 })
-  .then(() => {
-    console.log('🚀 ARSY Command Center running on http://localhost:3000')
-  })
-  .catch((err) => {
-    console.error(err)
-    process.exit(1)
-  })
-
-export { app }
+export default app;
