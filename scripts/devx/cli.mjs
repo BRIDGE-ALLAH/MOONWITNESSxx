@@ -21,6 +21,7 @@ import {
   verifyInterfaceEscrow,
   verifyFlightRecorder,
 } from './lib.mjs'
+import { assessAutonomyBudget, compileIncidentRegression, planAdaptiveSwarm } from './frontier.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const [command = 'help', ...args] = process.argv.slice(2)
@@ -173,6 +174,27 @@ async function mergeProof() {
   const packet=createMergeEvidencePacket(input)
   console.log(JSON.stringify(packet,null,2));if(!packet.ready)process.exitCode=1
 }
+async function swarmPlan() {
+  const p = option('input', null)
+  if (!p) throw new Error('swarm-plan requires --input=<swarm.json>')
+  const input = JSON.parse(await readFile(resolve(root, p), 'utf8'))
+  const report = planAdaptiveSwarm({ agents: input.agents, maxParallel: input.maxParallel ?? 2 })
+  console.log(JSON.stringify(report, null, 2))
+}
+async function autonomyBudget() {
+  const p = option('input', null)
+  if (!p) throw new Error('autonomy-budget requires --input=<autonomy.json>')
+  const input = JSON.parse(await readFile(resolve(root, p), 'utf8'))
+  const report = assessAutonomyBudget(input)
+  console.log(JSON.stringify(report, null, 2))
+}
+async function incidentCompile() {
+  const p = option('input', null)
+  if (!p) throw new Error('incident-compile requires --input=<incident.json>')
+  const input = JSON.parse(await readFile(resolve(root, p), 'utf8'))
+  const report = compileIncidentRegression({ incident: input.incident, now: input.now })
+  console.log(JSON.stringify(report, null, 2))
+}
 function help() {
   console.log([
     'MOONWITNESS DX',
@@ -192,6 +214,9 @@ function help() {
     '  pnpm devx objective-plane --input=.moonwitness/objectives.json',
     '  pnpm devx interface-escrow --input=.moonwitness/escrow.json',
     '  pnpm devx merge-proof --input=.moonwitness/merge-evidence.json',
+    '  pnpm devx swarm-plan --input=.moonwitness/swarm.json',
+    '  pnpm devx autonomy-budget --input=.moonwitness/autonomy.json',
+    '  pnpm devx incident-compile --input=.moonwitness/incident.json',
     '',
     'Collision plans use { "agents": [{ "id": "agent-a", "writePaths": ["packages/foo"] }] }.',
     'Flight records are local evidence, not signed or tamper-proof attestations.',
@@ -214,6 +239,9 @@ try {
   else if (command === 'objective-plane') await objectivePlane()
   else if (command === 'interface-escrow') await interfaceEscrow()
   else if (command === 'merge-proof') await mergeProof()
+  else if (command === 'swarm-plan') await swarmPlan()
+  else if (command === 'autonomy-budget') await autonomyBudget()
+  else if (command === 'incident-compile') await incidentCompile()
   else help()
 } catch (error) {
   console.error(error.message)
