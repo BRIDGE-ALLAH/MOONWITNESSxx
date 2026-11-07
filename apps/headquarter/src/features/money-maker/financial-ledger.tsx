@@ -159,7 +159,7 @@ export function FinancialLedger() {
         </article>)}</div>}
     </section>
 
-    <form onSubmit={recordEvent} className="space-y-4 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
+    <form onSubmit={recordEvent} onChange={() => { if (idempotencyKey) setIdempotencyKey('') }} className="space-y-4 border border-acid-lime/30 bg-panel-charcoal p-5 md:p-7">
       <div><h2 className="font-display text-2xl uppercase">Record financial event</h2><p className="text-xs text-muted-ink">Use exact source values and a real provider or statement reference. Amount is an integer in minor units; no conversion or estimate is performed.</p></div>
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-1 text-xs font-mono uppercase">Event type<select name="eventType" required className="w-full border border-acid-lime/20 bg-obsidian p-3 text-xs">{eventTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
