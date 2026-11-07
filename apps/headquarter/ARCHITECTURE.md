@@ -61,6 +61,10 @@ The adapter is transport infrastructure, not proof that a backend capability exi
 
 `packages/ui/src/styles/globals.css` owns semantic CSS variables for surfaces, content, focus, borders, and success/warning/info/destructive states. Night Riot and Paper Riot theme values map to the same semantic names. `packages/ui/tailwind.config.js` exposes those semantic tokens and the stable brand palette. Feature pages should prefer semantic tokens for state and layout; brand colors remain intentional accents.
 
+## Route lifecycle
+
+The App Router root now provides route-level `loading.tsx`, `error.tsx`, and `not-found.tsx` fallbacks. Error UI intentionally avoids rendering raw exception messages. These boundaries are baseline recovery UX; they do not replace feature-specific empty, forbidden, stale, or partial-data states.
+
 ## Current known limitations
 
 - Feature pages still contain local/static demo data; the API adapter is ready for integration but no feature endpoint has been connected.
