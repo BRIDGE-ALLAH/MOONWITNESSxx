@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { createApp } from '../src/app.ts'
 
 const token = 'test-only-secret-operator-token'
+const operatorId = 'operator-test'
 const evidence = [{
   sourceName: 'Official documentation',
   sourceUrl: 'https://example.com/docs',
@@ -95,8 +96,20 @@ test('opportunity routes fail closed when operator auth is not configured', asyn
   }
 })
 
-test('opportunity routes require a valid operator token', async () => {
+test('opportunity routes fail closed when operator identity is not configured', async () => {
   const app = await createApp({ databasePool: fakePool(), logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
+  try {
+    const response = await app.inject({ method: 'GET', url: '/api/v1/opportunities' })
+    assert.equal(response.statusCode, 503)
+    assert.equal(response.json().error.code, 'OPERATOR_AUTH_NOT_CONFIGURED')
+  } finally {
+    await app.close()
+  }
+})
+
+test('opportunity routes require a valid operator token', async () => {
+  const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
+  const app = await createApp({ databasePool: fakePool(), logger: false, env })
   try {
     const missing = await app.inject({ method: 'GET', url: '/api/v1/opportunities' })
     const invalid = await app.inject({ method: 'GET', url: '/api/v1/opportunities', headers: { 'x-arsy-operator-token': 'wrong' } })
@@ -107,8 +120,9 @@ test('opportunity routes require a valid operator token', async () => {
   }
 })
 
-test('authenticated operator create/list routes delegate to the database pool', async () => {
-  const app = await createApp({ databasePool: fakePool(), logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
+test('authenticated operator create/list routes return the inserted record', async () => {
+  const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
+  const app = await createApp({ databasePool: fakePool(), logger: false, env })
   try {
     const created = await app.inject({
       method: 'POST',
