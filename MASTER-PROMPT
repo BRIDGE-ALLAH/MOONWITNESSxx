@@ -1,7 +1,7 @@
-# MASTER PROMPT v3.3 — MOONWITNESS // RIOTWORKS
+# MASTER PROMPT v3.4 — MOONWITNESS // RIOTWORKS
 ## Full-Stack Headquarter + ARSY + Modular ORM/Addons
 
-**Specification baseline:** README.md and docs/01–22  
+**Specification baseline:** README.md and docs/01–23; docs/23 is the current-state and execution-order authority  
 **Primary outcome:** Build a modular monorepo with apps/headquarter, apps/arsy, and the packages defined below.  
 **Product tagline:** MAKE WORK THAT OUTLIVES THE FEED.
 
@@ -616,3 +616,18 @@ Do not create a fake ORM facade over direct Kysely calls. ORM and adapter bounda
 **MOONWITNESS // RIOTWORKS**  
 **HEADQUARTER × ARSY**  
 **NO EMPTY NOISE. MAKE SOMETHING REAL.**
+
+
+# 0. Current repository truth and precedence (2026-11-07)
+
+The canonical repository is BRIDGE-ALLAH/MOONWITNESS. RIOTWORKS is a product division inside this repository. Before every task, inspect the current main HEAD and read docs/23-repository-audit-and-current-execution-plan.md. It supersedes older implementation-status assumptions and controls the current execution order.
+
+The current tree is a mixed documentation + prototype baseline. Headquarter is a Next.js-shaped prototype with an incorrect Fastify package manifest. ARSY is a minimal Fastify route prototype. arsy-core has a manifest but no implementation entrypoint. The custom ORM, orm-db, SQL adapters, and Base Platform packages are planned and absent. packages/bullmq is experimental. services/arsy and services/queue are duplicate/stranded prototypes outside the pnpm workspace. Never claim any target package is implemented without source, exports, tests and build evidence.
+
+Canonical topology: apps/headquarter (Next.js frontend), apps/arsy (only Fastify HTTP backend), optional future apps/worker, and reusable libraries under packages/*. Do not add services/* to the workspace. Extract unique useful behavior before retiring duplicate services. Headquarter must not depend on Fastify; ARSY must not depend on UI.
+
+Execution priority: repository/tooling repair → Headquarter and ARSY contracts/core → ORM kernel → DB runtime and libSQL/PostgreSQL adapters → staged Base Platform → RIOTWORKS business addons → first commercial vertical slice → jobs/automation. Do not jump to the full Base Platform or automation before P0 repository health passes.
+
+The authoritative BaseEntity contains exactly id, createdAt, createdById, updatedAt, updatedById. Base Platform is a modular suite of independent addon manifests, not a global entity with every field. PocketBase is not a v1 dependency. Schema synchronization is programmatic through the private ARSY API and selected adapter; no routine handwritten migration files. Semantic data upgrades remain typed code handlers; destructive schema changes require explicit approval and recovery.
+
+Pre-commit hooks must remain local, deterministic and fast. They must not call external AI, bump versions, rewrite changelogs, create GitHub issues, or hide failed checks. Release automation runs at release time. GitHub automation must discover or configure MOONWITNESS, not hardcode RIOTWORKS.
