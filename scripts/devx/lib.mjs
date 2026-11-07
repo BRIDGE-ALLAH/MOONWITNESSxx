@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { access, readFile, readdir } from 'node:fs/promises'
+import { access, appendFile, mkdir, readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const WORKSPACE_ROOTS = ['apps', 'packages']
@@ -250,4 +250,168 @@ export async function compileRepoContext({ root, maxChars = 12000, format = 'mar
   }
   const suffix = '\n\n[Context truncated at ' + maxChars + ' characters. Fingerprint covers the complete source context.]'
   return { fingerprint, truncated: true, content: rendered.slice(0, Math.max(0, maxChars - suffix.length)) + suffix }
+}
+
+
+// Phase 24: local execution receipts. Hash chaining detects accidental edits and
+// reordering; it is not a digital signature or protection against a privileged
+// attacker who can rewrite the entire file.
+const recorderLocks = new Map()
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return '[' + value.map(canonicalJson).join(',') + ']'
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().map((key) => JSON.stringify(key) + ':' + canonicalJson(value[key])).join(',') + '}'
+  }
+  return JSON.stringify(value)
+}
+
+function recordDigest(record) {
+  return createHash('sha256').update(canonicalJson(record)).digest('hex')
+}
+
+function sanitizeFlightRecord(value) {
+  if (Array.isArray(value)) return value.map(sanitizeFlightRecord)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [
+      key,
+      /api[_-]?key|access[_-]?token|secret|password|private[_-]?key|authorization|cookie/i.test(key)
+        ? '[REDACTED]'
+        : sanitizeFlightRecord(item),
+    ]))
+  }
+  return value
+}
+
+export async function appendFlightRecord({ root, record, file = '.moonwitness/flight-recorder.jsonl' }) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) throw new Error('record must be an object')
+  const safeRecord = sanitizeFlightRecord(record)
+  if (Buffer.byteLength(JSON.stringify(safeRecord), 'utf8') > 256 * 1024) throw new Error('record exceeds the 256 KiB limit')
+  const path = join(root, file)
+  const previousLock = recorderLocks.get(path) ?? Promise.resolve()
+  let release
+  const currentLock = new Promise((resolve) => { release = resolve })
+  const queuedLock = previousLock.then(() => currentLock)
+  recorderLocks.set(path, queuedLock)
+  await previousLock
+  try {
+    const existing = await verifyFlightRecorder({ root, file })
+    if (!existing.valid) throw new Error('flight recorder is corrupt: ' + existing.reason)
+    const payload = {
+      schemaVersion: 1,
+      sequence: existing.records.length + 1,
+      previousHash: existing.records.at(-1)?.hash ?? 'GENESIS',
+      recordedAt: new Date().toISOString(),
+      record: safeRecord,
+    }
+    const entry = { ...payload, hash: recordDigest(payload) }
+    await mkdir(join(root, '.moonwitness'), { recursive: true })
+    await appendFile(path, JSON.stringify(entry) + '\n', { encoding: 'utf8', flag: 'a' })
+    return entry
+  } finally {
+    release()
+    if (recorderLocks.get(path) === queuedLock) recorderLocks.delete(path)
+  }
+}
+
+export async function verifyFlightRecorder({ root, file = '.moonwitness/flight-recorder.jsonl' }) {
+  const path = join(root, file)
+  let text
+  try {
+    text = await readFile(path, 'utf8')
+  } catch (error) {
+    if (error.code === 'ENOENT') return { valid: true, records: [], headHash: 'GENESIS' }
+    throw error
+  }
+  const lines = text.split(/\r?\n/).filter(Boolean)
+  const records = []
+  let previousHash = 'GENESIS'
+  for (let index = 0; index < lines.length; index += 1) {
+    let entry
+    try { entry = JSON.parse(lines[index]) } catch { return { valid: false, records, reason: 'invalid_json_at_line_' + (index + 1), headHash: previousHash } }
+    const { hash, ...payload } = entry
+    if (entry.schemaVersion !== 1 || entry.sequence !== index + 1) return { valid: false, records, reason: 'sequence_mismatch_at_line_' + (index + 1), headHash: previousHash }
+    if (entry.previousHash !== previousHash) return { valid: false, records, reason: 'previous_hash_mismatch_at_line_' + (index + 1), headHash: previousHash }
+    if (hash !== recordDigest(payload)) return { valid: false, records, reason: 'hash_mismatch_at_line_' + (index + 1), headHash: previousHash }
+    records.push(entry)
+    previousHash = hash
+  }
+  return { valid: true, records, headHash: previousHash }
+}
+
+// Phase 25: predict overlapping write ownership before launching parallel agents.
+function normalizeWritePath(path) {
+  if (typeof path !== 'string' || !path.trim()) throw new Error('write paths must be non-empty strings')
+  const slashPath = path.replaceAll('\\', '/')
+  if (slashPath.startsWith('/')) throw new Error('unsafe write path: ' + path)
+  const segments = slashPath.split('/').filter((part) => part && part !== '.')
+  if (segments.some((part) => part === '..') || segments.length === 0) throw new Error('unsafe write path: ' + path)
+  return segments.join('/')
+}
+
+export function forecastWriteCollisions({ agents }) {
+  if (!Array.isArray(agents)) throw new Error('agents must be an array')
+  const owners = new Map()
+  for (const agent of agents) {
+    if (!agent?.id || !Array.isArray(agent.writePaths)) throw new Error('each agent needs an id and writePaths')
+    for (const rawPath of agent.writePaths) {
+      const path = normalizeWritePath(rawPath)
+      const list = owners.get(path) ?? []
+      if (!list.includes(agent.id)) list.push(agent.id)
+      owners.set(path, list)
+    }
+  }
+  const paths = [...owners.keys()].sort()
+  const collisions = []
+  for (let left = 0; left < paths.length; left += 1) {
+    for (let right = left + 1; right < paths.length; right += 1) {
+      const a = paths[left]
+      const b = paths[right]
+      if (b.startsWith(a + '/')) {
+        const participants = [...new Set([...owners.get(a), ...owners.get(b)])].sort()
+        if (participants.length > 1) collisions.push({ kind: 'ancestor-overlap', paths: [a, b], agents: participants, severity: 'high' })
+      }
+    }
+  }
+  for (const [path, ids] of owners) {
+    if (ids.length > 1) collisions.push({ kind: 'same-path', paths: [path], agents: [...ids].sort(), severity: 'critical' })
+  }
+  collisions.sort((a, b) => a.kind.localeCompare(b.kind) || a.paths.join('|').localeCompare(b.paths.join('|')))
+  return {
+    safeToParallelize: collisions.length === 0,
+    agentCount: agents.length,
+    uniqueWritePaths: owners.size,
+    collisions,
+    notes: ['Static path overlap only: runtime resources, generated files, shared databases, ports and semantic conflicts are not inferred.'],
+  }
+}
+
+// Phase 26: make context validity explicit and machine-checkable.
+export function createContextLease({ fingerprint, generatedAt = new Date().toISOString(), ttlMs = 60 * 60 * 1000 }) {
+  if (!/^[a-f0-9]{64}$/.test(String(fingerprint))) throw new Error('fingerprint must be a SHA-256 hex digest')
+  if (!Number.isSafeInteger(ttlMs) || ttlMs <= 0) throw new Error('ttlMs must be a positive safe integer')
+  const issuedAt = Date.parse(generatedAt)
+  if (!Number.isFinite(issuedAt)) throw new Error('generatedAt must be a valid timestamp')
+  return {
+    schemaVersion: 1,
+    fingerprint,
+    generatedAt: new Date(issuedAt).toISOString(),
+    expiresAt: new Date(issuedAt + ttlMs).toISOString(),
+    ttlMs,
+  }
+}
+
+export function verifyContextLease({ lease, currentFingerprint, now = new Date().toISOString() }) {
+  if (!lease || lease.schemaVersion !== 1) return { valid: false, reason: 'unsupported_lease_schema' }
+  if (lease.fingerprint !== currentFingerprint) return { valid: false, reason: 'context_fingerprint_changed' }
+  const nowMs = Date.parse(now)
+  const issuedMs = Date.parse(lease.generatedAt)
+  const expiresMs = Date.parse(lease.expiresAt)
+  if (!Number.isFinite(nowMs) || !Number.isFinite(issuedMs) || !Number.isFinite(expiresMs) || !Number.isSafeInteger(lease.ttlMs) || lease.ttlMs <= 0) {
+    return { valid: false, reason: 'invalid_lease_time' }
+  }
+  if (expiresMs !== issuedMs + lease.ttlMs) return { valid: false, reason: 'lease_duration_mismatch' }
+  if (nowMs < issuedMs) return { valid: false, reason: 'lease_not_yet_valid' }
+  if (nowMs >= expiresMs) return { valid: false, reason: 'context_lease_expired' }
+  return { valid: true, expiresAt: lease.expiresAt, fingerprint: lease.fingerprint }
 }

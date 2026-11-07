@@ -96,3 +96,19 @@ Commits must never bump versions or rewrite `CHANGELOG.md`. Release notes and ve
 - Local AI commit assistance is optional and must never be part of pre-commit or CI.
 
 See [docs/24](./docs/24-repository-and-automation-governance.md) for the complete automation ownership and escalation rules.
+
+
+## Developer experience commands
+
+```bash
+pnpm devx doctor --json
+pnpm devx plan --base=main --json
+pnpm devx context --json
+pnpm devx collision --plan-file=.moonwitness/agents.json
+pnpm devx record --input=.moonwitness/task-result.json
+pnpm devx flight verify
+pnpm devx context-lease
+pnpm devx context-verify --lease=.moonwitness/context-lease.json
+```
+
+Phase 24–26 commands are local-first. Flight records are hash-chained local evidence, not signed attestations. Collision forecasts only inspect declared write paths and cannot prove runtime isolation. Context leases detect fingerprint drift/expiry but are not authorization credentials. See [docs/27](./docs/27-dx-frontier-phases-24-26.md) for design, limitations and research.

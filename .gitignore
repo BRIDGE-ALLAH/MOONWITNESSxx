@@ -14,3 +14,6 @@ reports/
 
 # Generated local AI assistance artifacts (never commit these).
 scripts/ai/.ai-*.txt
+
+# Local agent receipts and freshness leases (never commit by default).
+.moonwitness/
