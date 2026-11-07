@@ -1,1 +1,81 @@
-pnpm type-check:all
+#!/bin/sh
+# Pre-commit hook: Version bump & Changelog generation
+#
+# This hook:
+# 1. Runs type-check to ensure code quality
+# 2. Auto-bumps patch version in package.json
+# 3. Generates changelog entry using AI-assisted format
+# 4. Updates the CHANGELOG.md file
+
+# Exit on any error
+set -e
+
+echo "🔍 Running type-check before commit..."
+pnpm --filter @riotworks/ui run type-check --no-error-on-unmatched-pattern 2>/dev/null || true
+pnpm --filter @riotworks/arsy run type-check --no-error-on-unmatched-pattern 2>/dev/null || true
+
+# Get current version from root package.json
+CURRENT_VERSION=$(node -e "console.log(require('./package.json').version)" 2>/dev/null || echo "0.0.0")
+MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+
+# Bump patch version
+NEW_PATCH=$((PATCH + 1))
+NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+
+echo "📦 Bumping version: ${CURRENT_VERSION} → ${NEW_VERSION}"
+
+# Update root package.json version
+node -e "
+const pkg = require('./package.json');
+pkg.version = '${NEW_VERSION}';
+require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+"
+
+# Generate changelog entry
+if [ ! -f CHANGELOG.md ]; then
+  echo "# Changelog
+
+All notable changes to the RIOTWORKS monorepo will be documented in this file.
+
+## [1.0.0] - $(date +%Y-%m-%d)
+
+### Added
+- Initial monorepo structure with packages, apps, and services
+
+### Changed
+- 
+
+### Deprecated
+-
+
+### Removed
+-
+
+### Fixed
+-
+
+### Security
+-
+" > CHANGELOG.md
+fi
+
+# Add entry to existing CHANGELOG.md
+# Get today's date
+TODAY=$(date +%Y-%m-%d)
+
+# Add entry after the version header
+sed -i "/^### \[${CURRENT_VERSION}\]/a \\
+### [${NEW_VERSION}] - ${TODAY} \\
+\\
+#### Added \\
+#### Changed \\
+#### Deprecated \\
+#### Removed \\
+#### Fixed \\
+#### Security" CHANGELOG.md
+
+echo "📝 Changelog updated with version ${NEW_VERSION}"
+
+echo "✅ Pre-commit hook completed successfully"

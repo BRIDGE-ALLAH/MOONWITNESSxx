@@ -5,7 +5,7 @@
   "description": "RIOTWORKS ARSY — Command Center (wraps @riotworks/arsy-core)",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "pnpm --filter @riotworks/arsy-core run dev",
+    "dev": "fastify dev",
     "build": "pnpm --filter @riotworks/arsy-core run build",
     "start": "pnpm --filter @riotworks/arsy-core run start",
     "lint": "pnpm --filter @riotworks/lint run lint",
@@ -19,7 +19,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "fastify-cli": "^10.0.0",
     "typescript": "^5.7.2"
   }
 }
