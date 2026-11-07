@@ -37,10 +37,10 @@ function createPool() {
           id: assetId, product_id: values[2], product_version: values[3], file_name: values[4],
           media_type: values[5], byte_size: String(values[6]), storage_key: values[7], sha256: values[8],
           idempotency_key: values[9], request_hash: values[10],
-          created_at: '2026-11-08T00:00:00.000Z', created_by: values[9],
-          source_asset_id: values[10], source_reference: values[11], creator: values[12],
-          license: values[13], permission_basis: values[14], tool_model: values[15],
-          edit_history: JSON.parse(values[16]), disclosure: values[17],
+          created_at: '2026-11-08T00:00:00.000Z', created_by: values[11],
+          source_asset_id: values[12], source_reference: values[13], creator: values[14],
+          license: values[15], permission_basis: values[16], tool_model: values[17],
+          edit_history: JSON.parse(values[18]), disclosure: values[19],
         }
         if (assets.has(assetId)) return { rows: [] }
         assets.set(assetId, row)
@@ -103,7 +103,7 @@ test('asset upload stores bytes, checksum and provenance without exposing storag
   const database = createPool()
   const storage = createMemoryStorage()
   const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env })
-  const bytes = Buffer.from('original asset fixture bytes')
+  const bytes = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), Buffer.from('original asset fixture bytes')])
   try {
     const response = await app.inject({
       method: 'POST',
@@ -140,7 +140,7 @@ test('asset download is private, attachment-only and returns original bytes', as
   try {
     const upload = await app.inject({
       method: 'POST', url: '/api/v1/assets', headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'asset-upload-key-0001' },
-      payload: { productId, productVersion, fileName: 'private.png', mediaType: 'image/png', contentBase64: bytes.toString('base64'), provenance },
+      payload: { productId, productVersion, fileName: 'private.txt', mediaType: 'text/plain', contentBase64: bytes.toString('base64'), provenance },
     })
     assert.equal(upload.statusCode, 201)
     const download = await app.inject({
