@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { AssetRepository, type AssetInput, type InspectionInput } from './repository.ts'
 import { createAssetStorage, type AssetStorage } from './storage.ts'
+import { getInspectionPrincipalId } from '../auth/operator-token.ts'
 
 const MAX_ASSET_BYTES = 10 * 1024 * 1024
 const allowedMediaTypes = ['image/png', 'image/jpeg', 'image/webp', 'application/pdf', 'text/plain', 'application/zip'] as const
@@ -224,7 +225,14 @@ export function registerAssetRoutes(
     if (!params.success || !parsed.success) return reply.code(400).send({
       error: { code: 'VALIDATION_ERROR', message: 'Inspection input is invalid.', details: parsed.success ? undefined : parsed.error.flatten() },
     })
-    const inspection = await repository.appendInspection(ownerId, actorId, params.data.id, parsed.data as InspectionInput)
+    const inspectionPrincipalId = getInspectionPrincipalId(request)
+    if (inspectionPrincipalId && parsed.data.inspectionSource === 'operator-attestation') {
+      return reply.code(403).send({ error: { code: 'INSPECTION_SOURCE_MISMATCH', message: 'Trusted inspection principals must record automated-check or independent-review source types.' } })
+    }
+    if (!inspectionPrincipalId && parsed.data.inspectionSource !== 'operator-attestation') {
+      return reply.code(403).send({ error: { code: 'TRUSTED_INSPECTOR_REQUIRED', message: 'Automated checks and independent reviews require a separately configured inspection principal.' } })
+    }
+    const inspection = await repository.appendInspection(ownerId, inspectionPrincipalId ?? actorId, params.data.id, parsed.data as InspectionInput)
     if (!inspection) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Asset was not found.' } })
     return reply.code(201).send({ data: inspection })
   })
