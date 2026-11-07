@@ -55,64 +55,128 @@ struct ApiError {
 
 fn authorized(headers: &HeaderMap) -> Result<(), (StatusCode, Json<ApiError>)> {
     let Ok(expected) = std::env::var("ATLAS_CONTROL_TOKEN") else {
-        return Err((StatusCode::SERVICE_UNAVAILABLE, Json(ApiError {
-            error: "control API is disabled until ATLAS_CONTROL_TOKEN is configured",
-        })));
+        return Err((
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ApiError {
+                error: "control API is disabled until ATLAS_CONTROL_TOKEN is configured",
+            }),
+        ));
     };
     let Some(provided) = headers
         .get(axum::http::header::AUTHORIZATION)
         .and_then(|value| value.to_str().ok())
         .and_then(|value| value.strip_prefix("Bearer "))
     else {
-        return Err((StatusCode::UNAUTHORIZED, Json(ApiError { error: "bearer token required" })));
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(ApiError {
+                error: "bearer token required",
+            }),
+        ));
     };
     let expected = expected.as_bytes();
     let provided = provided.as_bytes();
-    if expected.is_empty() || expected.len() != provided.len() || !bool::from(expected.ct_eq(provided)) {
-        return Err((StatusCode::UNAUTHORIZED, Json(ApiError { error: "invalid bearer token" })));
+    if expected.is_empty()
+        || expected.len() != provided.len()
+        || !bool::from(expected.ct_eq(provided))
+    {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(ApiError {
+                error: "invalid bearer token",
+            }),
+        ));
     }
     Ok(())
 }
 
 fn database_error() -> (StatusCode, Json<ApiError>) {
-    (StatusCode::SERVICE_UNAVAILABLE, Json(ApiError { error: "database operation failed" }))
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        Json(ApiError {
+            error: "database operation failed",
+        }),
+    )
 }
 
 async fn health() -> Json<HealthResponse> {
     let (database, redis) = tokio::join!(database::probe(), cache::probe());
-    Json(HealthResponse { status: "ok", database, redis })
+    Json(HealthResponse {
+        status: "ok",
+        database,
+        redis,
+    })
 }
 
 async fn readiness() -> (StatusCode, Json<ReadinessResponse>) {
     let (database, redis) = tokio::join!(database::probe(), cache::probe());
     let ready = database == DatabaseStatus::Available && redis == CacheStatus::Available;
-    let status = if ready { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
-    (status, Json(ReadinessResponse { ready, database, redis }))
+    let status = if ready {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    };
+    (
+        status,
+        Json(ReadinessResponse {
+            ready,
+            database,
+            redis,
+        }),
+    )
 }
 
 async fn version() -> Json<VersionResponse> {
     Json(VersionResponse {
         name: "ATLAS",
         version: env!("CARGO_PKG_VERSION"),
-        build: option_env!("BUILD_SHA").or(option_env!("GITHUB_SHA")).unwrap_or("dev"),
+        build: option_env!("BUILD_SHA")
+            .or(option_env!("GITHUB_SHA"))
+            .unwrap_or("dev"),
     })
 }
 
 async fn engine_catalog() -> Json<EngineCatalogResponse> {
     Json(EngineCatalogResponse {
         items: vec![
-            EngineDescriptor { engine: "powerdns-authoritative", role: "authoritative_dns", adapter_status: "http_health_and_api_probe" },
-            EngineDescriptor { engine: "unbound", role: "recursive_dns", adapter_status: "native_control_adapter_pending" },
-            EngineDescriptor { engine: "dnsdist", role: "dns_traffic_management", adapter_status: "native_control_adapter_pending" },
-            EngineDescriptor { engine: "freeradius", role: "radius_authentication_accounting", adapter_status: "radius_status_probe_pending" },
-            EngineDescriptor { engine: "victoriametrics", role: "metrics_storage", adapter_status: "http_health_probe" },
-            EngineDescriptor { engine: "victorialogs", role: "log_storage_and_search", adapter_status: "http_metrics_probe" },
+            EngineDescriptor {
+                engine: "powerdns-authoritative",
+                role: "authoritative_dns",
+                adapter_status: "http_health_and_api_probe",
+            },
+            EngineDescriptor {
+                engine: "unbound",
+                role: "recursive_dns",
+                adapter_status: "native_control_adapter_pending",
+            },
+            EngineDescriptor {
+                engine: "dnsdist",
+                role: "dns_traffic_management",
+                adapter_status: "native_control_adapter_pending",
+            },
+            EngineDescriptor {
+                engine: "freeradius",
+                role: "radius_authentication_accounting",
+                adapter_status: "radius_status_probe_pending",
+            },
+            EngineDescriptor {
+                engine: "victoriametrics",
+                role: "metrics_storage",
+                adapter_status: "http_health_probe",
+            },
+            EngineDescriptor {
+                engine: "victorialogs",
+                role: "log_storage_and_search",
+                adapter_status: "http_metrics_probe",
+            },
         ],
     })
 }
 
 async fn list_engines(headers: HeaderMap) -> impl IntoResponse {
-    if let Err(error) = authorized(&headers) { return error.into_response(); }
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
     match engine::list().await {
         Ok(items) => (StatusCode::OK, Json(items)).into_response(),
         Err(error) => {
@@ -122,8 +186,13 @@ async fn list_engines(headers: HeaderMap) -> impl IntoResponse {
     }
 }
 
-async fn create_engine(headers: HeaderMap, Json(input): Json<EngineWriteRequest>) -> impl IntoResponse {
-    if let Err(error) = authorized(&headers) { return error.into_response(); }
+async fn create_engine(
+    headers: HeaderMap,
+    Json(input): Json<EngineWriteRequest>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
     if let Err(message) = engine::validate(&input) {
         return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
     }
@@ -140,7 +209,13 @@ async fn get_engine(headers: HeaderMap, Path(id): Path<String>) -> impl IntoResp
     if let Err(error) = authorized(&headers) { return error.into_response(); }
     match engine::get(&id).await {
         Ok(Some(item)) => (StatusCode::OK, Json(item)).into_response(),
-        Ok(None) => (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
+        Ok(None) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiError {
+                error: "engine instance not found",
+            }),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to retrieve engine instance");
             database_error().into_response()
@@ -148,8 +223,14 @@ async fn get_engine(headers: HeaderMap, Path(id): Path<String>) -> impl IntoResp
     }
 }
 
-async fn update_engine(headers: HeaderMap, Path(id): Path<String>, Json(input): Json<EngineWriteRequest>) -> impl IntoResponse {
-    if let Err(error) = authorized(&headers) { return error.into_response(); }
+async fn update_engine(
+    headers: HeaderMap,
+    Path(id): Path<String>,
+    Json(input): Json<EngineWriteRequest>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
     if let Err(message) = engine::validate(&input) {
         return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
     }
@@ -178,7 +259,9 @@ async fn delete_engine(headers: HeaderMap, Path(id): Path<String>) -> impl IntoR
 async fn engine_health(headers: HeaderMap, Path(id): Path<String>) -> impl IntoResponse {
     if let Err(error) = authorized(&headers) { return error.into_response(); }
     match engine::get(&id).await {
-        Ok(Some(item)) => (StatusCode::OK, Json(adapters::probe(&item).await)).into_response(),
+        Ok(Some(item)) => {
+            (StatusCode::OK, Json(adapters::probe(&item).await)).into_response()
+        }
         Ok(None) => (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to load engine for health probe");
@@ -195,6 +278,9 @@ pub fn routes() -> Routes {
         .add("/system/version", get(version))
         .add("/engines/catalog", get(engine_catalog))
         .add("/engines", get(list_engines).post(create_engine))
-        .add("/engines/{id}", get(get_engine).put(update_engine).delete(delete_engine))
+        .add(
+            "/engines/{id}",
+            get(get_engine).put(update_engine).delete(delete_engine),
+        )
         .add("/engines/{id}/health", get(engine_health))
 }

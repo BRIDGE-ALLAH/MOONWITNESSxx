@@ -38,9 +38,7 @@ pub async fn pool() -> Result<&'static MySqlPool, sqlx::Error> {
 
         let max_connections =
             parse_db_max_connections(env::var("DB_MAX_CONNECTIONS").ok().as_deref())
-                .map_err(|error| {
-                    sqlx::Error::Configuration(std::io::Error::other(error).into())
-                })?;
+                .map_err(|error| sqlx::Error::Configuration(std::io::Error::other(error).into()))?;
 
         MySqlPoolOptions::new()
             .max_connections(max_connections)

@@ -31,7 +31,9 @@ pub struct EngineWriteRequest {
     pub secret_env_key: Option<String>,
 }
 
-fn default_enabled() -> bool { true }
+fn default_enabled() -> bool {
+    true
+}
 
 #[derive(Debug, Serialize)]
 pub struct EngineHealth {
@@ -49,8 +51,12 @@ pub fn validate(input: &EngineWriteRequest) -> Result<(), &'static str> {
         return Err("role must contain 1 to 64 characters");
     }
     let allowed = [
-        "powerdns-authoritative", "unbound", "dnsdist", "freeradius",
-        "victoriametrics", "victorialogs",
+        "powerdns-authoritative",
+        "unbound",
+        "dnsdist",
+        "freeradius",
+        "victoriametrics",
+        "victorialogs",
     ];
     if !allowed.contains(&input.engine_type.as_str()) {
         return Err("engine_type is not in the supported engine catalog");
@@ -65,14 +71,20 @@ pub fn validate(input: &EngineWriteRequest) -> Result<(), &'static str> {
         || !url.username().is_empty()
         || url.password().is_some()
     {
-        return Err("endpoint must use HTTP(S), include a host, and contain no embedded credentials");
+        return Err(
+            "endpoint must use HTTP(S), include a host, and contain no embedded credentials",
+        );
     }
     if let Some(key) = &input.secret_env_key {
         if !key.starts_with("ATLAS_ENGINE_SECRET_")
             || key.len() > 128
-            || !key.chars().all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit() || ch == '_')
+            || !key
+                .chars()
+                .all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit() || ch == '_')
         {
-            return Err("secret_env_key must be an environment variable named ATLAS_ENGINE_SECRET_*");
+            return Err(
+                "secret_env_key must be an environment variable named ATLAS_ENGINE_SECRET_*",
+            );
         }
     }
     Ok(())
@@ -114,7 +126,10 @@ pub async fn create(input: &EngineWriteRequest) -> Result<EngineInstance, sqlx::
     get(&id).await?.ok_or(sqlx::Error::RowNotFound)
 }
 
-pub async fn update(id: &str, input: &EngineWriteRequest) -> Result<Option<EngineInstance>, sqlx::Error> {
+pub async fn update(
+    id: &str,
+    input: &EngineWriteRequest,
+) -> Result<Option<EngineInstance>, sqlx::Error> {
     let result = sqlx::query(
         "UPDATE engine_instances SET name = ?, engine_type = ?, role = ?, endpoint = ?, enabled = ?, labels = ?, config = ?, secret_env_key = ? WHERE id = ?",
     )
@@ -129,7 +144,9 @@ pub async fn update(id: &str, input: &EngineWriteRequest) -> Result<Option<Engin
     .bind(id)
     .execute(database::pool().await?)
     .await?;
-    if result.rows_affected() == 0 { return Ok(None); }
+    if result.rows_affected() == 0 {
+        return Ok(None);
+    }
     get(id).await
 }
 
