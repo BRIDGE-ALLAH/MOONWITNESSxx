@@ -133,3 +133,30 @@ test('archive is a reversible soft-state operation and owner scoped', async () =
   assert.match(fake.calls[0].sql, /archived_at = now\(\)/)
   assert.deepEqual(fake.calls[0].values.slice(0, 3), ['owner-a', row.id, 'owner-a'])
 })
+
+test('updates opportunity content with owner scope and optimistic revision', async () => {
+  const updatedRow = { ...row, revision: 2, updated_at: '2026-11-08T01:00:00.000Z' }
+  const fake = createDatabase([[updatedRow]])
+  const repository = new OpportunityRepository(fake.db)
+  const result = await repository.update('owner-a', 'owner-a', row.id, input, evaluation, 1)
+
+  assert.equal(result.conflict, false)
+  assert.equal(result.record?.revision, 2)
+  assert.match(fake.calls[0].sql, /revision = revision \+ 1/)
+  assert.match(fake.calls[0].sql, /revision = \$18/)
+  assert.match(fake.calls[0].sql, /content-updated/)
+  assert.equal(fake.calls[0].values[0], 'owner-a')
+  assert.equal(fake.calls[0].values[1], row.id)
+  assert.equal(fake.calls[0].values[17], 1)
+})
+
+test('returns the latest opportunity and a conflict when revision is stale', async () => {
+  const current = { ...row, revision: 3 }
+  const fake = createDatabase([[], [current]])
+  const repository = new OpportunityRepository(fake.db)
+  const result = await repository.update('owner-a', 'owner-a', row.id, input, evaluation, 1)
+
+  assert.equal(result.conflict, true)
+  assert.equal(result.record?.revision, 3)
+  assert.equal(fake.calls.length, 2)
+})
