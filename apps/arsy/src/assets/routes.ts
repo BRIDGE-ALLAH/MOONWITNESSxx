@@ -111,6 +111,12 @@ export function registerAssetRoutes(
     if (typeof idempotencyKey !== 'string' || idempotencyKey.trim().length < 8 || idempotencyKey.length > 200) {
       return reply.code(400).send({ error: { code: 'IDEMPOTENCY_KEY_REQUIRED', message: 'A valid Idempotency-Key header is required.' } })
     }
+    if (parsed.data.provenance.sourceAssetId) {
+      const sourceAsset = await repository.get(ownerId, parsed.data.provenance.sourceAssetId)
+      if (!sourceAsset) return reply.code(409).send({
+        error: { code: 'SOURCE_ASSET_NOT_FOUND', message: 'The source asset does not exist under this operator.' },
+      })
+    }
     const bytes = decodeBase64(parsed.data.contentBase64)
     if (!bytes || bytes.length === 0 || bytes.length > MAX_ASSET_BYTES) {
       return reply.code(400).send({ error: { code: 'INVALID_ASSET_BYTES', message: 'Asset bytes must be valid base64 and no larger than 10 MiB.' } })
