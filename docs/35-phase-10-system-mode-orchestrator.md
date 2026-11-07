@@ -32,3 +32,8 @@ Make installation and synchronization an explicit deployment lifecycle, never an
 The package now exports `SqliteSystemRunJournal`. It enforces SQLite/System adapter identity, persists run identity/actor/stage/status/fingerprint/plan/error/timestamps, uses compare-and-set stage transitions, rejects stale transitions, and returns interrupted running records for an explicit recovery handler. Initialize the journal during controlled startup before invoking the orchestrator.
 
 Important failure boundary: if runtime handoff fails after atomic activation, the candidate pointer has already been committed. Readiness remains false and recovery must inspect the journal; automatic pointer rollback is intentionally not attempted because PostgreSQL schema rollback may be unsafe. The prior snapshot remains stored for an operator-directed rollback only when compatibility is established.
+
+
+### Pre-activation shadow preparation
+
+The orchestrator now requires a runtime preparation step after database verification and before activation. This is the safe place to warm a shadow registry/runtime, load routes/services, and run synthetic health checks without publishing it as active. The post-activation handoff should be a narrow in-memory pointer switch. If preparation fails, the active registry has not yet changed.
