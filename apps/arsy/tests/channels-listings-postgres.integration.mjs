@@ -45,6 +45,7 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
       policyReviewedAt: '2026-11-08T00:00:00Z',
       policyRecheckAt: '2099-01-01T00:00:00Z',
       payoutRequirements: { currency: 'IDR', method: 'bank-transfer' },
+      listingRequirements: { acceptedMediaTypes: ['text/plain'], acceptedProductFamilies: ['digital-utility'], maxAssetBytes: 10485760, maxTitleLength: 180, maxDescriptionLength: 2000 },
       payoutSetupStatus: 'configured',
       capability: 'C1',
       grantedScopes: [],
@@ -54,6 +55,7 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
         { evidenceType: 'official-policy', sourceName: 'Official policy', sourceUrl: policyUrl, capturedAt: '2026-11-08T00:00:00Z', reviewedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Official channel policy was reviewed.', limitations: 'CI fixture only.' },
         { evidenceType: 'account-eligibility', sourceName: 'Account page', sourceUrl: 'https://example.com/account', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test account eligibility evidence.', limitations: 'CI fixture only.' },
         { evidenceType: 'payout-requirements', sourceName: 'Payout page', sourceUrl: 'https://example.com/payout', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test payout requirements evidence.', limitations: 'CI fixture only.' },
+        { evidenceType: 'format-requirements', sourceName: 'Format page', sourceUrl: 'https://example.com/formats', capturedAt: '2026-11-08T00:00:00Z', evidenceClass: 'observed-fact', summary: 'Test accepted format requirements evidence.', limitations: 'CI fixture only.' },
       ],
     })
 
