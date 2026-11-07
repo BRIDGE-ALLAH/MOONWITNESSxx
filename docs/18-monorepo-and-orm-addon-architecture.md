@@ -1,6 +1,6 @@
 # 18 — Monorepo, Fastify Core, Custom ORM & Addon Architecture
 
-**Status:** Approved target architecture | **Version:** 1.2 | **Updated:** 2026-11-07
+**Status:** Approved target architecture | **Version:** 1.3 | **Updated:** 2026-11-07
 
 ## 1. Canonical decisions
 One Fastify backend (ARSY), one custom TypeScript metadata ORM, one provider-neutral DB contract, PostgreSQL/libSQL providers, Kysely internal to adapters, code-first schema reconciliation through private ARSY API, minimal BaseEntity, opt-in mixins. PostgreSQL is production recommendation; libSQL is lightweight/single-node. PocketBase is not a v1 persistence provider.
@@ -73,3 +73,7 @@ Owns AIProvider, AIModel, ModelCapability, Agent, AgentRole, AgentRun, AgentTask
 - Kysely libSQL dialect: https://github.com/tursodatabase/kysely-libsql
 - libSQL: https://github.com/tursodatabase/libsql
 - PocketBase BaseModel compatibility reference: https://pkg.go.dev/github.com/pocketbase/pocketbase/models#BaseModel
+
+
+## 16. v1.3 base platform and ORM target (supersedes earlier short description)
+BaseEntity contains id, createdAt, createdById, updatedAt and updatedById. packages/orm-addon-base is one source/release package containing independent addon manifests for core, identity, security, workspace, optional company, audit, events, optional communication/activity, attachment, sequence, settings, localization, transient, import-export, optional integration and taxonomy. The ORM target includes persistent/abstract/transient models, computed/related/translated fields, deterministic extension, domains, recordsets, cache/prefetch, ACL/record rules and field policies. See docs/22 for the canonical ownership/dependency matrix.

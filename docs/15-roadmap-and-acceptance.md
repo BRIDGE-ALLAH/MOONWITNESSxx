@@ -1,6 +1,6 @@
 # 15 — Roadmap & Acceptance Criteria
 
-**Status:** Approved execution baseline | **Version:** 1.2 | **Updated:** 2026-11-07
+**Status:** Approved execution baseline | **Version:** 1.3 | **Updated:** 2026-11-07
 
 ## 1. Delivery strategy
 Build incrementally. Visual prototype, backend runtime, ORM, SQL providers, addons, and commercial workflows are separate milestones. Do not claim a package exists until code, tests, and build checks prove it.
@@ -65,3 +65,7 @@ RIOTWORKS identity, Extreme Riot + MoonWitness Comic + Industrial + Game HUD DNA
 
 ## 7. Definition of done
 A feature is complete only when user problem, domain state, permissions, failure behavior, tests, audit/logs, docs, and visible states are covered. Scaffolding/placeholders are not done.
+
+
+## 6. v1.3 ORM/base-platform acceptance
+BaseEntity injects five fields exactly once: id, createdAt, createdById, updatedAt and updatedById. Implement the Odoo-inspired foundation addon suite in dependency order as defined in docs/22. Prove persistent/abstract/transient models, registry extension, typed fields/relations, domain AST, recordset batching, cache invalidation, ACL/record rules and workspace isolation. Audit, events/outbox, chatter, activities, jobs and notifications must remain distinct. The complete target is staged; do not claim all capabilities are implemented before tests pass.

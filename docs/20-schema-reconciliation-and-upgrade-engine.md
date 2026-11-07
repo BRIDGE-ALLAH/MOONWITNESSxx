@@ -1,6 +1,6 @@
 # 20 — Programmatic Schema Reconciliation & Data Upgrade Engine
 
-**Status:** Approved architecture contract | **Version:** 1.2 | **Updated:** 2026-11-07
+**Status:** Approved architecture contract | **Version:** 1.3 | **Updated:** 2026-11-07
 
 ## 1. Decision
 RIOTWORKS uses code-first model declarations and programmatic schema reconciliation through ARSY's private operations API. Addon TypeScript models are the only desired-schema source. ORM composes desired schema; schema engine compares desired/actual provider schema; adapter applies safe physical schema operations through its DB connection.
@@ -86,3 +86,7 @@ Edit TypeScript model → request plan → review classification → safe local 
 
 ## 14. Acceptance
 Model declarations are desired source; routine nullable field requires no handwritten migration; API/CLI call same reconciler; no arbitrary SQL/untrusted code; deterministic/idempotent plans; capability checked; safe changes applied/verified; destructive/semantic changes authorized; partial failure recoverable; no replica race; unowned objects preserved; schema ledger and AuditTrail do not overlap.
+
+
+## 13. v1.3 composed schema scope
+Desired schema is composed from the enabled base-platform addon manifests as well as business addons. BaseEntity injects id, createdAt, createdById, updatedAt and updatedById exactly once. Optional mixins and optional base addons contribute schema only when enabled. Schema plan/reconcile remains API-triggered through ARSY; adapters execute provider-native schema operations. This supersedes older three-field BaseEntity references.

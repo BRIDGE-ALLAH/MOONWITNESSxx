@@ -1,6 +1,6 @@
 # 08 — Technical Architecture: Headquarter, ARSY, ORM & SQL Providers
 
-**Status:** Approved target architecture | **Version:** 1.2 | **Updated:** 2026-11-07
+**Status:** Approved target architecture | **Version:** 1.3 | **Updated:** 2026-11-07
 
 ## 1. Canonical decisions
 RIOTWORKS uses one backend (ARSY), one metadata-driven ORM, one provider-neutral database contract, and relational SQL providers.
@@ -65,3 +65,7 @@ AuditTrail is one central append-oriented model/service. SQL business mutation a
 Fastify routes delegate to application services. Provide health/readiness, versioned APIs, private schema operations, structured logs, request correlation, centralized validation/errors, graceful shutdown. Keep DB credentials server-side; separate runtime and schema-apply privileges where possible. Preserve unowned tables. Require backup/restore validation before destructive changes. Test both adapters for CRUD, relations, constraints, transactions, audit atomicity, schema sync, drift, recovery, and capability differences.
 
 This is a target architecture contract, not a claim that packages already exist.
+
+
+## 10. v1.3 base-platform clarification (supersedes older minimal summaries)
+BaseEntity is not the complete base platform. The universal persisted metadata is id, createdAt, createdById, updatedAt and updatedById. The source package packages/orm-addon-base contains independently declared manifests for base.core, identity, security, workspace, optional company, audit, events, optional communication/activity, attachment, sequence, settings, localization, transient, import-export, optional integration and taxonomy. The ORM target includes persistent/abstract/transient models, computed/related/translated fields, deterministic extension, domain AST, recordsets, prefetch/cache, ACL/record rules and field policies. docs/22 is canonical where earlier sections are less detailed.

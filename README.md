@@ -80,7 +80,7 @@ Channels are enabled only after current country eligibility, payout, policy, fee
 - **packages/contract** — runtime API schemas, DTO contracts, and inferred types.
 - **packages/lint** — shared lint, format, and TypeScript configuration.
 
-PostgreSQL is recommended for production; libSQL is the lightweight/single-node option. Kysely is internal to SQL adapters. PocketBase is not part of v1 persistence.
+PostgreSQL is recommended for production; libSQL is the lightweight/local/single-node option. Kysely is internal to SQL adapters. PocketBase is not part of v1 persistence. BaseEntity injects five universal metadata fields; the Odoo-inspired base platform is a suite of independently declared addons for identity, security, workspace, audit, events, communication, activities, attachments, sequences, settings, localization and more.
 
 Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm-addon-architecture.md](./docs/18-monorepo-and-orm-addon-architecture.md), [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md), and [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md).
 
@@ -123,6 +123,7 @@ Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm
 | [docs/19-orm-addon-development-guide.md](./docs/19-orm-addon-development-guide.md) | Addon manifests, model inheritance, base fields |
 | [docs/20-schema-reconciliation-and-upgrade-engine.md](./docs/20-schema-reconciliation-and-upgrade-engine.md) | ARSY internal schema API and programmatic reconciliation |
 | [docs/21-database-provider-strategy.md](./docs/21-database-provider-strategy.md) | PostgreSQL/libSQL decision, portability, BaseEntity mapping |
+| [docs/22-base-platform-and-orm-capability-blueprint.md](./docs/22-base-platform-and-orm-capability-blueprint.md) | Complete base addon catalog, Odoo-inspired ORM capability matrix, mixins and ownership boundaries |
 
 ## Current status
 
@@ -156,7 +157,7 @@ Cash received, pending commissions, estimated royalties, tax withholding, FX, an
 
 ## Documentation status
 
-Product definition and architecture baseline: **v1.2**, updated 2026-11-07. This is a finalized specification baseline, not a claim that software, integrations, business results, or platform approvals are already complete.
+Product definition and architecture baseline: **v1.3**, updated 2026-11-07. This is a finalized specification baseline, not a claim that software, integrations, business results, or platform approvals are already complete.
 
 ---
 

@@ -1,6 +1,6 @@
 # 13 — Domain Model, BaseEntity & AuditTrail
 
-**Status:** Approved conceptual model | **Version:** 1.2 | **Updated:** 2026-11-07
+**Status:** Approved conceptual model | **Version:** 1.3 | **Updated:** 2026-11-07
 
 ## 1. Design principles
 Separate universal persistence metadata from business attributes. Keep one BaseEntity composition in the ORM registry. Add lifecycle concerns through opt-in mixins. Keep AuditTrail centralized. Preserve provenance and financial history. Never store raw credentials in ordinary domain tables or frontend state.
@@ -54,3 +54,7 @@ Workspace; MarketSource; EvidenceItem; Opportunity; Product/ProductVersion; Prod
 
 ## 8. Field, money, time, privacy
 Use typed metadata for common scalar, JSON, selection, and relation fields. Query expressions are validated against metadata and adapter capabilities. Money uses exact decimal or integer minor units plus currency; never binary float as authority. Store UTC and display workspace timezone. Preserve source currency and FX rate/source/time separately. Collect only required data and define export, deletion, retention.
+
+
+## 8. v1.3 superseding BaseEntity decision
+This section supersedes earlier three-field BaseEntity wording. The universal metadata contract is five fields: id, createdAt, createdById, updatedAt and updatedById. Actor references are server-controlled and nullable only for documented bootstrap/system/import provenance. Archive, soft-delete, active, version, workspace and company scope remain explicit mixins. The full base platform addon catalog and ownership matrix are defined in docs/22.

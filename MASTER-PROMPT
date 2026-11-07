@@ -1,7 +1,7 @@
-# MASTER PROMPT v3.2 — MOONWITNESS // RIOTWORKS
+# MASTER PROMPT v3.3 — MOONWITNESS // RIOTWORKS
 ## Full-Stack Headquarter + ARSY + Modular ORM/Addons
 
-**Specification baseline:** README.md and docs/01–21  
+**Specification baseline:** README.md and docs/01–22  
 **Primary outcome:** Build a modular monorepo with apps/headquarter, apps/arsy, and the packages defined below.  
 **Product tagline:** MAKE WORK THAT OUTLIVES THE FEED.
 
@@ -287,22 +287,16 @@ The ORM must be metadata-driven and addon-aware.
 ## 6.1 Required ORM capabilities
 
 Core:
-- Model registry.
-- Addon/module registry.
-- Declarative model and field metadata.
-- Model inheritance and extension.
-- Field validation and defaults.
-- Relation metadata.
-- Query/domain representation.
-- Safe query compilation through adapters.
-- Create/read/update/archive/restore/delete policy.
-- Model lifecycle hooks.
-- Environment/context.
-- Permission/record-scope integration points.
-- Schema reconciliation and typed data-upgrade coordination.
-- Adapter capability checking.
-- Typed model APIs.
-- Error normalization.
+- Persistent, abstract and transient model kinds.
+- Model/addon registry, typed fields, constraints, defaults and indexes.
+- Deterministic extension/inheritance and explicit composition.
+- Computed, related, translated and relational fields.
+- Domain/query AST, typed recordsets, batch operations and safe query compilation.
+- Request-scoped identity map, prefetch cache and invalidation.
+- Lifecycle hooks, environment/context, unit-of-work and concurrency integration.
+- Model ACL, record rules, field policies and workspace/company scope integration.
+- Programmatic schema reconciliation, typed data-upgrade coordination and adapter capability checks.
+- Normalized errors, telemetry and cross-provider contracts.
 
 Initial field types:
 - string
@@ -424,24 +418,55 @@ Lifecycle: DISCOVER → VALIDATE → RESOLVE → COMPOSE → PLAN → SAFE RECON
 
 Resolve deterministically. Reject missing/circular dependencies, duplicate IDs, model/field conflicts, incompatible versions, and untrusted code. Disable/uninstall never silently deletes data. Never auto-execute arbitrary community addon code.
 
-# 9. Base addon — packages/orm-addon-base
+# 9. Base platform — Odoo-inspired foundation suite
 
-Install before business addons. ORM composes universal metadata exactly once.
+Do not confuse the minimal BaseEntity record contract with the complete base platform. BaseEntity is composed once by the ORM. The complete addon catalog, ownership matrix and feature target are defined in docs/22.
 
-## 9.1 Minimal BaseEntity
-Every persisted model receives only id (opaque stable string identifier), createdAt (UTC), and updatedAt (UTC). For v1 SQL providers, ARSY generates UUID IDs; libSQL stores them as TEXT and PostgreSQL as UUID. Adapters normalize IDs/timestamps to one TypeScript contract. A future provider with native ID format must define an explicit compatible ID strategy; do not assume every provider accepts UUIDs unchanged. Addons never redeclare these fields; collisions fail registry validation.
+## 9.1 Universal BaseEntity
 
-## 9.2 Optional mixins
-- OwnershipAttribution: createdBy/updatedBy where useful.
-- Archiveable: archivedAt/archivedBy where recoverable archival is required.
-- Versioned: concurrency token where optimistic concurrency is required.
-- Toggleable: active/enabled only when independently meaningful.
-- SoftDeletable: deletedAt with explicit retention/restore policy.
+Every persisted model receives exactly five ORM-managed fields:
+- id: opaque stable string identifier.
+- createdAt: immutable UTC creation instant.
+- createdById: nullable reference to a canonical principal, set from trusted execution context.
+- updatedAt: UTC instant of last successful persisted mutation.
+- updatedById: nullable reference to a canonical principal, set from trusted execution context.
 
-Business status, enablement, archive, and delete are distinct. Do not inject universal active or equate active=false with archive.
+Null actors are allowed only for documented bootstrap/system/import provenance. Never trust actor IDs supplied directly by clients. Addons never redeclare these fields.
 
-## 9.3 AuditTrail
-One shared append-oriented audit subsystem records model, record ID, action, actor ID/type, timestamp, source, request/trace ID, safe diff, reason, metadata. Redact secrets. Ordinary code cannot edit/delete audit events; audit reads require authorization. SQL mutation and required AuditTrail insert share one transaction; external effects use transactional outbox. Never claim tamper-proof storage without verified integrity controls.
+Do not inject active, archivedAt, deletedAt, version, workspaceId, companyId, displayName, or audit payload universally. They have distinct semantics and belong to explicit mixins or owning addons.
+
+## 9.2 Base platform addon suite
+
+Keep packages/orm-addon-base as a release package but split it internally into independently declared addon manifests:
+- base.core
+- base.identity
+- base.security
+- base.workspace
+- base.company (optional)
+- base.audit
+- base.events
+- base.communication (optional)
+- base.activity (optional)
+- base.attachment
+- base.sequence
+- base.settings
+- base.localization
+- base.transient
+- base.import-export
+- base.integration (optional)
+- base.taxonomy (optional)
+
+The addons own separate models/services and dependencies. Do not create one giant base model or one monolithic addon. docs/22 defines exact ownership and dependencies.
+
+## 9.3 Reusable mixins
+
+OwnershipAttribution, Archiveable, SoftDeletable, Toggleable, Versioned, WorkspaceScoped, CompanyScoped, ParentTree, ChatterEnabled, ActivityEnabled, AttachmentEnabled, SequenceAssigned, Translatable and CustomMetadata are explicit opt-in behavior bundles. Mixins define fields, policy, query semantics and lifecycle behavior; they are not global field bags.
+
+## 9.4 Strict ownership boundaries
+
+AuditEvent is generic change history. DomainEvent/Outbox is reliable business event delivery. Message/Thread is collaboration history. Activity is a human follow-up. Background Job is executable worker work. Notification is recipient delivery. Do not merge them into a catch-all table.
+
+Base platform addons own identity, security, workspace, company and shared services. Business addons own Project, Product, Opportunity, Asset, Finance and AI/Agent models. See docs/22.
 
 # 10. Required addons
 
