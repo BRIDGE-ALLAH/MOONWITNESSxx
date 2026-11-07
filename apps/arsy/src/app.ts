@@ -12,7 +12,7 @@ export interface CreateAppOptions {
 
 export function createApp(options: CreateAppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? true })
-  app.register(rateLimit, { global: false })
+  app.register(rateLimit, { global: true, max: 300, timeWindow: '1 minute' })
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
 
