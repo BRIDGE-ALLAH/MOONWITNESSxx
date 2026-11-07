@@ -60,19 +60,37 @@ test('idempotent replay returns the existing event and rejects key reuse with a 
   await assert.rejects(conflictRepo.create('owner-a', 'owner-a', input), /IDEMPOTENCY_KEY_REUSED/)
 })
 
-test('contribution summary uses exact bigint arithmetic and excludes pending events', async () => {
+test('summary separates tax reserves and payout movements and uses bigint arithmetic per currency', async () => {
   const repository = new FinancialRepository({
-    query: async () => ({ rows: [{
-      currency: 'IDR',
-      gross_receipts_minor: '9007199254740993',
-      deductions_minor: '200',
-      payout_movements_minor: '100',
-      pending_minor: '500',
-      pending_count: '2',
-    }] }),
+    query: async () => ({ rows: [
+      {
+        currency: 'IDR',
+        gross_receipts_minor: '9007199254740993',
+        deductions_minor: '200',
+        tax_reserve_minor: '700',
+        payout_movements_minor: '100',
+        pending_minor: '500',
+        pending_count: '2',
+      },
+      {
+        currency: 'USD',
+        gross_receipts_minor: '1200',
+        deductions_minor: '50',
+        tax_reserve_minor: '25',
+        payout_movements_minor: '300',
+        pending_minor: '0',
+        pending_count: '0',
+      },
+    ] }),
     end: async () => undefined,
   })
-  const [summary] = await repository.summary('owner-a')
-  assert.equal(summary.net_contribution_minor, '9007199254740793')
-  assert.equal(summary.pending_minor, '500')
+  const summaries = await repository.summary('owner-a')
+  assert.equal(summaries.length, 2)
+  assert.deepEqual(summaries.map((item) => item.currency), ['IDR', 'USD'])
+  assert.equal(summaries[0].net_contribution_minor, '9007199254740793')
+  assert.equal(summaries[0].tax_reserve_minor, '700')
+  assert.equal(summaries[0].payout_movements_minor, '100')
+  assert.equal(summaries[0].pending_minor, '500')
+  assert.equal(summaries[1].net_contribution_minor, '1150')
+  assert.equal(summaries[1].tax_reserve_minor, '25')
 })
