@@ -87,7 +87,7 @@ function fakePool() {
         records.push(record)
         return { rows: [record] }
       }
-      if (sql.includes('SET title = $4')) {
+      if (sql.includes('UPDATE arsy_opportunities SET')) {
         const id = values[1]
         const expectedVersion = values[18]
         const index = records.findIndex((record) => record.id === id && record.version === expectedVersion)
