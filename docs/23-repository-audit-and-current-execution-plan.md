@@ -1,3 +1,5 @@
+> **Historical baseline notice (2026-11-08):** This document records an earlier repository snapshot and is no longer the source of truth for current branch/PR/release state. See [docs/28-current-state-revalidation-2026-11-08.md](./28-current-state-revalidation-2026-11-08.md) for the latest remote revalidation, merged PRs, open PR gates, ARSY runtime inconsistencies, UX gaps, and production release NO-GO assessment.
+
 # 23 — Repository Reality Audit & Current Execution Plan
 
 **Status:** Authoritative execution baseline | **Version:** 2.0 | **Audited:** 2026-11-07  
