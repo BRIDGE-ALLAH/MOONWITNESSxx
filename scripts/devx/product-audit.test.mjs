@@ -99,6 +99,7 @@ test('release preflight reports absent release/deploy workflows and an empty cha
     const report = await auditReleaseReadiness({ root })
     assert.equal(report.ready, false)
     assert.ok(report.findings.some((item) => item.id === 'unreleased-changelog-empty'))
+    assert.ok(report.findings.some((item) => item.id === 'package-changelog-version-mismatch'))
     assert.ok(report.findings.some((item) => item.id === 'release-workflow-missing'))
     assert.ok(report.findings.some((item) => item.id === 'production-deployment-workflow-missing'))
     assert.ok(report.findings.some((item) => item.id === 'arsy-production-entrypoint-invalid'))
