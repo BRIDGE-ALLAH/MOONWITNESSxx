@@ -1051,3 +1051,14 @@ Use these labels consistently when updating this file:
 - [x] Phase 20: detect empty traces, malformed context, duplicate policy decisions and cross-tenant terminal receipts; mark undefined benchmark metrics as null rather than perfect.
 - [ ] Authenticated issuer registry, signed attestation envelope/KMS, actual tool-gateway enforcement, licensed benchmark import and calibrated CI thresholds remain open.
 See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract checks, not production security enforcement.
+
+
+---
+
+## Product integrity Phases 36–38 (2026-11-08)
+
+- [x] Phase 36: ARSY app factory, validated runtime configuration, cached DB readiness, typed Fastify lifecycle, health semantics and local-container hardening.
+- [x] Phase 37: persistent, localized, accessible Headquarter prototype/data disclosure in the topbar.
+- [x] Phase 38: DevX workspace-contract, route/navigation and release-preflight audit with real-repository tests.
+- [ ] Merge only after Repository CI, workspace build, CodeQL and both container-image builds pass on the current head.
+- [ ] Production release remains blocked until release publisher, deployment provider, secret management, backups, rollback and production smoke tests are verified.
