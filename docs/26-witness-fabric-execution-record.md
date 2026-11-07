@@ -100,3 +100,12 @@ Added portable bundle creation and verification: event prefix, deterministic sna
 
 ## New differentiator hypothesis
 **Temporal Evidence Twin**: every high-impact claim has two clocks (when it was true vs when the system learned it), a cryptographically anchored history, and a portable replay artifact. Potential use cases: AI incident response, compliance evidence, scientific audit trails, and agent-to-agent trust handoff. This combines known techniques; novelty must be established by benchmarks and prior-art review.
+
+
+## Verification correction — signed checkpoint
+The first CI run exposed a gap: checkpoint verification compared only sequence and final head metadata, so a modified interior event with an unchanged claimed head could pass the signature-only helper. The verifier now recomputes every event digest and checks sequence/previous-hash continuity before accepting the signature. This makes the checkpoint verifier independently validate the supplied event prefix, not merely its endpoint metadata.
+
+## CI repair record
+- pnpm v12 uses `allowBuilds`; legacy `onlyBuiltDependencies` is ignored. Explicitly approved only the three dependencies observed in the repository's CI install (esbuild, msgpackr-extract, sharp).
+- Root manifest identity and validation command wiring were aligned with the repository audit contract. New root test/type-check scripts were added.
+- The 2026-11-07 CI run confirmed the failure was isolated to the checkpoint tamper test: 16 tests passed, 1 failed. The failure is fixed in the subsequent commit; a fresh full run on the final head is still required.

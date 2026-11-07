@@ -19,6 +19,7 @@
 - [ ] Cross-vendor bundle schema, JSON Schema and independent verifier CLI.
 
 ## Release gates
+- [x] Fixed checkpoint verifier to recompute each event digest and chain link after the first tamper test exposed an endpoint-only verification gap.
 - [ ] Latest dedicated tests and type-check pass.
 - [ ] Full repository CI passes.
 - [ ] Security review, tenant isolation, retention and redaction.
