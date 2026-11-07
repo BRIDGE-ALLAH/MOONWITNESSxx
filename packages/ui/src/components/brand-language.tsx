@@ -24,7 +24,7 @@ export function RiotLiveIndicator({ state = 'live', label, className, ...props }
   )
 }
 
-export interface RiotSignalHeaderProps extends React.HTMLAttributes<HTMLElement> {
+export interface RiotSignalHeaderProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
   eyebrow: React.ReactNode
   title: React.ReactNode
   description?: React.ReactNode
