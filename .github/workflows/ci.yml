@@ -58,6 +58,9 @@ jobs:
       - name: Test ARSY governance primitives
         run: pnpm --filter @riotworks/arsy-core test:governance
 
+      - name: Test Divine epistemic and provenance suites
+        run: pnpm --filter @riotworks/divine test
+
       - name: Smoke test developer experience commands
         run: |
           pnpm devx doctor --json
