@@ -1,10 +1,6 @@
 name: Refresh pnpm lockfile
 
 on:
-  # One-time Phase 0 recovery on the isolated governance execution branch.
-  push:
-    branches:
-      - chore/governance-phase-0-1
   workflow_dispatch:
 
 permissions:
@@ -13,7 +9,7 @@ permissions:
 
 jobs:
   refresh:
-    name: Regenerate pnpm lockfile
+    name: Regenerate and propose lockfile
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -33,21 +29,7 @@ jobs:
       - name: Regenerate lockfile from workspace manifests
         run: pnpm install --lockfile-only --ignore-scripts
 
-      - name: Commit lockfile to isolated execution branch
-        if: github.event_name == 'push'
-        run: |
-          if git diff --quiet -- pnpm-lock.yaml; then
-            echo "Lockfile is already current."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pnpm-lock.yaml
-          git commit -m "chore(deps): refresh workspace lockfile [skip ci]"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-
       - name: Open or update lockfile pull request
-        if: github.event_name == 'workflow_dispatch'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -57,10 +39,12 @@ jobs:
           title: "chore: refresh pnpm lockfile"
           body: |
             ## Purpose
-            Regenerate the pnpm lockfile from committed workspace manifests using pnpm 12.16.1.
+
+            Regenerate the pnpm lockfile from committed workspace manifests using the pinned pnpm version.
 
             ## Validation
-            - Generated with the pinned pnpm version.
+
+            - Generated with pnpm 12.16.1.
             - No application source files are changed.
             - Review the dependency graph diff before merging.
           add-paths: pnpm-lock.yaml
