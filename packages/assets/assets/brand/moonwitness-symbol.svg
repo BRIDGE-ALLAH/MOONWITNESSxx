@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+<title id="title">MOONWITNESS symbol</title><desc id="desc">An original lunar aperture mark formed by a crescent, orbital arc, and four-point witness star.</desc>
+<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="61" cy="64" r="43" stroke-width="3" opacity=".32"/>
+<path d="M77 22a45 45 0 1 0 29 66A39 39 0 0 1 77 22Z" stroke-width="5"/>
+<path d="M17 82c23-31 54-48 94-43" stroke-width="2.5"/>
+<path d="M89 15v19M79.5 24.5h19" stroke-width="2.5"/>
+<path d="m89 15 4 9.5-4 9.5-4-9.5Z" fill="currentColor" stroke="none"/>
+<circle cx="25" cy="82" r="3.5" fill="currentColor" stroke="none"/>
+</g></svg>
