@@ -4,7 +4,7 @@
 
 **MOONWITNESS** is the master brand.
 - Core Promise: SEE MORE. KNOW MORE.
-- Brand Manifesto: WHEN THE MOON RISES, WE SHARE WHAT MATTERS.
+- Brand Manifesto: WHEN THE MOON RISES, WE SHARE MESSAGES.
 - Observatory: research, observation, evidence workflows, and command experience.
 - Archive: durable records, knowledge, retrieval, and provenance.
 - RIOTWORKS: independent creative/engineering studio identity; not the product master brand.
