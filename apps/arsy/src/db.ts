@@ -12,7 +12,9 @@ declare module 'fastify' {
   }
 }
 
-export function createDatabasePool(env: NodeJS.ProcessEnv = process.env): Pool {
+export function createDatabasePool(
+  env: NodeJS.ProcessEnv = process.env,
+): Pool {
   const connectionString = env.DATABASE_URL?.trim()
   if (!connectionString) {
     throw new Error('DATABASE_URL is required to start the ARSY application')
@@ -32,17 +34,23 @@ export function setupDatabase(
 ): void {
   app.decorate('db', pool)
 
-  app.get('/health/db', async (_request, reply) => {
-    if (!isReady()) {
-      return reply.code(503).send({
-        status: 'unavailable',
-        message: 'Database connection unavailable',
-      })
-    }
-    return { status: 'ok', message: 'Database connection healthy' }
-  })
+  app.get(
+    '/health/db',
+    async (_request, reply) => {
+      if (!isReady()) {
+        return reply.code(503).send({
+          status: 'unavailable',
+          message: 'Database connection unavailable',
+        })
+      }
+      return { status: 'ok', message: 'Database connection healthy' }
+    },
+  )
 
-  app.addHook('onClose', async () => {
-    await pool.end()
-  })
+  app.addHook(
+    'onClose',
+    async () => {
+      await pool.end()
+    },
+  )
 }
