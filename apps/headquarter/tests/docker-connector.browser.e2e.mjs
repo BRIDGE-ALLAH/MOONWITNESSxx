@@ -36,8 +36,18 @@ test('operator registers a real Docker Engine and reads persisted inventory thro
     await page.getByRole('button', { name: 'Test & register' }).click()
     await page.getByText('CI Docker Engine', { exact: true }).waitFor({ timeout: 30_000 })
 
-    const engineValue = page.getByText('Engine', { exact: true }).locator('xpath=..').locator('p').nth(1)
-    await engineValue.waitFor({ timeout: 30_000 })
+    const waitForEngineVersion = async () => {
+      const value = page.getByText('Engine', { exact: true }).locator('xpath=..').locator('p').nth(1)
+      await value.waitFor({ state: 'visible', timeout: 30_000 })
+      const handle = await value.elementHandle()
+      await page.waitForFunction(
+        (element) => /^\d+\.\d+/.test(element?.textContent?.trim() ?? ''),
+        handle,
+        { timeout: 30_000 },
+      )
+      return value
+    }
+    const engineValue = await waitForEngineVersion()
     assert.match((await engineValue.textContent()) ?? '', /^\d+\.\d+/,
       'Headquarter must render the version returned by the real Docker Engine API')
 
@@ -53,8 +63,8 @@ test('operator registers a real Docker Engine and reads persisted inventory thro
     await page.reload({ waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'Docker Connector' }).waitFor()
     await page.getByText('CI Docker Engine', { exact: true }).waitFor({ timeout: 30_000 })
-    await engineValue.waitFor({ timeout: 30_000 })
-    assert.match((await engineValue.textContent()) ?? '', /^\d+\.\d+/)
+    const refreshedEngineValue = await waitForEngineVersion()
+    assert.match((await refreshedEngineValue.textContent()) ?? '', /^\d+\.\d+/)
     await page.getByRole('button', { name: 'Logs', exact: true }).first().waitFor({ timeout: 30_000 })
 
     assert.deepEqual(pageErrors, [], 'the Docker workflow must not produce uncaught browser errors')
