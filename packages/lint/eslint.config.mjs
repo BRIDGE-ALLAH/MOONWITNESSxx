@@ -3,7 +3,8 @@ import tsPlugin from '@typescript-eslint/eslint-plugin'
 
 export default [
   {
-    files: ['**/*.ts', '**/*.tsx', '../arsy-core/**/*.ts', '../arsy-core/**/*.tsx'],
+    basePath: '../arsy-core',
+    files: ['**/*.ts', '**/*.tsx'],
     ignores: ['dist/**', 'node_modules/**'],
     languageOptions: {
       parser: tsParser,
