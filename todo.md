@@ -1051,3 +1051,19 @@ Use these labels consistently when updating this file:
 - [x] Phase 20: detect empty traces, malformed context, duplicate policy decisions and cross-tenant terminal receipts; mark undefined benchmark metrics as null rather than perfect.
 - [ ] Authenticated issuer registry, signed attestation envelope/KMS, actual tool-gateway enforcement, licensed benchmark import and calibrated CI thresholds remain open.
 See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract checks, not production security enforcement.
+
+
+---
+
+## Phases 36–38 — Product integrity, UX truth and release readiness
+
+**Status:** implemented in branch `feat/moonwitness-product-integrity-phases-36-38`; CI verification pending.
+
+- [x] Phase 36: ARSY owns its build/start lifecycle; validated host/port configuration; production Docker entrypoint; removed fake lint success and core app-lifecycle scripts.
+- [x] Phase 37: persistent, localized, accessible demo disclosure in the Headquarter topbar across mobile and desktop.
+- [x] Phase 38: DevX workspace-contract, navigation-to-route, and release-preflight audits with deterministic tests.
+- [ ] Merge after required CI and CodeQL pass.
+- [ ] Configure an approved release publisher and production deployment workflow.
+- [ ] Verify production secrets, database migration/backups, ingress, health checks and user-flow smoke tests.
+
+**Release boundary:** the local preflight intentionally reports release blockers. It cannot prove remote tags, GitHub Release publication, external deployment, or live production health.
