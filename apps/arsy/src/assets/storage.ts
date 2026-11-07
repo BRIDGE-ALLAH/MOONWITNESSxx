@@ -126,7 +126,9 @@ export function createAssetStorage(env: NodeJS.ProcessEnv = process.env): AssetS
   const secretAccessKey = env.ARSY_ASSET_STORAGE_SECRET_ACCESS_KEY?.trim()
   if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) throw new Error('S3_ASSET_STORAGE_NOT_CONFIGURED')
   const parsedEndpoint = new URL(endpoint)
+  if (parsedEndpoint.username || parsedEndpoint.password) throw new Error('S3_ASSET_STORAGE_ENDPOINT_MUST_NOT_EMBED_CREDENTIALS')
   if (parsedEndpoint.search || parsedEndpoint.hash) throw new Error('S3_ASSET_STORAGE_ENDPOINT_MUST_NOT_HAVE_QUERY_OR_HASH')
+  if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(bucket)) throw new Error('S3_ASSET_STORAGE_BUCKET_INVALID')
   if (env.NODE_ENV === 'production' && parsedEndpoint.protocol !== 'https:') throw new Error('S3_ASSET_STORAGE_REQUIRES_HTTPS')
   return new S3CompatibleAssetStorage({
     endpoint, bucket, region: env.ARSY_ASSET_STORAGE_REGION?.trim() || 'us-east-1',
