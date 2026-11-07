@@ -65,6 +65,7 @@ export class InspectionRepository {
         FROM arsy_product_versions pv
         JOIN arsy_products p ON p.id = pv.product_id
         WHERE p.owner_id = $2 AND pv.id = $7
+          AND pv.version = (SELECT MAX(latest.version) FROM arsy_product_versions latest WHERE latest.product_id = p.id)
         RETURNING *
       ), latest AS (
         SELECT DISTINCT ON (inspection_type) inspection_type, status
