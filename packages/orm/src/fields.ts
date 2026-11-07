@@ -20,7 +20,7 @@ export type SelectionOptions<T extends string> = CommonFieldOptions<T | null> & 
 
 function descriptor<TValue>(
   kind: FieldDefinition<TValue>["kind"],
-  options: CommonFieldOptions<TValue> & Readonly<Record<string, unknown>> = {},
+  options: CommonFieldOptions<TValue> & object = {},
 ): FieldDefinition<TValue> {
   return Object.freeze({
     kind,
@@ -32,7 +32,7 @@ function descriptor<TValue>(
     ...(options.default !== undefined ? { default: options.default } : {}),
     ...(options.label !== undefined ? { label: options.label } : {}),
     ...(options.description !== undefined ? { description: options.description } : {}),
-    options: Object.freeze({ ...options }),
+    options: Object.freeze({ ...options }) as Readonly<Record<string, unknown>>,
   });
 }
 
