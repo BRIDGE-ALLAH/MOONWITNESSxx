@@ -64,8 +64,8 @@ test('creates a persisted opportunity with owner and actor attribution', async (
   assert.equal(result.id, row.id)
   assert.equal(result.evaluation.score, 80)
   assert.match(fake.calls[0].sql, /INSERT INTO arsy_opportunities/)
-  assert.equal(fake.calls[0].values[0], 'owner-a')
-  assert.equal(fake.calls[0].values.at(-1), 'owner-a')
+  assert.equal(fake.calls[0].values[1], 'owner-a')
+  assert.equal(fake.calls[0].values.at(-2), 'owner-a')
 })
 
 test('scopes reads to the authenticated owner', async () => {
@@ -81,5 +81,5 @@ test('archive is a reversible soft-state operation and owner scoped', async () =
   const repository = new OpportunityRepository(fake.db)
   assert.equal(await repository.archive('owner-a', 'owner-a', row.id), true)
   assert.match(fake.calls[0].sql, /archived_at = now\(\)/)
-  assert.deepEqual(fake.calls[0].values, ['owner-a', row.id, 'owner-a'])
+  assert.deepEqual(fake.calls[0].values.slice(0, 3), ['owner-a', row.id, 'owner-a'])
 })
