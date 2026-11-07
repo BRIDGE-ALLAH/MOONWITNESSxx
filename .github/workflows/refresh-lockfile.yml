@@ -39,8 +39,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: chore-refresh-pnpm-lockfile
           delete-branch: true
-          commit-message: "chore: refresh pnpm lockfile"
-          title: "chore: refresh pnpm lockfile"
+          commit-message: 'chore: refresh pnpm lockfile'
+          title: 'chore: refresh pnpm lockfile'
           body: |
             ## Purpose
 
