@@ -22,6 +22,7 @@ export interface OpportunityRecord {
   decisionRationale: string | null
   createdAt: string
   updatedAt: string
+  revision: number
 }
 
 interface OpportunityRow {
@@ -43,6 +44,7 @@ interface OpportunityRow {
   decision_rationale: string | null
   created_at: Date | string
   updated_at: Date | string
+  revision: number
   request_hash?: string
 }
 
@@ -85,12 +87,13 @@ function mapOpportunity(row: OpportunityRow): OpportunityRecord {
     decisionRationale: row.decision_rationale,
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
+    revision: row.revision,
   }
 }
 
 const SELECT_COLUMNS = `id, title, buyer_problem, buyer_segment, job_to_be_done,
   product_hypothesis, product_family, candidate_channels, evidence, scores, score_details, hard_gates, hard_gate_details,
-  score::text AS score, decision, decision_rationale, created_at, updated_at`
+  score::text AS score, decision, decision_rationale, created_at, updated_at, revision`
 
 export class OpportunityRepository {
   constructor(private readonly db: DatabasePool) {}
@@ -159,6 +162,45 @@ export class OpportunityRepository {
     )
     const row = rows<OpportunityRow>(result)[0]
     return row ? mapOpportunity(row) : null
+  }
+
+  async update(
+    ownerId: string,
+    actorId: string,
+    id: string,
+    input: OpportunityInput,
+    evaluation: OpportunityEvaluation,
+    expectedRevision: number,
+  ): Promise<{ record: OpportunityRecord | null; conflict: boolean }> {
+    const result = await this.db.query(
+      `WITH changed AS (
+        UPDATE arsy_opportunities SET
+          title = $3, buyer_problem = $4, buyer_segment = $5, job_to_be_done = $6,
+          product_hypothesis = $7, product_family = $8, candidate_channels = $9::jsonb,
+          evidence = $10::jsonb, scores = $11::jsonb, score_details = $12::jsonb,
+          hard_gates = $13::jsonb, hard_gate_details = $14::jsonb,
+          score = $15, decision = $16, updated_at = now(), updated_by = $17,
+          revision = revision + 1
+        WHERE owner_id = $1 AND id = $2 AND archived_at IS NULL AND revision = $18
+        RETURNING *
+      ), audited AS (
+        INSERT INTO arsy_commerce_audit_events
+          (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
+        SELECT $19, owner_id, 'opportunity', id, 'content-updated', $17,
+          jsonb_build_object('revision', revision, 'score', score, 'decision', decision)
+        FROM changed
+      )
+      SELECT ${SELECT_COLUMNS} FROM changed`,
+      [ownerId, id, input.title, input.buyerProblem, input.buyerSegment, input.jobToBeDone,
+        input.productHypothesis, input.productFamily, JSON.stringify(input.candidateChannels),
+        JSON.stringify(input.evidence), JSON.stringify(input.scores), JSON.stringify(input.scoreDetails),
+        JSON.stringify(input.hardGates), JSON.stringify(input.hardGateDetails), evaluation.score,
+        evaluation.decision, actorId, expectedRevision, randomUUID()],
+    )
+    const updated = rows<OpportunityRow>(result)[0]
+    if (updated) return { record: mapOpportunity(updated), conflict: false }
+    const current = await this.get(ownerId, id)
+    return { record: current, conflict: Boolean(current) }
   }
 
   async decide(ownerId: string, actorId: string, id: string, decision: OpportunityEvaluation['decision'], rationale: string): Promise<OpportunityRecord | null> {
