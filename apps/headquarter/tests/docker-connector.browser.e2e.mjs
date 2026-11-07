@@ -23,6 +23,10 @@ test('operator registers a real Docker Engine and reads persisted inventory thro
     page.on('pageerror', (error) => pageErrors.push(error.message))
 
     await page.goto(`${baseUrl}/login?returnTo=%2Finfrastructure%2Fdocker`, { waitUntil: 'domcontentloaded' })
+    // Next.js client handlers must be hydrated before submitting; otherwise the
+    // browser falls back to a native GET form submission and drops the returnTo.
+    await page.waitForLoadState('networkidle')
+    await page.getByTestId('operator-login-form').waitFor()
     await page.getByLabel('Operator password').fill(operatorPassword)
     await page.getByRole('button', { name: 'Enter Headquarter' }).click()
     await page.waitForURL('**/infrastructure/docker')
