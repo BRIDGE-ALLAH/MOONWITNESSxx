@@ -79,13 +79,13 @@ jobs:
         env:
           HOST: 127.0.0.1
           PORT: 3001
-        run: pnpm --filter @riotworks/arsy start > /tmp/arsy.log 2>&1 &
+        run: nohup pnpm --filter @riotworks/arsy start > /tmp/arsy.log 2>&1 &
 
       - name: Start Headquarter
         env:
           PORT: 3000
           HOSTNAME: 127.0.0.1
-        run: pnpm --filter @riotworks/headquarter dev -- --hostname 127.0.0.1 --port 3000 > /tmp/headquarter.log 2>&1 &
+        run: nohup pnpm --filter @riotworks/headquarter dev -- --hostname 127.0.0.1 --port 3000 > /tmp/headquarter.log 2>&1 &
 
       - name: Wait for application readiness
         run: |
