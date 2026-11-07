@@ -41,6 +41,7 @@ export function OpportunityBoard() {
     try {
       const response = await fetch('/api/opportunities', { cache: 'no-store' })
       const payload = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to load opportunities.')
       setItems(payload.data ?? [])
     } catch (cause) {
@@ -84,8 +85,9 @@ export function OpportunityBoard() {
     try {
       const response = await fetch('/api/opportunities', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
       const result = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(result.error?.message || 'Unable to save opportunity.')
-      event.currentTarget.reset()
+      form.reset()
       setScores({ ...emptyScores }); setScoreRationales({ ...emptyRationales }); setHardGates({ ...emptyGates }); setGateRationales({ ...emptyGateRationales })
       setMessage('Opportunity saved. Review evidence and hard gates before production.')
       await refresh()
