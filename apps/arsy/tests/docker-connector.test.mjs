@@ -6,7 +6,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { getDockerInfo, getDockerContainerLogs, listDockerContainers } from '../src/docker/engine.ts'
-import { decryptDockerCredentials, encryptDockerCredentials, validateRemoteDockerEndpoint, validateTlsCredentials } from '../src/docker/security.ts'
+import { decryptDockerCredentials, encryptDockerCredentials, resolveRemoteDockerEndpoint, validateRemoteDockerEndpoint, validateTlsCredentials } from '../src/docker/security.ts'
 import { createApp } from '../src/app.ts'
 
 const key = Buffer.alloc(32, 7).toString('base64')
@@ -23,6 +23,36 @@ test('remote endpoint validation requires HTTPS and an explicit exact host allow
     'https://docker.example.com/private',
     'https://docker.example.com:4444',
   ]) assert.throws(() => validateRemoteDockerEndpoint(value, env))
+})
+
+test('remote Docker DNS resolution blocks private and special-use destinations unless explicitly allowed', async () => {
+  const privateResolver = async () => [{ address: '10.24.0.8', family: 4 }]
+  await assert.rejects(
+    resolveRemoteDockerEndpoint('https://docker.example.com:2376', env, privateResolver),
+    /private address/,
+  )
+  const trustedPrivate = await resolveRemoteDockerEndpoint(
+    'https://docker.example.com:2376',
+    { ...env, DOCKER_REMOTE_ALLOW_PRIVATE_NETWORKS: '1' },
+    privateResolver,
+  )
+  assert.deepEqual(trustedPrivate.addresses, ['10.24.0.8'])
+
+  await assert.rejects(
+    resolveRemoteDockerEndpoint('https://docker.example.com:2376', { ...env, DOCKER_REMOTE_ALLOW_PRIVATE_NETWORKS: '1' },
+      async () => [{ address: '127.0.0.1', family: 4 }]),
+    /loopback.*blocked address/,
+  )
+  await assert.rejects(
+    resolveRemoteDockerEndpoint('https://docker.example.com:2376', env,
+      async () => [{ address: '8.8.8.8', family: 4 }, { address: '169.254.10.2', family: 4 }]),
+    /loopback.*blocked address/,
+  )
+  const publicEndpoint = await resolveRemoteDockerEndpoint(
+    'https://docker.example.com:2376', env,
+    async () => [{ address: '8.8.8.8', family: 4 }],
+  )
+  assert.deepEqual(publicEndpoint.addresses, ['8.8.8.8'])
 })
 
 test('remote Docker TLS credentials are authenticated-encrypted and never returned as plaintext', () => {
@@ -198,6 +228,7 @@ test('remote Docker Engine requires a valid mutually authenticated TLS session',
       const info = await getDockerInfo({
         kind: 'remote',
         endpointUrl: 'https://docker.example.com:2376',
+        address: '127.0.0.1',
         tls: { ca, cert: clientCert, key: clientKey },
       })
       assert.equal(info.Name, 'mtls-fixture-engine')
