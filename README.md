@@ -134,14 +134,15 @@ Package boundaries and dependency rules are defined in [docs/18-monorepo-and-orm
 | [docs/21-database-provider-strategy.md](./docs/21-database-provider-strategy.md) | PostgreSQL/libSQL decision, portability, BaseEntity mapping |
 | [docs/22-base-platform-and-orm-capability-blueprint.md](./docs/22-base-platform-and-orm-capability-blueprint.md) | Complete base addon catalog, Odoo-inspired ORM capability matrix, mixins and ownership boundaries |
 | [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md) | Actual repository inventory, defects, canonical topology and revised implementation roadmap |
+| [docs/24-repository-and-automation-governance.md](./docs/24-repository-and-automation-governance.md) | Canonical repository boundaries, scripts, hooks, CI, security, releases, Wiki and Pages rules |
 
 ## Current status
 
 The repository is a **mixed documentation + early prototype baseline**, not a production-ready application. Headquarter and ARSY exist as thin prototypes; several utility packages exist; the custom ORM, database runtime/adapters, Base Platform addons and end-to-end commercial workflow do not yet exist. The tracked `services/` directory contains duplicate/stranded prototypes and is not part of the pnpm workspace.
 
-The authoritative current-state audit and execution order are [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md). Do not infer implementation from a planned package name. A package is implemented only when its source, exports, tests and build evidence exist.
+The authoritative current-state audit and execution order are [docs/23-repository-audit-and-current-execution-plan.md](./docs/23-repository-audit-and-current-execution-plan.md). Do not infer implementation from a planned package name. A package is implemented only when its source, exports, tests and build evidence exist. The engineering and automation contract is [docs/24-repository-and-automation-governance.md](./docs/24-repository-and-automation-governance.md); it distinguishes repository-level checks from full application build readiness.
 
-**Next delivery order:** (1) repair workspace/manifests/CI and duplicate service code; (2) make Headquarter and ARSY/arsy-core/contracts buildable; (3) implement ORM and schema API; (4) implement SQL adapters; (5) stage required Base Platform addons; (6) business modules and first commercial slice; (7) jobs and safe automation.
+**Next delivery order:** (1) regenerate and verify the pnpm lockfile, then align app/package manifests and actual entrypoints; (2) complete full workspace CI and safely retire duplicate legacy services; (3) make Headquarter and ARSY/arsy-core/contracts buildable; (4) implement ORM and schema API; (5) implement SQL adapters; (6) stage required Base Platform addons; (7) business modules and first commercial slice; (8) jobs and safe automation.
 
 ## Financial truth
 

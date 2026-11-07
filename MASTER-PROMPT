@@ -1,7 +1,7 @@
 # MASTER PROMPT v3.4 — MOONWITNESS // RIOTWORKS
 ## Full-Stack Headquarter + ARSY + Modular ORM/Addons
 
-**Specification baseline:** README.md and docs/01–23; docs/23 is the current-state and execution-order authority  
+**Specification baseline:** README.md and docs/01–24; docs/23 is the current-state and execution-order authority, while docs/24 governs repository engineering and automation  
 **Primary outcome:** Build a modular monorepo with apps/headquarter, apps/arsy, and the packages defined below.  
 **Product tagline:** MAKE WORK THAT OUTLIVES THE FEED.
 

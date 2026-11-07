@@ -1,5 +1,0 @@
-### Changed
-- Updated 6 file(s) across RIOTWORKS packages
-
-### Changed
-- Version bumped to 1.0.8

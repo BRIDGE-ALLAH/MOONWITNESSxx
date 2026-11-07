@@ -1,6 +1,16 @@
-node_modules
-.next
-dist
-.turbo
+node_modules/
+.next/
+dist/
+.turbo/
+coverage/
+.artifacts/
+reports/
 *.tsbuildinfo
-.env*.local
+
+.env
+.env.*
+!.env.example
+*.local
+
+# Generated local AI assistance artifacts (never commit these).
+scripts/ai/.ai-*.txt

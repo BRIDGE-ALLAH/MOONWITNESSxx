@@ -1,65 +1,43 @@
-name: RIOTWORKS Weekly Auto-Detection
+name: Weekly repository audit
 
 on:
   schedule:
-    # Run every Monday at 02:30 WIB (09:30 UTC)
-    - cron: '30 9 * * 1'
+    # Monday 02:30 Asia/Jakarta (Sunday 19:30 UTC).
+    - cron: "30 19 * * 0"
   workflow_dispatch:
-    # Allow manual trigger from Actions tab
-    inputs:
-      reason:
-        description: 'Reason for manual trigger'
-        required: false
-        default: 'Manual trigger'
+
+concurrency:
+  group: weekly-repository-audit
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
-  auto-detection:
+  audit:
+    name: Read-only repository audit
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    
+    timeout-minutes: 10
     steps:
-      - name: 📂 Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
         with:
-          fetch-depth: 0
-          
-      - name 📋 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          
-      - name: 📦 Install Dependencies
-        run: |
-          cd RIOTWORKS
-          pnpm install --frozen-lockfile
-          
-      - name: 🔍 Run Auto-Detection Script
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          cd RIOTWORKS
-          node scripts/auto-detect.js
-          
-      - name: 📝 Create GitHub Issues
+          node-version: 24
+
+      - name: Generate audit report
+        run: node scripts/repo-audit.mjs --write-report
+
+      - name: Run automation tests
+        run: node --test
+
+      - name: Upload audit report
         if: always()
-        uses: peter-evans/create-issue-from-markdown@v2
+        uses: actions/upload-artifact@v6
         with:
-          token: ${{ secrets.GH_TOKEN }}
-          title: '[Auto] Weekly Detection Report - ${{ github.run_number }}'
-          content: '.github/auto-detection-report.md'
-          labels: ['auto-generated', 'detection', 'triage']
-          
-      - name: 📤 Comment on Created Issues
-        if: always()
-        run: |
-          echo "✅ Auto-detection completed for run #${github.run_number}"
-          echo "Check the Issues tab for newly created issues"
-          
-      - name: 📧 Notify via GitHub Discussion (Optional)
-        if: false()  # Disable by default, enable if needed
-        run: |
-          echo "Consider creating a discussion post for the detection results"
-          # Uncomment to post to discussion:
-          # gh discussion create --body "RIOTWORKS Weekly Detection Report - Run #${github.run_number}" --title "Weekly Detection Report"
-```
+          name: moonwitness-weekly-audit-${{ github.run_number }}
+          path: .artifacts/
+          if-no-files-found: ignore
+          retention-days: 30
