@@ -4,7 +4,7 @@
 - [x] Establish MOONWITNESS as the master brand.
 - [x] Define Observatory and Archive as experience families, XV as a program descriptor, and RIOTWORKS as a separate studio identity.
 - [x] Define Core Promise: SEE MORE. KNOW MORE.
-- [x] Define Brand Manifesto: WHEN THE MOON RISES, WE SHARE WHAT MATTERS.
+- [x] Define Brand Manifesto: WHEN THE MOON RISES, WE SHARE MESSAGES. (WMR-WSM)
 - [x] Define operational verbs and messaging hierarchy.
 - [x] Record asset ownership, provenance, and licensing constraints.
 
@@ -13,16 +13,16 @@
 - [x] Create wordmark and primary lockup.
 - [x] Create archive seal.
 - [ ] Review logo with owner and approve final master mark.
-- [ ] Produce optical-size variants and monochrome exports after mark approval.
-- [ ] Produce favicon/app-icon exports and test at 16, 24, 32, 48, and 192 px.
+- [x] Produce a small-size symbol candidate and monochrome light/dark SVG exports (provisional pending owner approval).
+- [x] Add scalable favicon SVG candidate; raster-size exports and pixel review remain pending owner approval and browser validation.
 
 ## Phase 2 — Visual DNA
 - [x] Define core palette and typography roles.
 - [x] Define editorial, observatory, and evidence visual principles.
 - [x] Define texture, illustration, accessibility, and motion rules.
 - [x] Define Core Promise and Manifesto placement rules.
-- [ ] Map brand primitives to semantic tokens in all app themes.
-- [ ] Run contrast audit for all foreground/background combinations.
+- [x] Map brand primitives to semantic semantic tokens for default Archive, .theme-archive, .dark, and .theme-observatory.
+- [x] Audit primary brand foreground/background pairs and document unsafe combinations in CONTRAST-AUDIT.md; full rendered-state audit remains a release gate.
 
 ## Phase 3 — Asset library
 - [x] Add original lunar contour and orbital grid textures.
