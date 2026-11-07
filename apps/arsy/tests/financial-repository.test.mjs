@@ -66,6 +66,7 @@ test('contribution summary uses exact bigint arithmetic and excludes pending eve
       currency: 'IDR',
       gross_receipts_minor: '9007199254740993',
       deductions_minor: '200',
+      tax_reserve_minor: '50',
       payout_movements_minor: '100',
       pending_minor: '500',
       pending_count: '2',
@@ -74,5 +75,7 @@ test('contribution summary uses exact bigint arithmetic and excludes pending eve
   })
   const [summary] = await repository.summary('owner-a')
   assert.equal(summary.net_contribution_minor, '9007199254740793')
+  assert.equal(summary.tax_reserve_minor, '50')
+  assert.equal(summary.payout_movements_minor, '100')
   assert.equal(summary.pending_minor, '500')
 })
