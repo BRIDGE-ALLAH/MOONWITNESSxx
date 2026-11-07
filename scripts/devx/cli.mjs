@@ -208,7 +208,7 @@ async function productAudit() {
     console.log(sections.map(([title, section]) => [
       title + ': ' + (section.ok === false || section.ready === false ? 'BLOCKED' : 'PASS'),
       ...section.findings.map((item) => '- [' + item.severity + '] ' + item.id + ': ' + item.message),
-    ].join('\\n')).join('\\n\\n'))
+    ].join('\n')).join('\n\n'))
     console.log('Release readiness: ' + (report.readyForRelease ? 'READY' : 'NOT READY'))
   }
   if (!report.ok || !report.release.ready) process.exitCode = 1
