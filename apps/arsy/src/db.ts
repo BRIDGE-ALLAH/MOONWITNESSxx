@@ -1,57 +1,37 @@
 /**
- * Database connector for ARSY application.
+ * Database connector for ARSY.
  *
- * Connects to PostgreSQL using the Docker service connection.
- * Uses the DATABASE_URL environment variable which should point
- * to the postgres Docker service (e.g., postgres://user:password@postgres:5432/db).
- *
- * This module is designed to work with Fastify and provides:
- * - Database connection pooling
- * - Health check endpoints
- * - Graceful connection management
+ * The pool is owned by Fastify's lifecycle. Readiness probes verify the
+ * database connection; liveness probes intentionally do not depend on it.
  */
-
 import { Pool } from 'pg'
 
-// Initialize PostgreSQL pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20, // maximum number of connections in the pool
-  idleTimeoutMillis: 30000, // close connections after 30 seconds of idle
+  max: 20,
+  idleTimeoutMillis: 30000,
 })
 
-/**
- * Setup database connection for Fastify app.
- *
- * @param app - Fastify instance to attach database to
- */
 export function setupDatabase(app: any): void {
-  // Attach pool to fastify instance for use in routes
   app.decorate('db', pool)
 
-  // Add health check route
-  app.get('/health/db', async () => {
+  app.get('/health/ready', async (_request: unknown, reply: any) => {
     try {
       await pool.query('SELECT 1')
-      return { status: 'ok', message: 'Database connection healthy' }
+      return { status: 'ok', dependencies: { database: 'ready' } }
     } catch (error) {
-      console.error('Database health check failed:', error)
-      throw error
+      app.log.error({ err: error }, 'Database readiness check failed')
+      return reply.code(503).send({
+        status: 'error',
+        dependencies: { database: 'unavailable' },
+      })
     }
   })
 
-  // Graceful shutdown
-  const shutdown = async (): Promise<void> => {
+  app.addHook('onClose', async () => {
     await pool.end()
-    console.log('Database pool closed')
-  }
-
-  // Handle process termination
-  process.on('SIGTERM', shutdown)
-  process.on('SIGINT', shutdown)
-
-  // Export shutdown for use in other modules
-  ;(app as any).shutdownDatabase = shutdown
+    app.log.info('Database pool closed')
+  })
 }
 
 export { pool }
