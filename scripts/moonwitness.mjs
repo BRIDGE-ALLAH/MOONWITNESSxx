@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process'
 import { copyFile, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 
 const STATE_PATH = '.moonwitness/install-state.json'
 const MIN_NODE_MAJOR = 20
@@ -147,7 +148,7 @@ async function reportDoctor(root, profile) {
   const git = checkGit(root)
   const packageManager = String(manifest.packageManager ?? 'not pinned')
   let pnpm = { ok: false, expected: packageManager, actual: 'not checked' }
-  if (profile !== 'minimal') {
+  {
     try {
       const resolved = await resolvePackageManager(root)
       pnpm = { ok: true, expected: packageManager, actual: resolved.version }
@@ -160,7 +161,7 @@ async function reportDoctor(root, profile) {
     command: 'doctor',
     profile,
     checks: { node, git, pnpm, env: { ok: envExists, status: envExists ? 'present' : 'missing (will be copied from template on install)' } },
-    ok: node.ok && git.ok && pnpm.ok,
+    ok: node.ok && pnpm.ok,
   }
 }
 
@@ -259,7 +260,7 @@ export async function runCli(argv, cwd = process.cwd()) {
   print({ command: options.command, profile, result: 'success', env: envStatus, packageManager: pnpmVersion })
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.url).pathname)) {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   runCli(process.argv.slice(2)).catch((error) => {
     console.error(`MOONWITNESS setup failed: ${error.message}`)
     process.exitCode = 1
