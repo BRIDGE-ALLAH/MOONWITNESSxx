@@ -42,7 +42,7 @@ FreeRADIUS is the RADIUS data-plane engine. ATLAS will own NAS inventory, subscr
 
 FreeRADIUS is launched by the development Compose stack using the upstream freeradius/freeradius-server:3.2.10 image. The upstream image's default configuration has no production NAS clients or subscriber database. It must be configured with explicit clients, secure shared secrets, certificates, and an authentication/accounting backend before being exposed to network devices. The Compose port bindings default to loopback for safety.
 
-On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user, then imports the upstream FreeRADIUS 3.2.10 MySQL schema. The initialization scripts run only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. NAS clients are read at FreeRADIUS startup; adding or changing a NAS row currently requires a FreeRADIUS reload/restart. Subscriber records can be inserted into `radcheck` and group/policy replies into `radreply` / `radusergroup`; a dedicated ATLAS subscriber/NAS CRUD API is still pending. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
+On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user, then imports the upstream FreeRADIUS 3.2.10 MySQL schema. The initialization scripts run only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. NAS clients are read at FreeRADIUS startup; adding or changing a NAS row currently requires a FreeRADIUS reload/restart. Subscriber records can be inserted into `radcheck` and group/policy replies into `radreply` / `radusergroup`; ATLAS exposes NAS and subscriber CRUD endpoints. NAS changes are persisted in the `nas` table but FreeRADIUS reads clients at process startup, so a FreeRADIUS restart/reload is required before a newly created or modified NAS is accepted. Subscriber credentials are stored as bcrypt `Crypt-Password` plus the legacy NT hash required by MS-CHAPv2; raw passwords are not stored. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
 
 ## Run with Docker Compose
 
@@ -79,6 +79,12 @@ The dashboard is served at http://127.0.0.1:5150/.
 - PUT /api/v1/engines/{id} — update an engine (Bearer token required).
 - DELETE /api/v1/engines/{id} — remove an engine (Bearer token required).
 - GET /api/v1/engines/{id}/health — run a live backend probe (Bearer token required).
+- GET/POST /api/v1/radius/nas — list or create NAS clients (Bearer token required).
+- DELETE /api/v1/radius/nas/{id} — remove a NAS client (Bearer token required).
+- GET/POST /api/v1/radius/subscribers — list or create/update subscriber credentials and optional group (Bearer token required).
+- DELETE /api/v1/radius/subscribers/{username} — remove subscriber authentication/policy rows (accounting history is retained).
+- GET /api/v1/radius/sessions/active — inspect active sessions from radacct (Bearer token required).
+- GET /api/v1/radius/accounting/summary — accounting totals and octet counters (Bearer token required).
 
 Set ATLAS_CONTROL_TOKEN to a long random secret in standalone mode. Do not expose the control API directly to the public internet. In integrated deployments, place it behind ARSY's authenticated authorization gateway; the local bearer token is a bootstrap/standalone guard, not a replacement for ARSY governance.
 

@@ -20,6 +20,7 @@ struct HealthResponse {
     status: &'static str,
     database: DatabaseStatus,
     redis: CacheStatus,
+    radius_database: DatabaseStatus,
 }
 
 #[derive(Debug, Serialize)]
@@ -27,6 +28,7 @@ struct ReadinessResponse {
     ready: bool,
     database: DatabaseStatus,
     redis: CacheStatus,
+    radius_database: DatabaseStatus,
 }
 
 #[derive(Debug, Serialize)]
@@ -100,17 +102,22 @@ fn database_error() -> (StatusCode, Json<ApiError>) {
 }
 
 async fn health() -> Json<HealthResponse> {
-    let (database, redis) = tokio::join!(database::probe(), cache::probe());
+    let (database, redis, radius_database) =
+        tokio::join!(database::probe(), cache::probe(), radius_db::probe());
     Json(HealthResponse {
         status: "ok",
         database,
         redis,
+        radius_database,
     })
 }
 
 async fn readiness() -> (StatusCode, Json<ReadinessResponse>) {
-    let (database, redis) = tokio::join!(database::probe(), cache::probe());
-    let ready = database == DatabaseStatus::Available && redis == CacheStatus::Available;
+    let (database, redis, radius_database) =
+        tokio::join!(database::probe(), cache::probe(), radius_db::probe());
+    let ready = database == DatabaseStatus::Available
+        && redis == CacheStatus::Available
+        && radius_database == DatabaseStatus::Available;
     let status = if ready {
         StatusCode::OK
     } else {
@@ -122,6 +129,7 @@ async fn readiness() -> (StatusCode, Json<ReadinessResponse>) {
             ready,
             database,
             redis,
+            radius_database,
         }),
     )
 }
@@ -270,6 +278,138 @@ async fn engine_health(headers: HeaderMap, Path(id): Path<String>) -> impl IntoR
     }
 }
 
+
+async fn list_nas(headers: HeaderMap) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    match radius::list_nas().await {
+        Ok(items) => (StatusCode::OK, Json(items)).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to list RADIUS NAS clients");
+            database_error().into_response()
+        }
+    }
+}
+
+async fn create_nas(
+    headers: HeaderMap,
+    Json(input): Json<NasWriteRequest>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    if let Err(message) = radius::validate_nas(&input) {
+        return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
+    }
+    match radius::create_nas(&input).await {
+        Ok(item) => (StatusCode::CREATED, Json(item)).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to create RADIUS NAS client");
+            database_error().into_response()
+        }
+    }
+}
+
+async fn delete_nas(headers: HeaderMap, Path(id): Path<i64>) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    match radius::delete_nas(id).await {
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiError { error: "NAS client not found" }),
+        ).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to delete RADIUS NAS client");
+            database_error().into_response()
+        }
+    }
+}
+
+async fn list_subscribers(headers: HeaderMap) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    match radius::list_subscribers().await {
+        Ok(items) => (StatusCode::OK, Json(items)).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to list RADIUS subscribers");
+            database_error().into_response()
+        }
+    }
+}
+
+async fn upsert_subscriber(
+    headers: HeaderMap,
+    Json(input): Json<SubscriberWriteRequest>,
+) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    if let Err(message) = radius::validate_subscriber(&input) {
+        return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
+    }
+    match radius::create_or_update_subscriber(&input).await {
+        Ok(()) => (
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "username": input.username,
+                "credential_storage": "hashed",
+                "authentication_effective": true
+            })),
+        ).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to store RADIUS subscriber");
+            database_error().into_response()
+        }
+    }
+}
+
+async fn delete_subscriber(headers: HeaderMap, Path(username): Path<String>) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    match radius::delete_subscriber(&username).await {
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiError { error: "subscriber not found" }),
+        ).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to delete RADIUS subscriber");
+            database_error().into_response()
+        }
+    }
+}
+
+async fn active_sessions(headers: HeaderMap) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    match radius::active_sessions().await {
+        Ok(items) => (StatusCode::OK, Json(items)).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to list RADIUS active sessions");
+            database_error().into_response()
+        }
+    }
+}
+
+async fn accounting_summary(headers: HeaderMap) -> impl IntoResponse {
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
+    match radius::accounting_summary().await {
+        Ok(summary) => (StatusCode::OK, Json(summary)).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "failed to summarize RADIUS accounting");
+            database_error().into_response()
+        }
+    }
+}
+
 pub fn routes() -> Routes {
     Routes::new()
         .prefix("/api/v1")
@@ -283,4 +423,10 @@ pub fn routes() -> Routes {
             get(get_engine).put(update_engine).delete(delete_engine),
         )
         .add("/engines/{id}/health", get(engine_health))
+        .add("/radius/nas", get(list_nas).post(create_nas))
+        .add("/radius/nas/{id}", delete(delete_nas))
+        .add("/radius/subscribers", get(list_subscribers).post(upsert_subscriber))
+        .add("/radius/subscribers/{username}", delete(delete_subscriber))
+        .add("/radius/sessions/active", get(active_sessions))
+        .add("/radius/accounting/summary", get(accounting_summary))
 }

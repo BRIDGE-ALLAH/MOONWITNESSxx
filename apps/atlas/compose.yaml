@@ -79,6 +79,7 @@ services:
       ATLAS_PUBLIC_URL: ${ATLAS_PUBLIC_URL:-http://localhost:5150}
       DATABASE_URL: mysql://atlas:${ATLAS_DB_PASSWORD}@mariadb:3306/atlas
       REDIS_URL: redis://:${ATLAS_REDIS_PASSWORD}@redis:6379/0
+      RADIUS_DATABASE_URL: mysql://radius:${RADIUS_DB_PASSWORD}@mariadb:3306/radius
       ATLAS_CONTROL_TOKEN: ${ATLAS_CONTROL_TOKEN:?Set ATLAS_CONTROL_TOKEN in the environment}
       DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-10}
     ports:
