@@ -22,8 +22,8 @@ docker-compose logs -f
 # Stop services
 docker-compose down
 
-# Remove volumes (destructive — deletes database)
-docker-compose down -v
+# Stop containers while preserving named database/cache volumes
+docker-compose down
 ```
 
 ### Environment variables
@@ -162,13 +162,27 @@ Verify PostgreSQL is healthy:
 docker-compose exec postgres pg_isready
 ```
 
-### Clear everything and restart fresh
+### Troubleshoot an unhealthy ARSY container
+
+The development Compose stack bind-mounts `apps/arsy`, `apps/headquarter`, and `packages` over directories in the image. A bind mount hides the image contents at that path, including pnpm's package-local `node_modules` links. The Compose file therefore keeps anonymous dependency volumes for ARSY, Headquarter, and their shared workspace packages. Do not remove these nested mounts while retaining the source bind mounts.
+
+Inspect the actual startup error before restarting:
 
 ```bash
-docker-compose down -v
-docker system prune -a
-docker-compose up -d
+docker-compose logs --tail=200 arsy
+docker inspect --format '{{json .State.Health}}' moonwitness-arsy
+docker-compose ps -a
 ```
+
+After changing dependency mounts or rebuilding the images, recreate only the application containers and renew their anonymous dependency volumes. The named PostgreSQL and Redis data volumes are not removed:
+
+```bash
+docker-compose up --build --force-recreate --renew-anon-volumes -d arsy headquarter
+docker-compose ps
+docker-compose logs --tail=100 arsy
+```
+
+Do not use `down -v` or `docker system prune --volumes` as a startup troubleshooting shortcut; they can delete persistent database data. If ARSY remains unhealthy after dependencies are restored, use the ARSY logs and health history to identify the next failure rather than resetting data.
 
 ## File structure
 
