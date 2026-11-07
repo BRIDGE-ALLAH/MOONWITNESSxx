@@ -57,7 +57,7 @@ export async function authorizeCapability(
 ): Promise<CapabilityDecision> {
   const deny = (reason: string): CapabilityDecision => ({ allowed: false, reasonCodes: [reason] })
   if (!chain.length) return deny('capability_chain_missing')
-  if (!request.actorId || !request.tenantId || !request.action || !request.resource || !request.purpose) {
+  if (!request.actorId || !request.tenantId || !request.action || !request.resource || !request.purpose || !request.sessionId || !request.argumentHash) {
     return deny('request_context_incomplete')
   }
   const now = Date.parse(request.now ?? new Date().toISOString())
