@@ -100,6 +100,21 @@ try {
   await page.getByRole('button', { name: 'Start production' }).click()
   await page.getByRole('status').filter({ hasText: 'moved to production' }).waitFor({ state: 'visible', timeout: 30_000 })
 
+  // Reload and query ARSY to prove lifecycle and immutable versions survive a browser refresh.
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  const persistedProductsResponse = await context.request.get(`${baseUrl}/api/products?limit=100`)
+  assert.equal(persistedProductsResponse.status(), 200)
+  const persistedProducts = await persistedProductsResponse.json()
+  const persistedProduct = persistedProducts.data.find((item) => item.title === title)
+  assert.ok(persistedProduct)
+  assert.equal(persistedProduct.version, 2)
+  assert.equal(persistedProduct.lifecycleState, 'production')
+  const versionHistoryResponse = await context.request.get(`${baseUrl}/api/products/${persistedProduct.id}/versions`)
+  assert.equal(versionHistoryResponse.status(), 200)
+  const versionHistory = await versionHistoryResponse.json()
+  assert.deepEqual(versionHistory.data.map((item) => item.version), [2, 1])
+  assert.equal(versionHistory.data[0].brief.summary, 'Version two: adds a documented reconciliation export.')
+
   // Record a real pending ledger event and reconcile it with a source URL.
   await page.goto(`${baseUrl}/mizan-ledger`, { waitUntil: 'domcontentloaded' })
   await page.getByLabel('Event type').selectOption('gross-receipt')
