@@ -58,6 +58,13 @@ jobs:
       - name: Test ARSY governance primitives
         run: pnpm --filter @riotworks/arsy-core test:governance
 
+      - name: Smoke test developer experience commands
+        run: |
+          pnpm devx doctor --json
+          pnpm devx plan --base=HEAD --json
+          pnpm devx context --json --max-chars=12000 > /tmp/moonwitness-context.json
+          node -e "JSON.parse(require('node:fs').readFileSync('/tmp/moonwitness-context.json', 'utf8'))"
+
       - name: Upload repository audit
         if: always()
         uses: actions/upload-artifact@v6
