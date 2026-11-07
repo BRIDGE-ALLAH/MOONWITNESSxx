@@ -2,7 +2,7 @@
 
 MOONWITNESS is an evidence-first, agent-governed workspace and product-engineering monorepo. RIOTWORKS is a product division within the ecosystem. The repository contains Headquarter (human-facing command center), ARSY (backend runtime and governance primitives), shared packages, WITNESS FABRIC, Divine research tooling, and repository automation.
 
-**Product truth:** The Money Maker development workflow is being implemented as a PostgreSQL-backed operator product: evidence-backed opportunities, versioned product briefs, inspections, provenance-aware local assets, C0/C1 channel review, manual listing packages/publication receipts, and a reconciled financial ledger. Operator-entered records and manual publication receipts are not independent market research, verified marketplace API events, or confirmed bank/provider transactions. Other discovery/provider capabilities remain unavailable until real connectors exist. Do not treat static demo content as live data. Production deployment is not yet approved or verified.
+**Product truth:** The Money Maker development workflow is a PostgreSQL-backed operator product: evidence-backed opportunities, versioned product briefs, inspections, provenance-aware assets, C0/C1 channel review, manual listing packages/publication receipts, source-backed financial events, payout lifecycle, exact-rational FX conversion, and database-side Aftershock cohorts. Operator-entered records and manual publication/payout evidence are not independent market research, verified marketplace API events, or bank/provider verification. Discovery exposure, support burden and external provider adapters remain unavailable until real sources and permissions exist. Do not treat static demo content as live data. Production deployment is not yet approved or verified.
 
 ## Repository map
 
@@ -45,4 +45,4 @@ Copy or adapt these instructions only after reading the existing repository rule
 
 ## Documentation
 
-Start with [CONTRIBUTING.md](./CONTRIBUTING.md), [Repository Reality Audit](./docs/23-repository-audit-and-current-execution-plan.md), [Repository Governance](./docs/24-repository-and-automation-governance.md), and the phase execution documents in `docs/`.
+Start with [CONTRIBUTING.md](./CONTRIBUTING.md), [Repository Reality Audit](./docs/23-repository-audit-and-current-execution-plan.md), [Repository Governance](./docs/24-repository-and-automation-governance.md), the [Money Maker runtime setup](./docs/29-money-maker-runtime-setup.md), the [payout, FX and portfolio metric contracts](./docs/32-money-maker-payout-fx-and-portfolio-metrics.md), and the phase execution documents in `docs/`.

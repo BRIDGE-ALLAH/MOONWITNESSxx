@@ -2,7 +2,7 @@
 
 **Issue:** #100 — https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/100  
 **Branch:** `feat/money-maker-delivery`  
-**Baseline:** `main` at `5fa7ecc21f085becaa47612acbb6a1b3a439e604` (recheck before every implementation batch)  
+**Baseline:** `main` at `b26ffb50a4cfb3e1c63fa7404b98a0c8d68dcb98` (re-fetch before merge; this plan branch is based on PR #126) (recheck before every implementation batch)  
 **Scope:** Real creative-commerce workflows only. This plan does not reopen ARSY ORM, replace the backend, or duplicate PRs #93/#98/#24.
 
 ## Product contract
@@ -37,7 +37,7 @@ Truth rules:
 - [x] MM-0004 Inspect current ARSY app factory, PostgreSQL pool, migrations and route surface.
 - [x] MM-0005 Reconcile overlapping PRs #93 and #98 and shared UI PR #24; do not duplicate their changes.
 - [x] MM-0006 Search open Issues/PRs for existing Money Maker scope; create Issue #100 because no matching commerce vertical-slice Issue existed.
-- [x] MM-0007 Create isolated branch `feat/money-maker-mvp` from main.
+- [x] MM-0007 Reuse the consolidated delivery branch `feat/money-maker-delivery`; do not create another overlapping branch.
 - [x] MM-0008 Re-fetch main and inspect latest merged status of #93/#98/#24 and #102 before coding.
 - [x] MM-0009 Inspect the exact current ARSY database contract, migrations, CI service dependencies and package scripts on the implementation base.
 - [x] MM-0010 Decide and document the minimum single-owner authentication/session boundary; fail closed if secrets or identity are not configured.
@@ -54,7 +54,7 @@ Truth rules:
 - [x] MM-0104 Add additive PostgreSQL migration with constraints, indexes, ownership and timestamps; never reset existing data.
 - [x] MM-0105 Add repository queries with parameterized SQL and transaction-safe writes.
 - [x] MM-0106 Add append-only audit events for opportunity create/update/decision/archive.
-- [ ] MM-0107 Add idempotency/conflict handling for repeated submissions.
+- [x] MM-0107 Add idempotency/conflict handling for repeated opportunity submissions.
 
 ### API and business rules
 - [x] MM-0110 Add authenticated create/list/read/decision/archive routes.
@@ -65,15 +65,15 @@ Truth rules:
 - [x] MM-0115 Return stable error codes for validation, auth, conflict, not-found and database failures.
 
 ### Headquarter
-- [ ] MM-0120 Replace Signal Room hardcoded trends/categories/buyer-problem counts with an honest empty state and real opportunity API client.
+- [x] MM-0120 Replace the old Signal Room demo market claims with the persisted Riot Radar opportunity/evidence workflow; no synthetic market trend is shown as live.
 - [x] MM-0121 Add opportunity capture form with evidence references and buyer job.
-- [ ] MM-0122 Add opportunity detail/review view with evidence class, confidence, score breakdown and hard-gate results.
+- [x] MM-0122 Add opportunity review details with evidence class, confidence, score breakdown, hard-gate results and decision rationale.
 - [x] MM-0123 Add loading, empty, error and success states.
-- [x] MM-0124 Remove unsupported business fixtures from production-facing commerce routes; keep unrelated demo fixtures explicitly disclosed. to explicit development/test mode; do not display them as live data.
+- [x] MM-0124 Remove unsupported business fixtures from production-facing commerce routes; keep unrelated demo fixtures explicitly disclosed as development/test data.
 
 ### Verification
 - [x] MM-0130 Unit tests for evidence classification, score math, hard-gate precedence and invalid source data.
-- [x] MM-0131 Integration tests against isolated PostgreSQL for opportunity/product/finance persistence and reconnects. for create/read/update/archive and persistence after reconnect.
+- [x] MM-0131 Add isolated PostgreSQL integration tests for opportunity, product, asset, finance and reconnect persistence.
 - [x] MM-0132 Authorization tests for missing/invalid credentials and cross-owner access.
 - [ ] MM-0133 Browser E2E: authenticate → create evidence-backed opportunity → review → refresh → confirm persisted state.
 - [ ] MM-0134 Verify migration upgrade from the current schema without destructive operations.
@@ -89,7 +89,7 @@ Truth rules:
 - [x] MM-0204 Add append-only product version revisions without overwriting previously approved artifacts.
 - [x] MM-0205 Add Asset and ProvenanceRecord with owner, source/original declaration, license, tool/model, edit history, checksum, disclosure and derivative links.
 - [x] MM-0206 Add append-only Inspection records for rights, policy, technical QA and creative QA; product READY requires the latest four inspections to pass.
-- [x] MM-0207 Replace The Forge sample products and placeholder previews with persisted product briefs and honest empty states. and Picsum previews with persisted records and honest empty states.
+- [x] MM-0207 Replace The Forge sample products and placeholder previews with persisted product briefs and honest empty states.
 
 ### Asset storage
 - [x] MM-0208 Add bounded local filesystem storage, upload/download/archive APIs, SHA-256 verification and persistent Docker volume.
@@ -98,17 +98,17 @@ Truth rules:
 ### Finance
 - [x] MM-0210 Define FinancialEvent and Payout persistence contracts using exact amount, currency, event type, occurred/recorded time, provider reference, source evidence and reconciliation state.
 - [x] MM-0211 Separate gross receipt, fee, refund, chargeback, FX, variable cost, attributable production cost, tax reserve and payout.
-- [x] MM-0212 Implement integer-minor-unit arithmetic and currency validation; FX conversion remains unimplemented. and currency validation; preserve original currency and FX source/rate/time.
+- [x] MM-0212 Implement integer-minor-unit arithmetic and exact rational FX conversion with source/rate/time provenance; preserve the original event and currency.
 - [x] MM-0213 Add immutable financial event ingestion/manual entry with actor, source and idempotency key.
 - [x] MM-0214 Compute net contribution from persisted events; do not accept client-submitted aggregate totals as authority.
 - [x] MM-0215 Replace Mizan Ledger demo rows with real persisted financial events and explicit no-data states.
 - [x] MM-0216 Add reconciliation status for pending, verified, disputed and reversed events; never count pending commission as received income.
 
 ### Verification
-- [x] MM-0220 Unit tests for integer minor-unit precision, idempotency and verified contribution formula. FX conversion remains out of scope.
+- [x] MM-0220 Unit tests for integer minor-unit precision, payout transitions, FX rational rounding, idempotency and verified contribution formula.
 - [x] MM-0221 Integration tests for product promotion, versioning, asset provenance, checksum and audit history.
 - [x] MM-0222 Integration tests for duplicate financial event idempotency and reconciliation behavior.
-- [ ] MM-0223 E2E: approved opportunity → product brief/version → record cost/receipt → refresh → verify ledger totals.
+- [ ] MM-0223 E2E: operator login → evidence-backed opportunity → product/version/assets/inspections → manual listing receipt → verified finance → payout/reversal → FX conversion → Aftershock cohorts → logout/anonymous isolation.
 - [x] MM-0224 Verify financial aggregates against underlying events in isolated PostgreSQL.
 
 **Exit gate:** products and their provenance persist; financial totals reconcile to immutable source events; no demo revenue is represented as real.
@@ -124,9 +124,9 @@ Truth rules:
 - [x] MM-0306 Do not implement scraping, stealth browser automation, CAPTCHA bypass or credential sharing.
 
 ### Aftershock and operations
-- [ ] MM-0310 Compute metrics only from persisted opportunities, products, listings, financial events and support/maintenance records.
-- [ ] MM-0311 Define metric numerator, denominator, date window, timezone, currency and source for every displayed metric.
-- [x] MM-0312 Replace Aftershock demo percentages with persisted opportunity/product counts and verified financial contribution or honest unavailable states. with real cohort and contribution calculations or honest unavailable states.
+- [x] MM-0310 Compute opportunity/product cohorts, publication, first sale and retirement metrics from persisted database records; discovery and support remain explicitly unavailable until real event workflows exist.
+- [x] MM-0311 Define metric numerator, denominator, UTC date window, currency grouping and source in docs/32.
+- [x] MM-0312 Replace Aftershock demo percentages with PostgreSQL cohort aggregates, verified financial contribution and explicit unavailable states.
 - [ ] MM-0313 Add product retirement recommendations based on observed discovery, conversion, margin, support burden and relevance; recommendations never silently delete or unpublish.
 - [ ] MM-0314 Add bounded workflow runs, retries, idempotency, cost budgets, kill switch and approval records for permitted internal automation.
 - [ ] MM-0315 Keep first publication, policy exceptions and material financial/legal actions approval-gated.
@@ -166,3 +166,33 @@ Truth rules:
 - Production requires `HEADQUARTER_TRUSTED_PROXY_HOPS=1` behind one trusted ingress that overwrites `X-Forwarded-For` and blocks direct application access; local configuration uses `0`.
 - An isolated PostgreSQL integration test exercises the limiter through two independent ARSY instances. The dedicated PostgreSQL workflow applies migrations twice and runs the integration suite.
 - Do not close Issue #123 or mark this follow-up verified until the exact latest PR head passes unit, PostgreSQL integration, Headquarter session, full Repository CI, CodeQL, browser E2E and container-build checks.
+
+
+## Phase 2 follow-up — Payout lifecycle and FX (Issue #121)
+
+- [x] MM-0217 Add additive payout lifecycle/history schema, idempotency and owner/channel-scoped reads.
+- [x] MM-0218 Add pending → paid/failed/disputed → reversed/disputed transitions with evidence, audit history and linked payout/reversal financial events.
+- [x] MM-0219 Add manual exact-rational FX conversion records linked to verified source events; keep currency totals separate.
+- [x] MM-0225 Add payout/FX unit and API tests, including missing evidence, exact conversion mismatch and integer half-up rounding.
+- [x] MM-0226 Add isolated PostgreSQL integration coverage for payout replay, paid/reversal movements, FX provenance and reconnect persistence.
+- [ ] MM-0227 Verify provider adapters only when official provider docs, operator credentials, country eligibility and permissions are available. Until then, keep provider ingestion manual and do not simulate provider success.
+
+**Exit gate:** payout state and financial movements reconcile to evidence; FX conversion preserves source events; no provider success or bank balance is inferred.
+
+## Phase 3 follow-up — Aftershock cohorts (Issue #122)
+
+- [x] MM-0316 Add database-side complete-cohort opportunity promotion and product first-sale/publication/retirement aggregates.
+- [x] MM-0317 Add fixed-window, UTC, end-exclusive metric contracts and zero-denominator null behavior.
+- [x] MM-0318 Add isolated PostgreSQL tests proving metrics match inserted source records and do not leak across owners.
+- [ ] MM-0319 Add discovery/exposure events only after a real discovery workflow provides a valid impression denominator.
+- [ ] MM-0326 Add support/maintenance case capture before calculating support burden or retirement recommendations.
+- [ ] MM-0327 Add advisory product retirement recommendations only after discovery, first-sale, margin and support signals have reliable cohorts; recommendations must never auto-unpublish.
+
+**Exit gate:** displayed rates have source-backed denominators; unsupported metrics remain unavailable; no recommendations are generated from missing data.
+
+## Latest implementation notes
+
+- Payout and FX screens are part of Mizan Ledger. Payout creation requires an enabled C1+ channel and starts as pending. Paid/reversed transitions append corresponding verified financial events only after operator evidence.
+- Exact FX conversions use a rational rate in target minor units per source minor unit with integer half-up rounding. They never mutate the source financial event or combine currency summaries.
+- Aftershock now uses complete PostgreSQL cohort aggregates instead of the previous latest-100 UI lists. Discovery-to-opportunity and support burden are explicitly unavailable.
+- The browser E2E has been expanded to record a synthetic test-only manual publication receipt, reconcile a gross receipt and tax reserve, exercise payout/reversal and FX, and assert cohort metrics. No external marketplace action is executed by CI.

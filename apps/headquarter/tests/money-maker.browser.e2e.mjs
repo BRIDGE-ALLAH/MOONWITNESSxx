@@ -184,6 +184,16 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     const listingCard = page.locator('article').filter({ hasText: title }).filter({ hasText: channelName }).first()
     await listingCard.getByText('READY', { exact: true }).waitFor()
 
+    // Record a synthetic test-only publication receipt. No external channel is called
+    // and no real listing is published by this isolated CI fixture.
+    const publicationForm = listingCard.locator('form')
+    await publicationForm.getByLabel('Provider listing reference').fill(`e2e-publication-${runId}`)
+    await publicationForm.getByLabel('Publication evidence URL').fill(`https://example.com/e2e-publication-${runId}`)
+    await publicationForm.getByLabel('Published at').fill(localDateTime(-45_000))
+    await publicationForm.getByRole('button', { name: 'Record manual publication receipt' }).click()
+    await page.getByRole('status').filter({ hasText: 'Manual publication receipt recorded with its evidence reference.' }).waitFor()
+    await listingCard.getByText('published', { exact: true }).waitFor()
+
     // Persist and reconcile test financial events. These are synthetic CI fixtures,
     // not actual sales, receipts, tax payments, or income.
     await page.goto(`${baseUrl}/mizan-ledger`, { waitUntil: 'domcontentloaded' })
@@ -308,6 +318,9 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
 
     await page.goto(`${baseUrl}/aftershock`, { waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'AFTERSHOCK' }).waitFor()
+    await page.getByText('Opportunity promotion rate', { exact: true }).waitFor()
+    await page.getByText('First-sale rate', { exact: true }).waitFor()
+    await page.getByText('100.00%', { exact: true }).first().waitFor()
     await page.getByText('Net contribution · before tax reserve and payouts', { exact: true }).waitFor()
     await page.getByText('Tax reserve · verified', { exact: true }).waitFor()
     await page.getByText('5000', { exact: true }).first().waitFor()
@@ -354,7 +367,7 @@ test('operator completes the persisted commerce journey; anonymous visitors cann
     await page.goto(`${baseUrl}/the-forge`, { waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'THE FORGE' }).waitFor()
     await page.waitForLoadState('networkidle')
-    const signOutButton = page.getByRole('button', { name: /sign out/i })
+    const signOutButton = page.getByTestId('operator-sign-out')
     await signOutButton.waitFor({ state: 'visible' })
     await signOutButton.click()
     await page.waitForURL((url) => url.pathname === '/login', { timeout: 15_000 })
