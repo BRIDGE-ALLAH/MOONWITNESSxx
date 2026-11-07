@@ -50,7 +50,7 @@ export function registerAssetRoutes(app: FastifyInstance, db: DatabasePool, env:
     return { data: await repository.list(ownerId, query.data.productVersionId) }
   })
 
-  app.post('/api/v1/assets', async (request, reply) => {
+  app.post('/api/v1/assets', { bodyLimit: 8 * 1024 * 1024 }, async (request, reply) => {
     const body = uploadSchema.safeParse(request.body)
     if (!body.success) return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Asset upload input is invalid.', details: body.error.flatten() } })
     const content = Buffer.from(body.data.contentBase64, 'base64')
