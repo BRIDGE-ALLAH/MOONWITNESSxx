@@ -35,7 +35,8 @@
 ## Phase 4 — Typography
 - [x] Specify display, body, and technical font families with fallback stacks.
 - [x] Verify Space Grotesk and IBM Plex Mono upstream SIL OFL 1.1 licenses and permitted software embedding/redistribution conditions.
-- [x] Document compliant font-bundling policy, copyright notices, license text, and pinned-source/hash requirements; defer binaries until a reproducible pinned import is justified.
+- [x] Document compliant font-bundling policy, copyright notices, license text, and pinned-source/hash requirements.
+- [ ] Owner decision on the experimental MOONWITNESS Signal font: approve its rights and required glyph/QA work, or exclude it from any product/package release.
 
 ## Phase 5 — Product integration
 - [x] Replace RIOTWORKS master-brand lockup in Headquarter shell and metadata.
