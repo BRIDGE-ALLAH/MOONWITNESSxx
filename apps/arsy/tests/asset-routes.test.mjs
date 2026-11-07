@@ -105,3 +105,39 @@ test('asset upload rejects unsupported active-content media types', async () => 
     assert.equal(response.statusCode, 400)
   } finally { await app.close() }
 })
+
+test('asset provenance rejects executable URLs before storage or database writes', async () => {
+  const storageDir = await mkdtemp(path.join(tmpdir(), 'arsy-asset-url-'))
+  let queryCount = 0
+  const pool = {
+    query: async () => { queryCount += 1; return { rows: [] } },
+    end: async () => undefined,
+  }
+  const app = await createApp({ databasePool: pool, logger: false, env: { ...env, ARSY_ASSET_STORAGE_DIR: storageDir } })
+  try {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/assets',
+      headers: { 'x-arsy-operator-token': token },
+      payload: {
+        productVersionId,
+        filename: 'fixture.txt',
+        mediaType: 'text/plain',
+        contentBase64: content.toString('base64'),
+        rightsState: 'unknown',
+        provenance: {
+          creator: 'Operator test',
+          license: 'Test license',
+          sourceUrl: 'javascript:alert(1)',
+          editHistory: [],
+          disclosure: 'Test-only fixture.',
+        },
+      },
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(queryCount, 0)
+  } finally {
+    await app.close()
+    await rm(storageDir, { recursive: true, force: true })
+  }
+})
