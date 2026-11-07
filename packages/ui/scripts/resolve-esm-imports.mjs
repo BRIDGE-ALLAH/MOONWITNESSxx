@@ -1,7 +1,8 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const outputDirectory = new URL('../dist/', import.meta.url)
+const outputDirectory = fileURLToPath(new URL('../dist/', import.meta.url))
 
 async function rewriteDirectory(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -31,5 +32,5 @@ async function rewriteDirectory(directory) {
   }
 }
 
-await rewriteDirectory(outputDirectory.pathname)
+await rewriteDirectory(outputDirectory)
 console.log('Rewrote relative ESM imports to explicit .js specifiers.')
