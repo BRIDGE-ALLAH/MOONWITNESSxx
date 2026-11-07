@@ -18,3 +18,5 @@ export * as Temporal from "./temporal/index.ts";
 export * as CounterfactualSurgery from "./counterfactual-surgery/index.ts";
 export * as EvidenceInteractions from "./evidence-interactions/index.ts";
 export * as CitationMutationLab from "./citation-mutation-lab/index.ts";
+
+export * as ProvenanceAssurance from "./provenance-assurance/index.ts";
