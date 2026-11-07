@@ -122,3 +122,13 @@ test('memory integrity report counts blocked attacks with no detection signal se
   assert.equal(report.blockedWithoutSignal, 1)
   assert.equal(report.undetectedAttacks, 1)
 })
+
+test('lineage access fails closed on malformed source-field classification', () => {
+  const lineage = { artifactId: 'bad', tenantId: 'tenant:a', lineageComplete: true, sourceFields: [
+    { sourceId: 'db', fieldPath: 'secret', tenantId: 'tenant:a', classification: 'unknown' }
+  ] }
+  const decision = evaluateLineageAccess(lineage, { requesterId: 'reader', tenantId: 'tenant:a', allowedClassifications: ['public', 'internal', 'confidential', 'restricted'] })
+  assert.equal(decision.allowed, false)
+  assert.ok(decision.reasonCodes.includes('source_field_metadata_invalid'))
+  assert.throws(() => composeDerivedLineage('bad', 'tenant:a', [lineage]), /invalid source field lineage metadata/)
+})
