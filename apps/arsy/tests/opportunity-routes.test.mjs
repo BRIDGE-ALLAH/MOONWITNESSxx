@@ -4,6 +4,7 @@ import { createApp } from '../src/app.ts'
 
 const token = 'test-only-secret-operator-token'
 const operatorId = 'operator-test'
+const idempotencyKey = 'opportunity-route-test-0001'
 const evidence = [{
   sourceName: 'Official documentation',
   sourceUrl: 'https://example.com/docs',
@@ -55,9 +56,11 @@ function fakePool() {
   const calls = []
   return {
     calls,
-    query: async (sql) => {
+    query: async (sql, values) => {
       calls.push(sql)
       if (sql.includes('INSERT INTO arsy_opportunities')) {
+        const key = values[16]
+        if (records.some((record) => record.idempotency_key === key)) return { rows: [] }
         const record = {
           id: '11111111-1111-4111-8111-111111111111',
           title: body.title,
@@ -75,6 +78,8 @@ function fakePool() {
           score: '80.00',
           decision: 'prototype-candidate',
           decision_rationale: null,
+          idempotency_key: key,
+          request_hash: values[17],
           created_at: '2026-11-08T00:00:00.000Z',
           updated_at: '2026-11-08T00:00:00.000Z',
         }
@@ -130,7 +135,7 @@ test('authenticated operator create/list routes return the inserted record', asy
     const created = await app.inject({
       method: 'POST',
       url: '/api/v1/opportunities',
-      headers: { 'x-arsy-operator-token': token },
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': idempotencyKey },
       payload: body,
     })
     assert.equal(created.statusCode, 201)
@@ -149,6 +154,39 @@ test('authenticated operator create/list routes return the inserted record', asy
 })
 
  
+test('opportunity create replays identical idempotency keys and rejects changed payloads', async () => {
+  const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
+  const app = await createApp({ databasePool: fakePool(), logger: false, env })
+  try {
+    const first = await app.inject({
+      method: 'POST',
+      url: '/api/v1/opportunities',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': idempotencyKey },
+      payload: body,
+    })
+    const replay = await app.inject({
+      method: 'POST',
+      url: '/api/v1/opportunities',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': idempotencyKey },
+      payload: body,
+    })
+    const conflict = await app.inject({
+      method: 'POST',
+      url: '/api/v1/opportunities',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': idempotencyKey },
+      payload: { ...body, title: 'Different opportunity under reused key' },
+    })
+    assert.equal(first.statusCode, 201)
+    assert.equal(replay.statusCode, 200)
+    assert.equal(replay.json().replayed, true)
+    assert.equal(replay.json().data.id, first.json().data.id)
+    assert.equal(conflict.statusCode, 409)
+    assert.equal(conflict.json().error.code, 'IDEMPOTENCY_CONFLICT')
+  } finally {
+    await app.close()
+  }
+})
+
 test('all versioned business API groups reject anonymous requests before database access', async () => {
   const pool = fakePool()
   const env = { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token }
