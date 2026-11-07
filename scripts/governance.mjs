@@ -46,7 +46,10 @@ async function read(root, path) {
 async function directories(root, path) {
   try {
     const entries = await readdir(resolve(root, path), { withFileTypes: true })
-    return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort()
+    return entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort()
   } catch {
     return []
   }
