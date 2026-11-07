@@ -12,10 +12,14 @@
     "./schema-planner": {
       "types": "./src/schema-planner.ts",
       "default": "./src/schema-planner.ts"
+    },
+    "./reconciler": {
+      "types": "./src/reconciler.ts",
+      "default": "./src/reconciler.ts"
     }
   },
   "scripts": {
-    "type-check": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts src/runtime.ts src/schema-planner.ts",
+    "type-check": "tsc --noEmit --strict --allowImportingTsExtensions --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts src/runtime.ts src/schema-planner.ts src/reconciler.ts",
     "lint": "../lint/node_modules/.bin/eslint src test --config ../lint/eslint.config.mjs --max-warnings 0",
     "test": "node --experimental-strip-types --test test/*.test.ts"
   },
