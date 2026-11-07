@@ -1,13 +1,41 @@
 import { NextResponse } from 'next/server'
+import {
+  getOperatorSessionConfig,
+  readOperatorSessionCookie,
+  requestHasTrustedOrigin,
+  verifyOperatorSession,
+} from '@/lib/operator-session'
+
+export const runtime = 'nodejs'
 
 function arsyConfig() {
   const baseUrl = process.env.ARSY_API_BASE_URL?.trim()
   const operatorToken = process.env.ARSY_OPERATOR_TOKEN?.trim()
   if (!baseUrl || !operatorToken) return null
-  return { baseUrl: baseUrl.replace(/\/+$/, ''), operatorToken }
+  return { baseUrl: baseUrl.replace(/\\/+$/, ''), operatorToken }
 }
 
 async function proxy(request: Request, method: 'GET' | 'POST') {
+  const sessionConfig = getOperatorSessionConfig()
+  if (!sessionConfig) {
+    return NextResponse.json({
+      error: { code: 'OPERATOR_AUTH_NOT_CONFIGURED', message: 'Headquarter operator authentication is not configured.' },
+    }, { status: 503 })
+  }
+
+  const session = verifyOperatorSession(readOperatorSessionCookie(request), sessionConfig.secret)
+  if (!session || session.operatorId !== sessionConfig.operatorId) {
+    return NextResponse.json({
+      error: { code: 'UNAUTHENTICATED', message: 'An authenticated operator session is required.' },
+    }, { status: 401 })
+  }
+
+  if (method === 'POST' && !requestHasTrustedOrigin(request, sessionConfig.publicOrigin)) {
+    return NextResponse.json({
+      error: { code: 'ORIGIN_REJECTED', message: 'Cross-origin state changes are not allowed.' },
+    }, { status: 403 })
+  }
+
   const config = arsyConfig()
   if (!config) {
     return NextResponse.json({
