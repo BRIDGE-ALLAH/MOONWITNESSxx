@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
-import { decryptDockerCredentials, encryptDockerCredentials, validateRemoteDockerEndpoint, validateTlsCredentials } from './security.ts'
+import { decryptDockerCredentials, encryptDockerCredentials, resolveRemoteDockerEndpoint, validateTlsCredentials } from './security.ts'
 import { getDockerInfo, getDockerContainerLogs, listDockerContainers, type DockerConnection } from './engine.ts'
 
 type QueryResult<T> = { rows: T[] }
@@ -25,11 +25,11 @@ function localConnection(env: NodeJS.ProcessEnv): DockerConnection {
   return { kind: 'local', socketPath }
 }
 
-function connectionFor(row: ServerRow, env: NodeJS.ProcessEnv): DockerConnection {
+async function connectionFor(row: ServerRow, env: NodeJS.ProcessEnv): Promise<DockerConnection> {
   if (row.kind === 'local') return localConnection(env)
   if (!row.endpoint_url || !row.encrypted_credentials) throw new Error('Remote Docker TLS configuration is incomplete')
-  const endpoint = validateRemoteDockerEndpoint(row.endpoint_url, env)
-  return { kind: 'remote', endpointUrl: endpoint.origin, tls: decryptDockerCredentials(row.encrypted_credentials, env) }
+  const endpoint = await resolveRemoteDockerEndpoint(row.endpoint_url, env)
+  return { kind: 'remote', endpointUrl: endpoint.url.origin, addresses: endpoint.addresses, tls: decryptDockerCredentials(row.encrypted_credentials, env) }
 }
 
 function safeServer(row: ServerRow) {
@@ -60,14 +60,17 @@ export function registerDockerRoutes(app: FastifyInstance, pool: DatabasePool, e
     let connection: DockerConnection
     let endpointUrl: string | null = null
     let encryptedCredentials: string | null = null
+    let remoteAddresses: Array<{ address: string; family: number }> = []
     try {
       if (kind === 'local') {
         connection = localConnection(env)
       } else {
-        endpointUrl = validateRemoteDockerEndpoint(String(body?.endpointUrl ?? ''), env).origin
+        const endpoint = await resolveRemoteDockerEndpoint(String(body?.endpointUrl ?? ''), env)
+        endpointUrl = endpoint.url.origin
+        remoteAddresses = endpoint.addresses
         const tls = validateTlsCredentials(body?.tls)
         encryptedCredentials = encryptDockerCredentials(tls, env)
-        connection = { kind: 'remote', endpointUrl, tls }
+        connection = { kind: 'remote', endpointUrl, addresses: remoteAddresses, tls }
       }
       const info = await getDockerInfo(connection)
       if (!info.ServerVersion) throw new Error('Docker Engine did not return a server version')
@@ -104,7 +107,7 @@ export function registerDockerRoutes(app: FastifyInstance, pool: DatabasePool, e
     const row = result.rows[0]
     if (!row) return reply.code(404).send({ error: { code: 'DOCKER_SERVER_NOT_FOUND' } })
     try {
-      const info = await getDockerInfo(connectionFor(row, env))
+      const info = await getDockerInfo(await connectionFor(row, env))
       return { data: { server: safeServer(row), engine: {
         name: info.Name ?? null, serverVersion: info.ServerVersion ?? null,
         operatingSystem: info.OperatingSystem ?? null, architecture: info.Architecture ?? null,
@@ -127,7 +130,7 @@ export function registerDockerRoutes(app: FastifyInstance, pool: DatabasePool, e
     const row = result.rows[0]
     if (!row) return reply.code(404).send({ error: { code: 'DOCKER_SERVER_NOT_FOUND' } })
     try {
-      const containers = await listDockerContainers(connectionFor(row, env))
+      const containers = await listDockerContainers(await connectionFor(row, env))
       return { data: { containers, truncated: containers.length === 100 } }
     } catch {
       return reply.code(502).send({ error: { code: 'DOCKER_ENGINE_UNAVAILABLE', message: 'Docker container inventory is unavailable.' } })
@@ -149,7 +152,7 @@ export function registerDockerRoutes(app: FastifyInstance, pool: DatabasePool, e
     const row = result.rows[0]
     if (!row) return reply.code(404).send({ error: { code: 'DOCKER_SERVER_NOT_FOUND' } })
     try {
-      const logs = await getDockerContainerLogs(connectionFor(row, env), containerId)
+      const logs = await getDockerContainerLogs(await connectionFor(row, env), containerId)
       return { data: { containerId, logs, tail: 200 } }
     } catch {
       return reply.code(502).send({ error: { code: 'DOCKER_LOGS_UNAVAILABLE', message: 'Container logs are unavailable.' } })
