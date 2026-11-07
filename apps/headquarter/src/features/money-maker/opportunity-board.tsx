@@ -10,6 +10,8 @@ type Opportunity = {
   buyerProblem: string
   evaluation: { score: number | null; decision: string; blockedGates: string[]; unknownGates: string[]; missingScoreDimensions: string[] }
 }
+type Decision = 'blocked' | 'research-more' | 'prototype-candidate' | 'park'
+type DecisionDraft = { decision: Decision; rationale: string }
 const dimensions = [
   ['demandEvidence', 'Demand evidence', 25],
   ['competitionGap', 'Competition / quality gap', 20],
@@ -33,6 +35,8 @@ export function OpportunityBoard() {
   const [evidenceCapturedAt, setEvidenceCapturedAt] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [actionId, setActionId] = useState<string | null>(null)
+  const [decisionDrafts, setDecisionDrafts] = useState<Record<string, DecisionDraft>>({})
   const [scores, setScores] = useState(emptyScores)
   const [scoreRationales, setScoreRationales] = useState(emptyRationales)
   const [hardGates, setHardGates] = useState(emptyGates)
@@ -107,6 +111,49 @@ export function OpportunityBoard() {
   }
 
 
+  async function updateDecision(item: Opportunity) {
+    const draft = decisionDrafts[item.id] ?? { decision: item.evaluation.decision as Decision, rationale: '' }
+    if (draft.rationale.trim().length < 10) {
+      setError('Decision rationale must contain at least 10 characters.')
+      return
+    }
+    setActionId(item.id); setError(''); setMessage('')
+    try {
+      const response = await fetch(`/api/opportunities/${item.id}/decision`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ decision: draft.decision, rationale: draft.rationale.trim() }),
+      })
+      const result = await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!response.ok) throw new Error(result.error?.message || 'Unable to update opportunity decision.')
+      setDecisionDrafts((current) => ({ ...current, [item.id]: { ...draft, rationale: '' } }))
+      setMessage('Decision updated and recorded in the audit trail.')
+      await refresh()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to update opportunity decision.')
+    } finally {
+      setActionId(null)
+    }
+  }
+
+  async function archiveOpportunity(item: Opportunity) {
+    if (!window.confirm(`Archive "${item.title}"? The record will be retained in the audit history.`)) return
+    setActionId(item.id); setError(''); setMessage('')
+    try {
+      const response = await fetch(`/api/opportunities/${item.id}`, { method: 'DELETE' })
+      const result = response.status === 204 ? null : await response.json()
+      if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
+      if (!response.ok) throw new Error(result?.error?.message || 'Unable to archive opportunity.')
+      setMessage('Opportunity archived. Its audit history is retained.')
+      await refresh()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to archive opportunity.')
+    } finally {
+      setActionId(null)
+    }
+  }
+
   return <main className="min-h-screen bg-obsidian p-6 text-paper-bone md:p-8"><div className="mx-auto max-w-7xl space-y-8">
     <header className="border-b border-acid-lime/30 pb-6"><p className="font-mono text-xs uppercase tracking-[0.25em] text-acid-lime">RIOTWORKS / Market Intelligence</p><h1 className="mt-3 font-display text-5xl uppercase">RIOT RADAR</h1><p className="mt-3 max-w-3xl text-sm text-muted-ink">Capture a real buyer problem, preserve source evidence, and evaluate the opportunity. Scores, confidence, and gate states are operator assessments—not independent source verification. Missing evidence stays unknown.</p></header>
     {error && <div role="alert" className="border border-red-500/50 bg-red-950/20 p-4 text-sm">{error}</div>}
@@ -119,9 +166,24 @@ export function OpportunityBoard() {
           && item.evaluation.blockedGates.length === 0
           && item.evaluation.unknownGates.length === 0
           && item.evaluation.missingScoreDimensions.length === 0
+        const draft = decisionDrafts[item.id] ?? { decision: item.evaluation.decision as Decision, rationale: '' }
         return <article key={item.id} className="border border-acid-lime/20 bg-panel-charcoal p-4"><div className="flex justify-between gap-3"><h3 className="font-display text-xl uppercase">{item.title}</h3><span className="font-mono text-xs text-acid-lime">{item.evaluation.score === null ? 'UNSCORED' : `${item.evaluation.score}/100`}</span></div><p className="mt-2 text-sm text-muted-ink">{item.buyerSegment}</p><p className="mt-3 text-sm">{item.buyerProblem}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono uppercase"><span className="border border-acid-lime/30 px-2 py-1">{item.evaluation.decision}</span>{item.evaluation.blockedGates.map((g) => <span key={g} className="border border-red-500/50 px-2 py-1 text-red-300">BLOCKED: {g}</span>)}{item.evaluation.unknownGates.map((g) => <span key={g} className="border border-orange-400/50 px-2 py-1 text-orange-200">UNKNOWN: {g}</span>)}</div>
           {eligible ? <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs"><Link href="/the-forge" className="font-mono uppercase text-acid-lime underline">Ready for product brief in The Forge →</Link></p>
             : <p className="mt-4 border-t border-acid-lime/20 pt-3 text-xs text-muted-ink">Product promotion is locked until every score dimension is complete and all hard gates are passed.</p>}
+          <div className="mt-4 space-y-2 border-t border-acid-lime/15 pt-4">
+            <label className="block space-y-1 text-[10px] font-mono uppercase text-muted-ink">Operator decision
+              <select value={draft.decision} onChange={(event) => setDecisionDrafts((current) => ({ ...current, [item.id]: { ...draft, decision: event.target.value as Decision } }))} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs text-paper-bone">
+                <option value="blocked">Blocked</option><option value="research-more">Research more</option><option value="prototype-candidate">Prototype candidate</option><option value="park">Park</option>
+              </select>
+            </label>
+            <label className="block space-y-1 text-[10px] font-mono uppercase text-muted-ink">Decision rationale (minimum 10 characters)
+              <textarea value={draft.rationale} onChange={(event) => setDecisionDrafts((current) => ({ ...current, [item.id]: { ...draft, rationale: event.target.value } }))} rows={2} maxLength={2000} className="w-full border border-acid-lime/20 bg-obsidian p-2 text-xs text-paper-bone" placeholder="Why this decision is appropriate based on the current evidence." />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={actionId === item.id || draft.rationale.trim().length < 10} onClick={() => void updateDecision(item)} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase disabled:opacity-40">{actionId === item.id ? 'Saving…' : 'Save decision'}</button>
+              <button type="button" disabled={actionId === item.id} onClick={() => void archiveOpportunity(item)} className="border border-red-500/40 px-3 py-2 font-mono text-[10px] uppercase text-red-300 disabled:opacity-40">Archive</button>
+            </div>
+          </div>
         </article>
       })}</div>}
     </section>
