@@ -55,7 +55,7 @@ After `pnpm install`, the root `prepare` script configures `core.hooksPath=.husk
 | `pnpm validate:repo` | Run repository integrity, format, and automation tests |
 | `pnpm validate` | Run repository validation, package type-checks, and builds |
 
-A command is only a reliable quality gate when the affected package actually defines that capability. Do not add placeholder scripts that return success without checking anything. Formatting is intentionally changed-files-only: the current legacy prototype tree has not received a mass-formatting rewrite. The pnpm lockfile is excluded because pnpm owns its serialization.
+A command is only a reliable quality gate when the affected package actually defines that capability. Do not add placeholder scripts that return success without checking anything. Formatting is intentionally changed-files-only: the current legacy prototype tree has not received a mass-formatting rewrite. The pnpm lockfile is excluded because pnpm owns its serialization. GitHub Actions workflow files are excluded from Prettier and checked separately with actionlint in CI.
 
 ## Branches, commits, and pull requests
 

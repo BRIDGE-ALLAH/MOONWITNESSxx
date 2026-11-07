@@ -42,6 +42,11 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      - name: Validate GitHub Actions workflows
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
+
       - name: Generate repository audit report
         run: node scripts/repo-audit.mjs --write-report
 

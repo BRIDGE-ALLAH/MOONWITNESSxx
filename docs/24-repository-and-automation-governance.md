@@ -115,7 +115,7 @@ Formatting checks use a changed-files policy:
 
 - Locally, `pnpm format:check` checks modified, staged, and untracked supported files; `pnpm format` formats those files.
 - In CI, pull requests are checked against their merge-base with the target branch. Push events use the event's `before` commit; manual runs validate the checked-out commit.
-- The lockfile is excluded from Prettier because pnpm owns its serialization.
+- The pnpm lockfile is excluded from Prettier because pnpm owns its serialization. GitHub workflow files under `.github/workflows/` are excluded from the formatter because the formatting bot is deliberately not granted workflow-edit permission; they are validated independently by actionlint in CI.
 - Pre-commit separately checks staged text/config files, so malformed formatting cannot be committed accidentally.
 
 This avoids turning a new gate into a mass-formatting rewrite of historical prototype code. On `main`, `format-changed.yml` runs the same changed-files formatter and, when necessary, creates a separate formatting-only bot commit and dispatches CI. It never changes application behavior, versions, or changelog content. Existing files become compliant as they are changed or through a separately reviewed cleanup. Do not claim the entire historical tree is already formatted.

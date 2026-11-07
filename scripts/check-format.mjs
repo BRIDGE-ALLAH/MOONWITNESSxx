@@ -15,7 +15,11 @@ function runGit(args) {
 }
 
 export function isPrettierSupportedFile(file) {
-  return file !== 'pnpm-lock.yaml' && supportedExtensions.test(file)
+  return (
+    file !== 'pnpm-lock.yaml' &&
+    !file.startsWith('.github/workflows/') &&
+    supportedExtensions.test(file)
+  )
 }
 
 export function uniqueFilePaths(paths) {
