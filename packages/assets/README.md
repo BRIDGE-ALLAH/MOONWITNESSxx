@@ -14,7 +14,7 @@ RIOTWORKS is an independent creative/engineering studio identity. It is not the 
 - Expose a small, statically declared TypeScript registry.
 - Provide lightweight React helpers for rendering approved assets.
 - Keep provenance, licensing, accessibility, and theme applicability close to each declaration.
-- Validate missing, malformed, oversized, or unsafe SVG resources.
+- Validate missing, malformed, oversized, or unsafe SVG resources, including positive `viewBox` dimensions and aspect-ratio agreement with registry metadata.
 
 This package is **not** a CMS, database, remote asset service, user-upload store, or replacement for `@riotworks/ui`.
 
