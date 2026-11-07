@@ -1,6 +1,19 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { compileRepoContext, createChangePlan, parseMajorVersion, runDoctor } from './lib.mjs'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import {
+  appendFlightRecord,
+  compileRepoContext,
+  createChangePlan,
+  createContextLease,
+  forecastWriteCollisions,
+  parseMajorVersion,
+  runDoctor,
+  verifyContextLease,
+  verifyFlightRecorder,
+} from './lib.mjs'
 
 const root = new URL('../..', import.meta.url).pathname
 
@@ -47,4 +60,65 @@ test('context compiler emits machine-readable JSON when requested', async () => 
   assert.equal(parsed.schemaVersion, 1)
   assert.equal(parsed.fingerprint, result.fingerprint)
   assert.ok(Array.isArray(parsed.packages))
+})
+
+
+test('flight recorder serializes concurrent appends and verifies its hash chain', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'moonwitness-flight-'))
+  try {
+    await Promise.all([
+      appendFlightRecord({ root, record: { task: 'one', apiKey: 'secret-value', exitCode: 0 } }),
+      appendFlightRecord({ root, record: { task: 'two', exitCode: 0 } }),
+      appendFlightRecord({ root, record: { task: 'three', exitCode: 1 } }),
+    ])
+    const verified = await verifyFlightRecorder({ root })
+    assert.equal(verified.valid, true)
+    assert.equal(verified.records.length, 3)
+    assert.deepEqual(verified.records.map((entry) => entry.sequence), [1, 2, 3])
+    assert.equal(verified.records[0].record.apiKey, '[REDACTED]')
+    const path = join(root, '.moonwitness', 'flight-recorder.jsonl')
+    const lines = (await readFile(path, 'utf8')).trim().split(/\r?\n/)
+    const tampered = JSON.parse(lines[1])
+    tampered.record.exitCode = 99
+    lines[1] = JSON.stringify(tampered)
+    await writeFile(path, lines.join('\n') + '\n')
+    const corrupted = await verifyFlightRecorder({ root })
+    assert.equal(corrupted.valid, false)
+    assert.equal(corrupted.reason, 'hash_mismatch_at_line_2')
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('parallel collision forecast detects exact and ancestor write conflicts', () => {
+  const report = forecastWriteCollisions({ agents: [
+    { id: 'agent-a', writePaths: ['packages/core/src/index.ts', 'docs/'] },
+    { id: 'agent-b', writePaths: ['packages/core/src/index.ts', 'docs/design.md'] },
+    { id: 'agent-c', writePaths: ['apps/web/src/page.tsx'] },
+  ] })
+  assert.equal(report.safeToParallelize, false)
+  assert.ok(report.collisions.some((item) => item.kind === 'same-path' && item.severity === 'critical'))
+  assert.ok(report.collisions.some((item) => item.kind === 'ancestor-overlap' && item.severity === 'high'))
+  assert.throws(() => forecastWriteCollisions({ agents: [{ id: 'bad', writePaths: ['../secrets'] }] }), /unsafe write path/)
+  assert.throws(() => forecastWriteCollisions({ agents: [{ id: 'bad', writePaths: ['/etc/passwd'] }] }), /unsafe write path/)
+})
+
+test('parallel collision forecast allows disjoint agent write sets', () => {
+  const report = forecastWriteCollisions({ agents: [
+    { id: 'agent-a', writePaths: ['packages/a/src'] },
+    { id: 'agent-b', writePaths: ['packages/b/src'] },
+  ] })
+  assert.equal(report.safeToParallelize, true)
+  assert.equal(report.collisions.length, 0)
+})
+
+test('context lease invalidates changed or expired repository context', () => {
+  const fingerprint = 'a'.repeat(64)
+  const lease = createContextLease({ fingerprint, generatedAt: '2026-11-08T00:00:00.000Z', ttlMs: 60000 })
+  assert.equal(verifyContextLease({ lease, currentFingerprint: fingerprint, now: '2026-11-08T00:00:30.000Z' }).valid, true)
+  assert.deepEqual(verifyContextLease({ lease, currentFingerprint: 'b'.repeat(64), now: '2026-11-08T00:00:30.000Z' }), { valid: false, reason: 'context_fingerprint_changed' })
+  assert.deepEqual(verifyContextLease({ lease, currentFingerprint: fingerprint, now: '2026-11-08T00:01:00.000Z' }), { valid: false, reason: 'context_lease_expired' })
+  assert.deepEqual(verifyContextLease({ lease: { ...lease, ttlMs: 999 }, currentFingerprint: fingerprint, now: '2026-11-08T00:00:30.000Z' }), { valid: false, reason: 'lease_duration_mismatch' })
+  assert.deepEqual(verifyContextLease({ lease, currentFingerprint: fingerprint, now: '2026-11-07T23:59:59.000Z' }), { valid: false, reason: 'lease_not_yet_valid' })
+  assert.throws(() => createContextLease({ fingerprint: 'invalid' }), /SHA-256/)
 })
