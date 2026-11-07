@@ -88,8 +88,46 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.deepEqual(loaded.evidence, evidence)
     assert.deepEqual(loaded.scoreDetails, input.scoreDetails)
     assert.equal(loaded.evaluation.score, 80)
+    assert.equal(loaded.version, 1)
     assert.equal((await persistedOpportunities.list(ownerId)).length, 1)
     assert.equal((await persistedOpportunities.list(`${ownerId}-other`)).length, 0)
+
+    const revisedInput = opportunityInputSchema.parse({
+      ...input,
+      title: 'Updated PostgreSQL commerce integration fixture',
+      productHypothesis: 'A revised PostgreSQL-backed integration test catches persisted update regressions.',
+    })
+    const revisedEvaluation = evaluateOpportunity(revisedInput)
+    const updated = await persistedOpportunities.update(
+      ownerId,
+      ownerId,
+      created.id,
+      revisedInput,
+      revisedEvaluation,
+      loaded.version,
+    )
+    assert.ok(updated)
+    assert.equal(updated.title, revisedInput.title)
+    assert.equal(updated.version, 2)
+    assert.equal(updated.evaluation.decision, 'research-more')
+    assert.equal(await persistedOpportunities.update(
+      ownerId,
+      ownerId,
+      created.id,
+      input,
+      evaluation,
+      loaded.version,
+    ), null, 'stale versions must not overwrite newer opportunity data')
+
+    const promoted = await persistedOpportunities.decide(
+      ownerId,
+      ownerId,
+      created.id,
+      'prototype-candidate',
+      'Updated evidence and hard-gate notes were reviewed before promotion.',
+    )
+    assert.ok(promoted)
+    assert.equal(promoted.version, 3)
 
     const products = new ProductRepository(pool)
     const product = await products.createFromOpportunity(ownerId, ownerId, created.id, [
@@ -148,6 +186,10 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const reloadedProduct = await persistedProducts.get(ownerId, product.id)
     assert.ok(reloadedProduct)
     assert.equal(reloadedProduct.brief.buyerProblem, input.buyerProblem)
+    const reloadedOpportunity = await new OpportunityRepository(pool).get(ownerId, created.id)
+    assert.ok(reloadedOpportunity)
+    assert.equal(reloadedOpportunity.title, revisedInput.title)
+    assert.equal(reloadedOpportunity.version, 3)
     const financialEvents = await persistedFinance.list(ownerId)
     assert.equal(financialEvents.length, 2)
     assert.equal(financialEvents.find((event) => event.id === gross.event.id)?.amountMinor, '5000')
@@ -176,6 +218,8 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     const actions = audit.rows.map((row) => row.action)
     for (const expected of [
       'created',
+      'updated',
+      'decision-changed',
       'created-from-opportunity',
       'recorded-pending-reconciliation',
       'reconciled',
