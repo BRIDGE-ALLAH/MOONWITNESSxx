@@ -29,6 +29,15 @@ function quoteExistingIdentifier(value: string): string {
   return '"' + value.replace(/"/g, '""') + '"';
 }
 
+function sqliteAffinity(value: string): string {
+  const type = value.toUpperCase();
+  if (type.includes("INT")) return "INTEGER";
+  if (type.includes("CHAR") || type.includes("CLOB") || type.includes("TEXT")) return "TEXT";
+  if (type.includes("BLOB") || type.length === 0) return "BLOB";
+  if (type.includes("REAL") || type.includes("FLOA") || type.includes("DOUB")) return "REAL";
+  return "NUMERIC";
+}
+
 function validateType(value: unknown): string {
   if (typeof value !== "string") throw new TypeError("SQLite data type must be a string.");
   const normalized = value.toUpperCase().trim();
@@ -150,6 +159,7 @@ export class SqliteSystemDatabaseAdapter implements DatabaseAdapter {
 
   async close(): Promise<void> {
     const db = this.#db;
+    if (this.#transactionActive) throw new Error("Cannot close SQLite System Database with an active transaction.");
     this.#db = null;
     if (db) db.close();
   }
@@ -220,7 +230,7 @@ export class SqliteSystemDatabaseAdapter implements DatabaseAdapter {
         name: item.name,
         columns: rawColumns.sort((a, b) => a.cid - b.cid).map((column) => ({
           name: column.name,
-          dataType: column.type || "TEXT",
+          dataType: sqliteAffinity(column.type || "TEXT"),
           nullable: column.notnull !== 1,
           ...(column.dflt_value !== null ? { defaultExpression: column.dflt_value } : {}),
           ordinal: column.cid + 1,
