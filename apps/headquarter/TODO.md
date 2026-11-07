@@ -32,29 +32,29 @@
 **Tujuan:** memahami kondisi aktual sebelum mengubah struktur. Catat temuan berdasarkan source code dan hasil command, bukan asumsi.
 
 ### 0.1 Inventaris aplikasi
-- [ ] Inventaris seluruh route App Router, layout, page, loading, error, not-found, dan route handler.
-- [ ] Petakan komponen shell: sidebar, topbar, navigation, workspace selector, command palette, notification center, user menu, mobile navigation.
+- [x] Inventaris seluruh route App Router, layout, page, loading, error, not-found, dan route handler.
+- [x] Petakan komponen shell: sidebar, topbar, navigation, workspace selector, command palette, notification center, user menu, mobile navigation.
 - [ ] Petakan semua feature yang sudah ada dan statusnya: production-ready, partial, prototype, placeholder, atau belum ada.
 - [ ] Identifikasi komponen yang hanya digunakan satu feature vs yang benar-benar reusable.
 - [ ] Inventaris assets, fonts, global CSS, Tailwind config, theme provider, dan token yang digunakan.
 - [ ] Inventaris seluruh environment variable dan konfigurasi runtime; pastikan tidak ada secret di client bundle.
 
 ### 0.2 Dependency dan kualitas
-- [ ] Audit dependency internal dan eksternal di `package.json`; tandai dependency duplikat, tidak terpakai, atau berisiko.
+- [x] Audit dependency internal dan eksternal di `package.json`; tandai dependency duplikat, tidak terpakai, atau berisiko.
 - [ ] Petakan import graph dan cari circular dependency.
-- [ ] Verifikasi integrasi `@riotworks/ui`, termasuk exports, styles, Tailwind preset/config, dan transpilation.
+- [x] Verifikasi integrasi `@riotworks/ui`, termasuk exports, styles, Tailwind preset/config, dan transpilation.
 - [ ] Jalankan lint, typecheck, test, dan build; simpan baseline hasil aktual.
-- [ ] Perbaiki script quality gate yang menelan error (contoh pola `|| echo lint-skip`); command gagal harus membuat proses gagal.
+- [x] Perbaiki script quality gate yang menelan error (contoh pola `|| echo lint-skip`); command gagal harus membuat proses gagal.
 - [ ] Identifikasi konfigurasi yang berbeda atau bertentangan dengan standar monorepo.
 
 ### 0.3 UX dan accessibility baseline
 - [ ] Audit semua route pada desktop, tablet, dan mobile.
 - [ ] Audit keyboard navigation, focus visibility, dialog semantics, screen reader labels, dan color contrast.
 - [ ] Inventaris state UI yang belum tersedia: loading, empty, error, permission denied, offline, stale, partial data, dan demo.
-- [ ] Bedakan interaksi sungguhan dari simulasi/prototype (mis. notification, locale, workspace, command palette, theme).
+- [x] Bedakan interaksi sungguhan dari simulasi/prototype (mis. notification, locale, workspace, command palette, theme).
 
 ### 0.4 Dokumentasi audit
-- [ ] Cocokkan implementasi aktual dengan Information Architecture dan dokumen DNA/guideline proyek.
+- [x] Cocokkan implementasi aktual dengan Information Architecture dan dokumen DNA/guideline proyek.
 - [ ] Tandai dokumentasi historis yang sudah tidak sesuai source saat ini; jangan jadikan dokumen lama sebagai fakta implementasi.
 - [ ] Buat ringkasan gap: P0 blocker, P1 high, P2 medium, P3 polish.
 - [ ] Simpan baseline command dan hasil audit agar kemajuan fase berikutnya dapat diukur.
@@ -71,9 +71,9 @@
 **Tujuan:** membentuk struktur yang konsisten dan scalable tanpa membuat abstraksi berlebihan.
 
 ### 1.1 Struktur ownership
-- [ ] Definisikan konvensi folder resmi untuk `app`, `shell`, `features`, `platform`, `components`, `hooks`, `lib`, `styles`, dan `types`.
+- [x] Definisikan konvensi folder resmi untuk `app`, `shell`, `features`, `platform`, `components`, `hooks`, `lib`, `styles`, dan `types` (lihat `ARCHITECTURE.md`).
 - [ ] Pisahkan route composition dari implementasi feature; page sebaiknya menjadi composition layer yang tipis.
-- [ ] Kelompokkan komponen global shell ke area shell tersendiri.
+- [x] Kelompokkan komponen global shell ke area shell tersendiri.
 - [ ] Kelompokkan domain-specific UI, hooks, API adapters, types, dan tests di dalam feature pemiliknya.
 - [ ] Letakkan primitive reusable di `packages/ui`; jangan membuat salinan primitive di Headquarter.
 - [ ] Letakkan integrasi lintas-feature (auth, API client, workspace context, localization, telemetry) di platform layer hanya jika benar-benar shared.
@@ -86,7 +86,7 @@
 - [ ] Pastikan root layout, locale layout, dan workspace layout memiliki tanggung jawab berbeda.
 - [ ] Tambahkan not-found, error boundary, dan loading boundary pada level yang tepat.
 - [ ] Pastikan deep-link, refresh halaman, dan navigasi browser berfungsi konsisten.
-- [ ] Pastikan navigasi mobile dan desktop menggunakan sumber konfigurasi yang sama.
+- [x] Pastikan navigasi mobile dan desktop menggunakan sumber konfigurasi yang sama.
 
 ### 1.3 Dependency boundaries
 - [ ] Tetapkan aturan arah import: route → feature/shell composition → platform/packages; hindari dependency melingkar.
@@ -98,8 +98,8 @@
 ### 1.4 Refactor shell
 - [ ] Pecah AppShell berdasarkan tanggung jawab (navigation, topbar, command palette, notification center, user menu, mobile shell).
 - [ ] Jaga AppShell sebagai composition/orchestration UI, bukan tempat business logic feature.
-- [ ] Ekstrak konfigurasi navigation ke satu sumber data dengan grouping dan metadata yang eksplisit.
-- [ ] Hilangkan state duplikat antara desktop navigation dan mobile navigation.
+- [x] Ekstrak konfigurasi navigation ke satu sumber data dengan grouping dan metadata yang eksplisit.
+- [x] Hilangkan state duplikat antara desktop navigation dan mobile navigation.
 - [ ] Pastikan active route, nested route, disabled item, dan permission-aware item memiliki perilaku konsisten.
 - [ ] Tambahkan test untuk shell navigation dan route matching.
 
@@ -380,3 +380,14 @@ Sebuah task/feature hanya boleh ditandai selesai jika seluruh bagian yang releva
 4. Jangan mengubah kontrak API atau ownership ARSY secara sepihak dari Headquarter.
 5. Jika keputusan belum pasti, tulis sebagai open decision dan sertakan opsi, dampak, serta rekomendasi.
 6. Perbarui checklist ini setelah setiap milestone; sertakan commit/PR dan bukti verifikasi bila tersedia.
+
+
+---
+
+## Execution record — 2026-11-07
+
+- [x] Phase 0 source audit recorded in [AUDIT.md](./AUDIT.md).
+- [x] Phase 1 shell decomposition and folder conventions recorded in [ARCHITECTURE.md](./ARCHITECTURE.md).
+- [ ] Clean-checkout lint, type-check, and Next.js build verified in CI or local environment.
+- [ ] Browser-level responsive and accessibility checks verified.
+- [ ] Route-aware `/id` and `/en` localization implemented; current locale toggle remains prototype-only.

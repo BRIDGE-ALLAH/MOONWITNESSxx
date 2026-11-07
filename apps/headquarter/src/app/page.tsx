@@ -10,16 +10,14 @@ export default function Home() {
           <h1 className="font-display text-6xl uppercase leading-none">
             MOONWITNESS <span className="text-riot-orange">//</span> RIOTWORKS
           </h1>
-          <p className="font-mono text-sm uppercase tracking-widest text-muted-foreground">
-            Make work that outlives the feed.
-          </p>
+          <p className="font-mono text-sm uppercase tracking-widest text-muted-foreground">Make work that outlives the feed.</p>
         </header>
-
         <Card className="border-acid-lime/30">
           <CardHeader>
             <CardTitle>Creative Commerce Engine</CardTitle>
             <CardDescription>
-              apps/headquarter + packages/ui (shadcn/ui) — workspace active. Use the left nav or command palette to explore modules.
+              Headquarter is the human-facing command center. ARSY provides the backend API and orchestration runtime.
+              This workspace currently displays prototype/demo content.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
@@ -33,4 +31,3 @@ export default function Home() {
     </main>
   )
 }
-

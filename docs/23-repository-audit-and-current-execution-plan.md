@@ -41,7 +41,7 @@ This is a repository inspection, not a local execution of pnpm install/build/tes
 
 | Path | Observed state | Audit finding |
 |---|---|---|
-| apps/headquarter | Next.js App Router-shaped files, layout, page, Tailwind config and next.config.ts | Prototype only. Its package manifest describes a Fastify backend, uses Fastify CLI scripts, and does not declare Next/React runtime dependencies. The page still says apps/web; this is stale UI copy. |
+| apps/headquarter | Next.js App Router app, layout, page, Tailwind config and next.config.ts | At the original audit snapshot, the manifest described Fastify. **That mismatch has since been corrected**: current source declares Next.js/React and Next scripts. The stale home-page architecture copy was also corrected in the Headquarter Phase 1 change. See `apps/headquarter/AUDIT.md`. |
 | apps/arsy | Fastify app with one / status route | Minimal prototype. It imports @riotworks/arsy-core, but that package has no implementation entrypoint in the current tree. It imports UI unnecessarily. Server starts directly on port 3000; no config/lifecycle/DB/ORM/auth/route composition yet. |
 
 ### 3.2 Actual packages
@@ -89,7 +89,7 @@ This is expected unfinished work, not evidence that the docs are wrong. Do not c
 
 | ID | Severity | Finding | Required correction |
 |---|---|---|---|
-| AUD-001 | Critical | Headquarter package manifest describes Fastify, while its source is Next.js | Correct package identity, scripts, dependencies, and Next build/typecheck path. |
+| AUD-001 | Critical | **Resolved after the original audit snapshot:** Headquarter package manifest previously described Fastify while source was Next.js | Current `apps/headquarter/package.json` declares Next.js/React and Next build/type-check scripts. Keep the manifest aligned with the App Router application. See `apps/headquarter/AUDIT.md`. |
 | AUD-002 | Critical | ARSY imports arsy-core, but arsy-core has no source entrypoint in tracked tree | Implement core factory/lifecycle or remove the false dependency until ready. |
 | AUD-003 | Critical | apps/arsy depends on @riotworks/ui | Remove UI from backend dependency graph. |
 | AUD-004 | Critical | services/arsy duplicates apps/arsy and references a missing local queue module | Make apps/arsy canonical; extract useful behavior then retire duplicate. |
