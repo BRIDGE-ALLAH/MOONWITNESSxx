@@ -148,3 +148,34 @@ This addendum supersedes the earlier HEAD and open-PR snapshots above. It is bas
 5. Complete a real container build/run against PostgreSQL, then production secrets, TLS, backup/restore, monitoring, rollback and live smoke tests.
 6. Reconcile SemVer/tag/release history and publish only after production verification.
 
+
+## 9. Follow-up mainline revalidation — 2026-11-08
+
+A further remote update occurred after section 8 was written.
+
+### 9.1 Latest main and product UI correction
+
+- Latest verified `main` is now `2d3bdc6b5536dc350e0df98978f20f40fe0febb6`.
+- This commit reverts `apps/headquarter/src/features/money-maker/opportunity-board.tsx`, a premature UI file that had reached main without the full verified workflow. Do not reintroduce that file or treat the deleted UI as a completed commerce feature.
+- Issue #100 remains the canonical work item for the actual commerce vertical slice.
+
+### 9.2 Newer data-truth work
+
+- PR #107 is the current draft for Signal Room fabricated-market-metric removal. It replaces static market signals and unsupported confidence/prevalence figures with an explicit disconnected state. CI, typecheck/build, CodeQL and browser/accessibility checks remain pending.
+- PR #105 is superseded by #107; use #107 as the canonical review path.
+- PR #109 is a draft that removes fictional transactions/payouts from Mizan Ledger, fictional products/provenance/production states and placeholder imagery from The Forge, and fictional rights/inspection/similarity outcomes from ZILL Watch. It is a data-truth correction, not implementation of those backend capabilities. CI and browser verification remain pending.
+
+### 9.3 Commerce backend foundation and dependency order
+
+- PR #106 is a draft backend foundation for Issue #100. It contains PostgreSQL domain tables, a checksum-verified explicit migration runner, opportunity validation/evaluation, owner-scoped API operations, single-operator token authentication and tests.
+- PR #106 intentionally targets PR #102's branch, not main, and is not mergeable until the dependency is integrated/rebased.
+- Its own stated limits are material: migration application against an isolated real database, Headquarter API/BFF integration, product lifecycle, asset storage, financial event/reconciliation endpoints, channel workflows, real analytics, E2E, deployment and backup/restore remain incomplete. The described unit/API tests do not prove real PostgreSQL persistence.
+- PR #102 still targets main at its older base SHA `8621f861e5e544d8059e5216cc44b550e7077d90`; current main has advanced to `2d3bdc6`. Rebase/revalidate PR #102 before treating it as merge-ready. Its mergeable flag is not a CI result.
+- The safe dependency order is #102 current-main rebase and gates → #106 rebase onto integrated runtime → isolated PostgreSQL migration/repository verification → Headquarter integration → browser E2E. Keep Issue #100 open until all acceptance criteria are met.
+
+### 9.4 Audit PR status
+
+- PR #108 contains this documentation revalidation. It was created against the then-current main and GitHub now reports it mergeable against the newer main. It is documentation-only; its content must remain a dated audit snapshot, not a claim of code completion.
+- The repository's latest changes show active remediation, not production readiness. No current CI, live database, browser, container runtime or production deployment verification was performed by this session.
+- Release remains **NO-GO**. Do not infer that a release is safe from merged data-truth fixes or draft backend foundations.
+
