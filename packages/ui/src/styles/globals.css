@@ -20,11 +20,11 @@
     --secondary: 210 6% 87%;
     --secondary-foreground: 210 8% 14%;
     --accent: 16 100% 42%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 210 8% 10%;
 
     --success: 145 62% 29%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 34%;
+    --warning: 38 92% 30%;
     --warning-foreground: 0 0% 100%;
     --danger: 0 72% 42%;
     --danger-foreground: 0 0% 100%;
