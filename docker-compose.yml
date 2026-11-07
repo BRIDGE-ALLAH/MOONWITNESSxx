@@ -80,7 +80,7 @@ services:
     container_name: moonwitness-headquarter
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${HEADQUARTER_PORT:-3000}
+      PORT: 3000
       NEXT_PUBLIC_ARSY_URL: ${NEXT_PUBLIC_ARSY_URL:-http://arsy:3001}
     ports:
       - '${HEADQUARTER_PORT:-3000}:3000'
