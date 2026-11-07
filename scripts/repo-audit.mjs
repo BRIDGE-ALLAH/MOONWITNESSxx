@@ -65,7 +65,12 @@ export function parseWorkspaceGlobs(workspaceConfig) {
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line.startsWith('- '))
-    .map((line) => line.slice(2).trim().replace(/^['"]|['"]$/g, ''))
+    .map((line) =>
+      line
+        .slice(2)
+        .trim()
+        .replace(/^['"]|['"]$/g, '')
+    )
 
   return new Set(globs)
 }
@@ -134,7 +139,9 @@ export async function runAudit({ writeReport = process.argv.includes('--write-re
     errors.push('pnpm-workspace.yaml must include apps/* and packages/*.')
   }
   if (workspaceGlobs.has('services/*')) {
-    errors.push('services/* must not be a workspace until its ownership and runtime boundaries are reconciled.')
+    errors.push(
+      'services/* must not be a workspace until its ownership and runtime boundaries are reconciled.'
+    )
   }
 
   // Pass 1: collect every package manifest before resolving cross-package references.
