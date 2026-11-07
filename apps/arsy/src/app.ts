@@ -9,17 +9,21 @@ import { registerProductRoutes } from './products/routes.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { registerFinancialRoutes } from './finance/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
+import { createAssetStorage, type AssetStorageAdapter } from './assets/storage.ts'
+import { registerAssetRoutes } from './assets/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
   logger?: boolean
   env?: NodeJS.ProcessEnv
+  assetStorage?: AssetStorageAdapter
 }
 
 export function createApp(options: CreateAppOptions = {}) {
-  const app = Fastify({ logger: options.logger ?? true })
+  const app = Fastify({ logger: options.logger ?? true, bodyLimit: 8 * 1024 * 1024 })
   const env = options.env ?? process.env
   const databasePool = options.databasePool ?? createDatabasePool(env)
+  const assetStorage = options.assetStorage ?? createAssetStorage(env)
   registerOperatorApiAuth(app, env)
 
   app.register(async (instance) => {
@@ -68,6 +72,7 @@ export function createApp(options: CreateAppOptions = {}) {
     registerProductRoutes(instance, databasePool, env)
     registerFinancialRoutes(instance, databasePool, env)
     registerLoginAttemptRoutes(instance, databasePool, env)
+    registerAssetRoutes(instance, databasePool, assetStorage, env)
   })
 
   return app
