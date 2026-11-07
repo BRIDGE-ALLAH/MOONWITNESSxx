@@ -76,7 +76,9 @@ pub fn validate(input: &EngineWriteRequest) -> Result<(), &'static str> {
         || !url.username().is_empty()
         || url.password().is_some()
     {
-        return Err("endpoint scheme must match engine type and must not contain embedded credentials");
+        return Err(
+            "endpoint scheme must match engine type and must not contain embedded credentials",
+        );
     }
     if let Some(key) = &input.secret_env_key {
         if !key.starts_with("ATLAS_ENGINE_SECRET_")

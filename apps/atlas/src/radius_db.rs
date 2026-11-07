@@ -32,7 +32,10 @@ pub async fn probe() -> DatabaseStatus {
     let Ok(pool) = pool().await else {
         return DatabaseStatus::Unavailable;
     };
-    match sqlx::query_scalar::<_, i32>("SELECT 1").fetch_one(pool).await {
+    match sqlx::query_scalar::<_, i32>("SELECT 1")
+        .fetch_one(pool)
+        .await
+    {
         Ok(1) => DatabaseStatus::Available,
         _ => DatabaseStatus::Unavailable,
     }

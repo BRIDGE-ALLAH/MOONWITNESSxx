@@ -1,9 +1,4 @@
-use std::{
-    env,
-    os::unix::fs::PermissionsExt,
-    process::Stdio,
-    time::Duration,
-};
+use std::{env, os::unix::fs::PermissionsExt, process::Stdio, time::Duration};
 
 use tokio::{io::AsyncWriteExt, process::Command};
 
@@ -101,25 +96,51 @@ async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
         return result(engine, "disabled", "engine instance is disabled");
     }
     let Some(secret_key) = engine.secret_env_key.as_ref() else {
-        return result(engine, "not_configured", "RADIUS Status-Server secret reference is missing");
+        return result(
+            engine,
+            "not_configured",
+            "RADIUS Status-Server secret reference is missing",
+        );
     };
     let Ok(secret) = env::var(secret_key) else {
-        return result(engine, "not_configured", "RADIUS Status-Server secret environment variable is missing");
+        return result(
+            engine,
+            "not_configured",
+            "RADIUS Status-Server secret environment variable is missing",
+        );
     };
     let Ok(url) = reqwest::Url::parse(&engine.endpoint) else {
         return result(engine, "invalid_endpoint", "RADIUS endpoint URL is invalid");
     };
     let Some(host) = url.host_str() else {
-        return result(engine, "invalid_endpoint", "RADIUS endpoint host is missing");
+        return result(
+            engine,
+            "invalid_endpoint",
+            "RADIUS endpoint host is missing",
+        );
     };
     let port = url.port().unwrap_or(18121);
     let secret_path = env::temp_dir().join(format!("atlas-radius-{}.secret", ulid::Ulid::new()));
-    if tokio::fs::write(&secret_path, format!("{secret}\n")).await.is_err() {
-        return result(engine, "error", "could not prepare protected RADIUS probe secret");
+    if tokio::fs::write(&secret_path, format!("{secret}\n"))
+        .await
+        .is_err()
+    {
+        return result(
+            engine,
+            "error",
+            "could not prepare protected RADIUS probe secret",
+        );
     }
-    if tokio::fs::set_permissions(&secret_path, std::fs::Permissions::from_mode(0o600)).await.is_err() {
+    if tokio::fs::set_permissions(&secret_path, std::fs::Permissions::from_mode(0o600))
+        .await
+        .is_err()
+    {
         let _ = tokio::fs::remove_file(&secret_path).await;
-        return result(engine, "error", "could not secure temporary RADIUS probe secret");
+        return result(
+            engine,
+            "error",
+            "could not secure temporary RADIUS probe secret",
+        );
     }
     let child = Command::new("radclient")
         .arg("-q")
@@ -135,9 +156,9 @@ async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
     let outcome = match child {
         Ok(mut child) => {
             let write_result = if let Some(mut stdin) = child.stdin.take() {
-                stdin.write_all(
-                    b"FreeRADIUS-Statistics-Type = 1\nMessage-Authenticator = 0x00\n",
-                ).await
+                stdin
+                    .write_all(b"FreeRADIUS-Statistics-Type = 1\nMessage-Authenticator = 0x00\n")
+                    .await
             } else {
                 Err(std::io::Error::other("radclient stdin unavailable"))
             };
@@ -158,8 +179,16 @@ async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
     };
     let _ = tokio::fs::remove_file(&secret_path).await;
     if outcome {
-        result(engine, "healthy", "FreeRADIUS answered a Status-Server request")
+        result(
+            engine,
+            "healthy",
+            "FreeRADIUS answered a Status-Server request",
+        )
     } else {
-        result(engine, "unreachable", "FreeRADIUS Status-Server probe did not receive a valid response")
+        result(
+            engine,
+            "unreachable",
+            "FreeRADIUS Status-Server probe did not receive a valid response",
+        )
     }
 }

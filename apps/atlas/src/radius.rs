@@ -72,7 +72,11 @@ pub fn validate_nas(input: &NasWriteRequest) -> Result<(), &'static str> {
     if !valid_ip {
         return Err("nasname must be an IPv4/IPv6 address or CIDR network");
     }
-    if input.shortname.as_ref().is_some_and(|value| value.len() > 32) {
+    if input
+        .shortname
+        .as_ref()
+        .is_some_and(|value| value.len() > 32)
+    {
         return Err("shortname must not exceed 32 characters");
     }
     if input.nas_type.trim().is_empty() || input.nas_type.len() > 30 {
@@ -80,11 +84,18 @@ pub fn validate_nas(input: &NasWriteRequest) -> Result<(), &'static str> {
     }
     if input.secret.len() < 32
         || input.secret.len() > 60
-        || !input.secret.bytes().all(|byte| (0x21..=0x7e).contains(&byte))
+        || !input
+            .secret
+            .bytes()
+            .all(|byte| (0x21..=0x7e).contains(&byte))
     {
         return Err("NAS shared secret must be 32-60 printable non-space ASCII characters");
     }
-    if input.description.as_ref().is_some_and(|value| value.len() > 200) {
+    if input
+        .description
+        .as_ref()
+        .is_some_and(|value| value.len() > 200)
+    {
         return Err("description must not exceed 200 characters");
     }
     Ok(())
@@ -170,10 +181,7 @@ pub async fn list_subscribers() -> Result<Vec<Subscriber>, sqlx::Error> {
         .await
 }
 
-fn derive_credential(
-    password: &str,
-    mode: &str,
-) -> Result<(String, String), sqlx::Error> {
+fn derive_credential(password: &str, mode: &str) -> Result<(String, String), sqlx::Error> {
     match mode {
         "bcrypt" => {
             let hash = bcrypt::hash(password, 12)
@@ -190,7 +198,9 @@ fn derive_credential(
             let hash = format!("0x{}", hex::encode(hasher.finalize()));
             Ok(("NT-Password".to_string(), hash))
         }
-        _ => Err(sqlx::Error::Protocol("unsupported credential mode".to_string())),
+        _ => Err(sqlx::Error::Protocol(
+            "unsupported credential mode".to_string(),
+        )),
     }
 }
 
@@ -199,11 +209,10 @@ pub async fn create_or_update_subscriber(
 ) -> Result<(), sqlx::Error> {
     let password = input.password.clone();
     let mode = input.credential_mode.clone();
-    let (attribute, value) = tokio::task::spawn_blocking(move || {
-        derive_credential(&password, &mode)
-    })
-    .await
-    .map_err(|_| sqlx::Error::Protocol("password hashing task failed".to_string()))??;
+    let (attribute, value) =
+        tokio::task::spawn_blocking(move || derive_credential(&password, &mode))
+            .await
+            .map_err(|_| sqlx::Error::Protocol("password hashing task failed".to_string()))??;
 
     let pool = radius_db::pool().await?;
     let mut tx = pool.begin().await?;

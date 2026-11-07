@@ -216,7 +216,9 @@ async fn create_engine(
 }
 
 async fn get_engine(headers: HeaderMap, Path(id): Path<String>) -> impl IntoResponse {
-    if let Err(error) = authorized(&headers) { return error.into_response(); }
+    if let Err(error) = authorized(&headers) {
+        return error.into_response();
+    }
     match engine::get(&id).await {
         Ok(Some(item)) => (StatusCode::OK, Json(item)).into_response(),
         Ok(None) => (
@@ -246,7 +248,13 @@ async fn update_engine(
     }
     match engine::update(&id, &input).await {
         Ok(Some(item)) => (StatusCode::OK, Json(item)).into_response(),
-        Ok(None) => (StatusCode::NOT_FOUND, Json(ApiError { error: "engine instance not found" })).into_response(),
+        Ok(None) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiError {
+                error: "engine instance not found",
+            }),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to update engine instance");
             database_error().into_response()
@@ -294,10 +302,7 @@ async fn list_nas(headers: HeaderMap) -> impl IntoResponse {
     }
 }
 
-async fn create_nas(
-    headers: HeaderMap,
-    Json(input): Json<NasWriteRequest>,
-) -> impl IntoResponse {
+async fn create_nas(headers: HeaderMap, Json(input): Json<NasWriteRequest>) -> impl IntoResponse {
     if let Err(error) = authorized(&headers) {
         return error.into_response();
     }
@@ -321,8 +326,11 @@ async fn delete_nas(headers: HeaderMap, Path(id): Path<i64>) -> impl IntoRespons
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => (
             StatusCode::NOT_FOUND,
-            Json(ApiError { error: "NAS client not found" }),
-        ).into_response(),
+            Json(ApiError {
+                error: "NAS client not found",
+            }),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to delete RADIUS NAS client");
             database_error().into_response()
@@ -361,7 +369,8 @@ async fn upsert_subscriber(
                 "credential_storage": "hashed",
                 "authentication_effective": true
             })),
-        ).into_response(),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to store RADIUS subscriber");
             database_error().into_response()
@@ -377,8 +386,11 @@ async fn delete_subscriber(headers: HeaderMap, Path(username): Path<String>) -> 
         Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Ok(false) => (
             StatusCode::NOT_FOUND,
-            Json(ApiError { error: "subscriber not found" }),
-        ).into_response(),
+            Json(ApiError {
+                error: "subscriber not found",
+            }),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to delete RADIUS subscriber");
             database_error().into_response()
@@ -427,7 +439,10 @@ pub fn routes() -> Routes {
         .add("/engines/{id}/health", get(engine_health))
         .add("/radius/nas", get(list_nas).post(create_nas))
         .add("/radius/nas/{id}", delete(delete_nas))
-        .add("/radius/subscribers", get(list_subscribers).post(upsert_subscriber))
+        .add(
+            "/radius/subscribers",
+            get(list_subscribers).post(upsert_subscriber),
+        )
         .add("/radius/subscribers/{username}", delete(delete_subscriber))
         .add("/radius/sessions/active", get(active_sessions))
         .add("/radius/accounting/summary", get(accounting_summary))
