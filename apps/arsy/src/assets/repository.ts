@@ -229,11 +229,30 @@ export class AssetRepository {
     return rows<InspectionRow>(result).map(mapInspection)
   }
 
-  async readiness(ownerId: string, assetId: string): Promise<{ ready: boolean; inspections: Record<InspectionType, InspectionStatus> } | null> {
+  async readiness(ownerId: string, assetId: string): Promise<{
+    ready: boolean
+    inspections: Record<InspectionType, { status: InspectionStatus; source: InspectionSource | null; reviewedAt: string | null }>
+  } | null> {
     const history = await this.inspections(ownerId, assetId)
     if (!history) return null
     const required: InspectionType[] = ['rights', 'policy', 'technical-qa', 'creative-qa']
-    const latest = Object.fromEntries(required.map((type) => [type, history.find((item) => item.inspectionType === type)?.status ?? 'unknown'])) as Record<InspectionType, InspectionStatus>
-    return { ready: required.every((type) => latest[type] === 'pass'), inspections: latest }
+    const latest = Object.fromEntries(required.map((type) => {
+      const record = history.find((item) => item.inspectionType === type)
+      return [type, {
+        status: record?.status ?? 'unknown',
+        source: record?.inspectionSource ?? null,
+        reviewedAt: record?.reviewedAt ?? null,
+      }]
+    })) as Record<InspectionType, { status: InspectionStatus; source: InspectionSource | null; reviewedAt: string | null }>
+    const sourceAllowed: Record<InspectionType, InspectionSource[]> = {
+      rights: ['independent-review'],
+      policy: ['independent-review'],
+      'technical-qa': ['automated-check', 'independent-review'],
+      'creative-qa': ['independent-review'],
+    }
+    const ready = required.every((type) =>
+      latest[type].status === 'pass' && latest[type].source !== null && sourceAllowed[type].includes(latest[type].source),
+    )
+    return { ready, inspections: latest }
   }
 }
