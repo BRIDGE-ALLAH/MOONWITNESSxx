@@ -1,32 +1,31 @@
-# RIOTWORKS UI — Design Token Contract
+# MOONWITNESS UI — Design Token Contract
 
-The source of truth for visual tokens is `src/styles/globals.css`. Tailwind aliases are defined in `tailwind.config.js`. Applications must consume these shared tokens rather than redefining semantic colors locally.
+The source of truth for semantic UI tokens is `src/styles/globals.css`. Primitive brand colors are defined by `packages/assets/brand-tokens.css` and `docs/10-design-dna.md`; Tailwind aliases are defined in `tailwind.config.js`.
 
-## Theme mapping
+## Experience themes
 
-| Semantic role | Night Riot | Paper Riot | Usage |
+| Semantic role | Observatory | Archive | Usage |
 |---|---|---|---|
-| Background / foreground | Obsidian / Paper Bone | Paper Bone / Obsidian | App canvas and default text |
-| Card / popover | Deep Industrial | Warm paper surface | Grouped content and overlays |
-| Secondary / muted | Panel Charcoal | Warm neutral | Secondary controls and quiet surfaces |
-| Primary | Acid Lime | Acid Lime | Main action and intentional signal |
-| Accent | Riot Orange | Riot Orange | Brand emphasis, not generic status |
-| Destructive | Red | Red | Destructive action and failure |
-| Success | Accessible green range | Dark green range | Confirmed success only |
-| Warning | Amber | Dark amber | Caution and attention |
-| Info | Electric cyan range | Dark cyan range | Informational state |
-| Focus | Acid Lime | Darkened lime | Keyboard focus indicator |
+| Background / foreground | Void / Moonlight | Moonlight / Deep Ink | Primary canvas and readable text |
+| Card / popover | Observatory | Warm Moonlight | Elevated content and overlays |
+| Secondary / muted | Slate / Lunar Silver | Warm neutral / Muted Ink | Secondary controls and quiet content |
+| Primary | Signal Gold | Darkened Eclipse Violet | Main action; pair with a compliant foreground |
+| Accent | Eclipse Violet | Dark Gold | Deliberate identity emphasis |
+| Destructive | Signal Red | Accessible dark red | Failure and destructive actions |
+| Focus | Signal Gold | Darkened Eclipse Violet | Visible keyboard focus |
+
+The Archive theme intentionally overrides inherited dark theme tokens on its route root. A page using `.theme-archive` inside the application-level `.dark` class must render as a light editorial surface.
 
 ## Rules
 
 - Prefer semantic classes such as `bg-background`, `text-foreground`, `border-border`, `bg-success`, `text-warning-foreground`, and `ring-focus`.
-- Brand utilities such as `text-riot-orange` and `bg-acid-lime` are for deliberate identity moments, not arbitrary status meaning.
-- Never communicate success, warning, failure, or selection through color alone; pair color with text, icon, or accessible status semantics.
-- Use display typography for short identity-led headings, UI typography for operational reading, and monospace for codes, timestamps, and telemetry.
-- Keep corners tight and surfaces structured. Avoid adding glow, gradients, or motion to every component; visual intensity should establish hierarchy.
+- Map brand primitives to semantic roles; do not use brand colors as substitutes for success, warning, failure, or information.
+- Never communicate status, selection, or focus through color alone; pair color with text, iconography, or accessible semantics.
+- Use Space Grotesk for display/interface and IBM Plex Mono for technical data, with documented system fallbacks.
+- Keep lunar geometry and textures subtle and away from dense data, essential text, and focus indicators.
 - Honor `prefers-reduced-motion`. Motion must communicate state or hierarchy, not decorate every interaction.
-- Theme changes must preserve semantic meaning and readable contrast in both themes.
+- Theme switching must preserve semantic meaning and readable contrast in both experiences.
 
 ## Verification status
 
-The shared semantic foundation and initial Badge/Button mappings are implemented. WCAG contrast measurements, full component migration, visual regression, and browser verification remain open tasks. Do not treat this document as an accessibility certification.
+Theme selectors and semantic token contracts have automated source-level tests. This is not browser visual verification or WCAG certification. Rendered-state contrast, keyboard/focus behavior, responsive screenshots, and assistive-technology review remain release gates.
