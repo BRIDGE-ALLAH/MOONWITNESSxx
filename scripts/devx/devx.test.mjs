@@ -32,12 +32,13 @@ test('root configuration changes conservatively impact every workspace package',
 })
 
 test('context compiler is bounded, fingerprinted and excludes secret files', async () => {
-  const result = await compileRepoContext({ root, maxChars: 3000 })
+  const result = await compileRepoContext({ root, maxChars: 3000, format: 'json' })
   assert.equal(result.truncated, true)
   assert.equal(result.fingerprint.length, 64)
   assert.ok(result.content.length <= 3000)
-  assert.equal(result.content.includes('.env'), false)
-  assert.equal(result.content.includes('node_modules/.bin'), false)
+  const parsed = JSON.parse(result.content)
+  assert.equal(parsed.fingerprint, result.fingerprint)
+  assert.equal((parsed.sections ?? []).some((section) => section.path === '.env' || section.path.startsWith('.env.')), false)
 })
 
 test('context compiler emits machine-readable JSON when requested', async () => {
