@@ -43,11 +43,12 @@ export function createApp(options: CreateAppOptions = {}) {
     '/health/ready',
     { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
     async (_request, reply) => {
-    try {
-      await databasePool.query('SELECT 1')
-      return { status: 'ready' }
-    } catch {
-      return reply.code(503).send({ status: 'not-ready' })
+      try {
+        await databasePool.query('SELECT 1')
+        return { status: 'ready' }
+      } catch {
+        return reply.code(503).send({ status: 'not-ready' })
+      }
     },
   )
 
