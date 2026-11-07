@@ -11,6 +11,7 @@
     "lint": "ESLINT_USE_FLAT_CONFIG=false pnpm --filter @riotworks/lint exec eslint --config .eslintrc.json ../../apps/arsy/src --ext .ts --max-warnings 0",
     "type-check": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "test:integration": "node --experimental-strip-types --test tests/*.integration.mjs",
     "migrate:up": "node --experimental-strip-types src/migrations/runner.ts"
   },
   "dependencies": {
