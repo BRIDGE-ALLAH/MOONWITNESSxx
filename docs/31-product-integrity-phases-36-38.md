@@ -83,3 +83,6 @@ The database readiness and database health routes use Fastify rate limiting (60 
 ## Release metadata gate
 
 The product preflight now compares the root package SemVer with the latest numeric release heading in CHANGELOG.md. A mismatch is a release blocker; do not guess or bump versions until the authoritative previous tag/release and monorepo version policy have been verified.
+
+
+Current repository finding: root package version is 1.0.11 while the latest numeric CHANGELOG heading is 1.0.0. The product preflight flags this as a release blocker; no version bump or tag is made until the authoritative release history and version policy are confirmed.
