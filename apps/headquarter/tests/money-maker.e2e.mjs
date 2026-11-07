@@ -109,7 +109,35 @@ try {
   assert.ok(idr)
   assert.equal(idr.gross_receipts_minor, '5000')
   assert.equal(idr.net_contribution_minor, '5000')
+  assert.equal(idr.tax_reserve_minor, '0')
   assert.equal(idr.pending_minor, '0')
+
+  // A verified tax reserve is reported separately and does not reduce operating contribution.
+  await page.getByLabel('Event type').selectOption('tax-reserve')
+  await page.getByLabel('Product (optional)').selectOption({ label: `${title} · v1` })
+  await page.getByLabel('Amount · minor units').fill('300')
+  await page.getByLabel('ISO currency').fill('IDR')
+  await page.getByLabel('Occurred at').fill(new Date(Date.now() - 30_000).toISOString().slice(0, 16))
+  await page.getByLabel('Source', { exact: true }).fill(`${source} tax reserve`)
+  await page.getByLabel('Provider reference (optional)').fill(`${runId}-tax`)
+  await page.getByTestId('record-financial-event').click()
+  await page.getByRole('status').filter({ hasText: 'Financial event recorded as pending reconciliation' }).waitFor({ state: 'visible', timeout: 30_000 })
+  const taxEventCard = page.getByTestId('financial-event-card').filter({ hasText: `${source} tax reserve` })
+  await taxEventCard.waitFor({ state: 'visible' })
+  await taxEventCard.getByLabel('Evidence URL').fill(`https://example.com/isolated-tax-statement/${runId}`)
+  await taxEventCard.getByLabel('Reconciliation rationale').fill('Matched to the isolated CI tax-reserve statement fixture.')
+  await taxEventCard.getByTestId('save-reconciliation').click()
+  await taxEventCard.getByText('verified', { exact: true }).waitFor({ state: 'visible', timeout: 30_000 })
+
+  const updatedSummaryResponse = await context.request.get(`${baseUrl}/api/financial-summary`)
+  assert.equal(updatedSummaryResponse.status(), 200)
+  const updatedSummaryPayload = await updatedSummaryResponse.json()
+  const updatedIdr = updatedSummaryPayload.data.find((row) => row.currency === 'IDR')
+  assert.ok(updatedIdr)
+  assert.equal(updatedIdr.gross_receipts_minor, '5000')
+  assert.equal(updatedIdr.net_contribution_minor, '5000')
+  assert.equal(updatedIdr.tax_reserve_minor, '300')
+  assert.equal(updatedIdr.pending_minor, '0')
 
   // Refresh proves that all three layers are reading persisted data.
   await page.reload({ waitUntil: 'domcontentloaded' })
@@ -118,7 +146,10 @@ try {
   // Portfolio analytics must use persisted records and explicitly label unavailable cohorts.
   await page.goto(`${baseUrl}/aftershock`, { waitUntil: 'domcontentloaded' })
   await page.getByText('Financial contribution by currency').waitFor({ state: 'visible' })
-  await page.getByText('Net contribution', { exact: true }).waitFor({ state: 'visible' })
+  await page.getByText('Net contribution (before tax reserve)', { exact: true }).waitFor({ state: 'visible' })
+  await page.getByText('Verified tax reserve', { exact: true }).waitFor({ state: 'visible' })
+  await page.getByText('300', { exact: true }).waitFor({ state: 'visible' })
+  await page.getByText('5000', { exact: true }).waitFor({ state: 'visible' })
   await page.getByText('Unavailable. Search impression and source-exposure events are not yet captured with a defined denominator.').waitFor({ state: 'visible' })
 
   // Archive is a real soft-delete; the audit record and related product/ledger remain.
