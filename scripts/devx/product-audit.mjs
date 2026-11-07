@@ -36,7 +36,13 @@ export async function auditWorkspaceContracts({ root } = {}) {
   const workspaceText = await readText(join(root, 'pnpm-workspace.yaml'))
   const patterns = [...workspaceText.matchAll(/^\s*-\s*["']([^"']+)["']/gm)].map((match) => match[1])
   if (!patterns.length) findings.push(finding('workspace-patterns-missing', 'error', 'pnpm-workspace.yaml declares no package globs.'))
-  for (const pattern of patterns) {\n    if (!WORKSPACE_PATTERNS.has(pattern)) {\n      const id = pattern === 'services/*' ? 'legacy-services-in-workspace' : 'unsupported-workspace-pattern'\n      findings.push(finding(id, 'error', 'Workspace pattern is not an approved repository root: ' + pattern))\n    }\n  }\n
+  for (const pattern of patterns) {
+    if (!WORKSPACE_PATTERNS.has(pattern)) {
+      const id = pattern === 'services/*' ? 'legacy-services-in-workspace' : 'unsupported-workspace-pattern'
+      findings.push(finding(id, 'error', 'Workspace pattern is not an approved repository root: ' + pattern))
+    }
+  }
+
   const packages = await workspacePackages(root, patterns)
   const byName = new Map()
   for (const item of packages) {
