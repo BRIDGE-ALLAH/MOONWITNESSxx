@@ -19,7 +19,7 @@ The identity combines lunar symbolism, archival credibility, cinematic observato
 The enduring product promise: help people observe more carefully and understand more deeply. Use as the primary tagline on the master logo lockup, product entry points, and concise brand signatures.
 
 ### Brand Manifesto
-**WHEN THE MOON RISES, WE SHARE WHAT MATTERS.**
+**WHEN THE MOON RISES, WE SHARE MESSAGES.**
 
 The poetic and communal expression of the brand: discoveries, knowledge, stories, and messages should be shared with care. Use in campaign/editorial contexts, About pages, launch narratives, community communications, and selected onboarding moments. It is not a replacement for the Core Promise and should not crowd compact UI.
 
@@ -41,7 +41,7 @@ Product names may use a descriptive descriptor lockup, but the master symbol and
 ## 4. Brand idea and voice
 
 **Promise:** A bridge between human curiosity, evidence, and a clearer view of the world.
-**Manifesto:** When the Moon rises, we share what matters.
+**Manifesto:** When the Moon rises, we share messages.
 
 Voice: precise, curious, calm, accountable, and humane. Avoid grandiose claims, fake certainty, mystical authority, or decorative pseudo-technical copy. Distinguish facts, interpretations, hypotheses, and unknowns. Sharing must preserve source context and provenance.
 
