@@ -1,1 +1,1 @@
-export * from "./types.ts";export {executeResearchPlan,evaluateRetrieval,exportResearchReport} from "./orchestrator.ts";
+export * from "./types.ts";export {executeResearchPlan,evaluateRetrieval,exportResearchReport,createResearchCertificate,verifyResearchCertificate} from "./orchestrator.ts";

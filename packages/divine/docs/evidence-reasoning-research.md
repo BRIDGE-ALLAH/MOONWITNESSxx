@@ -14,7 +14,7 @@
 - ArcRAG (arXiv, 2026-11-04) motivates construction-agnostic query-time graph interfaces; Divine consumes typed graph contracts without binding to a particular graph DB.
 
 ## New high-upside research directions (proposals, not novelty claims)
-1. **Proof-Carrying Research (PCR):** every answer/report ships a compact derivation certificate (premise refs, evidence selectors, rule/version, source release hash). A separate verifier can reject missing, stale or scope-invalid support. This is more useful than a citation list because it tests whether the cited evidence actually participates in the derivation.
+1. **Proof-Carrying Research (PCR):** a first experimental certificate API now packages conclusion, premise refs, evidence/provenance refs, graph-edge refs, rule/version, scope and pinned Corpus release. A separate deterministic verifier checks the graph/release references and certificate fingerprint. This is more useful than a citation list because it tests whether cited evidence participates in the derivation; it is not a cryptographic signature or proof of truth.
 2. **Witness-Family Firewall:** evaluation splits and retrieval deduplication use Corpus lineage/witness families, not URL or document IDs, to prevent near-duplicate leakage and false corroboration.
 3. **Epistemic Time-Travel:** compare two pinned Corpus releases and show which conclusions changed, which evidence was added/withdrawn, and which rule version caused the change. This becomes a reproducible “why did our answer change?” debugger.
 4. **Negative-Space Ledger:** record searched-but-unavailable, restricted, missing and out-of-scope evidence separately from negative evidence. Absence becomes auditable without becoming denial.
@@ -27,3 +27,20 @@ Community discussions repeatedly report that multi-hop retrieval can lose relati
 
 ## Explicit non-goals
 No graph database, vector database, embedding model, Python runtime, network call, AI provider, Corpus write, universal confidence score, or source-independence inference is added. The graph and research runner are pure TypeScript interfaces/functions over supplied data.
+
+## References
+- Kejriwal (2026), *Semantics for Science*: https://www.isi.edu/results/publications/82525/semantics-for-science-toward-a-massive-scale-evidence-centric-scientific-knowledge-graph/
+- Chhetri et al. (2025), *Bridging the Scientific Knowledge Gap and Reproducibility*: https://doi.org/10.1145/3701716.3715483
+- SciGraph-LLM (WSDM Companion 2026): https://doi.org/10.1145/3779211.3793169
+- STEM (ACL 2026): https://aclanthology.org/2026.acl-long.329/
+- Programmatic Graph Reasoning (EMNLP Findings 2025): https://aclanthology.org/2025.findings-emnlp.293/
+- PaGLR (2026): https://doi.org/10.1007/s44443-026-00763-x
+- ArcRAG (arXiv, 2026-11-04): https://arxiv.org/abs/2611.06481
+- GitHub trending snapshot (Nov 7, 2026): https://github.locker/topics/knowledge-graph
+- Graphify deterministic code/docs graph approach: https://github.com/Graphify-Labs/graphify
+- NVIDIA Auto Ontology: https://github.com/NVIDIA/auto-ontology
+- LightRAG: https://github.com/HKUDS/LightRAG
+- Hindsight agent memory: https://github.com/vectorize-io/hindsight
+- Reddit practitioner discussion on claim-level GraphRAG verification: https://www.reddit.com/r/Rag/comments/1wgwryf/graphrag_retrieves_a_plausible_subgraphbut_can_it/
+- Reddit discussion on citation IDs surviving chunk/retrieval pipelines: https://www.reddit.com/r/LangChain/comments/1uukcbf/the_rag_citation_problem_why_i_ended_up_tracking/
+- Reddit discussion on query-dependent retrieval strategy trade-offs: https://www.reddit.com/r/LocalLLaMA/comments/1rxzmcd/benchmarked_5_rag_retrieval_strategies_on_code/
