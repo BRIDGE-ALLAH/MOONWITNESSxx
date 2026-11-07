@@ -23,7 +23,7 @@ export function Sidebar({ isOpen, demoLabel, onNavigate }: SidebarProps) {
     >
       <Link href="/" onClick={onNavigate} className="block border-2 border-primary/40 p-3">
         <div className="font-display text-xl uppercase leading-none">MOONWITNESS</div>
-        <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">// RIOTWORKS</div>
+        <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{'// RIOTWORKS'}</div>
       </Link>
       <div className="mt-4"><Badge variant="warning">{demoLabel}</Badge></div>
       <nav aria-label="Headquarter navigation" className="mt-6 space-y-5">
