@@ -8,7 +8,7 @@ ENV HOST=0.0.0.0 PORT=3001
 RUN npm install -g pnpm@12.16.1
 
 # Copy workspace manifests
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json turbo.json ./
 
 # Copy packages and apps
 COPY packages ./packages

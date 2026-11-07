@@ -1,3 +1,4 @@
+import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
 import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
@@ -11,41 +12,51 @@ export interface CreateAppOptions {
 
 export function createApp(options: CreateAppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? true })
-  app.setValidatorCompiler(validatorCompiler)
-  app.setSerializerCompiler(serializerCompiler)
-
-  const typedApp = app.withTypeProvider<ZodTypeProvider>()
   const databasePool = options.databasePool ?? createDatabasePool()
 
-  typedApp.get(
-    '/',
-    {
-      schema: {
-        response: {
-          200: Zod.object({
-            status: Zod.string(),
-            message: Zod.string(),
-          }),
+  app.register(async (instance) => {
+    // Register the onRoute hook before declaring routes in this encapsulated scope.
+    await instance.register(rateLimit, { global: false })
+    instance.setValidatorCompiler(validatorCompiler)
+    instance.setSerializerCompiler(serializerCompiler)
+
+    const typedApp = instance.withTypeProvider<ZodTypeProvider>()
+
+    typedApp.get(
+      '/',
+      {
+        schema: {
+          response: {
+            200: Zod.object({
+              status: Zod.string(),
+              message: Zod.string(),
+            }),
+          },
         },
       },
-    },
-    async () => ({
-      status: 'ok',
-      message: 'ARSY Command Center is running',
-    })
-  )
+      async () => ({
+        status: 'ok',
+        message: 'ARSY Command Center is running',
+      }),
+    )
 
-  typedApp.get('/health/live', async () => ({ status: 'alive' }))
+    typedApp.get('/health/live', async () => ({ status: 'alive' }))
 
-  typedApp.get('/health/ready', async (_request, reply) => {
-    try {
-      await databasePool.query('SELECT 1')
-      return { status: 'ready' }
-    } catch {
-      return reply.code(503).send({ status: 'not-ready' })
-    }
+    typedApp.get(
+      '/health/ready',
+      { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
+      async (_request, reply) => {
+        try {
+          await databasePool.query('SELECT 1')
+          return { status: 'ready' }
+        } catch {
+          return reply.code(503).send({ status: 'not-ready' })
+        }
+      },
+    )
+
+    setupDatabase(instance, databasePool)
   })
 
-  setupDatabase(app, databasePool)
   return app
 }
