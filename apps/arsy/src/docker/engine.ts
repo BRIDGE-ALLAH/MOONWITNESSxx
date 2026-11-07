@@ -1,11 +1,12 @@
 import http from 'node:http'
 import https from 'node:https'
 import type { IncomingMessage } from 'node:http'
+import { isIP, type LookupFunction } from 'node:net'
 import type { DockerTlsCredentials } from './security.ts'
 
 export type DockerConnection =
   | { kind: 'local'; socketPath: string }
-  | { kind: 'remote'; endpointUrl: string; tls: DockerTlsCredentials }
+  | { kind: 'remote'; endpointUrl: string; addresses: string[]; tls: DockerTlsCredentials }
 
 export interface DockerContainer {
   id: string
@@ -35,6 +36,15 @@ function requestBuffer(connection: DockerConnection, path: string, timeoutMs = 5
           key: connection.tls.key,
           rejectUnauthorized: true,
           servername: new URL(connection.endpointUrl).hostname,
+          lookup: ((hostname, options, callback) => {
+            const address = connection.addresses[0]
+            const family = isIP(address ?? '')
+            if (!address || family === 0) {
+              callback(new Error('Docker remote connection has no validated IP address'))
+              return
+            }
+            callback(null, address, family)
+          }) as LookupFunction,
         }
 
     const onResponse = (response: IncomingMessage) => {
