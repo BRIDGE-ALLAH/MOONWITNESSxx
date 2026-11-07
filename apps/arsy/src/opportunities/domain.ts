@@ -176,13 +176,12 @@ export function evaluateOpportunity(input: Pick<OpportunityInput, 'scores' | 'ha
   const gateEntries = Object.entries(input.hardGates)
   const blockedGates = gateEntries.filter(([, value]) => value === 'blocked').map(([key]) => key)
   const unknownGates = gateEntries.filter(([, value]) => value === 'unknown').map(([key]) => key)
-  const scoreEntries = Object.entries(scoreWeights) as Array<[keyof typeof scoreWeights, number]>
-  const missingScoreDimensions = scoreEntries
-    .filter(([key]) => input.scores[key] === undefined)
-    .map(([key]) => key)
+  const scoreDimensions = Object.keys(scoreWeights) as Array<keyof typeof scoreWeights>
+  const missingScoreDimensions = scoreDimensions
+    .filter((key) => input.scores[key] === undefined)
   const scoreIsComplete = missingScoreDimensions.length === 0
   const score = scoreIsComplete
-    ? Math.round(scoreEntries.reduce((total, [key, weight]) => total + (input.scores[key] ?? 0), 0) * 100) / 100
+    ? Math.round(scoreDimensions.reduce((total, key) => total + (input.scores[key] ?? 0), 0) * 100) / 100
     : null
 
   let decision: OpportunityDecision
