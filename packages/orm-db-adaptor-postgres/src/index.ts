@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { Pool, type PoolClient, type PoolConfig } from "pg";
+import { Pool, type PoolClient } from "pg";
 import type {
   DatabaseAdapter,
   DatabaseCapabilities,
@@ -118,7 +118,7 @@ export class PostgresDatabaseAdapter implements DatabaseAdapter {
   async connect(options: DatabaseConnectionOptions): Promise<void> {
     if (this.#pool) throw new Error("PostgreSQL adapter is already connected.");
     if (!options.connectionString) throw new TypeError("PostgreSQL connectionString is required.");
-    const config: PoolConfig = {
+    const config = {
       connectionString: options.connectionString,
       min: options.pool?.min ?? 0,
       max: options.pool?.max ?? 20,
@@ -127,8 +127,8 @@ export class PostgresDatabaseAdapter implements DatabaseAdapter {
     };
     const pool = new Pool(config);
     try {
-      const result = await pool.query<{ server_version: string }>("SHOW server_version");
-      this.#version = result.rows[0]?.server_version ?? "unknown";
+      const result = await pool.query("SHOW server_version");
+      this.#version = (result.rows[0] as { server_version?: string } | undefined)?.server_version ?? "unknown";
       this.#pool = pool;
     } catch (error) {
       await pool.end();
@@ -175,37 +175,41 @@ export class PostgresDatabaseAdapter implements DatabaseAdapter {
   async inspectSchema(): Promise<DatabaseSnapshot> {
     const pool = this.#requirePool();
     const [tablesResult, columnsResult, indexesResult, foreignKeysResult] = await Promise.all([
-      pool.query<{ table_name: string }>(
+      pool.query(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_type = 'BASE TABLE' ORDER BY table_name",
       ),
-      pool.query<{
-        table_name: string; column_name: string; data_type: string; character_maximum_length: number | null;
-        numeric_precision: number | null; numeric_scale: number | null; is_nullable: string;
-        column_default: string | null; ordinal_position: number;
-      }>(
+      pool.query(
         "SELECT table_name, column_name, data_type, character_maximum_length, numeric_precision, numeric_scale, is_nullable, column_default, ordinal_position FROM information_schema.columns WHERE table_schema = current_schema() ORDER BY table_name, ordinal_position",
       ),
-      pool.query<{ tablename: string; indexname: string; indexdef: string }>(
+      pool.query(
         "SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = current_schema() ORDER BY tablename, indexname",
       ),
-      pool.query<{
-        table_name: string; constraint_name: string; column_name: string; foreign_table_name: string;
-        foreign_column_name: string; delete_rule: string;
-      }>(
+      pool.query(
         "SELECT tc.table_name, tc.constraint_name, kcu.column_name, ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name, rc.delete_rule FROM information_schema.table_constraints tc JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema JOIN information_schema.referential_constraints rc ON rc.constraint_name = tc.constraint_name AND rc.constraint_schema = tc.table_schema WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = current_schema() ORDER BY tc.table_name, tc.constraint_name, kcu.ordinal_position",
       ),
     ]);
 
+    const tableRows = tablesResult.rows as Array<{ table_name: string }>;
+    const columnRows = columnsResult.rows as Array<{
+      table_name: string; column_name: string; data_type: string; character_maximum_length: number | null;
+      numeric_precision: number | null; numeric_scale: number | null; is_nullable: string;
+      column_default: string | null; ordinal_position: number;
+    }>;
+    const indexRows = indexesResult.rows as Array<{ tablename: string; indexname: string; indexdef: string }>;
+    const foreignKeyRows = foreignKeysResult.rows as Array<{
+      table_name: string; constraint_name: string; column_name: string; foreign_table_name: string;
+      foreign_column_name: string; delete_rule: string;
+    }>;
     const tables = new Map<string, {
       name: string;
       columns: Array<{ name: string; dataType: string; nullable: boolean; defaultExpression?: string; ordinal: number }>;
       indexes: Array<{ name: string; columns: string[]; unique: boolean; predicate?: string }>;
       foreignKeys: Array<{ name: string; columns: string[]; targetTable: string; targetColumns: string[]; onDelete: string }>;
     }>();
-    for (const row of tablesResult.rows) {
+    for (const row of tableRows) {
       tables.set(row.table_name, { name: row.table_name, columns: [], indexes: [], foreignKeys: [] });
     }
-    for (const row of columnsResult.rows) {
+    for (const row of columnRows) {
       const table = tables.get(row.table_name);
       if (!table) continue;
       let dataType = row.data_type.toUpperCase();
@@ -220,7 +224,7 @@ export class PostgresDatabaseAdapter implements DatabaseAdapter {
         ordinal: row.ordinal_position,
       });
     }
-    for (const row of indexesResult.rows) {
+    for (const row of indexRows) {
       const table = tables.get(row.tablename);
       if (!table) continue;
       const match = row.indexdef.match(/\(([^)]+)\)(?:\s+WHERE\s+(.+))?$/i);
@@ -234,7 +238,7 @@ export class PostgresDatabaseAdapter implements DatabaseAdapter {
         ...(match?.[2] ? { predicate: match[2] } : {}),
       });
     }
-    for (const row of foreignKeysResult.rows) {
+    for (const row of foreignKeyRows) {
       const table = tables.get(row.table_name);
       if (!table) continue;
       let key = table.foreignKeys.find((item) => item.name === row.constraint_name);
