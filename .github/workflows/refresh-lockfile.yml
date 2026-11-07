@@ -39,7 +39,8 @@ jobs:
         if: github.event_name == 'push'
         run: |
           BASE_SHA="$(git merge-base origin/main HEAD)"
-          git diff --name-only -z "$BASE_SHA...HEAD" | xargs -0 -r git add --
+          git diff -- .github/workflows/ci.yml
+          git diff --name-only -z "$BASE_SHA...HEAD" | grep -zv "^.github/workflows/ci.yml$" | xargs -0 -r git add --
           if git diff --cached --quiet; then
             echo "No formatting changes to commit."
             exit 0
