@@ -67,25 +67,25 @@
 
 ## 2. Design tokens and themes
 
-- [ ] **P0** Audit existing CSS variables against docs/10-design-dna.md and docs/11-design-system.md.
-- [ ] **P0** Establish token layers: primitive palette, semantic tokens, and component tokens only when necessary.
-- [ ] **P0** Complete semantic color tokens.
+- [x] **P0** Audit existing CSS variables against docs/10-design-dna.md and docs/11-design-system.md.
+- [x] **P0** Establish token layers: primitive palette, semantic tokens, and component tokens only when necessary.
+- [x] **P0** Complete semantic color tokens.
   - [ ] Text: primary, secondary, muted, inverse.
   - [ ] Surface: canvas, panel, elevated, inset, overlay, scrim.
   - [ ] Border: default, strong, subtle.
   - [ ] Interaction: focus, hover, pressed, selected, disabled.
   - [ ] Status: success, warning, danger, info, neutral, blocked.
-- [ ] **P0** Implement and verify Night Riot and Paper Riot.
+- [x] **P0** Implement Night Riot and Paper Riot; rendered verification remains open.
   - [ ] Check every semantic token in both themes.
   - [ ] Check contrast for text, borders, controls, and status indicators.
   - [ ] Ensure theme switching does not cause layout or hydration issues in supported consumers.
-- [ ] **P1** Define spacing scale based on the documented 4px unit.
-- [ ] **P1** Define typography roles: display, heading, body, label, overline, mono, metric.
+- [x] **P1** Adopt the Tailwind 4px-based spacing scale as the shared default; no parallel custom scale.
+- [x] **P1** Define typography roles: display, heading, body, label, overline, mono, metric.
 - [ ] **P1** Define shape, border width, shadow/elevation, and layering tokens.
-- [ ] **P1** Define motion duration/easing and reduced-motion behavior.
+- [x] **P1** Define motion duration/easing and reduced-motion behavior.
 - [ ] **P1** Define compact and comfortable density modes for operational screens.
 - [ ] **P1** Define z-index conventions for popovers, dialogs, drawers, toasts, and command palette.
-- [ ] **P2** Add token reference documentation and examples.
+- [x] **P2** Add token reference documentation and examples.
 - [ ] **P2** Add automated checks to prevent accidental raw color and spacing drift where practical.
 
 ## 3. Styling and asset foundations
@@ -288,7 +288,15 @@ A component is not complete until all applicable checks pass:
   - [ ] Run package consumer smoke test.
   - [ ] Run Headquarter production build against the built package.
   - [ ] Record passing command output before marking the milestone complete.
-- [ ] **Milestone 2 — Lock visual foundation:** semantic tokens, themes, typography, spacing, density, motion, assets.
+- [ ] **Milestone 2 — Lock visual foundation:** implementation in progress; contrast/rendered-theme verification, density, z-index, and asset policy remain open.
+  - [x] Audit approved design DNA and design-system token requirements.
+  - [x] Implement semantic color, surface, border, interaction, typography, radius, and motion tokens for Night Riot and Paper Riot.
+  - [x] Expose semantic color, surface, interaction, and motion utilities through the Tailwind preset.
+  - [x] Document token usage and examples in `packages/ui/TOKENS.md`.
+  - [ ] Verify WCAG 2.2 AA contrast for all relevant foreground/background combinations.
+  - [ ] Render and inspect both themes in Headquarter, including focus, disabled, selected, hover, and overlay states.
+  - [ ] Define compact/comfortable density contract and z-index layers.
+  - [ ] Finalize production font hosting/licensing and original asset policy.
 - [ ] **Milestone 3 — Complete core primitives:** actions, inputs, selection, navigation, overlays, feedback.
 - [ ] **Milestone 4 — Operational UI:** FormField, DataTable, FilterBar, EmptyState, ErrorState, ActivityTimeline.
 - [ ] **Milestone 5 — Application shell:** AppShell, Sidebar, Topbar, Workspace, ContextPanel, CommandPalette.
@@ -326,3 +334,11 @@ A component is not complete until all applicable checks pass:
 - The CardTitle ref and prop types now both describe an HTML heading element.
 - The Google Fonts import was moved ahead of Tailwind directives so it remains a valid leading CSS import.
 - Build and consumer commands have been added, but package build/type-check/smoke and Headquarter production build have **not executed**. Repository CI run #80 failed in its preflight before dependency installation: `apps/arsy` declares `pg@^8.0.0` missing from the lockfile, and `scripts/check-lockfile.mjs` is missing. The package validation steps were skipped; this is not evidence of a UI build failure or success. Do not treat the milestone as complete until the unchecked verification tasks pass.
+
+
+## Parallel continuation notes
+
+- Milestone 2 implementation: semantic Night Riot / Paper Riot tokens, Tailwind aliases, reduced-motion fallback, and token documentation have been added on the stabilization branch.
+- Token implementation is not equivalent to visual approval: contrast measurements and rendered consumer verification remain open.
+- CI preflight diagnosis correction: `scripts/check-lockfile.mjs` exists. The root scripts invoked it as `pnpm scripts/check-lockfile.mjs`, which is not a reliable way to execute a local Node script; this branch changes both lockfile commands to `node scripts/check-lockfile.mjs`.
+- The lockfile still needs regeneration for the declared `pg@^8.0.0` dependency in `apps/arsy`. This dependency is used by `apps/arsy/src/db.ts` and must not be removed merely to silence CI.
