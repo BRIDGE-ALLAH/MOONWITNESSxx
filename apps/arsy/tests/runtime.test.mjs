@@ -53,7 +53,6 @@ test('readiness and database health return 503 when PostgreSQL is unavailable', 
   }
 })
 
-
 test('database health endpoints enforce per-client request limits', async () => {
   for (const endpoint of ['/health/ready', '/health/db']) {
     const fake = createFakePool()
