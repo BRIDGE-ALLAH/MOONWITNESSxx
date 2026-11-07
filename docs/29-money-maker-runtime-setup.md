@@ -61,8 +61,10 @@ Run against an isolated development or staging database first. Verify backup and
 5. Use `/riot-radar` to capture an opportunity with source provenance, evidence limitations, score rationales and hard gates.
 6. Leave unknown rights, country, channel and payout gates unknown until verified.
 7. Only a complete score of at least 80 with every hard gate passed can become a product brief in `/the-forge`.
-8. Record real source-backed financial events in `/mizan-ledger`. New events are pending.
-9. Reconcile an event only against a statement, invoice, receipt or other evidence URL. Verified events feed `/aftershock`.
+8. Upload product-version files from THE FORGE with creator, license, provenance, rights state and required disclosure. Asset files are limited to 5 MiB and receive a SHA-256 checksum.
+9. Record the rights, policy, technical and creative inspections for each product version. A blocker finding cannot be marked as passing.
+10. Record real source-backed financial events in `/mizan-ledger`. New events are pending.
+11. Reconcile an event only against a statement, invoice, receipt or other evidence URL. Verified events feed `/aftershock`.
 
 ## Implemented development capabilities
 
@@ -70,7 +72,7 @@ Run against an isolated development or staging database first. Verify backup and
 - Owner-scoped ARSY opportunity create/list/read/update/decision/archive API and audit events. Updates use `expectedVersion` optimistic concurrency; edits, decisions, archives and product promotion advance the opportunity version. A stale edit receives `VERSION_CONFLICT`; an opportunity with a product brief cannot be edited.
 - Product brief creation from an approved opportunity, append-only version revisions and owner-scoped product reads.
 - Append-only rights, policy, technical and creative inspections; a product becomes READY only when the latest inspection of all four types passes. A passing inspection cannot contain a blocker finding, and readiness includes the inspection written by the same transaction.
-- Asset upload/download/archive on a persistent local Docker volume, 5 MiB file cap, safe media-type allowlist, SHA-256 checksum and structured provenance metadata.
+- Asset upload/list/download/archive through THE FORGE and owner-scoped ARSY APIs. Files are stored on a persistent local Docker volume (5 MiB cap, media-type allowlist, SHA-256 checksum, provenance and rights metadata); download verifies the stored checksum.
 - C0/C1 channel registry with Indonesia eligibility, payout and policy evidence. A country can appear once per review; C1 enables manual listing packages only.
 - Persisted manual listing package generation from the latest READY product version and an enabled C1 channel; publication receipts are entered by the owner after external publication and are not independently verified by a marketplace API.
 - Financial event ingestion using integer minor units, ISO currency, request hashes and idempotency keys.
@@ -81,13 +83,13 @@ Run against an isolated development or staging database first. Verify backup and
 
 ## Not yet implemented or not production-verified
 
-- Binary asset storage, upload/download authorization, checksum verification, and a complete asset provenance editor. The current `arsy_assets` schema is not yet backed by an asset API/storage implementation.
+- Object-storage adapters, distributed/multi-node asset storage, aggregate storage quotas, automated retention/cleanup, backup/restore automation and a completed production restore drill. Current storage is a single-node local filesystem volume; asset upload UI and owner-scoped download are implemented but production durability still needs operational proof.
 - Marketplace account OAuth, official marketplace APIs, automated publishing, and independent verification of publication receipts. Current channel capability C1 means manual listing package only.
 - Automated market-source connectors, freshness/recheck jobs, and measured discovery/conversion cohorts. Signal Room intentionally remains an honest no-source empty state.
 - Payout import and provider reconciliation; current financial events are manually recorded by the operator. Operator-supplied evidence/reconciliation is not a bank or payment-provider verification.
 - Multi-user identities, roles, tenant isolation and customer-facing checkout.
 - Browser E2E, screen-reader/visual regression review, production deployment, managed secret provisioning, backup/restore drill, rollback and live smoke tests.
 
-The current asset adapter is single-node filesystem storage. Back up the `arsy_assets` Docker volume with the database and test restore before production. Do not run multiple ARSY replicas against independent local volumes.
+The current asset adapter is single-node filesystem storage. Back up the `arsy_assets` Docker volume with the database and test restore before production. Do not run multiple ARSY replicas against independent local volumes. The Forge UI records operator-supplied rights/provenance; it does not independently establish copyright ownership, license validity or originality.
 
 No sample transactions, sales, marketplace listings, payout states, market trend values, or revenue claims are generated by this workflow. The current login throttle is process-local (5 failures per 15-minute window); production ingress must add a shared rate limit before scaling Headquarter beyond one process.
