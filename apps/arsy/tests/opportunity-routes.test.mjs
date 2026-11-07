@@ -52,7 +52,7 @@ const body = {
 function fakePool() {
   const records = []
   return {
-    query: async (sql) => {
+    query: async (sql, values = []) => {
       if (sql.includes('INSERT INTO arsy_opportunities')) {
         const record = {
           id: '11111111-1111-4111-8111-111111111111',
@@ -75,6 +75,12 @@ function fakePool() {
           updated_at: '2026-11-08T00:00:00.000Z',
         }
         records.push(record)
+        return { rows: [record] }
+      }
+      if (sql.includes('UPDATE arsy_opportunities')) {
+        if (!records[0]) return { rows: [] }
+        const record = { ...records[0], title: values[3] }
+        records[0] = record
         return { rows: [record] }
       }
       if (sql.includes('FROM arsy_opportunities')) return { rows: records }
@@ -102,6 +108,30 @@ test('opportunity routes require a valid operator token', async () => {
     const invalid = await app.inject({ method: 'GET', url: '/api/v1/opportunities', headers: { 'x-arsy-operator-token': 'wrong' } })
     assert.equal(missing.statusCode, 401)
     assert.equal(invalid.statusCode, 401)
+  } finally {
+    await app.close()
+  }
+})
+
+test('authenticated operator can update an existing opportunity', async () => {
+  const app = await createApp({ databasePool: fakePool(), logger: false, env: { ARSY_OPERATOR_TOKEN: token } })
+  try {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/v1/opportunities',
+      headers: { 'x-arsy-operator-token': token },
+      payload: body,
+    })
+    assert.equal(created.statusCode, 201)
+
+    const updated = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/opportunities/11111111-1111-4111-8111-111111111111',
+      headers: { 'x-arsy-operator-token': token },
+      payload: { ...body, title: 'Updated inventory utility' },
+    })
+    assert.equal(updated.statusCode, 200)
+    assert.equal(updated.json().data.title, 'Updated inventory utility')
   } finally {
     await app.close()
   }
