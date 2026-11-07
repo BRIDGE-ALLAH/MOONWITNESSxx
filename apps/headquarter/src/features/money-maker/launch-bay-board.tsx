@@ -80,7 +80,6 @@ const initialChannelForm = {
   grantedScopes: '', quotaNotes: '{}', policySummary: '', accountEvidenceUrl: '', payoutEvidenceUrl: '',
 }
 const isoDate = (value: string) => value ? new Date(`${value}T00:00:00.000Z`).toISOString() : null
-const formatBytes = (value: unknown) => typeof value === 'number' ? value.toLocaleString() : String(value ?? '')
 
 export function LaunchBayBoard() {
   const [channels, setChannels] = useState<Channel[]>([])
@@ -95,7 +94,6 @@ export function LaunchBayBoard() {
   const [saving, setSaving] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
-  const [selectedPackage, setSelectedPackage] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     setLoading(true); setError('')
@@ -246,7 +244,6 @@ export function LaunchBayBoard() {
       if (response.status === 401) throw new Error('Operator login required. Sign in at /login.')
       if (!response.ok) throw new Error(payload.error?.message || 'Unable to generate listing package.')
       setMessage(`Manual listing package generated · ${payload.data.status} · SHA-256 ${payload.data.packageHash}`)
-      setSelectedPackage(payload.data.id)
       await refresh()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to generate listing package.')
@@ -370,7 +367,7 @@ export function LaunchBayBoard() {
             <label className="text-[10px] font-mono uppercase">Public listing URL (required for publication/withdrawal)<input value={draft.publicUrl} onChange={(event) => setReceiptDrafts((current) => ({ ...current, [listing.id]: { ...draft, publicUrl: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
             <label className="text-[10px] font-mono uppercase md:col-span-2">Evidence URL or reference<input value={draft.evidenceReference} onChange={(event) => setReceiptDrafts((current) => ({ ...current, [listing.id]: { ...draft, evidenceReference: event.target.value } }))} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" /></label>
             <label className="text-[10px] font-mono uppercase md:col-span-2">Explicit confirmation<textarea value={draft.confirmation} onChange={(event) => setReceiptDrafts((current) => ({ ...current, [listing.id]: { ...draft, confirmation: event.target.value } }))} rows={2} className="mt-1 w-full border border-acid-lime/20 bg-obsidian p-2 text-xs normal-case" placeholder="Confirm the real action already occurred. This form does not perform the marketplace action." /></label>
-            <button type="button" disabled={saving === listing.id || draft.confirmation.trim().length < 20 || !draft.evidenceReference.trim()} onClick={() => void recordReceipt(listing)} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase disabled:opacity-40 md:col-span-2">{saving === listing.id ? 'Recording…' : 'Record actual channel action'}</button>
+            <button type="button" disabled={saving === listing.id || draft.confirmation.trim().length < 20 || !draft.evidenceReference.trim() || (receiptType !== 'manual-submission' && !draft.publicUrl.trim() && !draft.externalListingId.trim())} onClick={() => void recordReceipt(listing)} className="border border-acid-lime/40 px-3 py-2 font-mono text-[10px] uppercase disabled:opacity-40 md:col-span-2">{saving === listing.id ? 'Recording…' : 'Record actual channel action'}</button>
           </div></details>}
         </article>
       })}
