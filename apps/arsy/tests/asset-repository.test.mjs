@@ -55,5 +55,6 @@ test('asset create and archive invalidate all readiness inspections on the curre
   assert.match(calls[1].sql, /INSERT INTO arsy_inspections/)
   assert.match(calls[1].sql, /'needs-review'/)
   assert.match(calls[1].sql, /SET lifecycle_state = 'production'/)
-  assert.deepEqual(calls[1].values, ['owner-a', asset.id, 'owner-a', calls[1].values[3]])
+  assert.deepEqual(calls[1].values.slice(0, 3), ['owner-a', asset.id, 'owner-a'])
+  assert.match(calls[1].values[3], /^[0-9a-f-]{36}$/i)
 })
