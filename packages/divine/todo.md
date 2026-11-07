@@ -930,3 +930,19 @@ Remaining: legal retention/deletion implementation, key-backed signing and trust
 Implementation accuracy note: Phase 10 source-span provenance and abstention are implemented, but prevention of generated sacred/source text from canonical source treatment and task/language-specific hallucination/citation evaluation remain open. Candidate state is an in-memory contract, not a persistent review queue. Phase 9 rights gates are reusable policy guards; enforcement in every live ingestion/display/export/AI adapter remains blocked on platform contracts.
 
 Accuracy correction: Phase 11 currently emits SKOS Concept nodes with scheme references, but does not serialize ConceptScheme nodes or ontology mappings; DIV-P11-002 therefore remains open. The current round-trip check verifies supported identifier preservation only, not full semantic import/export; DIV-P11-011 remains open. Phase 10 currently defines candidate status and review contracts, not a durable queue or a provider adapter; DIV-P10-001 and DIV-P10-005 remain open.
+
+
+## Phase 12–14 execution update (2026-11-08)
+
+Implemented on branch `feat/divine-phases-12-14-runtime-eval-temporal` as pure-domain vertical slices:
+
+- [x] Phase 12 readiness gate: checks Corpus/ORM/ARSY/ZILL/MIZAN adapter presence, versions, capabilities, duplicate declarations, contract verification and production-ready state. This is a blocker detector only; it does not pretend unavailable ORM/ARSY/ZILL adapters exist.
+- [x] Phase 13 deterministic evaluation harness: evidence precision/recall/F1, citation resolvability, abstention accuracy and contradiction preservation, per-case results and explicit metric limitations.
+- [x] Phase 14 Epistemic Time Machine: release-pinned structural diff for claims, evidence/provenance references, graph edges, ontology versions and method versions. Output is explicitly structural-change-only.
+- [x] Additional Phase 11 interoperability: minimal TEI P5 and IIIF Presentation 3 exports plus enforceable Semantic Loss Budget. IIIF placeholder dimensions are flagged and are not production publication data.
+- [ ] Real Corpus/ORM/ARSY/ZILL/MIZAN integration and authorization contract tests.
+- [ ] Rights-cleared, expert-adjudicated multilingual evaluation datasets, inter-rater agreement and frozen benchmark splits.
+- [ ] Bitemporal canonical event history, temporal query/indexing and counterfactual derivation replay.
+- [ ] Full TEI/IIIF schema validation, SHACL, round-trip import/export and actual IIIF media dimensions.
+
+These implementations are not production completion. See `PHASE-12-14-EXECUTION.md` for research and exact limitations.
