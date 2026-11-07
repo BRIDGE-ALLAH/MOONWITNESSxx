@@ -34,11 +34,23 @@ jobs:
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
 
+      - name: Copy SARIF into the workspace
+        if: always()
+        run: |
+          if [ -f ../results/javascript.sarif ]; then cp ../results/javascript.sarif ./codeql-results.sarif; fi
+
+      - name: Print CodeQL finding summary
+        if: always()
+        run: |
+          if [ -f codeql-results.sarif ]; then
+            node --input-type=module -e "import { readFileSync } from 'node:fs'; const sarif=JSON.parse(readFileSync('codeql-results.sarif','utf8')); for (const run of sarif.runs ?? []) for (const result of run.results ?? []) console.log(JSON.stringify({ruleId:result.ruleId,level:result.level,message:result.message?.text,locations:result.locations?.map(x=>x.physicalLocation?.artifactLocation?.uri+':'+x.physicalLocation?.region?.startLine)}));"
+          fi
+
       - name: Retain SARIF for review
         if: always()
         uses: actions/upload-artifact@v6
         with:
           name: codeql-sarif
-          path: ../results/javascript.sarif
+          path: codeql-results.sarif
           if-no-files-found: warn
           retention-days: 3
