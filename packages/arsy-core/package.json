@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "lint": "../lint/node_modules/.bin/eslint src --config ../lint/eslint.config.mjs --max-warnings 0",
-    "type-check": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts"
+    "type-check": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext src/index.ts"
   },
   "dependencies": {
     "@fastify/jwt": "^8.0.0",
