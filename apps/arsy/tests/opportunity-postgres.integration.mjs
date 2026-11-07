@@ -15,6 +15,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
 }, async () => {
   const ownerId = `integration-${randomUUID()}`
   let pool = createDatabasePool()
+  const channelSlug = `integration-${randomUUID()}`
   try {
     const evidence = [{
       evidenceId: 'integration-evidence-1',
@@ -176,7 +177,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     assert.equal((await inspections.list(ownerId, revisedProduct.versionId)).length, 4)
 
     const channels = new ChannelRepository(pool)
-    const channel = await channels.create(ownerId, `integration-${randomUUID()}`, 'Integration Manual Channel')
+    const channel = await channels.create(ownerId, channelSlug, 'Integration Manual Channel')
     assert.equal(channel.capability, 'C0')
     const reviewedChannel = await channels.review(channel.id, ownerId, {
       countryEligibility: [{ country: 'ID', status: 'pass', sourceUrl: 'https://example.com/id-eligibility', checkedAt: new Date().toISOString() }],
@@ -309,7 +310,7 @@ test('PostgreSQL commerce lifecycle persists opportunities, products, and reconc
     await pool.query('DELETE FROM arsy_financial_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_listings WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_inspections WHERE product_version_id IN (SELECT pv.id FROM arsy_product_versions pv JOIN arsy_products p ON p.id = pv.product_id WHERE p.owner_id = $1)', [ownerId]).catch(() => undefined)
-    await pool.query('DELETE FROM arsy_channels WHERE slug LIKE $1', [`integration-%`]).catch(() => undefined)
+    await pool.query('DELETE FROM arsy_channels WHERE slug = $1', [channelSlug]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_payouts WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query(
       'DELETE FROM arsy_product_versions WHERE product_id IN (SELECT id FROM arsy_products WHERE owner_id = $1)',
