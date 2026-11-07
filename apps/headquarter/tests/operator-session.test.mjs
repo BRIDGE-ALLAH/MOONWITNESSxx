@@ -99,7 +99,7 @@ test('operator session cookie is extracted without trusting other cookies', () =
   assert.equal(readOperatorSessionCookie(new Request('https://hq.example')), undefined)
 })
 
-import { safeOperatorReturnTo } from '../src/lib/operator-session.ts'
+import { safeOperatorReturnTo } from '../src/lib/operator-return-to.ts'
 
 test('post-login return path cannot escape the configured origin', () => {
   const origin = 'https://hq.example.com'
