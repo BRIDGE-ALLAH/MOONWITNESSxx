@@ -2,3 +2,7 @@ export {DivineError,type DivineErrorCode} from "./errors.ts";export {resolveAddo
 export * as Ontology from "./ontology/index.ts";
 export * as Theology from "./theology/index.ts";
 export * as Epistemology from "./epistemology/index.ts";
+
+export * as Evidence from "./evidence/index.ts";
+export * as Reasoning from "./reasoning/index.ts";
+export * as Research from "./research/index.ts";

@@ -1,0 +1,8 @@
+import type {CorpusRelease} from "../corpus/types.ts";
+export type RetrievalChannel="exact"|"lexical"|"structural"|"semantic";
+export interface ResearchPlan {readonly id:string;readonly query:string;readonly scope:Readonly<Record<string,string>>;readonly corpusRelease:CorpusRelease;readonly ontologyVersions:Readonly<Record<string,string>>;readonly methodVersions:Readonly<Record<string,string>>;readonly channels:readonly RetrievalChannel[];readonly allowSemantic:boolean;readonly createdAt:string}
+export interface ResearchHit {readonly ref:string;readonly channel:RetrievalChannel;readonly score:number;readonly witnessFamilyRef?:string;readonly sourceRefs:readonly string[];readonly evidenceRefs:readonly string[];readonly provenanceRefs:readonly string[];readonly snippet?:string}
+export interface ResearchRetriever {search(channel:RetrievalChannel,plan:ResearchPlan):Promise<readonly ResearchHit[]>}
+export interface ResearchManifest {readonly planId:string;readonly query:string;readonly corpusRelease:CorpusRelease;readonly ontologyVersions:Readonly<Record<string,string>>;readonly methodVersions:Readonly<Record<string,string>>;readonly channelsExecuted:readonly RetrievalChannel[];readonly createdAt:string;readonly resultRefs:readonly string[]}
+export interface ResearchReport {readonly manifest:ResearchManifest;readonly hits:readonly ResearchHit[];readonly witnessGroups:Readonly<Record<string,readonly string[]>>;readonly limitations:readonly string[]}
+export interface RetrievalMetrics {readonly precision:number;readonly recall:number;readonly reciprocalRank:number;readonly relevantRetrieved:number;readonly retrieved:number;readonly relevantExpected:number}

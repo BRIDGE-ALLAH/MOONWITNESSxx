@@ -31,6 +31,21 @@
       "types": "./src/epistemology/index.ts",
       "import": "./src/epistemology/index.ts",
       "default": "./src/epistemology/index.ts"
+    },
+    "./evidence": {
+      "types": "./src/evidence/index.ts",
+      "import": "./src/evidence/index.ts",
+      "default": "./src/evidence/index.ts"
+    },
+    "./reasoning": {
+      "types": "./src/reasoning/index.ts",
+      "import": "./src/reasoning/index.ts",
+      "default": "./src/reasoning/index.ts"
+    },
+    "./research": {
+      "types": "./src/research/index.ts",
+      "import": "./src/research/index.ts",
+      "default": "./src/research/index.ts"
     }
   },
   "scripts": {

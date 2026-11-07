@@ -2,7 +2,7 @@
 
 Evidence-centric epistemic and research infrastructure for MOONWITNESS.
 
-**Status:** foundational implementation (Phase 0–2); not production-ready.
+**Status:** foundational implementation (Phases 0–8); not production-ready.
 
 ## Identity and ownership
 The existing workspace uses `@riotworks/*`; Divine therefore uses `@riotworks/divine` until repository-wide naming governance changes. MoonWitness Corpus remains the canonical owner of Entity, Resource, Assertion, Evidence, Provenance, Assessment, canonical IDs, source artifacts, textual/manuscript/lexicon profiles, rights and provenance. Divine consumes Corpus read-only using its canonical `id` / `record_type` record identity and owns research context, addon composition, epistemic policies, reasoning and disposable projections.
@@ -28,3 +28,10 @@ Node 22+ is required for native TypeScript tests. No database, ORM, ARSY, Python
 - `./epistemology`: SIDRAT knowledge states, method-specific evidence sufficiency, scope boundaries and explainable abstention.
 
 These modules are deterministic domain contracts. They do not claim theological authority, infer metaphysical truth, or write into canonical Corpus.
+
+## Phase 6–8 modules
+- `./evidence`: provenance-bearing evidence graph projections, bounded path traversal and unresolved contradiction views.
+- `./reasoning`: deterministic method-bound defeasible rules, premise/evidence traces, defeaters and explicit conflicts.
+- `./research`: pinned research plans, exact-first multi-channel retrieval, witness-family grouping, reproducible manifests and retrieval metrics.
+
+No graph database, vector store, model provider or network service is required. See `docs/evidence-reasoning-research.md` for design decisions and research directions.

@@ -1,0 +1,7 @@
+import type {OntologyScope} from "../ontology/types.ts";
+export interface ReasoningFact {readonly id:string;readonly predicate:string;readonly polarity:"positive"|"negative";readonly scope:OntologyScope;readonly evidenceRefs:readonly string[];readonly provenanceRefs:readonly string[]}
+export interface RulePremise {readonly predicate:string;readonly polarity:"positive"|"negative"}
+export interface ReasoningRule {readonly id:string;readonly version:string;readonly premises:readonly RulePremise[];readonly conclusion:{readonly predicate:string;readonly polarity:"positive"|"negative"};readonly scope:OntologyScope;readonly exceptions?:readonly RulePremise[];readonly priority?:number;readonly methodId:string;readonly rationale:string}
+export interface DerivationTrace {readonly ruleRef:string;readonly ruleVersion:string;readonly premiseRefs:readonly string[];readonly evidenceRefs:readonly string[];readonly provenanceRefs:readonly string[];readonly methodId:string;readonly rationale:string}
+export interface DerivedConclusion {readonly id:string;readonly predicate:string;readonly polarity:"positive"|"negative";readonly scope:OntologyScope;readonly status:"supported"|"defeated"|"conflicted";readonly defeaterRefs:readonly string[];readonly trace:DerivationTrace}
+export interface ReasoningResult {readonly conclusions:readonly DerivedConclusion[];readonly conflicts:readonly {readonly predicate:string;readonly scope:OntologyScope;readonly conclusionRefs:readonly string[]}[];readonly diagnostics:readonly string[]}
