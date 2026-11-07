@@ -87,7 +87,7 @@ export async function POST(request: Request) {
   const password = body && typeof body === 'object' && 'password' in body && typeof body.password === 'string'
     ? body.password
     : ''
-  if (!password || !operatorPasswordMatches(password, config.password)) {
+  if (!password || !operatorPasswordMatches(password, config.password, config.secret)) {
     const blockedFor = recordLoginFailure()
     if (blockedFor > 0) {
       return NextResponse.json(
