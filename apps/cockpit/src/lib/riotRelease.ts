@@ -106,3 +106,90 @@ export async function createLocalReleaseTag(
   requireDesktop()
   return invoke<ReleaseHistory>('riot_release_create_local_tag', { path, version, notes })
 }
+
+export interface ReleaseBuildProfile {
+  id: string
+  label: string
+  description: string
+  executable: string
+  args: string[]
+  outputDirectories: string[]
+  trustNotice: string
+}
+
+export interface ReleaseBuildRecord {
+  id: string
+  repositoryPath: string
+  repositoryName: string
+  profileId: string
+  commandPreview: string
+  success: boolean
+  exitCode: number | null
+  timedOut: boolean
+  elapsedMs: number
+  stdout: string
+  stderr: string
+  logsTruncated: boolean
+  createdAtMs: number
+}
+
+export interface ArtifactCandidate {
+  repositoryPath: string
+  profileId: string
+  sourcePath: string
+  fileName: string
+  sizeBytes: number
+  sha256: string
+}
+
+export interface VaultArtifact {
+  id: string
+  repositoryPath: string
+  repositoryName: string
+  sourcePath: string
+  storedPath: string
+  fileName: string
+  sizeBytes: number
+  sha256: string
+  createdAtMs: number
+}
+
+export async function listReleaseBuildProfiles(path: string): Promise<ReleaseBuildProfile[]> {
+  requireDesktop()
+  return invoke<ReleaseBuildProfile[]>('riot_release_list_build_profiles', { path })
+}
+
+export async function runReleaseBuild(
+  path: string,
+  profileId: string,
+  confirmed: boolean
+): Promise<ReleaseBuildRecord> {
+  requireDesktop()
+  return invoke<ReleaseBuildRecord>('riot_release_run_build', { path, profileId, confirmed })
+}
+
+export async function listReleaseBuildHistory(path?: string): Promise<ReleaseBuildRecord[]> {
+  requireDesktop()
+  return invoke<ReleaseBuildRecord[]>('riot_release_list_build_history', { path: path ?? null })
+}
+
+export async function listArtifactCandidates(
+  path: string,
+  profileId: string
+): Promise<ArtifactCandidate[]> {
+  requireDesktop()
+  return invoke<ArtifactCandidate[]>('riot_release_list_artifact_candidates', { path, profileId })
+}
+
+export async function importReleaseArtifact(
+  path: string,
+  artifactPath: string
+): Promise<VaultArtifact> {
+  requireDesktop()
+  return invoke<VaultArtifact>('riot_release_import_artifact', { path, artifactPath })
+}
+
+export async function listReleaseVault(path?: string): Promise<VaultArtifact[]> {
+  requireDesktop()
+  return invoke<VaultArtifact[]>('riot_release_list_vault', { path: path ?? null })
+}
