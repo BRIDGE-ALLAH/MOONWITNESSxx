@@ -269,8 +269,6 @@ mod tests {
         assert!(validate_zone_name("example.org").is_err());
         assert!(validate_zone_name("-bad.example.").is_err());
     }
-
-
     #[test]
     fn validates_secondary_zones_without_nameservers_and_with_ip_masters() {
         let slave = ZoneCreateRequest {
