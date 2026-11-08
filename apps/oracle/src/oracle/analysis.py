@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import re
 import statistics
+from typing import Any
 
 from .schemas import StatisticsInput, TextProfileInput
-
 
 METHODS: dict[str, tuple[str, str, list[str]]] = {
     "statistics.describe": (
