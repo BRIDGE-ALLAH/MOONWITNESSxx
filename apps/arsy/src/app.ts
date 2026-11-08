@@ -5,6 +5,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
 import { registerDockerRoutes } from './docker/routes.ts'
+import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { createOracleClient, type OracleClient } from './oracle/client.ts'
 import { registerOracleRoutes } from './oracle/routes.ts'
@@ -66,6 +67,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
     setupDatabase(instance, databasePool)
     registerDockerRoutes(instance, databasePool, env)
+    registerLoginAttemptRoutes(instance, databasePool)
     registerOracleRoutes(instance, oracleClient)
   })
 
