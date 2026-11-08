@@ -80,7 +80,7 @@ The dashboard is served at http://127.0.0.1:5150/.
 - PUT /api/v1/engines/{id} — update an engine (Bearer token required).
 - DELETE /api/v1/engines/{id} — remove an engine (Bearer token required).
 - GET /api/v1/engines/{id}/health — run a live backend probe (Bearer token required).
-- GET/POST /api/v1/dns/engines/{engine_id}/zones — list or create PowerDNS zones (Bearer token required). Zone creation requires a fully-qualified zone name and at least two nameservers.
+- GET/POST /api/v1/dns/engines/{engine_id}/zones — list or create PowerDNS zones (Bearer token required). All zones require a fully-qualified zone name. Native/Master zones require 2–8 nameservers; Slave zones omit nameservers and require 1–8 valid IPv4/IPv6 master addresses.
 - GET/DELETE/PATCH /api/v1/dns/engines/{engine_id}/zones/{zone_id} — inspect/delete a zone or apply validated RRset changes (Bearer token required).
 - GET/POST /api/v1/radius/nas — list or create NAS clients (Bearer token required).
 - PUT /api/v1/radius/nas/{id} — update a NAS client and rotate its shared secret (Bearer token required).
