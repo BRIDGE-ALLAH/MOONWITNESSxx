@@ -1,0 +1,38 @@
+name: Build Engine KVM host preflight
+
+on:
+  pull_request:
+    paths:
+      - "docs/adr/0003-isolated-build-engine.md"
+      - "scripts/build-engine-spike/**"
+      - ".github/workflows/build-engine-kvm-preflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hosted-runner-report:
+    name: Inspect hosted runner KVM prerequisites
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Report host prerequisites (informational)
+        run: bash scripts/build-engine-spike/kvm-host-preflight.sh --report-only
+
+  dedicated-kvm-proof-preflight:
+    name: Validate dedicated KVM builder host
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, x64, kvm]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout protected main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Require Firecracker and jailer prerequisites
+        run: bash scripts/build-engine-spike/kvm-host-preflight.sh --full
