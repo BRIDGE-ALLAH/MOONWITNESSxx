@@ -81,11 +81,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if token is None:
             return  # Settings permits this only for a loopback-bound local service.
         scheme, separator, supplied = (authorization or "").partition(" ")
-        if (
-            not separator
-            or scheme.lower() != "bearer"
-            or not hmac.compare_digest(supplied, token)
-        ):
+        if not separator or scheme.lower() != "bearer" or not hmac.compare_digest(supplied, token):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Service authentication required",
