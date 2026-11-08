@@ -214,12 +214,12 @@ Do not use `docker compose down -v` or `docker system prune --volumes` as a star
 
 ## Related documentation
 
-- [docs/08-technical-architecture.md](../docs/08-technical-architecture.md) — Backend/ORM architecture
-- [docs/24-repository-and-automation-governance.md](../docs/24-repository-and-automation-governance.md) — Git/CI setup
-- [README.md](../README.md) — Project overview
-- [docs/34-aegis-network-infrastructure-blueprint.md](docs/34-aegis-network-infrastructure-blueprint.md) — AEGIS authority boundary and phased network runtime roadmap
+- [docs/08-technical-architecture.md](./docs/08-technical-architecture.md) — Backend/ORM architecture
+- [docs/24-repository-and-automation-governance.md](./docs/24-repository-and-automation-governance.md) — Git/CI setup
+- [README.md](./README.md) — Project overview
+- [docs/34-aegis-network-infrastructure-blueprint.md](./docs/34-aegis-network-infrastructure-blueprint.md) — AEGIS authority boundary and phased network runtime roadmap
 
 ## Docker Connector
 
-See [docs/29-docker-connector.md](docs/29-docker-connector.md) for the read-only Docker Engine connector, operator authentication requirements, remote mutual-TLS allowlist, database migration, and the explicit local-socket security boundary. The host Docker socket is intentionally not mounted into ARSY by default.
+See [docs/29-docker-connector.md](./docs/29-docker-connector.md) for the read-only Docker Engine connector, operator authentication requirements, remote mutual-TLS allowlist, database migration, and the explicit local-socket security boundary. The host Docker socket is intentionally not mounted into ARSY by default.
 
