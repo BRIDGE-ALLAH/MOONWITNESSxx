@@ -35,7 +35,7 @@ This is a product catalog, not a statement that nine apps exist in the current w
 
 - HEADQUARTER is a Next.js prototype. Demo/sample data must not be mistaken for live production data.
 - ARSY is the canonical Fastify backend application. It owns HTTP lifecycle and the central application/API authority.
-- ORACLE provides bounded deterministic analysis behind ARSY; Stage 1 job/idempotency state is process-memory only, with no durable queue/job persistence or production readiness claim.
+- ORACLE provides bounded deterministic analysis behind ARSY. Its current Stage 2 implementation persists job lifecycle and idempotency in PostgreSQL, uses bounded leased workers with fencing/retry/retention, and verifies restart recovery in Compose E2E. Production remains disabled pending managed secrets, monitoring/alerting, network policy, backup/restore drills, retention review, and deployment/rollback validation.
 - The authenticated Docker connector is deliberately read-only and bounded; it does not provide container start/stop/exec/deploy or production deployment management.
 - WITNESS FABRIC, Divine research tooling, repository automation, and developer-experience capabilities have implementation evidence in the repository.
 - The custom ORM, database adapters, and Base Platform addon suite remain target architecture; do not describe them as complete mainline implementations.

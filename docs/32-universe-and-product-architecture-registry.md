@@ -30,10 +30,10 @@ The wider product catalog is organized as **seven core application experiences p
 
 |   # | Product experience    | Primary responsibility                                                                                                   | Classification                     | Repository status                                                                                      |
 | --: | --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
-|   1 | **GATE**              | Public entrance, orientation, discovery, and navigation across the universe                                              | Core application                   | Target; no `apps/gate` in current workspace                                                            |
+|   1 | **GATE**              | Public entrance, orientation, discovery, and navigation across the universe                                              | Core application                   | Workspace at `apps/gate` (Next.js); maturity and production readiness require separate verification                                                            |
 |   2 | **DOCK**              | Community, participation, member activity, and shared spaces                                                             | Core application                   | Target; no `apps/dock` in current workspace                                                            |
 |   3 | **HEADQUARTER**       | Strategic command, governance, portfolio, approvals, and executive oversight                                             | Core application                   | Implemented as a Next.js prototype at `apps/headquarter`; not production-complete                      |
-|   4 | **MOONWITNESS ID**    | Human/service identity experience, account and session management, access visibility                                     | Core application                   | Product target; identity authority remains server-side in ARSY; no standalone ID app in this workspace |
+|   4 | **MOONWITNESS ID**    | Human/service identity experience, account and session management, access visibility                                     | Core application                   | Workspace at `apps/id` (Next.js); identity authority remains server-side in ARSY; not production-complete |
 |   5 | **WORLD OBSERVATORY** | Research, observations, evidence, source context, and knowledge discovery; JIZZ is a related perspective/analysis domain | Core application                   | Target experience; not a standalone app in this workspace                                              |
 |   6 | **MOONSKY**           | Communication experience: channels, conversations, routing, and delivery                                                 | Core application                   | Target; no standalone app in this workspace                                                            |
 |   7 | **HARBOR**            | Authenticated E-ISP subscriber portal: account, service, usage, billing, and support                                     | Core application                   | Target; no standalone app in this workspace                                                            |
@@ -188,6 +188,15 @@ At the current repository baseline:
 - A passing build or repository CI does not by itself establish production readiness.
 
 Use [docs/28](./28-current-state-revalidation-2026-11-08.md) and [docs/31](./31-product-integrity-phases-36-38.md) for the time-bounded evidence and limitations. These audit snapshots should be superseded by a new dated revalidation, not silently rewritten as if older observations never existed.
+
+## 7.1 Mainline recovery and implementation-status correction — 2026-11-09
+
+The mainline repository tree was restored by merged PR [#236](https://github.com/BRIDGE-ALLAH/MOONWITNESS/pull/236), merge commit `46d38a4877540b75028cb42353cbf087638fe5fe`. The recovery PR restored 651 files and passed its Repository CI and ATLAS CI jobs, including workspace typecheck/build, COCKPIT Tauri desktop compile, and ATLAS Rust quality. This confirms repository/CI recovery, not production readiness.
+
+- GATE and MOONWITNESS ID now have private Next.js workspace manifests under `apps/gate` and `apps/id`. Their presence is a real repository implementation milestone, but does not establish complete product journeys, centralized identity UX, production deployment, or operational readiness.
+- COCKPIT is also a workspace and passed its Tauri desktop compile in the recovery CI run; this does not establish signed distributables, update infrastructure, or production operations.
+- ORACLE has advanced beyond the process-memory-only Stage 1 snapshot described in older audit sections. The current `apps/oracle/README.md` documents Stage 2 PostgreSQL persistence, checksum-verified migrations, separate least-privilege migration/runtime roles, idempotent submission, leased/fenced workers, bounded retry/retention, fail-closed durable-store behavior, and a Compose E2E that verifies restart persistence through ARSY. `ORACLE_ENV=production` remains intentionally rejected; these foundations are not a production release.
+- The wider seven-core-plus-two-additional product catalog remains a target catalog. A workspace directory, package manifest, route, or green CI job must not be equated with a complete product experience.
 
 ## 8. Domain and public entry-point map
 
