@@ -129,7 +129,7 @@ pub async fn list() -> Result<Vec<EngineInstance>, sqlx::Error> {
 
 pub async fn get(id: &str) -> Result<Option<EngineInstance>, sqlx::Error> {
     sqlx::query_as::<_, EngineInstance>(
-        "SELECT id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key, CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at FROM engine_instances WHERE id = $1",
+        "SELECT id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key, created_at::text AS created_at, updated_at::text AS updated_at FROM engine_instances WHERE id = $1",
     )
     .bind(id)
     .fetch_optional(database::pool().await?)
