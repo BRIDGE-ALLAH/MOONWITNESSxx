@@ -7,7 +7,7 @@ Status: initial read-only connector implementation; not a production deployment 
 - ARSY owns Docker Engine connections and is the only process allowed to access the Docker socket or remote TLS credentials.
 - Headquarter calls authenticated same-origin Next.js routes. Those routes verify the signed operator session and forward a server-side ARSY operator token.
 - PostgreSQL stores owner-scoped connection metadata and append-only connection audit events.
-- The initial UI exposes engine metadata, a bounded (100 item) container inventory, and a bounded read-only log tail (200 lines, 1 MiB response cap). Start, stop, exec, image pull, Compose deploy, domains, TLS ingress management, metrics and rollback are intentionally not exposed.
+- The initial UI exposes engine metadata, a bounded (100 item) container inventory, a bounded read-only log tail (200 lines, 1 MiB response cap), and one-shot container runtime telemetry. Start, stop, exec, image pull, Compose deploy, domains, TLS ingress management, historical metrics, alerting and rollback are intentionally not exposed.
 - Local Docker uses the server-configured Unix socket. Remote Docker uses HTTPS with mutual TLS, an exact hostname allowlist and certificate verification. A custom remote agent is deferred.
 
 ## Required environment
@@ -59,11 +59,22 @@ All routes require the authenticated operator token:
 - `GET /api/v1/infrastructure/docker/servers/:id/info`
 - `GET /api/v1/infrastructure/docker/servers/:id/containers`
 - `GET /api/v1/infrastructure/docker/servers/:id/containers/:containerId/logs` (last 200 lines; stdout/stderr framing decoded; 1 MiB response cap)
+- `GET /api/v1/infrastructure/docker/servers/:id/containers/:containerId/stats` (one bounded `stream=false&one-shot=true` sample; owner-scoped server lookup; no persistent history)
 
 Headquarter exposes these through its session-protected `/api/infrastructure/docker/...` routes. Container logs can contain application secrets or personal data; access them only as an authorized operator, and do not copy them into tickets or shared channels without review. The connector does not persist log contents.
 
+## Runtime telemetry
+
+The Headquarter Docker page can request a one-shot runtime sample for a selected container and polls again every 10 seconds while that monitor panel is open. It stops polling when the panel is closed or the selected Docker server changes. This is bounded polling, not a streaming connection or an alerting service.
+
+ARSY calls the Docker Engine `GET /containers/{id}/stats?stream=false&one-shot=true` endpoint after validating the server UUID and container ID and resolving the server by both ID and `ARSY_OPERATOR_ID`. It returns only a normalized metric allowlist: engine observation timestamp, CPU percentage, memory working set/limit/percentage, process count, aggregate network RX/TX bytes and block read/write bytes. It never returns the raw Engine stats payload, container environment, mount configuration or TLS credentials. The one-shot Engine response uses the existing 5-second request timeout and 1 MiB response bound. An Engine 404 maps to a container-not-found response; other provider failures are reported as telemetry unavailable.
+
+CPU percentage follows Docker's documented delta formula using current and previous CPU counters and the online CPU count (with per-CPU array fallback). Memory working set subtracts `inactive_file` on cgroup v2 or `cache` on cgroup v1 when that counter is present. Missing counters remain unavailable rather than being invented as zero. See the [Docker Engine API container stats reference](https://docs.docker.com/reference/api/engine/version/v1.56/#get-container-stats-based-on-resource-usage).
+
+Telemetry is read-only and is not persisted as historical metric records. It does not implement deployment readiness, user-defined health checks, drift reconciliation, alert delivery, restart, automatic rollback or service orchestration. Those capabilities remain in the separately owned ARSY deployment roadmap and must not be inferred from this screen.
+
 ## Verification
 
-- `apps/arsy/tests/docker-connector.test.mjs` exercises TLS endpoint validation, credential encryption, Unix-socket HTTP integration, bounded inventory and log decoding, remote mutual-TLS handshakes, and fail-closed API authentication.
+- `apps/arsy/tests/docker-connector.test.mjs` exercises TLS endpoint validation, credential encryption, Unix-socket HTTP integration, bounded inventory and log decoding, cgroup-aware one-shot telemetry calculations, owner-scoped telemetry route validation, remote mutual-TLS handshakes, and fail-closed API authentication.
 - `apps/arsy/tests/docker-postgres.integration.test.mjs` runs the migration twice, verifies owner scoping and immutable audit records, then exercises the real ARSY API against both a disposable PostgreSQL database and the runner's Docker Engine. The same workflow runs an ephemeral-certificate mutual-TLS handshake test, including rejection without a client certificate.
 - A real Docker Engine smoke test is still required in a controlled environment before enabling the socket or approving production use.
