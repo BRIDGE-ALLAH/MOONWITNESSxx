@@ -202,6 +202,15 @@ export class PayoutRepository {
           AND capability = 'C1'
           AND account_eligibility = 'eligible'
           AND payout_setup_status = 'configured'
+          AND official_policy_url IS NOT NULL
+          AND policy_reviewed_at IS NOT NULL
+          AND policy_recheck_at > now()
+          AND EXISTS (
+            SELECT 1 FROM arsy_channel_evidence evidence
+            WHERE evidence.owner_id = $2 AND evidence.channel_id = arsy_channels.id
+              AND evidence.evidence_type = 'official-policy'
+              AND evidence.evidence_class = 'observed-fact'
+          )
           AND EXISTS (
             SELECT 1 FROM arsy_channel_evidence evidence
             WHERE evidence.owner_id = $2 AND evidence.channel_id = arsy_channels.id
@@ -212,6 +221,12 @@ export class PayoutRepository {
             SELECT 1 FROM arsy_channel_evidence evidence
             WHERE evidence.owner_id = $2 AND evidence.channel_id = arsy_channels.id
               AND evidence.evidence_type = 'payout-requirements'
+              AND evidence.evidence_class = 'observed-fact'
+          )
+          AND EXISTS (
+            SELECT 1 FROM arsy_channel_evidence evidence
+            WHERE evidence.owner_id = $2 AND evidence.channel_id = arsy_channels.id
+              AND evidence.evidence_type = 'format-requirements'
               AND evidence.evidence_class = 'observed-fact'
           )
       ), created AS (
