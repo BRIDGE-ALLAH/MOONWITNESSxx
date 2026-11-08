@@ -6,6 +6,8 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
 import { registerDockerRoutes } from './docker/routes.ts'
+import { registerDeploymentRoutes } from './deployments/routes.ts'
+import type { AuthorizeDeploymentDependencies } from './deployments/authorization.ts'
 import { registerEvidenceRoutes } from './evidence/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
@@ -17,6 +19,8 @@ export interface CreateAppOptions {
   logger?: boolean
   env?: NodeJS.ProcessEnv
   oracleClient?: OracleClient
+  /** Optional trusted policy/capability adapters; omitted configuration fails closed. */
+  deploymentAuthorization?: Omit<AuthorizeDeploymentDependencies, 'store'>
 }
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -69,6 +73,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
     setupDatabase(instance, databasePool)
     registerDockerRoutes(instance, databasePool, env)
+    registerDeploymentRoutes(instance, databasePool, { authorization: options.deploymentAuthorization, env })
     registerEvidenceRoutes(instance, databasePool as unknown as Pool)
     registerLoginAttemptRoutes(instance, databasePool)
     registerOracleRoutes(instance, oracleClient)

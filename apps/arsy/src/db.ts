@@ -3,6 +3,10 @@ import type { FastifyInstance } from 'fastify'
 
 export interface DatabasePool {
   query: (statement: string, values?: unknown[]) => Promise<unknown>
+  connect?: () => Promise<{
+    query: (statement: string, values?: unknown[]) => Promise<unknown>
+    release: () => void
+  }>
   end: () => Promise<void>
 }
 
