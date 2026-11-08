@@ -1,6 +1,9 @@
 name: ARSY Docker workload integration
 
 on:
+  push:
+    branches:
+      - 'feat/arsy-docker-workload-adapter-*'
   pull_request:
     branches: [main]
     paths:
