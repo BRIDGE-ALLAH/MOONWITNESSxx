@@ -111,11 +111,12 @@ export async function auditHeadquarterExperience({ root } = {}) {
 
   if (!entries.length) findings.push(finding('navigation-registry-empty', 'error', 'No navigable routes were parsed from the Headquarter navigation registry.'))
   const seen = new Set()
+  const allowedStatuses = new Set(['prototype', 'partial', 'integrated'])
   for (const item of entries) {
     if (seen.has(item.href)) findings.push(finding('duplicate-navigation-route', 'error', 'Navigation route is declared more than once: ' + item.href))
     seen.add(item.href)
     if (!routes.includes(item.href)) findings.push(finding('navigation-route-missing', 'error', item.label + ' points to ' + item.href + ' but no page.tsx route exists.'))
-    if (item.status !== 'prototype') findings.push(finding('route-status-ambiguous', 'error', item.label + ' must be explicitly marked prototype until live data is connected.'))
+    if (!allowedStatuses.has(item.status)) findings.push(finding('route-status-invalid', 'error', item.label + ' uses unsupported maturity status "' + item.status + '". Use prototype, partial, or integrated; these statuses do not claim production readiness or live data freshness.'))
   }
   for (const route of routes.filter((item) => item !== '/')) {
     if (!seen.has(route)) findings.push(finding('route-not-discoverable', 'warning', route + ' exists but is not listed in Headquarter navigation.'))
