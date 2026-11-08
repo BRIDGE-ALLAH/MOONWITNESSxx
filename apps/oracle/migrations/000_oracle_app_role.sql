@@ -1,5 +1,7 @@
 -- Idempotent development/CI bootstrap for the ORACLE runtime login.
 -- Execute as a database administrator; never use this identity in the ORACLE process.
+\getenv oracle_password ORACLE_DB_PASSWORD
+\getenv postgres_db POSTGRES_DB
 SELECT format(
   'CREATE ROLE oracle_app LOGIN PASSWORD %L NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION',
   :'oracle_password'
