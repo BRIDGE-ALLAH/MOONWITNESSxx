@@ -54,7 +54,7 @@ cleanup() {
     sudo systemctl reset-failed "$UNIT.service" >/dev/null 2>&1
   fi
   if [[ -n "$BUILDER_UID" ]]; then
-    if pgrep -u "$BUILDER_UID" -f 'buildkitd|rootlesskit' >/dev/null 2>&1; then
+    if pgrep -u "$BUILDER_UID" -f 'buildkitd|rootlesskit|slirp4netns' >/dev/null 2>&1; then
       echo "worker processes remained after systemd stop" >&2
       pgrep -a -u "$BUILDER_UID" -f 'buildkitd|rootlesskit' >&2
     fi
