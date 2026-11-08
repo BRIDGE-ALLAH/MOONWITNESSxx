@@ -211,3 +211,16 @@ After merge, `main` at `d7150c4d30377b0f5f2d9c7bfa2b924e5f3d2a56` passed:
 - A green container build and successful disposable Compose E2E are not evidence of a production deployment.
 
 **Next engineering priorities:** (1) decide and implement durable ORACLE job/idem state and worker recovery with an explicit persistence/ownership ADR; (2) continue the real commerce/product vertical slice through the existing draft Money Maker work, first resolving its dependency graph and unmergeable state; (3) continue ORM/Business Database work only with database-backed CRUD, migrations, access-policy and real persistence tests—not by treating declaration/registry scaffolding as complete.
+
+
+## Deployment journal and authorization gate — 2026-11-08
+
+**Current main HEAD:** `b25302ed5fb1d5c7feb1f4828a95394da6b471f6`.
+
+- PR #188 merged the first ARSY-owned deployment persistence foundation: owner-bound deployment records, idempotent operation records, append-only state events, and transactional outbox. Its exact PR head `4321323ae5cca43f11dcdfb85da963bad139cf00` passed Repository CI, CodeQL, container build, Docker/PostgreSQL integration, Headquarter browser E2E, and ORACLE Compose E2E before merge.
+- The journal is persistence only. No deployment API, worker/dispatcher, build engine, or Docker mutation was enabled. The existing Docker Connector remains read-only.
+- PR #191 is a draft implementation candidate for the next prerequisite: trusted ARSY operator principal, fail-closed injected policy evaluation, approval gating, and append-only authorization evidence linked to the operation and owner-bound Docker target.
+- PR #191 current head at this documentation update: pending exact-head CI; do not treat the authorization gate as accepted until Repository CI, PostgreSQL integration, CodeQL, and container checks pass.
+- Deployment execution remains blocked until the authorization gate, isolated build engine decision/implementation, and separate Docker Workload Adapter are completed and verified.
+
+**Production remains NO-GO.** Durable intent and authorization evidence do not by themselves execute, recover, or safely expose deployments. No production target, managed secrets, ingress/TLS, backup/restore drill, monitoring, rollback, or live smoke test has been verified.
