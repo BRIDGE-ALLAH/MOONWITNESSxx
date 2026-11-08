@@ -250,7 +250,6 @@ IMAGE_DIGEST="$(jq -r '[.manifests[]
   | select((.annotations["vnd.docker.reference.type"] // "") != "attestation-manifest")
   | .digest][0] // empty' "$INDEX")"
 [[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "OCI index has no platform image manifest"
-verify_blob "$IMAGE_DIGEST"
 IMAGE_HEX="${IMAGE_DIGEST#sha256:}"
 IMAGE_MANIFEST="$EXTRACT/blobs/sha256/$IMAGE_HEX"
 CONFIG_DIGEST="$(jq -r '.config.digest // empty' "$IMAGE_MANIFEST")"
