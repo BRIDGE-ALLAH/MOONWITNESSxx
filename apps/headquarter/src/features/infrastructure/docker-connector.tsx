@@ -101,7 +101,7 @@ export function DockerConnector() {
 
     let active = true
     let pending = false
-    let timer: ReturnType<typeof window.setTimeout>
+    let timer: ReturnType<typeof window.setTimeout> | undefined
     const poll = async () => {
       if (!active || pending) return
       pending = true
@@ -127,7 +127,7 @@ export function DockerConnector() {
     void poll()
     return () => {
       active = false
-      window.clearTimeout(timer)
+      if (timer !== undefined) window.clearTimeout(timer)
     }
   }, [selected, monitorContainer])
 
