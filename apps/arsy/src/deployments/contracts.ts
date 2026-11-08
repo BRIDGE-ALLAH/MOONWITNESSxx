@@ -16,7 +16,7 @@ export type DeploymentOperationStatus =
 
 const MAX_METADATA_BYTES = 64 * 1024
 const SENSITIVE_METADATA_KEY =
-  /(password|token|private.?key|credential|certificate|secret.?value|environment|^env$)/i
+  /(password|token|api.?key|private.?key|credential|certificate|secret.?value|environment|authorization|^env$)/i
 
 function normalizeJson(value: unknown, path: string, depth: number): JsonValue {
   if (depth > 12) throw new TypeError(`${path} exceeds the maximum JSON nesting depth`)
@@ -52,13 +52,24 @@ function normalizeJson(value: unknown, path: string, depth: number): JsonValue {
 }
 
 /** Canonical JSON for hashes and persisted non-secret deployment metadata. */
-export function canonicalJson(value: unknown): string {
-  const normalized = normalizeJson(value, 'metadata', 0)
-  const serialized = JSON.stringify(normalized)
+function serializeNormalized(value: JsonValue): string {
+  const serialized = JSON.stringify(value)
   if (Buffer.byteLength(serialized, 'utf8') > MAX_METADATA_BYTES) {
     throw new TypeError('Deployment metadata exceeds the 64 KiB limit')
   }
   return serialized
+}
+
+export function canonicalJson(value: unknown): string {
+  return serializeNormalized(normalizeJson(value, 'metadata', 0))
+}
+
+export function canonicalJsonObject(value: unknown): string {
+  const normalized = normalizeJson(value, 'metadata', 0)
+  if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) {
+    throw new TypeError('Deployment metadata must be a JSON object')
+  }
+  return serializeNormalized(normalized)
 }
 
 export function hashCanonicalJson(value: unknown): string {
