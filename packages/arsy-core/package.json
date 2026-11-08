@@ -25,7 +25,7 @@
     "@fastify/sensible": "^6.0.7",
     "ajv": "^8.0.0",
     "ajv-formats": "^3.0.0",
-    "zod": "^3.23.8"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "fastify-cli": "^8.0.3"
