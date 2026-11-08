@@ -1,6 +1,8 @@
 -- ORACLE-owned durable computation job lifecycle.
 -- Apply explicitly using the reviewed database migration process; never at application startup.
-CREATE SCHEMA IF NOT EXISTS oracle;
+CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION oracle_migrator;
+ALTER SCHEMA oracle OWNER TO oracle_migrator;
+SET ROLE oracle_migrator;
 
 CREATE TABLE IF NOT EXISTS oracle.jobs (
   job_id uuid PRIMARY KEY,
@@ -44,6 +46,9 @@ CREATE INDEX IF NOT EXISTS oracle_jobs_terminal_retention_idx
   ON oracle.jobs (completed_at, job_id)
   WHERE status IN ('succeeded', 'failed');
 
+RESET ROLE;
+ALTER TABLE oracle.jobs OWNER TO oracle_migrator;
+
 COMMENT ON SCHEMA oracle IS
   'ORACLE-owned computation job metadata and bounded results; not canonical evidence or audit storage.';
 COMMENT ON TABLE oracle.jobs IS
@@ -62,10 +67,7 @@ BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app') THEN
     EXECUTE 'GRANT USAGE ON SCHEMA oracle TO oracle_app';
     EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE oracle.jobs TO oracle_app';
-    EXECUTE format(
-      'ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA oracle GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO oracle_app',
-      current_user
-    );
+    EXECUTE 'ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator IN SCHEMA oracle GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO oracle_app';
   END IF;
 END
 $oracle_grants$;
