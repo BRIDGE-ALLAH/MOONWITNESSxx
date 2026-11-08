@@ -134,6 +134,12 @@ services:
     networks:
       atlas_internal:
         ipv4_address: 172.31.240.10
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --show-error http://127.0.0.1:5150/api/v1/system/readiness >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     restart: unless-stopped
 
 networks:
