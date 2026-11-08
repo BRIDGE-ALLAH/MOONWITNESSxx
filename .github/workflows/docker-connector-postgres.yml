@@ -41,6 +41,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Verify runner Docker Engine is available
         run: docker info
+      - name: Pull and pin the disposable workload test image
+        run: |
+          docker pull nginx:alpine
+          image="$(docker image inspect --format '{{index .RepoDigests 0}}' nginx:alpine)"
+          echo "DOCKER_WORKLOAD_TEST_IMAGE=$image" >> "$GITHUB_ENV"
       - name: Map isolated mutual TLS fixture hostname
         run: echo '127.0.0.1 docker.example.com' | sudo tee -a /etc/hosts
       - name: Run ARSY Docker connector tests against disposable PostgreSQL and real Docker Engine
@@ -48,5 +53,6 @@ jobs:
           TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/moonwitness_test
           DOCKER_SMOKE_SOCKET: '1'
           DOCKER_MTLS_SMOKE: '1'
+          DOCKER_WORKLOAD_SMOKE: '1'
           DOCKER_LOCAL_SOCKET_PATH: /var/run/docker.sock
         run: pnpm --filter @riotworks/arsy test
