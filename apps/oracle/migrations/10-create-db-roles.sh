@@ -14,7 +14,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app') \gexec
 ALTER ROLE oracle_migrator PASSWORD :'oracle_migrator_password';
 ALTER ROLE oracle_app PASSWORD :'oracle_app_password';
 CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION oracle_migrator;
-SELECT format('GRANT CONNECT ON DATABASE %I TO oracle_app', current_database()) \\gexec
+SELECT format('GRANT CONNECT ON DATABASE %I TO oracle_app', current_database()) \gexec
 GRANT USAGE ON SCHEMA oracle TO oracle_app;
 ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator IN SCHEMA oracle
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO oracle_app;
