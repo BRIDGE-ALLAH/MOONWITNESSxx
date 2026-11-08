@@ -142,21 +142,24 @@ def test_migrations_atomic_idempotency_capacity_and_lease_fencing() -> None:
             recovered_record, current_token = recovered
             assert recovered_record.job_id == record.job_id
             assert recovered_record.status == JobStatus.RUNNING
-            assert await first._complete(
-                record.job_id,
-                stale_token,
-                {"count": 3},
-                Provenance(
-                    method_id="test.method",
-                    method_version="1",
-                    engine="ORACLE",
-                    engine_version="test",
-                    input_digest="a" * 64,
-                    output_digest="b" * 64,
-                    evidence=[],
-                    completed_at=datetime.now(UTC),
-                ),
-            ) is False
+            assert (
+                await first._complete(
+                    record.job_id,
+                    stale_token,
+                    {"count": 3},
+                    Provenance(
+                        method_id="test.method",
+                        method_version="1",
+                        engine="ORACLE",
+                        engine_version="test",
+                        input_digest="a" * 64,
+                        output_digest="b" * 64,
+                        evidence=[],
+                        completed_at=datetime.now(UTC),
+                    ),
+                )
+                is False
+            )
 
             provenance = Provenance(
                 method_id="test.method",
@@ -168,12 +171,15 @@ def test_migrations_atomic_idempotency_capacity_and_lease_fencing() -> None:
                 evidence=[],
                 completed_at=datetime.now(UTC),
             )
-            assert await second._complete(
-                record.job_id,
-                current_token,
-                {"count": 3},
-                provenance,
-            ) is True
+            assert (
+                await second._complete(
+                    record.job_id,
+                    current_token,
+                    {"count": 3},
+                    provenance,
+                )
+                is True
+            )
             finished = await first.get(record.job_id)
             assert finished is not None
             assert finished.status == JobStatus.SUCCEEDED
@@ -261,7 +267,6 @@ def test_durable_mode_fails_closed_without_database_or_migration() -> None:
         assert submitted.json()["detail"] == (
             "ORACLE durable job persistence is unavailable or not migrated"
         )
-
 
 
 def test_queue_and_retained_job_ceilings_are_enforced_in_postgresql() -> None:
@@ -397,21 +402,24 @@ def test_expired_leases_retry_then_fail_after_bounded_attempts() -> None:
             assert failed.status == JobStatus.FAILED
             assert failed.error is not None
             assert failed.error.code == "worker_lease_expired"
-            assert await coordinator._complete(
-                submitted.job_id,
-                second_token,
-                {"count": 3},
-                Provenance(
-                    method_id="test.method",
-                    method_version="1",
-                    engine="ORACLE",
-                    engine_version="test",
-                    input_digest="a" * 64,
-                    output_digest="b" * 64,
-                    evidence=[],
-                    completed_at=datetime.now(UTC),
-                ),
-            ) is False
+            assert (
+                await coordinator._complete(
+                    submitted.job_id,
+                    second_token,
+                    {"count": 3},
+                    Provenance(
+                        method_id="test.method",
+                        method_version="1",
+                        engine="ORACLE",
+                        engine_version="test",
+                        input_digest="a" * 64,
+                        output_digest="b" * 64,
+                        evidence=[],
+                        completed_at=datetime.now(UTC),
+                    ),
+                )
+                is False
+            )
         finally:
             await admin.close()
             await coordinator.stop()
@@ -448,6 +456,7 @@ def test_missing_migration_keeps_durable_mode_unready_and_returns_503() -> None:
             )
             assert rejected.status_code == 503
     finally:
+
         async def drop_database() -> None:
             admin = await asyncpg.connect(admin_dsn)
             try:
