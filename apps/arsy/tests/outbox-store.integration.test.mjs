@@ -16,7 +16,10 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
   skip: !databaseUrl && 'TEST_DATABASE_URL is not configured; run in the PostgreSQL integration job',
   timeout: 60_000,
 }, async () => {
-  const pool = new Pool({ connectionString: databaseUrl, max: 8 })
+  const adminPool = new Pool({ connectionString: databaseUrl, max: 1 })
+  const schemaName = `arsy_outbox_${randomUUID().replaceAll('-', '')}`
+  await adminPool.query(`CREATE SCHEMA "${schemaName}"`)
+  const pool = new Pool({ connectionString: databaseUrl, max: 8, options: `-c search_path=${schemaName}` })
   const ownerId = `outbox-ci-${randomUUID()}`
   const hostId = randomUUID()
   try {
@@ -138,5 +141,7 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
     assert.equal(deadLetter.rows[0].dead, true)
   } finally {
     await pool.end()
+    await adminPool.query(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`)
+    await adminPool.end()
   }
 })
