@@ -1,0 +1,42 @@
+name: Build Engine Isolation Spike
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/adr/0003-isolated-build-engine.md'
+      - 'scripts/build-engine-spike/**'
+      - '.github/workflows/build-engine-spike.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-engine-spike-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rootless-buildkit:
+    name: Rootless BuildKit isolation and provenance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout immutable source
+        uses: actions/checkout@v4
+
+      - name: Install rootless worker prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y uidmap slirp4netns jq curl python3
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            # This is a disposable GitHub-hosted VM. Production must use a
+            # dedicated builder VM/profile, not a privileged container.
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+
+      - name: Run isolated BuildKit proof
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: bash scripts/build-engine-spike/verify.sh
