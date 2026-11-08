@@ -56,21 +56,21 @@ test('PostgreSQL login limiter is atomic across ARSY instances and survives inst
     const appA = startInstance()
     const appB = startInstance()
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 5; index += 1) {
       const result = await send(index % 2 === 0 ? appA : appB, 'attempt')
       assert.deepEqual(result, { allowed: true, retryAfterSeconds: 0 })
     }
 
-    const fifth = await send(appB, 'attempt')
-    assert.equal(fifth.allowed, false)
-    assert.ok(fifth.retryAfterSeconds > 0)
+    const sixth = await send(appB, 'attempt')
+    assert.equal(sixth.allowed, false)
+    assert.ok(sixth.retryAfterSeconds > 0)
 
     const stored = await setupPool.query(
       'SELECT bucket_key, attempt_count FROM arsy_login_attempt_buckets WHERE owner_id = $1 ORDER BY bucket_key',
       [ownerId],
     )
     assert.equal(stored.rowCount, 2)
-    assert.deepEqual(stored.rows.map((row) => Number(row.attempt_count)), [5, 5])
+    assert.deepEqual(stored.rows.map((row) => Number(row.attempt_count)), [6, 6])
 
     // Close one server and create a new instance with a new database pool.
     // The shared block must remain because PostgreSQL, not process memory, owns it.
@@ -95,8 +95,8 @@ test('PostgreSQL login limiter is atomic across ARSY instances and survives inst
     const concurrent = await Promise.all(
       Array.from({ length: 12 }, (_, index) => send(index % 2 ? appB : restartedApp, 'attempt')),
     )
-    assert.equal(concurrent.filter((result) => result.allowed).length, 4)
-    assert.equal(concurrent.filter((result) => !result.allowed).length, 8)
+    assert.equal(concurrent.filter((result) => result.allowed).length, 5)
+    assert.equal(concurrent.filter((result) => !result.allowed).length, 7)
 
     const concurrentRows = await setupPool.query(
       'SELECT attempt_count FROM arsy_login_attempt_buckets WHERE owner_id = $1 ORDER BY bucket_key',
