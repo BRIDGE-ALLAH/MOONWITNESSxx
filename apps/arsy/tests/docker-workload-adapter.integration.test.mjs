@@ -28,7 +28,7 @@ test('real Docker Engine creates only owner-labelled containers and preserves na
   const scope = { ownerId, deploymentId, operationId }
   const ownerHash = createHash('sha256').update(ownerId).digest('hex').slice(0, 16)
   let containerId = null
-  let volumeName = null
+  const volumeName = `mw-${ownerHash}-${deploymentId.slice(0, 8)}-data`
 
   try {
     const receipt = await adapter.create(connection, {
@@ -40,7 +40,7 @@ test('real Docker Engine creates only owner-labelled containers and preserves na
       resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
     })
     containerId = receipt.containerId
-    volumeName = receipt.volumeNames[0]
+    assert.equal(receipt.volumeNames[0], volumeName)
     assert.match(containerId, /^[a-f0-9]{64}$/)
     assert.equal(receipt.image, image)
 
@@ -75,16 +75,21 @@ test('real Docker Engine creates only owner-labelled containers and preserves na
         // Preserve the original integration failure; never delete an unverified container.
       }
     }
-    if (volumeName) {
-      const { stdout } = await execFileAsync('docker', ['volume', 'inspect', volumeName, '--format', '{{json .Labels}}'])
-      const labels = JSON.parse(stdout.trim())
-      if (labels['io.moonwitness.managed-by'] === 'arsy-deployment-adapter' &&
-          labels['io.moonwitness.owner-hash'] === ownerHash &&
-          labels['io.moonwitness.deployment-id'] === deploymentId) {
+    const leftoverVolume = await transport.request(connection, {
+      method: 'GET',
+      path: `/volumes/${encodeURIComponent(volumeName)}`,
+    })
+    if (leftoverVolume.statusCode === 200) {
+      const labels = leftoverVolume.body?.Labels
+      if (labels?.['io.moonwitness.managed-by'] === 'arsy-deployment-adapter' &&
+          labels?.['io.moonwitness.owner-hash'] === ownerHash &&
+          labels?.['io.moonwitness.deployment-id'] === deploymentId) {
         await execFileAsync('docker', ['volume', 'rm', volumeName])
       } else {
         throw new Error('Integration test refused to delete a volume without exact ownership labels')
       }
+    } else if (leftoverVolume.statusCode !== 404) {
+      throw new Error(`Integration volume cleanup could not inspect the volume (HTTP ${leftoverVolume.statusCode})`)
     }
   }
 })
