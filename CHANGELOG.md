@@ -16,6 +16,9 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 
 ### Fixed
 - ARSY application owns its build contract instead of delegating HTTP lifecycle to the framework-neutral core.
+- Removed fabricated market intelligence from Signal Room and replaced it with an explicit disconnected state (#107).
+- Removed synthetic financial, product/provenance, and inspection records from Mizan Ledger, The Forge, and ZILL Watch (#109).
+- Corrected the shared CardTitle forwarded-ref type to match its rendered heading element (#104).
 - Docker images include required workspace build configuration.
 - Workspace audit rejects unsafe glob patterns that could traverse outside the repository.
 
