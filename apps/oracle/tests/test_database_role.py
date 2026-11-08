@@ -37,6 +37,14 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
             )
             assert migrator_database_create is False
             assert migrator_schema_create is True
+            app_database_create = await admin.fetchval(
+                "SELECT has_database_privilege('oracle_app', current_database(), 'CREATE')"
+            )
+            app_schema_create = await admin.fetchval(
+                "SELECT has_schema_privilege('oracle_app', 'oracle', 'CREATE')"
+            )
+            assert app_database_create is False
+            assert app_schema_create is False
             await admin.execute(
                 """
                 CREATE TABLE IF NOT EXISTS public.arsy_login_attempts_probe (
@@ -77,6 +85,11 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
                 )
                 assert replayed is False
                 assert await store.get(record.job_id) is not None
+                await app.execute(
+                    "UPDATE oracle.jobs SET submitted_at = now() WHERE job_id = $1",
+                    record.job_id,
+                )
+                await app.execute("DELETE FROM oracle.jobs WHERE job_id = $1", record.job_id)
             finally:
                 await store.close()
 
