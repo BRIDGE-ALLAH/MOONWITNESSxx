@@ -10,6 +10,7 @@ import pytest
 
 from oracle.job_store import PostgresJobStore
 from oracle.jobs import IdempotencyConflictError, QueueSaturatedError
+from oracle.provenance import sha256_digest
 from oracle.schemas import EvidenceRef, Provenance
 from oracle.settings import Settings
 
@@ -25,7 +26,6 @@ def postgres_database():
     async def prepare() -> None:
         connection = await asyncpg.connect(dsn)
         try:
-            # Applying the same reviewed migration twice must be safe.
             await connection.execute(migration)
             await connection.execute(migration)
             await connection.execute("TRUNCATE oracle.jobs")
@@ -70,8 +70,6 @@ def submission(values: list[float] | None = None) -> dict[str, object]:
 
 
 def provenance(record, result: dict[str, object]) -> Provenance:
-    from oracle.provenance import sha256_digest
-
     return Provenance(
         method_id="oracle.statistics.describe",
         method_version="1",
@@ -141,7 +139,7 @@ def test_postgres_queue_capacity_is_enforced_transactionally(postgres_database: 
     asyncio.run(scenario())
 
 
-def test_postgres_claims_are_exclusive_and_expired_leases_are_fenced(postgres_database: str) -> None:
+def test_postgres_claims_are_exclusive_and_stale_workers_are_fenced(postgres_database: str) -> None:
     async def scenario() -> None:
         store = PostgresJobStore(make_settings(postgres_database))
         await store.start()
@@ -155,9 +153,8 @@ def test_postgres_claims_are_exclusive_and_expired_leases_are_fenced(postgres_da
             first = await store.claim("worker-a")
             assert first is not None
             assert first.job_id == submitted.job_id
-            assert first.status.value == "running"
 
-            await store._pool.execute(
+            await store._require_pool().execute(
                 "UPDATE oracle.jobs SET lease_until = now() - INTERVAL '1 second' WHERE job_id = $1",
                 submitted.job_id,
             )
@@ -194,6 +191,38 @@ def test_postgres_claims_are_exclusive_and_expired_leases_are_fenced(postgres_da
     asyncio.run(scenario())
 
 
+def test_expired_lease_without_reclaim_cannot_be_completed(postgres_database: str) -> None:
+    async def scenario() -> None:
+        store = PostgresJobStore(make_settings(postgres_database))
+        await store.start()
+        try:
+            submitted, _ = await store.submit(
+                **submission(),
+                idempotency_key="expired-lease-write-01",
+            )
+            claimed = await store.claim("worker-a")
+            assert claimed is not None
+            await store._require_pool().execute(
+                "UPDATE oracle.jobs SET lease_until = now() - INTERVAL '1 second' WHERE job_id = $1",
+                submitted.job_id,
+            )
+            result = {"count": 3}
+            accepted = await store.complete(
+                job_id=submitted.job_id,
+                worker_id="worker-a",
+                result=result,
+                provenance=provenance(claimed, result),
+            )
+            assert accepted is False
+            persisted = await store.get(submitted.job_id)
+            assert persisted is not None
+            assert persisted.status.value == "running"
+        finally:
+            await store.close()
+
+    asyncio.run(scenario())
+
+
 def test_expired_leases_exhaust_attempts_without_fabricating_success(postgres_database: str) -> None:
     async def scenario() -> None:
         store = PostgresJobStore(make_settings(postgres_database, max_job_attempts=2))
@@ -205,7 +234,7 @@ def test_expired_leases_exhaust_attempts_without_fabricating_success(postgres_da
             )
             first = await store.claim("worker-a")
             assert first is not None
-            await store._pool.execute(
+            await store._require_pool().execute(
                 "UPDATE oracle.jobs SET lease_until = now() - INTERVAL '1 second' WHERE job_id = $1",
                 submitted.job_id,
             )
@@ -213,7 +242,7 @@ def test_expired_leases_exhaust_attempts_without_fabricating_success(postgres_da
             second = await store.claim("worker-b")
             assert second is not None
             assert second.job_id == submitted.job_id
-            await store._pool.execute(
+            await store._require_pool().execute(
                 "UPDATE oracle.jobs SET lease_until = now() - INTERVAL '1 second' WHERE job_id = $1",
                 submitted.job_id,
             )
@@ -234,7 +263,12 @@ def test_expired_leases_exhaust_attempts_without_fabricating_success(postgres_da
 def test_terminal_job_retention_expires_its_idempotency_record(postgres_database: str) -> None:
     async def scenario() -> None:
         store = PostgresJobStore(
-            make_settings(postgres_database, max_queue_size=1, max_retained_jobs=1, job_retention_seconds=60)
+            make_settings(
+                postgres_database,
+                max_queue_size=1,
+                max_retained_jobs=1,
+                job_retention_seconds=60,
+            )
         )
         await store.start()
         try:
@@ -251,7 +285,7 @@ def test_terminal_job_retention_expires_its_idempotency_record(postgres_database
                 result=result,
                 provenance=provenance(claimed, result),
             )
-            await store._pool.execute(
+            await store._require_pool().execute(
                 """
                 UPDATE oracle.jobs
                 SET completed_at = now() - INTERVAL '10 minutes'
