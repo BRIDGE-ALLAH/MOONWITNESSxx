@@ -1,6 +1,8 @@
 # ADR 0002 — Docker Workload and Deployment Ownership
 
-**Status:** Proposed for maintainer review; not an implementation authorization  
+**Status:** Accepted  
+**Decision date:** 2026-11-08  
+**Decision authority:** Explicit project-owner approval recorded in the MOONWITNESS execution conversation and linked GitHub decision issue #178  
 **Date:** 2026-11-08  
 **Decision scope:** Docker application workloads, image builds, deployment lifecycle, and their relationship to ARSY, ATLAS, AEGIS, and HEADQUARTER  
 **Related:** [ADR 0001 — ATLAS PostgreSQL Storage](./0001-atlas-postgresql-storage.md), [Docker Connector](../29-docker-connector.md), [Platform Capability Ownership Map](../33-platform-capability-ownership-and-dependency-map.md), [Universe & Product Architecture Registry](../32-universe-and-product-architecture-registry.md)
@@ -21,7 +23,7 @@ The platform identities have separate responsibilities:
 
 Without an explicit decision, Docker deployment work could be implemented independently in ARSY, ATLAS, AEGIS, a generic worker, and Headquarter. That would create duplicate authorities, credentials, state machines, and side effects.
 
-## 2. Decision proposed
+## 2. Accepted decision
 
 ### 2.1 One application deployment control plane
 
@@ -173,13 +175,17 @@ Costs and constraints:
 - Mutating Docker operations require a separate threat model and test suite; read-only connector checks are not sufficient.
 - Production readiness will require durable recovery, RBAC/approval, observability, backups, rollback, target-specific tests and operational ownership.
 
-## 8. Implementation is not yet authorized by this proposal
+## 8. Implementation authorization and constraints
 
-This ADR is proposed for review. Until it is accepted:
-- keep the current Docker Connector read-only;
-- do not add start/stop/restart/remove/exec/Compose routes;
-- do not grant Docker access to ATLAS or AEGIS;
-- do not create a second deployment service or queue implementation;
-- do not claim Coolify parity or production readiness.
+This ADR is accepted and authorizes implementation planning and narrowly scoped development **only within the ownership and security boundaries above**. It does not authorize an unrestricted Docker API, public Docker socket exposure, production deployment, or claims of Coolify parity or production readiness.
 
-After acceptance, create a small dependency-ordered issue set against the current mainline and existing issues. Each issue must name one owning component, exact allowed paths/interfaces, explicit non-goals, dependencies, and executable acceptance criteria.
+The following constraints remain mandatory throughout implementation:
+- the existing Docker Connector stays read-only;
+- Docker workload mutation must use the separate ARSY-owned adapter and an allowlisted operation contract;
+- no Docker access is granted to ATLAS, AEGIS, or HEADQUARTER;
+- build execution is isolated from ARSY credentials and Docker control-plane access;
+- deployment intent, authorization, idempotency, audit, receipts and recovery state are durable before any external side effect;
+- persistent volumes and user data are never removed by default;
+- production readiness requires independent security review, tested recovery/rollback, backups, observability, ingress/TLS and operational ownership.
+
+Implementation must proceed through dependency-ordered issues against the current mainline and existing issues. Each issue must name one owner, exact allowed paths/interfaces, explicit non-goals, dependencies, security invariants, and executable acceptance criteria. Any material change to these decisions requires a superseding ADR.
