@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { Pool } from 'pg'
 import type { EvidenceEvent, EvidenceStore } from '@riotworks/arsy-core'
 
@@ -14,27 +15,39 @@ interface EvidenceRow {
   event_hash: string
 }
 
+function storageAggregateId(ownerId: string, aggregateId: string): string {
+  return createHash('sha256').update(ownerId).update('\0').update(aggregateId).digest('hex')
+}
+
 /**
  * PostgreSQL append-only adapter.
  * Requires migrations/001_arsy_evidence_events.sql to be applied by deployment System Mode.
  * The advisory transaction lock + expected previous hash prevents cross-process hash-chain forks.
+ * Operator scope is hashed into the storage key; the logical aggregate ID remains part of the
+ * event hash and API contract, while rows from different operators cannot share a stream.
  */
 export class PostgresEvidenceStore implements EvidenceStore {
   private readonly pool: Pool
+  private readonly ownerId: string
 
-  constructor(pool: Pool) {
+  constructor(pool: Pool, ownerId: string) {
+    if (!ownerId.trim() || ownerId.length > 128) {
+      throw new Error('A valid operator owner ID is required for evidence storage')
+    }
     this.pool = pool
+    this.ownerId = ownerId
   }
 
   async append(event: EvidenceEvent): Promise<void> {
+    const scopedAggregateId = storageAggregateId(this.ownerId, event.aggregateId)
     const client = await this.pool.connect()
     try {
       await client.query('BEGIN')
-      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [event.aggregateId])
+      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [scopedAggregateId])
 
       const existing = await client.query<{ event_hash: string }>(
         'SELECT event_hash FROM arsy_evidence_events WHERE aggregate_id = $1 AND id = $2',
-        [event.aggregateId, event.id],
+        [scopedAggregateId, event.id],
       )
       if (existing.rows[0]) {
         if (existing.rows[0].event_hash !== event.hash) throw new Error('Event id collision')
@@ -44,7 +57,7 @@ export class PostgresEvidenceStore implements EvidenceStore {
 
       const latest = await client.query<{ event_hash: string; stream_position: string }>(
         'SELECT event_hash, stream_position FROM arsy_evidence_events WHERE aggregate_id = $1 ORDER BY stream_position DESC LIMIT 1',
-        [event.aggregateId],
+        [scopedAggregateId],
       )
       const currentHash = latest.rows[0]?.event_hash ?? null
       if (currentHash !== event.previousHash) {
@@ -57,7 +70,7 @@ export class PostgresEvidenceStore implements EvidenceStore {
           (aggregate_id, stream_position, id, kind, occurred_at, recorded_at, actor_id, payload, evidence_ids, previous_hash, event_hash)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10, $11)`,
         [
-          event.aggregateId, nextPosition, event.id, event.kind, event.occurredAt, event.recordedAt,
+          scopedAggregateId, nextPosition, event.id, event.kind, event.occurredAt, event.recordedAt,
           event.actorId, JSON.stringify(event.payload), JSON.stringify(event.evidenceIds), event.previousHash, event.hash,
         ],
       )
@@ -71,15 +84,16 @@ export class PostgresEvidenceStore implements EvidenceStore {
   }
 
   async list(aggregateId: string): Promise<readonly EvidenceEvent[]> {
+    const scopedAggregateId = storageAggregateId(this.ownerId, aggregateId)
     const result = await this.pool.query<EvidenceRow>(
       `SELECT id, kind, aggregate_id, occurred_at, recorded_at, actor_id, payload, evidence_ids, previous_hash, event_hash
        FROM arsy_evidence_events WHERE aggregate_id = $1 ORDER BY stream_position ASC`,
-      [aggregateId],
+      [scopedAggregateId],
     )
     return result.rows.map((row) => ({
       id: row.id,
       kind: row.kind,
-      aggregateId: row.aggregate_id,
+      aggregateId,
       occurredAt: new Date(row.occurred_at).toISOString(),
       recordedAt: new Date(row.recorded_at).toISOString(),
       actorId: row.actor_id,
