@@ -1,1 +1,0 @@
-export * from "./types.ts";export {RevelationProfileRegistry,validateRevelationProfile,validateRevelationClaim,validateTheologyPosition,validateDomainReview,validateTheologyComparison,createIncomparableComparison} from "./profile.ts";export {validateComparisonFrame} from "./profile.ts";

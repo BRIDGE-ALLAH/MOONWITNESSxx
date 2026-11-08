@@ -1,4 +1,0 @@
-export interface ResearchPlan {readonly id:string;readonly query:string;readonly scope:Readonly<Record<string,string>>;readonly corpusRelease:string;readonly ontologyVersions:readonly string[];readonly methodVersions:readonly string[]}
-export interface RetrievalCandidate {readonly id:string;readonly sourceRef:string;readonly passageRef:string;readonly channel:"exact-id"|"citation"|"lexical"|"structural"|"semantic";readonly score?:number;readonly method?:string;readonly evidenceRefs:readonly string[];readonly witnessFamilyId?:string}
-export interface ResearchManifest {readonly plan:ResearchPlan;readonly softwareVersion:string;readonly generatedAt:string;readonly inputDigest:string;readonly selectedCandidateIds:readonly string[];readonly limitations:readonly string[]}
-export interface ResearchReport {readonly manifest:ResearchManifest;readonly candidates:readonly RetrievalCandidate[];readonly warnings:readonly string[]}

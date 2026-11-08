@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
-<title id="title">MOONWITNESS archive seal</title><desc id="desc">Circular archive seal with lunar aperture symbol and the words observe, record, verify, understand.</desc>
-<g fill="none" stroke="currentColor"><circle cx="128" cy="128" r="112" stroke-width="2"/><circle cx="128" cy="128" r="96" stroke-width="1" stroke-dasharray="2 5"/><circle cx="128" cy="128" r="68" stroke-width="1.5"/></g>
-<g fill="currentColor" text-anchor="middle" font-family="IBM Plex Mono,monospace" letter-spacing="3"><text x="128" y="43" font-size="12">MOONWITNESS</text><text x="128" y="220" font-size="10">OBSERVE • RECORD • VERIFY</text></g>
-<g transform="translate(64 64) scale(1)" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><path d="M91 10a61 61 0 1 0 38 90 53 53 0 0 1-38-90Z"/><path d="M7 91c29-38 68-58 118-53"/><path d="M116 1v22m-11-11h22"/></g>
-</svg>

@@ -1,8 +1,0 @@
-# Opt-in only: mounting this socket grants ARSY host-root-equivalent Docker control.
-# Use only on a trusted single-operator host with ARSY isolated from untrusted networks.
-services:
-  arsy:
-    volumes:
-      - type: bind
-        source: ${DOCKER_SOCKET_HOST_PATH:-/var/run/docker.sock}
-        target: ${DOCKER_LOCAL_SOCKET_PATH:-/var/run/docker.sock}
