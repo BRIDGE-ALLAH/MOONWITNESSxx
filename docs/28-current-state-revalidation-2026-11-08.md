@@ -272,3 +272,28 @@ These runs are exact-main-head CI evidence only. They do not establish a complet
 ### Persisted status contract
 
 The current operation model and database constraint permit `queued`, `running`, `verifying`, `succeeded`, `failed`, `cancelled`, and `blocked`. Do not write proposed labels such as `building` or `deploying` into `arsy_deployment_operations.status` without a reviewed migration and matching transition/API tests. Represent build, image-pull, container-create/start and health sub-stages as typed append-only operation events/details while keeping the persisted operation and deployment aggregate status values compatible with migrations 003–005.
+
+
+## Mainline recovery and ORACLE Stage 2 revalidation — 2026-11-09
+
+**Verified recovery merge:** `46d38a4877540b75028cb42353cbf087638fe5fe` (PR #236), restoring the repository tree after the empty-tree mainline incident associated with PR #229. The recovery PR restored 651 files (+70,850 lines) without rewriting main history. Its exact-head Repository CI and ATLAS CI jobs completed successfully, including Developer Experience, WITNESS FABRIC integrity, asset integrity, repository integrity, full workspace typecheck/build, COCKPIT Tauri desktop compile, and ATLAS Rust quality. CodeQL also completed successfully on the recovery head. This is repository recovery evidence only; it is not a production deployment verification.
+
+### ORACLE status correction
+
+Older sections in this document describe ORACLE Stage 1 as process-memory-only. That statement is historically accurate for the earlier snapshot but is superseded by the merged ORACLE persistence work recorded in the current `apps/oracle/README.md` and `CHANGELOG.md` (`1.2.0`):
+
+- PostgreSQL-backed job lifecycle and idempotency, with atomic same-key replay/conflict behavior and bounded queue/retention.
+- Checksum-verified SQL migrations and separate least-privilege runtime/migrator database roles.
+- Leased workers using `FOR UPDATE SKIP LOCKED`, heartbeats, fencing tokens, bounded retries, and terminal-row retention.
+- Durable mode fails closed when storage/migrations are unavailable; it does not silently fall back to memory.
+- Compose E2E exercises real PostgreSQL/Redis/ORACLE/ARSY containers and verifies job result and idempotency replay after ORACLE restart.
+
+The bounded in-memory coordinator remains only for isolated loopback development/test when no durable database URL is configured. `ORACLE_ENV=production` remains intentionally rejected. Production monitoring/alerting, managed secrets and rotation, network policy, backup/restore drills, retention review, deployment ownership, and rollback validation remain open gates.
+
+### Workspace inventory correction
+
+The restored mainline contains private Next.js workspaces `apps/gate` and `apps/id`, in addition to `apps/headquarter` and `apps/cockpit`; ARSY and ORACLE remain the backend/service authorities. GATE and ID workspace presence must not be represented as production-complete product journeys. ARSY remains the server-side identity and authorization authority.
+
+### Verification boundary
+
+The checks above are GitHub Actions results on the recovery PR head. A separate post-merge mainline workflow run was not independently established in this audit. No local clone/build, live production deployment, production credential inspection, backup/restore drill, or production smoke test was performed. **Production readiness remains NO-GO.** No version bump, tag, GitHub Release, or production deployment was attempted.
