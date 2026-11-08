@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
   let limit
   try {
-    limit = await requestSharedLoginLimit(request, 'check')
+    limit = await requestSharedLoginLimit(request, 'attempt')
   } catch {
     return limiterUnavailable()
   }
