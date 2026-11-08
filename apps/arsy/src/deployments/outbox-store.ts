@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import type { DatabasePool } from '../db.ts'
 
 type QueryResult<T> = { rows: T[] }
@@ -106,8 +105,6 @@ export async function claimDeploymentOutbox(
   const workerId = requiredWorkerId(input.workerId)
   const limit = boundedInteger(input.limit, 10, 1, 50, 'limit')
   const leaseSeconds = boundedInteger(input.leaseSeconds, 30, 5, 300, 'leaseSeconds')
-  const leaseToken = randomUUID()
-
   // A worker can die after claiming its final allowed attempt. Once that
   // lease expires, make the row terminal instead of leaving it unclaimable.
   await pool.query(
@@ -139,7 +136,7 @@ export async function claimDeploymentOutbox(
        UPDATE arsy_deployment_outbox AS outbox
        SET locked_by = $1,
            locked_until = now() + make_interval(secs => $3),
-           lease_token = $4,
+           lease_token = gen_random_uuid(),
            attempt_count = outbox.attempt_count + 1
        FROM candidates
        WHERE outbox.id = candidates.id
@@ -152,7 +149,7 @@ export async function claimDeploymentOutbox(
        attempt_count, max_attempts, created_at, locked_until, lease_token
      FROM claimed
      ORDER BY created_at ASC, id ASC`,
-    [workerId, limit, leaseSeconds, leaseToken],
+    [workerId, limit, leaseSeconds],
   )
   return queryRows<OutboxRow>(result).map((row) => mapClaim(row, workerId))
 }
