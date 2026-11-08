@@ -102,7 +102,7 @@ class ReadinessResponse(StrictModel):
     queue_depth: int
     queue_capacity: int
     workers: int
-    durable_jobs: Literal[False] = False
+    durable_jobs: bool = False
 
 
 class CapabilitiesResponse(StrictModel):
@@ -111,5 +111,5 @@ class CapabilitiesResponse(StrictModel):
     tasks: list[str]
     max_numeric_values: int
     max_text_chars: int
-    durable_jobs: Literal[False] = False
+    durable_jobs: bool = False
     model_inference: Literal[False] = False
