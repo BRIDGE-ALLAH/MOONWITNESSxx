@@ -12,6 +12,9 @@ import { AgiCopilotPanel } from '../components/AgiCopilotPanel'
 import { AuditTrail } from '../components/AuditTrail'
 import { ConfirmationDialog } from '../components/ConfirmationDialog'
 import { RunbookPanel } from '../components/RunbookPanel'
+import { TelemetryVisualizer } from '../components/TelemetryVisualizer'
+import { GateDaemonBridgePanel } from '../components/GateDaemonBridgePanel'
+import { PlaybookPipelineRunner } from '../components/PlaybookPipelineRunner'
 import type { CockpitSnapshot, SuggestedAction } from '../lib/agiCopilot'
 import {
   fetchCockpitTelemetry,
@@ -446,6 +449,17 @@ export default function CockpitDashboard() {
             onDispatchDraft={(actionId) => requestAction(actionId, 'copilot-draft')}
           />
         ) : null}
+
+        <TelemetryVisualizer
+          nodes={telemetry?.nodes ?? []}
+          diffs={nodeChanges}
+          environment={selectedEnv}
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <GateDaemonBridgePanel />
+          <PlaybookPipelineRunner />
+        </div>
 
         <div>
           <div className="mb-3 flex items-center justify-between">
