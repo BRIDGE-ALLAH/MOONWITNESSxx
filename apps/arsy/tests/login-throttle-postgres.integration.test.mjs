@@ -24,6 +24,7 @@ test('PostgreSQL login limiter is atomic across ARSY instances and survives inst
   const env = { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token }
   const secondEnv = { ARSY_OPERATOR_ID: secondOwnerId, ARSY_OPERATOR_TOKEN: secondToken }
   const apps = new Set()
+  let migrationApplied = false
 
   function startInstance(instanceEnv = env) {
     const pool = new Pool({ connectionString: databaseUrl, max: 5 })
@@ -50,6 +51,7 @@ test('PostgreSQL login limiter is atomic across ARSY instances and survives inst
     )
     await setupPool.query(migration)
     await setupPool.query(migration)
+    migrationApplied = true
 
     const appA = startInstance()
     const appB = startInstance()
@@ -127,10 +129,12 @@ test('PostgreSQL login limiter is atomic across ARSY instances and survives inst
     for (const app of apps) {
       await app.close()
     }
-    await setupPool.query(
-      'DELETE FROM arsy_login_attempt_buckets WHERE owner_id = ANY($1::text[])',
-      [[ownerId, secondOwnerId]],
-    )
+    if (migrationApplied) {
+      await setupPool.query(
+        'DELETE FROM arsy_login_attempt_buckets WHERE owner_id = ANY($1::text[])',
+        [[ownerId, secondOwnerId]],
+      )
+    }
     await setupPool.end()
   }
 })
