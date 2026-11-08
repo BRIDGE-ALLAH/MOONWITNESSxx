@@ -1,8 +1,21 @@
 -- Append-only authorization evidence for ARSY deployment operations.
 -- Apply only through the reviewed migration process; never at application startup.
+DO $
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'arsy_deployments_id_owner_host_key') THEN
+    ALTER TABLE arsy_deployments
+      ADD CONSTRAINT arsy_deployments_id_owner_host_key UNIQUE (id, owner_id, docker_server_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'arsy_deployment_operations_id_owner_deployment_key') THEN
+    ALTER TABLE arsy_deployment_operations
+      ADD CONSTRAINT arsy_deployment_operations_id_owner_deployment_key UNIQUE (id, owner_id, deployment_id);
+  END IF;
+END;
+$;
 CREATE TABLE IF NOT EXISTS arsy_deployment_authorization_decisions (
   id uuid PRIMARY KEY,
   operation_id uuid NOT NULL,
+  deployment_id uuid NOT NULL,
   owner_id text NOT NULL,
   actor_id text NOT NULL,
   target_host_id uuid NOT NULL,
@@ -14,10 +27,10 @@ CREATE TABLE IF NOT EXISTS arsy_deployment_authorization_decisions (
   evidence jsonb NOT NULL DEFAULT '{}'::jsonb
     CHECK (jsonb_typeof(evidence) = 'object'),
   recorded_at timestamptz NOT NULL DEFAULT now(),
-  FOREIGN KEY (operation_id, owner_id)
-    REFERENCES arsy_deployment_operations (id, owner_id) ON DELETE RESTRICT,
-  FOREIGN KEY (target_host_id, owner_id)
-    REFERENCES docker_connector_servers (id, owner_id) ON DELETE RESTRICT,
+  FOREIGN KEY (operation_id, owner_id, deployment_id)
+    REFERENCES arsy_deployment_operations (id, owner_id, deployment_id) ON DELETE RESTRICT,
+  FOREIGN KEY (deployment_id, owner_id, target_host_id)
+    REFERENCES arsy_deployments (id, owner_id, docker_server_id) ON DELETE RESTRICT,
   CHECK (policy_version IS NULL OR length(policy_version) BETWEEN 1 AND 120),
   CHECK (approval_reference IS NULL OR length(approval_reference) BETWEEN 1 AND 200)
 );
