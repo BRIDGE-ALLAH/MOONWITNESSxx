@@ -103,7 +103,8 @@
 - [ ] **P0** Run package type-check, lint, and tests in CI on the implementation PR.
 - [ ] **P1** Verify all three skins in a browser at desktop, tablet, mobile, and 200% zoom.
 - [ ] **P1** Complete rendered contrast and keyboard/focus review for every supported skin/mode pair.
-- [ ] **P1** Build a dedicated local skin workbench with representative Observatory, Archive, and Signal compositions.
+- [x] **P1** Add an initial internal Headquarter specimen route at `/ui-lab/skin-system` with representative Observatory, Archive, and Signal compositions.
+- [ ] **P1** Expand the specimen route into a complete component-state and mode-pairing workbench.
 - [ ] **P1** Map actual Headquarter routes to an appropriate skin without breaking the existing next-themes preference.
 - [ ] **P2** Add skin preference/persistence only when a real user-facing selection flow is justified.
 
