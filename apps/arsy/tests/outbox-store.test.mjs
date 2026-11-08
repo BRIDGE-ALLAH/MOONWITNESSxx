@@ -32,7 +32,7 @@ class FakePool {
 
 test('claim uses one atomic SKIP LOCKED statement and returns a fenced lease', async () => {
   const pool = new FakePool()
-  const claimed = await claimDeploymentOutbox(pool, { workerId: 'worker-a', limit: 5, leaseSeconds: 30 })
+  const claimed = await claimDeploymentOutbox(pool, { workerId: 'worker-a', ownerId: 'owner-1', limit: 5, leaseSeconds: 30 })
   assert.equal(claimed.length, 1)
   assert.equal(claimed[0].id, row.id)
   assert.equal(claimed[0].leaseOwner, 'worker-a')
@@ -42,6 +42,7 @@ test('claim uses one atomic SKIP LOCKED statement and returns a fenced lease', a
   assert.match(pool.statements[0].statement, /FOR UPDATE SKIP LOCKED/)
   assert.match(pool.statements[0].statement, /gen_random_uuid\(\)/)
   assert.match(pool.statements[0].statement, /dead_lettered_at/)
+  assert.equal(pool.statements[0].values[3], 'owner-1')
 })
 
 test('claim rejects invalid worker, batch and lease bounds before querying', async () => {
