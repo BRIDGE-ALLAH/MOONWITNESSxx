@@ -128,7 +128,7 @@ insecure-entitlements = []
   maxUsedSpace = "512MB"
 EOF
 cp -R "$(dirname "$0")/context/." "$CONTEXT/"
-chown -R "$BUILDER_USER:$BUILDER_USER" "$WORK"
+sudo chown -R "$BUILDER_USER:$BUILDER_USER" "$WORK"
 context_bytes="$(du -sb "$CONTEXT" | awk '{print $1}')"
 (( context_bytes <= 268435456 )) || fail "build context exceeds 256 MiB"
 
