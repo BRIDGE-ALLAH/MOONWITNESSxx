@@ -34,4 +34,4 @@ INSERT IGNORE INTO engine_instances (
     JSON_OBJECT('managed_by', 'atlas-compose'),
     NULL,
     NULL
-)
+);
