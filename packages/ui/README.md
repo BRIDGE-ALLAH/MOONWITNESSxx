@@ -150,7 +150,7 @@ Unsupported mode/skin combinations fall back to the selected skin's documented d
 
 **Skin is not a dark/light toggle.** A skin defines visual grammar, composition, typography, surface character, texture, and component recipes. Appearance mode, density, and accessibility preferences remain separate concerns.
 
-An initial internal specimen route is available at `/ui-lab/skin-system` in Headquarter. It compares the three profiles using illustrative content; it is not a complete component workbench or visual-regression suite. There is no global skin picker, preference persistence, React context, or automatic route mapping. Applications must explicitly apply `SkinRoot` to the route or application boundary. See [docs/13 — Skin System Blueprint](../../docs/13-skin-system-blueprint.md).
+Headquarter applies `SkinRoot` at its application boundary and maps `/sidra-archive` (including nested records) to Archive/light; all other current routes use Observatory/dark. The Signal skin remains in the internal specimen until a genuine public/editorial route exists. The route mapping is deterministic and fixed to each skin's currently supported mode. The prototype global theme toggle has been removed because none of the three initial skins supports both modes. There is no global skin picker or persisted preference. The internal `/ui-lab/skin-system` route still compares all three profiles with illustrative content; it is not a complete component workbench or visual-regression suite. See [docs/13 — Skin System Blueprint](../../docs/13-skin-system-blueprint.md).
 
 ## Typography and assets
 
@@ -176,7 +176,7 @@ pnpm --filter @riotworks/ui test
 pnpm --filter @riotworks/ui lint
 ```
 
-The package's `test` script runs the theme source-contract tests. Headquarter integration and production build checks run in repository CI.
+The package's `test` script runs the theme and skin source-contract tests. Headquarter integration and production build checks run in repository CI.
 
 ## Distribution status
 
