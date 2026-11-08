@@ -86,11 +86,6 @@ async def prepare_database() -> str:
             "ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator_test IN SCHEMA oracle "
             "REVOKE ALL ON TABLES FROM oracle_app_test"
         )
-        await admin.execute(
-            "ALTER ROLE oracle_app_test IN DATABASE "
-            + database_name
-            + " SET search_path = oracle"
-        )
     finally:
         await admin.close()
 
@@ -547,3 +542,77 @@ def test_missing_migration_keeps_durable_mode_unready_and_returns_503() -> None:
                 await admin.close()
 
         asyncio.run(drop_database())
+
+
+
+def test_runtime_role_is_confined_to_oracle_jobs() -> None:
+    app_dsn = asyncio.run(prepare_database())
+
+    async def setup_probe() -> None:
+        admin = await asyncpg.connect(TEST_DATABASE_URL)
+        try:
+            await admin.execute(
+                """
+                CREATE TABLE IF NOT EXISTS public.arsy_login_attempts_probe (
+                  owner_id text PRIMARY KEY,
+                  attempt_count integer NOT NULL
+                )
+                """
+            )
+            await admin.execute("TRUNCATE public.arsy_login_attempts_probe")
+            await admin.execute(
+                """
+                INSERT INTO public.arsy_login_attempts_probe (owner_id, attempt_count)
+                VALUES ('probe', 1)
+                """
+            )
+            app_db_create = await admin.fetchval(
+                "SELECT has_database_privilege($1, current_database(), 'CREATE')",
+                APP_ROLE,
+            )
+            app_oracle_create = await admin.fetchval(
+                "SELECT has_schema_privilege($1, 'oracle', 'CREATE')",
+                APP_ROLE,
+            )
+            migrator_db_create = await admin.fetchval(
+                "SELECT has_database_privilege('oracle_migrator_test', current_database(), 'CREATE')"
+            )
+            migrator_oracle_create = await admin.fetchval(
+                "SELECT has_schema_privilege('oracle_migrator_test', 'oracle', 'CREATE')"
+            )
+            assert app_db_create is False
+            assert app_oracle_create is False
+            assert migrator_db_create is False
+            assert migrator_oracle_create is True
+        finally:
+            await admin.close()
+
+    asyncio.run(setup_probe())
+    app = asyncio.run(asyncpg.connect(app_dsn))
+    try:
+        assert asyncio.run(app.fetchval("SELECT count(*) FROM oracle.jobs")) >= 0
+        with pytest.raises(asyncpg.InsufficientPrivilegeError):
+            asyncio.run(app.fetch("SELECT * FROM public.arsy_login_attempts_probe"))
+        with pytest.raises(asyncpg.InsufficientPrivilegeError):
+            asyncio.run(app.fetch("SELECT * FROM oracle.schema_migrations"))
+        with pytest.raises(asyncpg.InsufficientPrivilegeError):
+            asyncio.run(app.execute("CREATE SCHEMA oracle_app_must_not_create"))
+        with pytest.raises(asyncpg.InsufficientPrivilegeError):
+            asyncio.run(app.execute("CREATE TABLE oracle.app_must_not_create (id integer)"))
+        with pytest.raises(asyncpg.InsufficientPrivilegeError):
+            asyncio.run(app.execute("ALTER TABLE oracle.jobs ADD COLUMN forbidden text"))
+        with pytest.raises(asyncpg.InsufficientPrivilegeError):
+            asyncio.run(app.execute("DROP TABLE oracle.jobs"))
+        with pytest.raises(asyncpg.InsufficientPrivilegeError):
+            asyncio.run(app.execute("SET ROLE oracle_migrator_test"))
+    finally:
+        asyncio.run(app.close())
+
+        async def cleanup() -> None:
+            admin = await asyncpg.connect(TEST_DATABASE_URL)
+            try:
+                await admin.execute("DROP TABLE IF EXISTS public.arsy_login_attempts_probe")
+            finally:
+                await admin.close()
+
+        asyncio.run(cleanup())
