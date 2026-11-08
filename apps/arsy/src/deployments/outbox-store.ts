@@ -63,6 +63,15 @@ function boundedInteger(value: number | undefined, fallback: number, min: number
   return candidate
 }
 
+function requiredOwnerId(value: string): string {
+  if (typeof value !== 'string') throw new TypeError('ownerId must be a string')
+  const normalized = value.trim()
+  if (!normalized || normalized.length > 128 || /[\\u0000-\\u001f\\u007f]/.test(normalized)) {
+    throw new TypeError('ownerId must contain 1-128 printable characters')
+  }
+  return normalized
+}
+
 function jsonObject(value: unknown): Record<string, unknown> {
   const parsed = typeof value === 'string' ? JSON.parse(value) as unknown : value
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -104,7 +113,7 @@ export async function claimDeploymentOutbox(
   input: ClaimOutboxInput,
 ): Promise<ClaimedDeploymentOutboxMessage[]> {
   const workerId = requiredWorkerId(input.workerId)
-  const ownerId = input.ownerId === undefined ? null : requiredWorkerId(input.ownerId)
+  const ownerId = input.ownerId === undefined ? null : requiredOwnerId(input.ownerId)
   const limit = boundedInteger(input.limit, 10, 1, 50, 'limit')
   const leaseSeconds = boundedInteger(input.leaseSeconds, 30, 5, 300, 'leaseSeconds')
 
@@ -145,7 +154,7 @@ export async function claimDeploymentOutbox(
 }
 
 export interface ReapOutboxInput {
-  limit: number
+  limit?: number
   ownerId?: string
 }
 
