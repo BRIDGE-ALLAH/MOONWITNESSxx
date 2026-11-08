@@ -83,7 +83,6 @@ function toCopilotSnapshot(
   logs: string[]
 ): CockpitSnapshot {
   if (telemetry) {
-    const arsy = telemetry.nodes.find((n) => n.id === 'arsy') ?? telemetry.nodes[0]
     return {
       timestamp: telemetry.timestamp,
       environment: selectedEnv,
