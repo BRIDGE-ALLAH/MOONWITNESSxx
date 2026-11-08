@@ -1,6 +1,7 @@
 import { createPublicKey, randomUUID, verify as verifySignature, type KeyObject } from 'node:crypto'
 import {
   authorizeCapability,
+  type CapabilityDecision,
   type CapabilityGrant,
   type CapabilityRequest,
 } from '@riotworks/arsy-core'
@@ -438,10 +439,9 @@ export async function authorizeDeploymentOperation(
       decision = { allowed: false, reasonCodes: ['capability_verifier_unavailable'], policyVersion: policy.policyVersion, capabilityGrantId: null, approvalId: null }
     } else {
       const chains = await dependencies.store.loadCapabilityChains(context)
-      let capabilityDecision = {
+      let capabilityDecision: CapabilityDecision = {
         allowed: false,
         reasonCodes: ['capability_chain_missing'],
-        grantId: undefined as string | undefined,
       }
       const request: CapabilityRequest = {
         actorId: context.actorId,
