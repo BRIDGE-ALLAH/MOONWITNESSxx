@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto'
 import { isIP } from 'node:net'
 
-export type LoginLimitAction = 'check' | 'failure' | 'success'
+export type LoginLimitAction = 'attempt' | 'failure' | 'success'
 
 export interface LoginLimitResult {
   allowed: boolean
