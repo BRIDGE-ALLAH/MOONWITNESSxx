@@ -24,6 +24,10 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
             migration_path = Path(__file__).parents[1] / "migrations" / "001_oracle_jobs.sql"
             migration = migration_path.read_text()
             await admin.execute(migration)
+            owner = await admin.fetchval(
+                "SELECT tableowner FROM pg_tables WHERE schemaname = 'oracle' AND tablename = 'jobs'"
+            )
+            assert owner == "oracle_migrator"
             await admin.execute(
                 """
                 CREATE TABLE IF NOT EXISTS public.arsy_login_attempts_probe (
