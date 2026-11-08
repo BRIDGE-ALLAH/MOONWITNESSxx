@@ -53,13 +53,16 @@ export function registerEvidenceRoutes(app: FastifyInstance, pool: Pool): void {
     try {
       const existing = await store.list(aggregateId)
       const replay = existing.some((event) => event.id === parsed.data.id)
-      const event = await ledger.append({
+      const appended = await ledger.append({
         ...parsed.data,
         aggregateId,
         actorId: ownerId,
       })
-      return reply.code(replay ? 200 : 201).send({
-        data: { event, disposition: replay ? 'replayed' : 'created' },
+      const event = (await store.list(aggregateId)).find((item) => item.id === appended.id)
+      if (!event) throw new Error('Persisted evidence event could not be reloaded')
+      const wasReplay = replay || event.hash !== appended.hash
+      return reply.code(wasReplay ? 200 : 201).send({
+        data: { event, disposition: wasReplay ? 'replayed' : 'created' },
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : ''
