@@ -95,7 +95,7 @@
     --mw-skin-graphic-accent: 41 74% 65%;
     --mw-skin-content-max-width: 90rem;
     --mw-skin-density-scale: 1;
-}
+  }
 
   .theme-archive,
   [data-mw-skin="archive"][data-mw-mode="light"] {
@@ -139,7 +139,7 @@
     --mw-skin-graphic-accent: 41 52% 29%;
     --mw-skin-content-max-width: 68rem;
     --mw-skin-density-scale: 1;
-}
+  }
 
   .theme-signal,
   [data-mw-skin="signal"][data-mw-mode="dark"] {
