@@ -1,0 +1,54 @@
+name: Shared login throttle
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "fix/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shared-login-throttle-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shared-login-throttle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: arsy
+          POSTGRES_PASSWORD: arsy_test_password
+          POSTGRES_DB: arsy_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arsy -d arsy_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgres://arsy:arsy_test_password@localhost:5432/arsy_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run ARSY tests with PostgreSQL integration
+        run: pnpm --filter @riotworks/arsy test
+      - name: Run Headquarter shared throttle tests
+        run: pnpm --filter @riotworks/headquarter exec node --experimental-strip-types --test tests/shared-login-limit.test.mjs tests/operator-session-route.test.mjs
+      - name: Type-check affected applications
+        run: |
+          pnpm --filter @riotworks/arsy type-check
+          pnpm --filter @riotworks/headquarter type-check
