@@ -4,6 +4,9 @@ logger:
   level: warn
   format: compact
 
+workers:
+  mode: ForegroundBlocking
+
 server:
   port: 5151
   binding: 127.0.0.1
