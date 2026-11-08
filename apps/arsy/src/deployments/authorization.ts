@@ -4,7 +4,7 @@ import {
   type CapabilityDecision,
   type CapabilityGrant,
   type CapabilityRequest,
-} from '@riotworks/arsy-core'
+} from '../../../../packages/arsy-core/src/runtime-contract/capability.ts'
 import type { DatabasePool } from '../db.ts'
 
 const DEPLOYMENT_PURPOSE = 'application-deployment'
