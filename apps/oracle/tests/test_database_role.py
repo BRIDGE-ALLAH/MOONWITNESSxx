@@ -21,7 +21,8 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
     async def scenario() -> None:
         admin = await asyncpg.connect(admin_dsn)
         try:
-            migration = (Path(__file__).parents[1] / "migrations" / "001_oracle_jobs.sql").read_text()
+            migration_path = Path(__file__).parents[1] / "migrations" / "001_oracle_jobs.sql"
+            migration = migration_path.read_text()
             await admin.execute(migration)
             await admin.execute(
                 """
@@ -33,7 +34,10 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
             )
             await admin.execute("TRUNCATE public.arsy_login_attempts_probe")
             await admin.execute(
-                "INSERT INTO public.arsy_login_attempts_probe(owner_id, attempt_count) VALUES('probe', 1)"
+                """
+                INSERT INTO public.arsy_login_attempts_probe(owner_id, attempt_count)
+                VALUES ('probe', 1)
+                """
             )
         finally:
             await admin.close()
@@ -74,7 +78,9 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
 
         admin = await asyncpg.connect(admin_dsn)
         try:
-            await admin.execute("DELETE FROM oracle.jobs WHERE idempotency_key = 'oracle-role-positive'")
+            await admin.execute(
+                "DELETE FROM oracle.jobs WHERE idempotency_key = 'oracle-role-positive'"
+            )
             await admin.execute("DROP TABLE IF EXISTS public.arsy_login_attempts_probe")
             await admin.execute("DROP SCHEMA IF EXISTS oracle_app_must_not_create CASCADE")
         finally:
