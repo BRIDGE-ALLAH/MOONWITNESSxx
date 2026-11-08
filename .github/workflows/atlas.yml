@@ -168,7 +168,8 @@ jobs:
           with open("/tmp/atlas-subscriber.json", encoding="utf-8") as handle:
               result = json.load(handle)
           assert result["credential_storage"] == "hashed", result
-          assert result["authentication_effective"] is True, result
+          assert result["activation"] == "stored_in_radius_sql", result
+          assert result["restart_required"] is False, result
           PY
 
           docker compose restart freeradius
