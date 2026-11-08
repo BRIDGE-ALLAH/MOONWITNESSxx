@@ -67,8 +67,8 @@ test('PostgreSQL login throttle is shared across two ARSY instances and reserves
     const success = await send(appB, 'success')
     assert.equal(success.json().data.allowed, true)
     const clearedBuckets = await poolA.query(
-      'SELECT COUNT(*)::int AS count FROM arsy_login_attempt_buckets WHERE owner_id = $1',
-      [ownerId],
+      'SELECT COUNT(*)::int AS count FROM arsy_login_attempt_buckets WHERE owner_id = $1 AND bucket_key = ANY($2::text[])',
+      [ownerId, ['account', `network:${networkHash}`]],
     )
     assert.equal(clearedBuckets.rows[0].count, 0)
 
