@@ -23,7 +23,6 @@ func TestLoadDefaults(t *testing.T) {
 	}
 }
 
-
 func TestAddressFormatsIPv6Host(t *testing.T) {
 	t.Setenv("AEGIS_HOST", "::1")
 	t.Setenv("AEGIS_PORT", "9999")
