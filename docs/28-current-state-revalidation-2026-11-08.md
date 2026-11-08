@@ -267,3 +267,8 @@ These runs are exact-main-head CI evidence only. They do not establish a complet
 - This audit did not perform a local clone, local install/test run, manual browser/accessibility review, local Docker deployment, production credential inspection, production deployment, or production smoke test. Those remain NOT RUN / NOT AVAILABLE in this session.
 
 **Release readiness remains NO-GO.** The exact-head CI runs above are green, but no configured production target, managed secret injection, TLS/ingress, backup/restore drill, production monitoring/alerting, rollback procedure, live URL, or production smoke evidence was available. No version bump, tag, GitHub Release or production deployment was attempted.
+
+
+### Persisted status contract
+
+The current operation model and database constraint permit `queued`, `running`, `verifying`, `succeeded`, `failed`, `cancelled`, and `blocked`. Do not write proposed labels such as `building` or `deploying` into `arsy_deployment_operations.status` without a reviewed migration and matching transition/API tests. Represent build, image-pull, container-create/start and health sub-stages as typed append-only operation events/details while keeping the persisted operation and deployment aggregate status values compatible with migrations 003–005.
