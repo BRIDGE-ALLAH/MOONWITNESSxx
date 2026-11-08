@@ -1085,3 +1085,19 @@ See `docs/30-arsy-phases-18-20-hardening.md`. These are deterministic contract c
 - [ ] Configure approved stable-release and production-deployment workflows, credentials, migrations, backups, rollback, health checks, and smoke tests.
 
 **Release boundary:** successful tests and image builds are not evidence of a published stable release or live production deployment.
+
+
+
+## ORACLE Stage 1 and ARSY integration — verified on main (2026-11-08)
+
+- [x] Add the standalone Python ORACLE Stage 1 service and deterministic `statistics.describe` / `text.profile` tasks. See PR #171 (merged).
+- [x] Add the ARSY-authenticated API boundary and typed ORACLE service client. See PR #173 (merged).
+- [x] Keep ORACLE private on the Compose bridge network; do not publish a host port or expose it directly to the browser.
+- [x] Add a real Compose service-to-service E2E for computation, result/provenance, evidence passthrough and idempotency replay.
+- [x] Verify exact PR-head checks and post-merge `main` CI, Python 3.12/3.13, CodeQL, container builds and Compose E2E.
+- [ ] Replace process-memory-only ORACLE job/idempotency retention with an explicitly designed durable state/queue and restart-recovery model before production use.
+- [ ] Define an ADR for ownership of durable job state, retry/dead-letter policy, retention, concurrency and failure recovery; keep WITNESS FABRIC as the evidence/provenance authority.
+- [ ] Do not claim an ORACLE frontend workflow; no user-facing UI is included in this integration.
+- [ ] Keep production mode disabled until durable execution, managed secrets, TLS/ingress, backup/restore, monitoring, rollback and production smoke tests exist.
+
+**Status boundary:** the ARSY↔ORACLE integration is merged and verified on `main`; ORACLE is not yet a durable or production-ready service. This completion marker applies only to the Stage 1 integration scope, not to MOONWITNESS product completion.
