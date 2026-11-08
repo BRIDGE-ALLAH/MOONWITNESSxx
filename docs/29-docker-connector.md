@@ -23,7 +23,17 @@ Status: initial read-only connector implementation; not a production deployment 
 - `DOCKER_REMOTE_ALLOW_PRIVATE_NETWORKS=1`: opt-in only for a trusted deployment whose allowlisted Docker host resolves to RFC1918/ULA addresses. Loopback, link-local, multicast, reserved and documentation ranges remain blocked.
 - Optional `DOCKER_LOCAL_SOCKET_PATH`: only `/var/run/docker.sock` or `/run/docker.sock`.
 
-Generate secrets with a trusted secret manager or, for local development, `openssl rand -base64 32`. Never commit generated values. The login route in this connector branch currently uses a **process-local fallback throttle**. It is not shared across Headquarter replicas and must not be represented as distributed protection. The shared PostgreSQL-backed account/network limiter is tracked separately in issue [#123](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/123) and is present in the draft Money Maker integration branch, not in this connector branch. Do not scale Headquarter or approve production login protection until that shared limiter (or an equivalently verified trusted-ingress limiter) is integrated. If an ingress-derived client address is used, the ingress must overwrite forwarded headers and direct Headquarter access must be blocked; this branch does not yet implement that trusted-proxy contract.
+Generate secrets with a trusted secret manager or, for local development, `openssl rand -base64 32`. Never commit generated values. Headquarter now reserves login attempts against ARSY's PostgreSQL-backed account and network buckets before password verification. The sixth attempt in a rolling 15-minute bucket is rejected with HTTP 429 and `Retry-After`; a successful login clears the account bucket and the caller's current network bucket. The ARSY API derives the owner from the authenticated service principal, never from a caller-supplied account ID. The local process-only fallback remains available only outside production when shared ARSY configuration is absent; it is not distributed protection and must not be used to justify scaling a production deployment.
+
+Production requires all of the following:
+
+- `ARSY_API_BASE_URL` and a high-entropy `ARSY_OPERATOR_TOKEN` shared only by Headquarter and private ARSY.
+- `HEADQUARTER_TRUSTED_PROXY_HOPS=1` for exactly one trusted ingress that terminates client traffic.
+- `HEADQUARTER_TRUSTED_PROXY_SECRET` containing at least 32 random bytes, shared only between that ingress and Headquarter.
+- The ingress must remove client-supplied `X-MoonWitness-Client-IP` and `X-MoonWitness-Client-IP-Signature` headers, derive the client IP from its accepted connection, canonicalize it, and set the two headers itself. The signature is lowercase hex HMAC-SHA256 over `moonwitness-client-ip-v1:<canonical-ip>` using `HEADQUARTER_TRUSTED_PROXY_SECRET`.
+- Direct public access to Headquarter must be blocked; only the trusted ingress may reach it. Never trust raw `X-Forwarded-For` in this application.
+
+The production login route fails closed with HTTP 503 when the shared ARSY limiter, signed ingress identity, or their configuration is unavailable. The one-hop signed-header contract deliberately avoids trusting arbitrary client-supplied forwarding headers. A deployment behind a multi-proxy chain must normalize the address at its final trusted ingress and sign the resulting single canonical IP; increasing the hop count is not supported by this implementation. The repository does not yet verify a real production ingress configuration, so deployment readiness remains a separate gate.
 
 ## Database migration
 
