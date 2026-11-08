@@ -324,7 +324,8 @@ The following describes the checked-in baseline at the time of this blueprint; i
 - Compact density tokens are consumed by shared Card header/content/footer spacing and Badge padding. Form and button dimensions remain unchanged; browser-level touch-target and rendered layout verification is still required.
 - Source-level contract tests cover registry declarations, supported mode pairs, resolver fallback metadata, root attributes, and semantic token presence.
 - Browser visual regression, rendered contrast review, screen-reader QA, and complete component-state verification remain open release gates.
-- An initial internal Headquarter specimen route exists at `/ui-lab/skin-system`, comparing the three profiles with illustrative content. It is not yet a complete component-state workbench or visual-regression suite. No global skin picker, persisted preference, React context, or automatic Headquarter route mapping is implemented.
+- Headquarter applies `SkinRoot` at the AppShell boundary: `/sidra-archive` and its nested records use Archive/light; all other current routes use Observatory/dark. `SIGNAL ROOM` is research/operations, so it correctly remains Observatory despite its name. Signal is currently shown only in the internal specimen because Headquarter has no separate public/editorial route. No global skin picker or persisted preference is shipped; the prototype global theme toggle was removed because no initial skin supports both appearance modes.
+- An internal specimen route exists at `/ui-lab/skin-system`, comparing all three profiles with illustrative content. It is not yet a complete component-state workbench or visual-regression suite.
 - `apps/headquarter` owns its application shell and page compositions; the package does not yet own a complete shared app shell.
 - The custom MOONWITNESS Signal WOFF2 is not approved for runtime use; use licensed font families and robust system fallbacks.
 
@@ -363,7 +364,7 @@ The tasks below are intentionally small enough to be assigned to focused local A
 - [x] **S2-001** Define a static, typed SkinDefinition contract with key, label, description, supported modes, default mode, recommended density, and visual-purpose metadata.
 - [x] **S2-002** Add a static registry for Observatory, Archive, and Signal; no remote loading or dynamic imports.
 - [x] **S2-003** Add a small provider/root API or documented data-attribute integration contract.
-- [ ] **S2-004** Apply skin/mode/density at the application or route root.
+- [x] **S2-004** Apply skin/mode/density at the application or route root.
 - [x] **S2-005** Validate unknown skin and unsupported mode values with a safe fallback and fallback metadata.
 - [x] **S2-006** Preserve existing `.dark`, `.theme-observatory`, and `.theme-archive` behavior during migration.
 - [ ] **S2-007** Ensure server-rendered output and hydration use the same initial skin/mode.
