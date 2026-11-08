@@ -335,38 +335,38 @@ The tasks below are intentionally small enough to be assigned to focused local A
 
 ### Phase 0 — Lock the contract
 
-- [ ] **S0-001** Read and reconcile docs/01, docs/10, docs/11, docs/12, docs/13, and packages/assets/BRAND.md.
-- [ ] **S0-002** Record the three skin keys and their task boundaries in a typed contract proposal.
-- [ ] **S0-003** Define the supported skin/appearance-mode matrix; mark unsupported pairings explicitly.
+- [x] **S0-001** Read and reconcile docs/01, docs/10, docs/11, docs/12, docs/13, and packages/assets/BRAND.md.
+- [x] **S0-002** Record the three skin keys and their task boundaries in a typed contract proposal.
+- [x] **S0-003** Define the supported skin/appearance-mode matrix; mark unsupported pairings explicitly.
 - [ ] **S0-004** Inventory all existing token names and map them to brand, semantic, skin, or component layers.
-- [ ] **S0-005** Record legacy selector and Tailwind alias compatibility requirements.
-- [ ] **S0-006** Confirm package and asset ownership boundaries; do not move app-shell or backend code into UI.
+- [x] **S0-005** Record legacy selector and Tailwind alias compatibility requirements.
+- [x] **S0-006** Confirm package and asset ownership boundaries; do not move app-shell or backend code into UI.
 
 **Exit:** no contradictory brand hierarchy, token ownership, or skin naming remains.
 
 ### Phase 1 — Token foundation
 
-- [ ] **S1-001** Define typed names for skin, mode, and density.
+- [x] **S1-001** Define typed names for skin, mode, and density.
 - [ ] **S1-002** Add semantic token definitions for all required foreground, surface, interaction, status, and evidence roles.
-- [ ] **S1-003** Map Observatory tokens to the existing palette without changing semantic meanings.
-- [ ] **S1-004** Map Archive tokens to warm paper and Deep Ink with readable reading surfaces.
-- [ ] **S1-005** Define Signal tokens for expressive surfaces without changing semantic status colors.
+- [x] **S1-003** Map Observatory tokens to the existing palette without changing semantic meanings.
+- [x] **S1-004** Map Archive tokens to warm paper and Deep Ink with readable reading surfaces.
+- [x] **S1-005** Define Signal tokens for expressive surfaces without changing semantic status colors.
 - [ ] **S1-006** Define skin-level typography, spacing, shape, border, and elevation roles.
-- [ ] **S1-007** Document supported mode pairings and fallback behavior.
-- [ ] **S1-008** Add source-contract tests for token completeness and unsupported selectors.
+- [x] **S1-007** Document supported mode pairings and fallback behavior.
+- [x] **S1-008** Add source-contract tests for token completeness and unsupported selectors.
 
 **Exit:** tokens are complete, typed/documented, and semantic meaning is consistent.
 
 ### Phase 2 — Skin registry and runtime selection
 
-- [ ] **S2-001** Define a static, typed SkinDefinition contract with key, label, description, supported modes, default mode, recommended density, and visual-purpose metadata.
-- [ ] **S2-002** Add a static registry for Observatory, Archive, and Signal; no remote loading or dynamic imports.
-- [ ] **S2-003** Add a small provider/root API or documented data-attribute integration contract.
+- [x] **S2-001** Define a static, typed SkinDefinition contract with key, label, description, supported modes, default mode, recommended density, and visual-purpose metadata.
+- [x] **S2-002** Add a static registry for Observatory, Archive, and Signal; no remote loading or dynamic imports.
+- [x] **S2-003** Add a small provider/root API or documented data-attribute integration contract.
 - [ ] **S2-004** Apply skin/mode/density at the application or route root.
-- [ ] **S2-005** Validate unknown skin and unsupported mode values with a safe fallback and development warning.
-- [ ] **S2-006** Preserve existing `.dark`, `.theme-observatory`, and `.theme-archive` behavior during migration.
+- [x] **S2-005** Validate unknown skin and unsupported mode values with a safe fallback and fallback metadata.
+- [x] **S2-006** Preserve existing `.dark`, `.theme-observatory`, and `.theme-archive` behavior during migration.
 - [ ] **S2-007** Ensure server-rendered output and hydration use the same initial skin/mode.
-- [ ] **S2-008** Do not add a global skin picker until app-level use cases and persistence are designed.
+- [x] **S2-008** Do not add a global skin picker until app-level use cases and persistence are designed.
 
 **Exit:** a consumer can choose a supported skin deterministically without hydration mismatch or hidden global state.
 
@@ -384,19 +384,19 @@ The tasks below are intentionally small enough to be assigned to focused local A
 
 ### Phase 4 — Experience compositions
 
-- [ ] **S4-001** Build one Observatory specimen: operational workspace with source/status/evidence hierarchy.
-- [ ] **S4-002** Build one Archive specimen: long-form record with citation and provenance treatment.
-- [ ] **S4-003** Build one Signal specimen: public story/landing composition with a clear action.
-- [ ] **S4-004** Ensure specimens use shared primitives and real semantic states.
-- [ ] **S4-005** Ensure all sample/demo data is explicitly labelled.
-- [ ] **S4-006** Document when an application should use each skin and when it should not.
-- [ ] **S4-007** Keep domain behavior and API clients out of the shared UI package.
+- [x] **S4-001** Build one Observatory specimen: operational workspace with source/status/evidence hierarchy.
+- [x] **S4-002** Build one Archive specimen: long-form record with citation and provenance treatment.
+- [x] **S4-003** Build one Signal specimen: public story/landing composition with a clear action.
+- [x] **S4-004** Ensure specimens use shared primitives and semantic state labels.
+- [x] **S4-005** Ensure all sample/demo data is explicitly labelled.
+- [x] **S4-006** Document when an application should use each skin and when it should not.
+- [x] **S4-007** Keep domain behavior and API clients out of the shared UI package.
 
 **Exit:** three distinct experiences demonstrate the same master identity without leaking application behavior into UI.
 
 ### Phase 5 — Workbench and quality gates
 
-- [ ] **S5-001** Add a local skin workbench route/story collection for supported skins and modes.
+- [x] **S5-001** Add an internal Headquarter specimen route for the three initially supported skin/mode pairs.
 - [ ] **S5-002** Add desktop, tablet, and mobile specimens for each skin.
 - [ ] **S5-003** Add visual regression baselines for high-impact primitives and compositions.
 - [ ] **S5-004** Run rendered contrast review for text, controls, focus, and semantic states.
