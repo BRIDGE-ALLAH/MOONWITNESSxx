@@ -161,7 +161,7 @@ test('asset upload rejects bytes whose signature does not match the declared med
     const response = await app.inject({
       method: 'POST', url: '/api/v1/assets',
       headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'bad-signature-request-01' },
-      payload: { productId, productVersion, fileName: 'cover.png', mediaType: 'image/png', contentBase64: Buffer.from('not a png').toString('base64'), provenance },
+      payload: { productId, productVersion, fileName: 'cover.png', mediaType: 'image/png', contentBase64: Buffer.from('not a png - deliberately invalid image signature').toString('base64'), provenance },
     })
     assert.equal(response.statusCode, 400)
     assert.equal(response.json().error.code, 'ASSET_CONTENT_TYPE_MISMATCH')
