@@ -8,11 +8,15 @@ import {
   requestHasTrustedOrigin,
   verifyOperatorSession,
 } from '../../../../lib/operator-session.ts'
+import {
+  isSharedLoginLimitConfigured,
+  requestSharedLoginLimit,
+} from '../../../../lib/shared-login-limit.ts'
 
 export const runtime = 'nodejs'
 
-// Single-operator, process-local fallback throttle. Production ingress must also
-// enforce a shared rate limit if the service is ever scaled beyond one process.
+// Single-process fallback is for local development only. Production requires
+// the shared ARSY/PostgreSQL limiter and fails closed when it is unavailable.
 const LOGIN_FAILURE_LIMIT = 5
 const LOGIN_WINDOW_MS = 15 * 60 * 1000
 let loginWindowStartedAt = 0
@@ -49,6 +53,21 @@ function clearLoginFailures(): void {
   loginBlockedUntil = 0
 }
 
+function rateLimited(retryAfterSeconds: number) {
+  const retryAfter = Math.max(1, Math.min(900, Math.ceil(retryAfterSeconds)))
+  return NextResponse.json(
+    { error: { code: 'LOGIN_RATE_LIMITED', message: 'Too many login attempts. Try again later.' } },
+    { status: 429, headers: { 'retry-after': String(retryAfter) } },
+  )
+}
+
+function sharedLimitUnavailable() {
+  return NextResponse.json(
+    { error: { code: 'LOGIN_RATE_LIMIT_UNAVAILABLE', message: 'Shared login protection is unavailable. Try again later.' } },
+    { status: 503 },
+  )
+}
+
 export async function GET(request: Request) {
   const config = getOperatorSessionConfig()
   if (!config) {
@@ -70,12 +89,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: { code: 'ORIGIN_REJECTED' } }, { status: 403 })
   }
 
-  const retryAfter = loginRetryAfter()
-  if (retryAfter > 0) {
-    return NextResponse.json(
-      { error: { code: 'LOGIN_RATE_LIMITED', message: 'Too many failed login attempts. Try again later.' } },
-      { status: 429, headers: { 'retry-after': String(retryAfter) } },
-    )
+  const useSharedLimit = process.env.NODE_ENV === 'production' ||
+    isSharedLoginLimitConfigured(request)
+
+  if (!useSharedLimit) {
+    const retryAfter = loginRetryAfter()
+    if (retryAfter > 0) return rateLimited(retryAfter)
   }
 
   let body: unknown
@@ -87,17 +106,37 @@ export async function POST(request: Request) {
   const password = body && typeof body === 'object' && 'password' in body && typeof body.password === 'string'
     ? body.password
     : ''
+
+  if (useSharedLimit) {
+    let limit
+    try {
+      // Reserve before password KDF so parallel requests across replicas cannot
+      // bypass the account/network attempt budget with simultaneous checks.
+      limit = await requestSharedLoginLimit(request, 'attempt')
+    } catch {
+      return sharedLimitUnavailable()
+    }
+    if (!limit.allowed) return rateLimited(limit.retryAfterSeconds)
+  }
+
   if (!password || !(await operatorPasswordMatches(password, config.password, config.secret))) {
-    const blockedFor = recordLoginFailure()
-    if (blockedFor > 0) {
-      return NextResponse.json(
-        { error: { code: 'LOGIN_RATE_LIMITED', message: 'Too many failed login attempts. Try again later.' } },
-        { status: 429, headers: { 'retry-after': String(blockedFor) } },
-      )
+    if (!useSharedLimit) {
+      const blockedFor = recordLoginFailure()
+      if (blockedFor > 0) return rateLimited(blockedFor)
     }
     return NextResponse.json({ error: { code: 'INVALID_CREDENTIALS' } }, { status: 401 })
   }
-  clearLoginFailures()
+
+  if (useSharedLimit) {
+    try {
+      await requestSharedLoginLimit(request, 'success')
+    } catch {
+      // Do not issue a session when the shared security state cannot be updated.
+      return sharedLimitUnavailable()
+    }
+  } else {
+    clearLoginFailures()
+  }
 
   const response = NextResponse.json({ data: { authenticated: true, operatorId: config.operatorId } })
   response.cookies.set(OPERATOR_SESSION_COOKIE, createOperatorSession(config.operatorId, config.secret), {
