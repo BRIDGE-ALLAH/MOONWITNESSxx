@@ -139,6 +139,33 @@ def test_postgres_queue_capacity_is_enforced_transactionally(postgres_database: 
     asyncio.run(scenario())
 
 
+def test_concurrent_workers_claim_distinct_queued_jobs(postgres_database: str) -> None:
+    async def scenario() -> None:
+        store = PostgresJobStore(make_settings(postgres_database))
+        await store.start()
+        try:
+            first, _ = await store.submit(
+                **submission(),
+                idempotency_key="parallel-claim-first",
+            )
+            second, _ = await store.submit(
+                **submission([7, 8, 9]),
+                idempotency_key="parallel-claim-second",
+            )
+
+            claims = await asyncio.gather(
+                store.claim("worker-parallel-a"),
+                store.claim("worker-parallel-b"),
+            )
+            assert all(claim is not None for claim in claims)
+            claimed_ids = {claim.job_id for claim in claims if claim is not None}
+            assert claimed_ids == {first.job_id, second.job_id}
+        finally:
+            await store.close()
+
+    asyncio.run(scenario())
+
+
 def test_postgres_claims_are_exclusive_and_stale_workers_are_fenced(postgres_database: str) -> None:
     async def scenario() -> None:
         store = PostgresJobStore(make_settings(postgres_database))
