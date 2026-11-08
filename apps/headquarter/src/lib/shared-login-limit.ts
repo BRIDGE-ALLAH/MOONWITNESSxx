@@ -151,7 +151,7 @@ export async function requestSharedLoginLimit(
   const data = payload && typeof payload === 'object' && 'data' in payload
     ? (payload as { data?: Partial<LoginLimitResult> }).data
     : undefined
-  if (typeof data?.allowed !== 'boolean' ||
+  if (!data || typeof data.allowed !== 'boolean' ||
       typeof data.retryAfterSeconds !== 'number' ||
       !Number.isSafeInteger(data.retryAfterSeconds) ||
       data.retryAfterSeconds < 0 ||
