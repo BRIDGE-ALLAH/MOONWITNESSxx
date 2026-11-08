@@ -16,6 +16,7 @@ pub struct ZoneCreateRequest {
     pub name: String,
     #[serde(default = "default_zone_kind")]
     pub kind: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub nameservers: Vec<String>,
     #[serde(default)]
     pub masters: Vec<String>,
@@ -169,17 +170,31 @@ pub fn validate_zone(input: &ZoneCreateRequest) -> Result<(), &'static str> {
     if !matches!(input.kind.as_str(), "Native" | "Master" | "Slave") {
         return Err("zone kind must be Native, Master, or Slave");
     }
-    if input.nameservers.len() < 2 || input.nameservers.len() > 8 {
-        return Err("zone requires between 2 and 8 nameservers");
-    }
-    for nameserver in &input.nameservers {
-        validate_zone_name(nameserver)?;
-    }
-    if input.kind == "Slave" && input.masters.is_empty() {
-        return Err("slave zones require at least one master server");
+    if input.kind == "Slave" {
+        if !input.nameservers.is_empty() {
+            return Err("slave zones must omit nameservers and use configured masters");
+        }
+        if input.masters.is_empty() {
+            return Err("slave zones require at least one master server");
+        }
+    } else {
+        if input.nameservers.len() < 2 || input.nameservers.len() > 8 {
+            return Err("zone requires between 2 and 8 nameservers");
+        }
+        for nameserver in &input.nameservers {
+            validate_zone_name(nameserver)?;
+        }
+        if !input.masters.is_empty() {
+            return Err("master servers may only be configured for Slave zones");
+        }
     }
     if input.masters.len() > 8 {
         return Err("a zone may define at most 8 master servers");
+    }
+    for master in &input.masters {
+        if master.parse::<std::net::IpAddr>().is_err() {
+            return Err("master servers must be valid IPv4 or IPv6 addresses");
+        }
     }
     Ok(())
 }
@@ -253,6 +268,45 @@ mod tests {
         assert!(validate_zone_name("example.org.").is_ok());
         assert!(validate_zone_name("example.org").is_err());
         assert!(validate_zone_name("-bad.example.").is_err());
+    }
+
+
+    #[test]
+    fn validates_secondary_zones_without_nameservers_and_with_ip_masters() {
+        let slave = ZoneCreateRequest {
+            name: "secondary.example.org.".to_string(),
+            kind: "Slave".to_string(),
+            nameservers: vec![],
+            masters: vec!["192.0.2.53".to_string(), "2001:db8::53".to_string()],
+        };
+        assert!(validate_zone(&slave).is_ok());
+        let body = serde_json::to_value(&slave).unwrap();
+        assert!(body.get("nameservers").is_none());
+        assert_eq!(body["masters"][0], "192.0.2.53");
+        assert_eq!(body["masters"][1], "2001:db8::53");
+    }
+
+    #[test]
+    fn rejects_invalid_or_inapplicable_zone_masters() {
+        let mut slave = ZoneCreateRequest {
+            name: "secondary.example.org.".to_string(),
+            kind: "Slave".to_string(),
+            nameservers: vec![],
+            masters: vec!["master.example.net".to_string()],
+        };
+        assert!(validate_zone(&slave).is_err());
+
+        slave.masters = vec!["192.0.2.53".to_string()];
+        slave.nameservers = vec!["ns1.example.org.".to_string()];
+        assert!(validate_zone(&slave).is_err());
+
+        let primary = ZoneCreateRequest {
+            name: "primary.example.org.".to_string(),
+            kind: "Native".to_string(),
+            nameservers: vec!["ns1.example.org.".to_string(), "ns2.example.org.".to_string()],
+            masters: vec!["192.0.2.53".to_string()],
+        };
+        assert!(validate_zone(&primary).is_err());
     }
 
     #[test]
