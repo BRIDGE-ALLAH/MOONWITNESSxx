@@ -17,6 +17,7 @@ from .jobs import (
     JobCoordinator,
     JobRecord,
     QueueSaturatedError,
+    StorageUnavailableError,
 )
 from .middleware import JobBodyLimitMiddleware
 from .schemas import (
@@ -111,11 +112,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/health/ready", response_model=ReadinessResponse, tags=["health"])
     async def ready() -> ReadinessResponse:
+        is_ready, queue_depth = await coordinator.readiness()
         return ReadinessResponse(
-            ready=coordinator.accepting,
-            queue_depth=coordinator.queue_depth,
+            ready=is_ready,
+            queue_depth=queue_depth,
             queue_capacity=config.max_queue_size,
             workers=config.worker_count,
+            durable_jobs=coordinator.durable_jobs,
         )
 
     @app.get(
@@ -171,6 +174,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 detail=str(exc),
                 headers={"Retry-After": "5"},
             ) from exc
+        except StorageUnavailableError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="ORACLE durable job storage is unavailable",
+                headers={"Retry-After": "5"},
+            ) from exc
 
         response.headers["Location"] = f"/v1/jobs/{record.job_id}"
         response.headers["Idempotency-Replayed"] = str(replayed).lower()
@@ -183,7 +192,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         tags=["jobs"],
     )
     async def get_job(job_id: UUID) -> JobView:
-        record = await coordinator.get(job_id)
+        try:
+            record = await coordinator.get(job_id)
+        except StorageUnavailableError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="ORACLE durable job storage is unavailable",
+                headers={"Retry-After": "5"},
+            ) from exc
         if record is None:
             raise HTTPException(status_code=404, detail="Job not found")
         return _to_job_view(record)
