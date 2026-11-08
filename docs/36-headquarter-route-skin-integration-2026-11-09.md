@@ -32,3 +32,7 @@ Skin identity and appearance mode are independent: switching dark/light must not
 ## Remaining acceptance gates
 
 This implementation does not claim rendered browser review. Real-browser visual comparison, contrast measurement, responsive checks, keyboard interaction, screen-reader review, and visual regression remain open. The skin foundation and static contract tests do not substitute for those checks.
+
+## CSS ownership invariant
+
+The route-level `SkinRoot` is the single source of experience tokens. Route pages must not reapply legacy `.theme-archive` or `.theme-observatory` classes on nested elements, because child-level custom properties override inherited `data-mw-skin` appearance tokens and can make the global theme toggle appear broken. The Sidra Archive page now inherits Archive tokens from the route root, and the route contract test prevents reintroducing the legacy class.
