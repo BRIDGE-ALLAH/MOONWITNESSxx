@@ -408,7 +408,10 @@ pub async fn riot_release_run_build(
                 let taskkill = system_root.join("System32").join("taskkill.exe");
                 let pid = pid.to_string();
                 let _ = std::process::Command::new(taskkill)
-                    .args(["/PID", &pid, "/T", "/F"])
+                    .arg("/PID")
+                    .arg(&pid)
+                    .arg("/T")
+                    .arg("/F")
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
                     .stderr(Stdio::null())
