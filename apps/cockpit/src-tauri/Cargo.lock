@@ -1844,6 +1844,7 @@ name = "moonwitness-cockpit"
 version = "0.1.0"
 dependencies = [
  "keyring",
+ "libc",
  "sha2",
  "reqwest 0.12.28",
  "serde",
