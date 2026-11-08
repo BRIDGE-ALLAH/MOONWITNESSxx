@@ -150,8 +150,8 @@ def test_openapi_exposes_versioned_job_contract() -> None:
     with make_client() as client:
         spec = client.get("/openapi.json").json()
 
-    request_schema = (
-        spec["paths"]["/v1/jobs"]["post"]["requestBody"]["content"]["application/json"]["schema"]
-    )
+    request_schema = spec["paths"]["/v1/jobs"]["post"]["requestBody"]["content"][
+        "application/json"
+    ]["schema"]
     assert "/v1/jobs" in spec["paths"]
     assert len(request_schema["oneOf"]) == 2
