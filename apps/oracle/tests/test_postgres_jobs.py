@@ -545,10 +545,10 @@ def test_missing_migration_keeps_durable_mode_unready_and_returns_503() -> None:
 
 
 
-def test_runtime_role_is_confined_to_oracle_jobs() -> None:
-    app_dsn = asyncio.run(prepare_database())
 
-    async def setup_probe() -> None:
+def test_runtime_role_is_confined_to_oracle_jobs() -> None:
+    async def scenario() -> None:
+        app_dsn = await prepare_database()
         admin = await asyncpg.connect(TEST_DATABASE_URL)
         try:
             await admin.execute(
@@ -587,32 +587,30 @@ def test_runtime_role_is_confined_to_oracle_jobs() -> None:
         finally:
             await admin.close()
 
-    asyncio.run(setup_probe())
-    app = asyncio.run(asyncpg.connect(app_dsn))
-    try:
-        assert asyncio.run(app.fetchval("SELECT count(*) FROM oracle.jobs")) >= 0
-        with pytest.raises(asyncpg.InsufficientPrivilegeError):
-            asyncio.run(app.fetch("SELECT * FROM public.arsy_login_attempts_probe"))
-        with pytest.raises(asyncpg.InsufficientPrivilegeError):
-            asyncio.run(app.fetch("SELECT * FROM oracle.schema_migrations"))
-        with pytest.raises(asyncpg.InsufficientPrivilegeError):
-            asyncio.run(app.execute("CREATE SCHEMA oracle_app_must_not_create"))
-        with pytest.raises(asyncpg.InsufficientPrivilegeError):
-            asyncio.run(app.execute("CREATE TABLE oracle.app_must_not_create (id integer)"))
-        with pytest.raises(asyncpg.InsufficientPrivilegeError):
-            asyncio.run(app.execute("ALTER TABLE oracle.jobs ADD COLUMN forbidden text"))
-        with pytest.raises(asyncpg.InsufficientPrivilegeError):
-            asyncio.run(app.execute("DROP TABLE oracle.jobs"))
-        with pytest.raises(asyncpg.InsufficientPrivilegeError):
-            asyncio.run(app.execute("SET ROLE oracle_migrator_test"))
-    finally:
-        asyncio.run(app.close())
+        app = await asyncpg.connect(app_dsn)
+        try:
+            assert await app.fetchval("SELECT count(*) FROM oracle.jobs") >= 0
+            with pytest.raises(asyncpg.InsufficientPrivilegeError):
+                await app.fetch("SELECT * FROM public.arsy_login_attempts_probe")
+            with pytest.raises(asyncpg.InsufficientPrivilegeError):
+                await app.fetch("SELECT * FROM oracle.schema_migrations")
+            with pytest.raises(asyncpg.InsufficientPrivilegeError):
+                await app.execute("CREATE SCHEMA oracle_app_must_not_create")
+            with pytest.raises(asyncpg.InsufficientPrivilegeError):
+                await app.execute("CREATE TABLE oracle.app_must_not_create (id integer)")
+            with pytest.raises(asyncpg.InsufficientPrivilegeError):
+                await app.execute("ALTER TABLE oracle.jobs ADD COLUMN forbidden text")
+            with pytest.raises(asyncpg.InsufficientPrivilegeError):
+                await app.execute("DROP TABLE oracle.jobs")
+            with pytest.raises(asyncpg.InsufficientPrivilegeError):
+                await app.execute("SET ROLE oracle_migrator_test")
+        finally:
+            await app.close()
 
-        async def cleanup() -> None:
-            admin = await asyncpg.connect(TEST_DATABASE_URL)
+            cleanup = await asyncpg.connect(TEST_DATABASE_URL)
             try:
-                await admin.execute("DROP TABLE IF EXISTS public.arsy_login_attempts_probe")
+                await cleanup.execute("DROP TABLE IF EXISTS public.arsy_login_attempts_probe")
             finally:
-                await admin.close()
+                await cleanup.close()
 
-        asyncio.run(cleanup())
+    asyncio.run(scenario())
