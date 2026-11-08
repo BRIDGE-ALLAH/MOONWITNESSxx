@@ -15,6 +15,12 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 - Docker images include required workspace build configuration.
 - Workspace audit rejects unsafe glob patterns that could traverse outside the repository.
 
+### Added
+- PostgreSQL-backed ORACLE job lifecycle, atomic idempotency, worker leases/fencing, explicit migration and restart verification in Compose E2E.
+
+### Security
+- Keep ORACLE production mode blocked; durable job payload retention requires managed database access, storage encryption, backup/restore and operational controls.
+
 ## [1.0.0] - 2026-11-07
 
 ### Added
