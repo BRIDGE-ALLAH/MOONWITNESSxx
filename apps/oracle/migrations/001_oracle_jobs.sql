@@ -62,6 +62,9 @@ COMMENT ON COLUMN oracle.jobs.idempotency_key IS
 -- Keep the application login separate from the migration/owner identity.
 -- The role is provisioned before this migration by the reviewed bootstrap step.
 REVOKE ALL ON SCHEMA oracle FROM PUBLIC;
+REVOKE CREATE ON SCHEMA oracle FROM oracle_app;
+REVOKE ALL ON ALL TABLES IN SCHEMA oracle FROM oracle_app;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA oracle FROM oracle_app;
 DO $oracle_grants$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app') THEN
