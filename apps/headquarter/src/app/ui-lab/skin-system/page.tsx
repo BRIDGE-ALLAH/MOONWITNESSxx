@@ -52,7 +52,7 @@ function ObservatorySpecimen() {
             <p className="mt-2 text-2xl font-semibold tabular-nums">03</p>
             <p className="text-xs text-muted-foreground">Illustrative records</p>
           </div>
-          <Button asChild className="w-full" size="sm"><a href="#observatory-evidence">Review observation</a></Button>
+          <Button asChild className="w-full" size="sm"><a href="#archive-record">Open archive record</a></Button>
         </div>
       </div>
       <p className="mt-5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Dark-first · Instrument grid · Comfortable density</p>
@@ -133,8 +133,8 @@ function SignalSpecimen() {
               We share messages. Keep the source. Keep the context. Never mistake volume for truth.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button asChild><a href="#signal-story">Explore the story</a></Button>
-              <Button asChild variant="outline"><a href="#archive-record">Read the record</a></Button>
+              <Button asChild><a href="#archive-record">Read the record</a></Button>
+              <Button asChild variant="outline"><a href="#observatory-evidence">Inspect evidence</a></Button>
             </div>
           </div>
         </HalftoneSurface>
