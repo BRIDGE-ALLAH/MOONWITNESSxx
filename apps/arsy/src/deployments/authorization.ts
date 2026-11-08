@@ -98,7 +98,7 @@ interface DeploymentApprovalRow extends Omit<DeploymentApproval, 'ownerId' | 'op
   expires_at: Date | string
 }
 
-interface TrustedPublicKeyring {
+export interface TrustedPublicKeyring {
   get(issuerId: string): readonly KeyObject[]
 }
 
@@ -427,7 +427,8 @@ export async function authorizeDeploymentOperation(
     if (!dependencies.policyProvider) throw new Error('policy_provider_unavailable')
     policy = await dependencies.policyProvider.evaluate(context)
     if (!policy || typeof policy.allowed !== 'boolean' ||
-        !policy.policyVersion?.trim() || !policy.reasonCode?.trim() ||
+        !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$/.test(policy.policyVersion ?? '') ||
+        !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$/.test(policy.reasonCode ?? '') ||
         typeof policy.requiresApproval !== 'boolean') {
       throw new Error('policy_response_invalid')
     }
@@ -469,9 +470,6 @@ export async function authorizeDeploymentOperation(
         const approval = await dependencies.store.loadApproval(context, policy.policyVersion)
         if (!approval) {
           decision = { allowed: false, reasonCodes: ['approval_required'], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: null }
-        } else if (approval.decision !== 'approved') {
-          selectedApprovalId = approval.id
-          decision = { allowed: false, reasonCodes: ['approval_denied', approval.reasonCode], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: approval.id }
         } else if (approval.approverId === context.actorId ||
           approval.ownerId !== context.ownerId ||
           approval.operationId !== context.operationId ||
@@ -483,6 +481,9 @@ export async function authorizeDeploymentOperation(
           Date.parse(approval.expiresAt) <= Date.parse(input.now ?? new Date().toISOString()) ||
           !verifyApprovalSignature(approval, dependencies.approvalKeyring!)) {
           decision = { allowed: false, reasonCodes: ['approval_evidence_invalid'], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: approval.id }
+        } else if (approval.decision !== 'approved') {
+          selectedApprovalId = approval.id
+          decision = { allowed: false, reasonCodes: ['approval_denied', approval.reasonCode], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: approval.id }
         } else {
           selectedApprovalId = approval.id
           decision = { allowed: true, reasonCodes: [], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: selectedApprovalId }
