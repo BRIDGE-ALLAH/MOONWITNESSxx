@@ -60,9 +60,9 @@ Do not change RADIUS_BIND_ADDRESS to a public or LAN interface until you have re
 Install Rust 1.94+ and the Loco CLI:
 
     cargo install loco --version 1.3.1
-    export DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas'
+    export DATABASE_URL='postgres://atlas:password@127.0.0.1:5432/atlas'
     export REDIS_URL='redis://:password@127.0.0.1:6379/0'
-    export RADIUS_DATABASE_URL='mysql://radius:password@127.0.0.1:3306/radius'
+    export RADIUS_DATABASE_URL='postgres://radius:password@127.0.0.1:5432/radius'
     export ATLAS_CONTROL_TOKEN='replace-with-a-long-random-control-token'
     cargo loco start
 
