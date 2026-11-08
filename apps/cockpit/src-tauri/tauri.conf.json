@@ -4,8 +4,7 @@
   "version": "0.1.0",
   "identifier": "id.biz.moonwitness.cockpit",
   "build": {
-    "frontendDist": "../out",
-    "devUrl": "http://localhost:3002"
+    "frontendDist": "../out"
   },
   "app": {
     "withGlobalTauri": true,
