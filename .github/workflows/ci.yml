@@ -278,3 +278,30 @@ jobs:
 
       - name: Run full workspace validation and production builds
         run: pnpm run validate && pnpm run build
+
+  build-engine-isolation-spike:
+    name: Rootless BuildKit isolation and provenance
+    if: github.event_name == 'pull_request' && github.head_ref == 'feat/build-engine-isolation-spike-20261108'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout immutable source
+        uses: actions/checkout@v7
+
+      - name: Install rootless worker prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y uidmap slirp4netns jq curl python3 shellcheck
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            # This is a disposable GitHub-hosted VM, not a production host.
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+
+      - name: Shell-check proof script
+        run: shellcheck scripts/build-engine-spike/verify.sh
+
+      - name: Run isolated BuildKit proof
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: bash scripts/build-engine-spike/verify.sh
