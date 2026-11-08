@@ -27,4 +27,6 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_migrator')
 \gexec
 
 ALTER ROLE oracle_migrator WITH NOLOGIN NOCREATEDB NOCREATEROLE NOREPLICATION;
-GRANT CREATE ON DATABASE :"postgres_db" TO oracle_migrator;
+CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION oracle_migrator;
+ALTER SCHEMA oracle OWNER TO oracle_migrator;
+GRANT USAGE, CREATE ON SCHEMA oracle TO oracle_migrator;
