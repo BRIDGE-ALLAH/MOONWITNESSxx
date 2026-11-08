@@ -45,7 +45,7 @@ test('the static registry defines exactly the three canonical MOONWITNESS skins'
 })
 
 test('each initial skin only advertises an explicitly supported appearance mode', () => {
-  const expected = { observatory: 'dark', archive: 'light', signal: 'dark' }
+  const expected = { observatory: ['dark', 'light'], archive: ['light', 'dark'], signal: ['dark'] }
   const names = Object.keys(expected)
   for (let index = 0; index < names.length; index += 1) {
     const name = names[index]
@@ -53,8 +53,8 @@ test('each initial skin only advertises an explicitly supported appearance mode'
     const start = registry.indexOf(`  ${name}: {`)
     const end = nextName ? registry.indexOf(`  ${nextName}: {`, start) : registry.indexOf('\n} as const')
     const section = registry.slice(start, end)
-    assert.match(section, new RegExp(`defaultMode: '${expected[name]}'`))
-    assert.ok(section.includes(`supportedModes: ['${expected[name]}']`))
+    assert.match(section, new RegExp(`defaultMode: '${expected[name][0]}'`))
+    assert.ok(section.includes(`supportedModes: [${expected[name].map((mode) => `'${mode}'`).join(', ')}]`))
   }
 })
 
@@ -77,7 +77,9 @@ test('SkinRoot writes resolved skin, mode, density, and fallback metadata', () =
 test('all skin profiles define the full semantic token set', () => {
   const selectors = [
     '[data-mw-skin="observatory"][data-mw-mode="dark"]',
+    '[data-mw-skin="observatory"][data-mw-mode="light"]',
     '[data-mw-skin="archive"][data-mw-mode="light"]',
+    '[data-mw-skin="archive"][data-mw-mode="dark"]',
     '[data-mw-skin="signal"][data-mw-mode="dark"]',
   ]
   for (const selector of selectors) {
