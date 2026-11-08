@@ -305,3 +305,31 @@ test('inspection records preserve source type and readiness fails closed until a
     await app.close()
   }
 })
+
+
+test('inspection evidence rejects non-HTTP(S) and credential-bearing URLs before database access', async () => {
+  const database = createPool()
+  const storage = createMemoryStorage()
+  const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env })
+  try {
+    for (const url of ['javascript:alert(1)', 'data:text/html,unsafe', 'file:///etc/passwd', 'https://user:pass@example.com/evidence']) {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/v1/assets/${assetId}/inspections`,
+        headers: { 'x-arsy-operator-token': token },
+        payload: {
+          inspectionType: 'rights',
+          status: 'pass',
+          inspectionSource: 'operator-attestation',
+          rationale: 'Operator review records a source URL for the inspection evidence.',
+          findings: [],
+          evidence: [{ label: 'External evidence', url }],
+        },
+      })
+      assert.equal(response.statusCode, 400, url)
+    }
+    assert.equal(database.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
