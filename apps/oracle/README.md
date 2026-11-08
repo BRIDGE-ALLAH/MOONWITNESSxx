@@ -1,6 +1,6 @@
 # ORACLE — Python Intelligence Service
 
-**Stage:** Stage 1 computation + Stage 2 durable-job candidate · **Status:** development/CI verified candidate; production remains blocked
+**Stage:** Stage 1 computation + Stage 2 durable-job candidate · **Status:** implementation candidate; final Compose E2E/quality gates pending; production remains blocked
 
 ORACLE is the MOONWITNESS Python service for bounded computation and research-oriented analysis. It provides a versioned internal API, deterministic statistical/text profiling tasks, and digest-based derivation metadata. With `ORACLE_DATABASE_URL` configured, Stage 2 stores the job lifecycle and idempotency state in PostgreSQL and uses database leases for worker recovery. Without that URL, loopback development/test mode retains the bounded in-memory coordinator.
 
