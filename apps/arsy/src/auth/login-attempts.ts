@@ -21,7 +21,7 @@ function queryRows<T>(value: unknown): T[] {
  * Persist account-wide and HMAC-derived network buckets in one PostgreSQL
  * statement. Reserving an attempt before password verification makes the
  * limit effective even when multiple Headquarter replicas receive requests
- * concurrently. The fifth attempt in a 15-minute window is rejected.
+ * concurrently. Five attempts are allowed; the sixth in a 15-minute window is rejected.
  */
 export function registerLoginAttemptRoutes(app: FastifyInstance, db: DatabasePool): void {
   app.post('/api/v1/auth/login-attempts', async (request, reply) => {
@@ -74,12 +74,12 @@ export function registerLoginAttemptRoutes(app: FastifyInstance, db: DatabasePoo
              attempt_count = CASE
                WHEN existing_bucket.window_started_at <= now() - interval '15 minutes' THEN 1
                WHEN existing_bucket.blocked_until > now() THEN existing_bucket.attempt_count
-               ELSE LEAST(existing_bucket.attempt_count + 1, 5)
+               ELSE LEAST(existing_bucket.attempt_count + 1, 6)
              END,
              blocked_until = CASE
                WHEN existing_bucket.window_started_at <= now() - interval '15 minutes' THEN NULL
                WHEN existing_bucket.blocked_until > now() THEN existing_bucket.blocked_until
-               WHEN existing_bucket.attempt_count + 1 >= 5 THEN now() + interval '15 minutes'
+               WHEN existing_bucket.attempt_count + 1 > 5 THEN now() + interval '15 minutes'
                ELSE NULL
              END,
              updated_at = CASE
