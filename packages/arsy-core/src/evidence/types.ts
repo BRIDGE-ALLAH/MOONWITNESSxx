@@ -43,7 +43,7 @@ export interface EvidenceStore {
 export class InMemoryEvidenceStore implements EvidenceStore {
   private readonly streams = new Map<string, EvidenceEvent[]>()
 
-  async append(event: EvidenceEvent): Promise<void> {
+  async append(event: EvidenceEvent): Promise<EvidenceAppendDisposition> {
     const stream = this.streams.get(event.aggregateId) ?? []
     const existing = stream.find((item) => item.id === event.id)
     if (existing) {
@@ -114,7 +114,7 @@ export class EvidenceLedger {
           existing.actorId === input.actorId &&
           canonicalJson(existing.payload) === canonicalJson(input.payload) &&
           canonicalJson(existing.evidenceIds) === canonicalJson(normalizedEvidenceIds)
-        if (sameInput) return existing
+        if (sameInput) return { event: existing, disposition: 'replayed' }
         throw new Error('Event id collision')
       }
 
