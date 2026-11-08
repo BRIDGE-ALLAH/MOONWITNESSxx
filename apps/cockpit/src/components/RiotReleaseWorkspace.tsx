@@ -142,6 +142,24 @@ export function RiotReleaseWorkspace() {
     }
   }, [desktop, selectedPath])
 
+  useEffect(() => {
+    if (!desktop || !selectedPath || !selectedBuildProfile) {
+      setArtifactCandidates([])
+      return
+    }
+    let active = true
+    void listArtifactCandidates(selectedPath, selectedBuildProfile)
+      .then((items) => {
+        if (active) setArtifactCandidates(items)
+      })
+      .catch((reason: unknown) => {
+        if (active) setError(reason instanceof Error ? reason.message : String(reason))
+      })
+    return () => {
+      active = false
+    }
+  }, [desktop, selectedPath, selectedBuildProfile])
+
   async function refreshSelectedRepository(): Promise<void> {
     if (!selectedPath) return
     const [nextPreview, nextDrafts, nextHistory, nextBuildProfiles, nextBuildHistory, nextVaultArtifacts] = await Promise.all([
@@ -159,6 +177,53 @@ export function RiotReleaseWorkspace() {
     setBuildHistory(nextBuildHistory)
     setSelectedBuildProfile((current) => nextBuildProfiles.some((profile) => profile.id === current) ? current : nextBuildProfiles[0]?.id ?? '')
     setVaultArtifacts(nextVaultArtifacts)
+  }
+
+  async function handleRunBuild(): Promise<void> {
+    if (!selectedPath || !selectedBuildProfile) return
+    setError('')
+    setFeedback('')
+    setBusy(true)
+    try {
+      const record = await runReleaseBuild(selectedPath, selectedBuildProfile, true)
+      setBuildHistory((current) => [record, ...current.filter((item) => item.id !== record.id)])
+      const candidates = await listArtifactCandidates(selectedPath, selectedBuildProfile)
+      setArtifactCandidates(candidates)
+      setConfirmBuild(false)
+      setFeedback(record.success
+        ? 'Build completed successfully in ' + Math.round(record.elapsedMs / 1000) + 's.'
+        : record.timedOut
+          ? 'Build exceeded the 15-minute limit and was terminated.'
+          : 'Build failed with exit code ' + String(record.exitCode ?? 'unknown') + '. Inspect the captured output below.')
+      await refreshSelectedRepository()
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason))
+      setConfirmBuild(false)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleImportArtifact(candidate: ArtifactCandidate): Promise<void> {
+    setError('')
+    setFeedback('')
+    setBusy(true)
+    try {
+      const artifact = await importReleaseArtifact(selectedPath, candidate.sourcePath)
+      setVaultArtifacts((current) => [artifact, ...current.filter((item) => item.id !== artifact.id)])
+      setFeedback('Artifact copied into the local vault. SHA-256: ' + artifact.sha256)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function formatBytes(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B'
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KiB'
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MiB'
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GiB'
   }
 
   async function handleAddRepository(event: FormEvent<HTMLFormElement>): Promise<void> {
@@ -505,6 +570,134 @@ export function RiotReleaseWorkspace() {
                       </div>
                     )}
                   </section>
+                </div>
+              </section>
+
+              <section className="grid gap-6 2xl:grid-cols-2">
+                <div className="rounded border border-slate-800 bg-slate-900/70 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-slate-300">Build Deck</h2>
+                    <span className="font-mono text-[10px] text-slate-500">{buildProfiles.length} ALLOWLISTED</span>
+                  </div>
+                  {buildProfiles.length === 0 ? (
+                    <p className="rounded border border-dashed border-slate-700 p-3 text-xs text-slate-500">
+                      No supported build profile detected. RIOT RELEASE currently detects Cargo, package.json build scripts, and .NET projects.
+                    </p>
+                  ) : (
+                    <>
+                      <label htmlFor="riot-build-profile" className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-slate-500">Build profile</label>
+                      <select
+                        id="riot-build-profile"
+                        value={selectedBuildProfile}
+                        onChange={(event) => { setSelectedBuildProfile(event.target.value); setConfirmBuild(false) }}
+                        disabled={busy}
+                        className="mb-3 min-h-11 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-white"
+                      >
+                        {buildProfiles.map((profile) => (
+                          <option key={profile.id} value={profile.id}>{profile.label}</option>
+                        ))}
+                      </select>
+                      {buildProfiles.filter((profile) => profile.id === selectedBuildProfile).map((profile) => (
+                        <div key={profile.id} className="space-y-2">
+                          <div className="rounded border border-slate-800 bg-slate-950 p-3">
+                            <div className="font-mono text-[10px] uppercase text-slate-500">EXECUTABLE / ARGUMENTS</div>
+                            <code className="mt-1 block break-all text-xs text-cyan-200">{profile.executable} {profile.args.join(' ')}</code>
+                            <div className="mt-3 font-mono text-[10px] uppercase text-slate-500">OUTPUT DIRECTORIES</div>
+                            <p className="mt-1 break-all text-xs text-slate-400">{profile.outputDirectories.join(' · ')}</p>
+                          </div>
+                          <p className="rounded border border-amber-700/50 bg-amber-950/20 p-3 text-xs leading-5 text-amber-100">
+                            TRUST BOUNDARY: {profile.trustNotice} Build scripts may access the network depending on the project and installed tools. RIOT RELEASE does not upload or publish build output.
+                          </p>
+                          {!confirmBuild ? (
+                            <button type="button" onClick={() => setConfirmBuild(true)} disabled={busy} className="min-h-11 rounded border border-amber-500/60 bg-amber-500/10 px-4 py-2 font-mono text-xs font-bold text-amber-200 hover:bg-amber-500/20 disabled:opacity-40">
+                              PREPARE BUILD
+                            </button>
+                          ) : (
+                            <div className="rounded border border-rose-700/60 bg-rose-950/20 p-3">
+                              <p className="mb-3 text-xs text-rose-100">You are about to execute this repository's build process with a 15-minute limit. Review the command and trust the repository before proceeding.</p>
+                              <button type="button" onClick={() => void handleRunBuild()} disabled={busy} className="min-h-11 rounded border border-rose-500/60 bg-rose-500/10 px-4 py-2 font-mono text-xs font-bold text-rose-200 hover:bg-rose-500/20 disabled:opacity-40">
+                                {busy ? 'BUILD RUNNING…' : 'CONFIRM & RUN BUILD'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  <div className="mt-5 border-t border-slate-800 pt-4">
+                    <h3 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-slate-400">Build history</h3>
+                    {buildHistory.length === 0 ? (
+                      <p className="text-xs text-slate-500">No local build runs recorded.</p>
+                    ) : (
+                      <div className="max-h-48 space-y-2 overflow-auto">
+                        {buildHistory.slice(0, 12).map((build) => (
+                          <article key={build.id} className="rounded border border-slate-800 bg-slate-950 p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="truncate font-mono text-xs text-slate-200">{build.commandPreview}</span>
+                              <span className={'shrink-0 font-mono text-[10px] ' + (build.success ? 'text-emerald-300' : 'text-rose-300')}>
+                                {build.success ? 'SUCCESS' : build.timedOut ? 'TIMEOUT' : 'FAILED'}
+                              </span>
+                            </div>
+                            <p className="mt-1 font-mono text-[10px] text-slate-500">{Math.round(build.elapsedMs / 1000)}s · exit {String(build.exitCode ?? 'terminated')}</p>
+                            {build.stdout || build.stderr ? (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer font-mono text-[10px] text-cyan-300">VIEW CAPTURED OUTPUT{build.logsTruncated ? ' (TRUNCATED)' : ''}</summary>
+                                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded bg-black/40 p-2 text-[10px] leading-4 text-slate-300">{[build.stdout, build.stderr].filter(Boolean).join('\n--- STDERR ---\n')}</pre>
+                              </details>
+                            ) : null}
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded border border-slate-800 bg-slate-900/70 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-slate-300">Artifact Vault</h2>
+                    <span className="font-mono text-[10px] text-slate-500">{vaultArtifacts.length} STORED</span>
+                  </div>
+                  <div className="mb-4">
+                    <h3 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-slate-400">Detected build outputs</h3>
+                    {artifactCandidates.length === 0 ? (
+                      <p className="rounded border border-dashed border-slate-700 p-3 text-xs text-slate-500">No files found under this profile's known output directories. Run a build first, or choose another profile.</p>
+                    ) : (
+                      <div className="max-h-64 space-y-2 overflow-auto">
+                        {artifactCandidates.map((candidate) => (
+                          <article key={candidate.sourcePath} className="rounded border border-slate-800 bg-slate-950 p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="truncate font-mono text-xs text-slate-200">{candidate.fileName}</span>
+                              <span className="shrink-0 font-mono text-[10px] text-slate-500">{formatBytes(candidate.sizeBytes)}</span>
+                            </div>
+                            <p className="mt-1 break-all font-mono text-[10px] text-slate-600">SHA-256 {candidate.sha256}</p>
+                            <button type="button" onClick={() => void handleImportArtifact(candidate)} disabled={busy} className="mt-2 min-h-9 rounded border border-cyan-700/60 bg-cyan-950/30 px-3 py-1 font-mono text-[10px] text-cyan-200 hover:bg-cyan-900/40 disabled:opacity-40">
+                              IMPORT TO LOCAL VAULT
+                            </button>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="border-t border-slate-800 pt-4">
+                    <h3 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-slate-400">Stored artifacts</h3>
+                    {vaultArtifacts.length === 0 ? (
+                      <p className="text-xs text-slate-500">No artifacts copied into the local vault yet.</p>
+                    ) : (
+                      <div className="max-h-64 space-y-2 overflow-auto">
+                        {vaultArtifacts.map((artifact) => (
+                          <article key={artifact.id} className="rounded border border-slate-800 bg-slate-950 p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="truncate font-mono text-xs text-emerald-200">{artifact.fileName}</span>
+                              <span className="shrink-0 font-mono text-[10px] text-slate-500">{formatBytes(artifact.sizeBytes)}</span>
+                            </div>
+                            <p className="mt-1 break-all font-mono text-[10px] text-slate-500">SHA-256 {artifact.sha256}</p>
+                            <p className="mt-1 break-all font-mono text-[10px] text-slate-600">{artifact.storedPath}</p>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </section>
             </>
