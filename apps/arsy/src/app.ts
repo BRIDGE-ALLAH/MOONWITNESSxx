@@ -6,17 +6,21 @@ import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
 import { registerDockerRoutes } from './docker/routes.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
+import { createOracleClient, type OracleClient } from './oracle/client.ts'
+import { registerOracleRoutes } from './oracle/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
   logger?: boolean
   env?: NodeJS.ProcessEnv
+  oracleClient?: OracleClient
 }
 
 export function createApp(options: CreateAppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? true })
   const env = options.env ?? process.env
   const databasePool = options.databasePool ?? createDatabasePool(env)
+  const oracleClient = options.oracleClient ?? createOracleClient(env)
   registerOperatorApiAuth(app, env)
 
   app.register(async (instance) => {
@@ -62,6 +66,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
     setupDatabase(instance, databasePool)
     registerDockerRoutes(instance, databasePool, env)
+    registerOracleRoutes(instance, oracleClient)
   })
 
   return app

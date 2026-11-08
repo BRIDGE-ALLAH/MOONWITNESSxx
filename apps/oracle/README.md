@@ -85,6 +85,21 @@ docker run --rm -p 127.0.0.1:8010:8010 \\
 
 The container binds to \`0.0.0.0\` and therefore requires a service token. Do not expose this service directly to the public internet; place it behind ARSY on a private network.
 
+## ARSY integration
+
+The Docker Compose development stack runs ORACLE as a private service at `http://oracle:8010` on the existing `moonwitness` bridge network. ORACLE has no published host port. Its readiness endpoint is used by Compose before ARSY starts.
+
+ARSY exposes the caller-facing integration routes:
+
+- `POST /api/v1/oracle/jobs` — validated job submission; accepts an optional `Idempotency-Key`.
+- `GET /api/v1/oracle/jobs/{job_id}` — job status, result, and provenance.
+
+Both routes are protected by ARSY's existing operator authentication boundary. ARSY forwards only validated contracts to ORACLE and holds a separate `ORACLE_SERVICE_TOKEN` for the private bearer-authenticated upstream call. The ORACLE service credential must not be reused as `ARSY_OPERATOR_TOKEN`.
+
+The Compose example uses `ORACLE_BASE_URL=http://oracle:8010`, `ORACLE_SERVICE_TOKEN`, and `ORACLE_REQUEST_TIMEOUT_MS`. The sample token in `.env.docker` is for local development only; replace it before any shared or non-local environment. Do not expose ORACLE through public ingress or a host-published port.
+
+The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, ORACLE, and ARSY as real containers, submits both supported analysis tasks through ARSY, checks their computed results and provenance, and verifies idempotency replay. It uses an ephemeral CI operator token and removes the isolated Compose volumes after the run. This verifies service-to-service execution; it does not make Stage 1 jobs durable or prove production readiness.
+
 ## Stage 1 safety and operational limitations
 
 - Jobs and idempotency keys live in process memory only. Restarting the service loses queued/running jobs, results, and idempotency history.
