@@ -91,9 +91,7 @@ class JobCoordinator:
         if not self._workers:
             return
         try:
-            await asyncio.wait_for(
-                self._queue.join(), timeout=self.settings.shutdown_grace_seconds
-            )
+            await asyncio.wait_for(self._queue.join(), timeout=self.settings.shutdown_grace_seconds)
         except TimeoutError:
             logger.warning(
                 "ORACLE shutdown grace period expired",
