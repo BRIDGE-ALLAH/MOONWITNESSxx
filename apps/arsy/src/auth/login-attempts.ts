@@ -3,10 +3,12 @@ import type { FastifyInstance } from 'fastify'
 import { getArsyOperatorPrincipal } from './operator-token.ts'
 import type { DatabasePool } from '../db.ts'
 
-const inputSchema = z.object({
-  action: z.enum(['attempt', 'success']),
-  networkHash: z.string().regex(/^[a-f0-9]{64}$/),
-}).strict()
+const inputSchema = z
+  .object({
+    action: z.enum(['attempt', 'success']),
+    networkHash: z.string().regex(/^[a-f0-9]{64}$/),
+  })
+  .strict()
 
 type QueryResult<T> = { rows: T[] }
 
@@ -49,7 +51,7 @@ export function registerLoginAttemptRoutes(app: FastifyInstance, db: DatabasePoo
       if (action === 'success') {
         await db.query(
           'DELETE FROM arsy_login_attempt_buckets WHERE owner_id = $1 AND bucket_key = ANY($2::text[])',
-          [ownerId, bucketKeys],
+          [ownerId, bucketKeys]
         )
         return { data: { allowed: true, retryAfterSeconds: 0 } }
       }
@@ -94,11 +96,11 @@ export function registerLoginAttemptRoutes(app: FastifyInstance, db: DatabasePoo
          )::int AS retry_after_seconds
          FROM upserted
          WHERE blocked_until > now()`,
-        [ownerId, bucketKeys],
+        [ownerId, bucketKeys]
       )
       const retryAfterSeconds = Math.max(
         0,
-        Number(queryRows<{ retry_after_seconds: number }>(result)[0]?.retry_after_seconds ?? 0),
+        Number(queryRows<{ retry_after_seconds: number }>(result)[0]?.retry_after_seconds ?? 0)
       )
 
       // Remove at most 100 expired network buckets per attempt so years of
@@ -115,7 +117,7 @@ export function registerLoginAttemptRoutes(app: FastifyInstance, db: DatabasePoo
          DELETE FROM arsy_login_attempt_buckets AS bucket
          USING stale
          WHERE bucket.owner_id = stale.owner_id AND bucket.bucket_key = stale.bucket_key`,
-        [ownerId],
+        [ownerId]
       )
 
       return {

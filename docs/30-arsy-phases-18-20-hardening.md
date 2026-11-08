@@ -15,6 +15,7 @@ This change hardens the existing mainline contracts instead of introducing dupli
 - Scope arrays reject malformed wildcard patterns and non-string/blank entries.
 - A trusted verifier exception returns a structured deny result; it never falls through to allow.
 - Existing root-to-leaf attenuation, tenant/purpose/session binding, expiry and normalized argument-hash checks remain intact.
+- Delegation-link integrity: every non-root grant signs its exact `parentGrantId`; the persisted `parent_grant_id` is mapped into the verifier contract. Root grants omit the field and retain the legacy signing payload. The shared capability evaluator also requires each child to reference the immediately preceding grant and rejects a root carrying a parent reference.
 
 **Boundary:** verifier identity, issuer trust, signature parsing, KMS rotation, nonce consumption and actual tool-gateway enforcement are not supplied by this pure-domain evaluator.
 

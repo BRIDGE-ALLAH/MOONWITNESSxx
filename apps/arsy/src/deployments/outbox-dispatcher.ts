@@ -51,7 +51,7 @@ function handlerMessage(message: ClaimedDeploymentOutboxMessage): DeploymentOutb
  */
 export async function dispatchDeploymentOutboxBatch(
   pool: DatabasePool,
-  input: DispatchOutboxInput,
+  input: DispatchOutboxInput
 ): Promise<DispatchOutboxResult> {
   const deadLettered = await reapExpiredDeploymentOutbox(pool, input)
   const claimed = await claimDeploymentOutbox(pool, input)
