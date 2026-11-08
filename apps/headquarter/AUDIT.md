@@ -150,3 +150,15 @@ The separate full-workspace typecheck/build workflow was skipped by workflow con
 - CodeQL passed (run `42398091462`).
 - The full-workspace job is no longer conditional on `FULL_QUALITY_CI`.
 - Phase 6 Headquarter engineering-foundation gate is complete. Production rollout gates remain explicitly external: browser accessibility/E2E, ARSY identity/workspace/permission/API contracts, deployment smoke test, and rollback ownership.
+
+
+## Skin System route adoption — 2026-11-08
+
+This update supersedes the earlier package inventory and shell-state notes above where they mention the former global `next-themes` toggle.
+
+- `AppShell` now wraps Headquarter in the shared `SkinRoot` and resolves the profile from the current route.
+- `/sidra-archive` and nested archive records select Archive/light. Current operational and research routes (including `/signal-room`) select Observatory/dark.
+- Signal remains an internal design specimen until an actual public/editorial route is implemented; no route is assigned merely because its name contains “signal”.
+- The global prototype light/dark toggle and its `next-themes` provider/dependencies were removed. Each currently supported skin has only one approved initial appearance mode; exposing a global toggle would falsely imply unsupported combinations.
+- Route-resolution tests cover Archive route matching, operational fallback, internal specimen fallback, and missing-path behavior.
+- Not completed by this change: browser hydration/rewrite verification, rendered contrast, responsive review, keyboard/screen-reader review, and persistent user preferences.
