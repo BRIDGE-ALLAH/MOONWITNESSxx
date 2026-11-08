@@ -8,7 +8,7 @@ use atlas::{
     },
     radius_db,
 };
-use sqlx::{mysql::MySqlPoolOptions, Row};
+use sqlx::{Row, mysql::MySqlPoolOptions};
 
 const SEEDED_RADIUS_ID: &str = "01K9Z0J8A1B2C3D4E5F6G7H8J9";
 
@@ -192,9 +192,9 @@ async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
         .await
         .expect("list RADIUS group policies");
     assert!(
-        policies.iter().any(|item| {
-            item.groupname == "ci-integration-policy" && item.value == "10M/10M"
-        })
+        policies
+            .iter()
+            .any(|item| { item.groupname == "ci-integration-policy" && item.value == "10M/10M" })
     );
     assert!(
         radius::delete_group_policy("ci-integration-policy")
