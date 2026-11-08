@@ -40,6 +40,7 @@ jobs:
           --health-retries=10
     env:
       DATABASE_URL: mysql://root:ci-root-password@127.0.0.1:3306/atlas
+      RADIUS_DATABASE_URL: mysql://root:ci-root-password@127.0.0.1:3306/radius
     defaults:
       run:
         working-directory: apps/atlas
