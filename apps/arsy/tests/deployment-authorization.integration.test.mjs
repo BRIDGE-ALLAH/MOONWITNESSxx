@@ -64,9 +64,31 @@ test('signed deployment authorization persists an immutable, owner-bound decisio
     const action = 'deployment:deploy'
     const resource = `docker-server:${hostId}/deployment:${deployment.id}`
 
-    const grant = {
-      id: `grant-${randomUUID()}`,
+    const delegator = generateKeyPairSync('ed25519')
+    const parent = {
+      id: `grant-root-${randomUUID()}`,
+      parentGrantId: null,
       issuerId: 'ci-deployment-root',
+      subjectId: 'delegator',
+      tenantId: ownerId,
+      purpose: 'application-deployment',
+      sessionId: operation.id,
+      actions: [action],
+      resources: [resource],
+      argumentHashes: [operation.request_hash],
+      issuedAt: new Date(now.getTime() - 60_000).toISOString(),
+      expiresAt: new Date(now.getTime() + 10 * 60_000).toISOString(),
+      signature: '',
+    }
+    const alternateParent = {
+      ...parent,
+      id: `grant-alternate-root-${randomUUID()}`,
+      signature: '',
+    }
+    const grant = {
+      id: `grant-child-${randomUUID()}`,
+      parentGrantId: parent.id,
+      issuerId: 'delegator',
       subjectId: ownerId,
       tenantId: ownerId,
       purpose: 'application-deployment',
@@ -78,23 +100,30 @@ test('signed deployment authorization persists an immutable, owner-bound decisio
       expiresAt,
       signature: '',
     }
-    grant.signature = sign(
-      null,
-      Buffer.from(capabilityGrantSigningPayload(grant)),
-      issuer.privateKey,
-    ).toString('base64url')
-    await pool.query(
-      `INSERT INTO arsy_deployment_capability_grants
-        (id, owner_id, issuer_id, subject_id, tenant_id, purpose, session_id,
-         actions, resources, argument_hashes, issued_at, expires_at, signature)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11, $12, $13)`,
-      [
-        grant.id, ownerId, grant.issuerId, grant.subjectId, grant.tenantId,
-        grant.purpose, grant.sessionId, JSON.stringify(grant.actions),
-        JSON.stringify(grant.resources), JSON.stringify(grant.argumentHashes),
-        grant.issuedAt, grant.expiresAt, grant.signature,
-      ],
-    )
+    for (const capability of [parent, alternateParent, grant]) {
+      const privateKey = capability.issuerId === 'delegator'
+        ? delegator.privateKey
+        : issuer.privateKey
+      capability.signature = sign(
+        null,
+        Buffer.from(capabilityGrantSigningPayload(capability)),
+        privateKey,
+      ).toString('base64url')
+      await pool.query(
+        `INSERT INTO arsy_deployment_capability_grants
+          (id, owner_id, parent_grant_id, issuer_id, subject_id, tenant_id, purpose, session_id,
+           actions, resources, argument_hashes, issued_at, expires_at, signature)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+                 $9::jsonb, $10::jsonb, $11::jsonb, $12, $13, $14)`,
+        [
+          capability.id, ownerId, capability.parentGrantId, capability.issuerId,
+          capability.subjectId, capability.tenantId, capability.purpose, capability.sessionId,
+          JSON.stringify(capability.actions), JSON.stringify(capability.resources),
+          JSON.stringify(capability.argumentHashes), capability.issuedAt,
+          capability.expiresAt, capability.signature,
+        ],
+      )
+    }
 
     const approval = {
       id: `approval-${randomUUID()}`,
@@ -130,7 +159,8 @@ test('signed deployment authorization persists an immutable, owner-bound decisio
     )
 
     const capabilityKeys = createTrustedPublicKeyring(JSON.stringify({
-      [grant.issuerId]: issuer.publicKey.export({ type: 'spki', format: 'pem' }),
+      'ci-deployment-root': issuer.publicKey.export({ type: 'spki', format: 'pem' }),
+      delegator: delegator.publicKey.export({ type: 'spki', format: 'pem' }),
     }))
     const approvalKeys = createTrustedPublicKeyring(JSON.stringify({
       [approval.approverId]: approver.publicKey.export({ type: 'spki', format: 'pem' }),
@@ -170,6 +200,52 @@ test('signed deployment authorization persists an immutable, owner-bound decisio
     assert.deepEqual(persisted.rows[0].reason_codes, [])
     assert.equal(persisted.rows[0].capability_grant_id, grant.id)
     assert.equal(persisted.rows[0].approval_id, approval.id)
+
+    // Simulate a privileged database-side parent substitution. The append-only
+    // trigger protects normal writes; the child signature must still detect a
+    // changed parent reference if the stored relationship is tampered with.
+    await pool.query(
+      'ALTER TABLE arsy_deployment_capability_grants DISABLE TRIGGER arsy_deployment_capability_grants_immutable',
+    )
+    try {
+      await pool.query(
+        'UPDATE arsy_deployment_capability_grants SET parent_grant_id = $1 WHERE owner_id = $2 AND id = $3',
+        [alternateParent.id, ownerId, grant.id],
+      )
+    } finally {
+      await pool.query(
+        'ALTER TABLE arsy_deployment_capability_grants ENABLE TRIGGER arsy_deployment_capability_grants_immutable',
+      )
+    }
+
+    const tamperedDecision = await authorizeDeploymentOperation(
+      { operationId: operation.id, ownerId, authenticatedActorId: ownerId, now: nowIso },
+      {
+        store: new PostgresDeploymentAuthorizationStore(pool),
+        capabilityVerifier: createEd25519CapabilityVerifier(capabilityKeys),
+        approvalKeyring: approvalKeys,
+        policyProvider: {
+          evaluate: async () => ({
+            allowed: true,
+            policyVersion: 'deployment-policy-ci-v1',
+            reasonCode: 'within-policy',
+            requiresApproval: true,
+          }),
+        },
+      },
+    )
+    assert.equal(tamperedDecision.allowed, false)
+    assert.ok(tamperedDecision.reasonCodes.includes('capability_signature_invalid'))
+    const tamperedAudit = await pool.query(
+      `SELECT allowed, reason_codes
+       FROM arsy_deployment_authorization_decisions
+       WHERE operation_id = $1 AND owner_id = $2
+       ORDER BY recorded_at DESC, id DESC
+       LIMIT 1`,
+      [operation.id, ownerId],
+    )
+    assert.equal(tamperedAudit.rows[0].allowed, false)
+    assert.ok(tamperedAudit.rows[0].reason_codes.includes('capability_signature_invalid'))
 
     await assert.rejects(
       pool.query('UPDATE arsy_deployment_authorization_decisions SET allowed = false WHERE operation_id = $1', [operation.id]),
