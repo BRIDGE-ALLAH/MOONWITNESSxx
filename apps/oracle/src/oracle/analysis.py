@@ -52,9 +52,7 @@ def profile_text(payload: TextProfileInput) -> dict[str, Any]:
     words = re.findall(r"\b[\w']+\b", normalized, flags=re.UNICODE)
     sentences = re.findall(r"[.!?](?:\s|$)", payload.text)
     unique_words = len(set(words))
-    average_word_length = (
-        round(sum(len(word) for word in words) / len(words), 4) if words else 0.0
-    )
+    average_word_length = round(sum(len(word) for word in words) / len(words), 4) if words else 0.0
     return {
         "language_hint": payload.language_hint,
         "character_count": len(payload.text),
