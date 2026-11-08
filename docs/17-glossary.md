@@ -12,10 +12,13 @@
 | MOONWITNESS | Master brand and evidence-first knowledge-sharing ecosystem |
 | Core Promise | SEE MORE. KNOW MORE. |
 | Brand Manifesto | WHEN THE MOON RISES, WE SHARE MESSAGES. |
-| Observatory | Research, observation, evidence workflows, and command experience |
-| Archive | Durable records, knowledge, retrieval, and provenance experience |
+| Observatory | Dark-first cinematic instrument experience for operations, monitoring, research, and decisions |
+| Archive | Warm editorial experience for records, knowledge, reading, and provenance |
+| Signal | Expressive Moonpunk editorial experience for public stories, onboarding, and community |
+| Skin | A task-led visual expression profile that changes composition and material language without changing brand or semantic meaning |
+| Appearance mode | Supported light/dark presentation of a skin; not the same as skin selection |
 | MOONWITNESS XV | Program/release designation within the master brand |
-| RIOTWORKS | Independent creative/engineering studio identity; not the product master brand |
+| RIOTWORKS | Product and operating division within MOONWITNESS, initially associated with creative-commerce workflows |
 | ARSY | Backend command/orchestration runtime |
 | ARSY DECK | Human-facing Observatory command center |
 | SIGNAL ROOM | Signal and research intelligence experience |
