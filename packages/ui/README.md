@@ -149,7 +149,7 @@ Unsupported mode/skin combinations fall back to the selected skin's documented d
 
 **Skin is not a dark/light toggle.** A skin defines visual grammar, composition, typography, surface character, texture, and component recipes. Appearance mode, density, and accessibility preferences remain separate concerns.
 
-The current foundation does not yet include a global skin picker, preference persistence, React context, automatic route mapping, or a visual workbench. Applications must explicitly apply `SkinRoot` to the route or application boundary. See [docs/13 — Skin System Blueprint](../../docs/13-skin-system-blueprint.md).
+An initial internal specimen route is available at `/ui-lab/skin-system` in Headquarter. It compares the three profiles using illustrative content; it is not a complete component workbench or visual-regression suite. There is no global skin picker, preference persistence, React context, or automatic route mapping. Applications must explicitly apply `SkinRoot` to the route or application boundary. See [docs/13 — Skin System Blueprint](../../docs/13-skin-system-blueprint.md).
 
 ## Typography and assets
 
