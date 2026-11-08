@@ -315,7 +315,6 @@ function assertImageReference(image: string): string {
   }
   return value
 }
-}
 
 function containerName(input: CreateDockerWorkloadInput): string {
   const name = requiredText(input.name, 'name', 80).toLowerCase()
