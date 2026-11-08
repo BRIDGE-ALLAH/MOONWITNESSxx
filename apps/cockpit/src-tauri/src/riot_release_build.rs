@@ -305,6 +305,10 @@ fn artifact_candidates(root: &Path, profile_id: &str) -> Result<Vec<ArtifactCand
     let mut candidates = Vec::new();
     for output in profile.output_directories {
         let path = root.join(output);
+        let Ok(metadata) = fs::symlink_metadata(&path) else { continue };
+        if !metadata.file_type().is_dir() {
+            continue;
+        }
         let Ok(output_root) = path.canonicalize() else { continue };
         if !output_root.is_dir() || !is_inside(root, &output_root) {
             continue;
