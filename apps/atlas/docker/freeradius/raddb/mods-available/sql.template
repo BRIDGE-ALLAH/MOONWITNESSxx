@@ -1,8 +1,8 @@
 sql {
-    dialect = "mysql"
+    dialect = "postgresql"
     driver = "rlm_sql_${dialect}"
-    server = "mariadb"
-    port = 3306
+    server = "postgres"
+    port = 5432
     login = "radius"
     password = "__RADIUS_DB_PASSWORD__"
     radius_db = "radius"
