@@ -1,209 +1,206 @@
-# 11 — MOONWITNESS Design System Specification
+# 11 — MOONWITNESS Design System & Skin Framework
 
-**Status:** Approved foundation for product integration
-**Version:** 1.1
+**Status:** Canonical design-system foundation; skin framework implementation is a target  
+**Version:** 1.2  
 **Updated:** 2026-11-08
 
-## 1. Design system objectives
+## 1. Purpose
 
-- Express the MOONWITNESS master identity consistently.
-- Balance cinematic observatory atmosphere with evidence readability.
-- Support editorial research, dense operational interfaces, and long-form knowledge.
-- Provide consistent dark Observatory and warm Archive surfaces.
-- Deliver reusable, composable React components.
-- Meet WCAG 2.2 AA as a design target.
-- Keep original graphic assets and their provenance in `@riotworks/assets`.
-- Avoid generic SaaS, decorative sci-fi HUD, and unrelated studio-brand drift.
+The MOONWITNESS design system translates one master brand into a consistent, accessible product language across different user tasks.
 
-## 2. Brand foundations
+It must support three distinct experiences without creating three products:
 
-Source of truth:
-- `docs/10-design-dna.md` — visual DNA and brand principles.
-- `docs/01-ecosystem-narrative.md` — ecosystem hierarchy, narrative, and message architecture.
-- `packages/assets/BRAND.md` — asset usage and licensing.
-- `packages/assets/brand-tokens.css` — primitive brand tokens.
+- **Observatory** — operational and research instruments.
+- **Archive** — reading, evidence, records, and knowledge.
+- **Signal** — expressive public storytelling and community.
+
+The design system owns reusable presentation and interaction infrastructure. Applications own page composition, domain meaning, API access, permissions, and workflows.
+
+## 2. Canonical sources
+
+- [01 — Ecosystem Narrative](./01-ecosystem-narrative.md): why MOONWITNESS exists, its message, values, and narrative boundaries.
+- [10 — Design DNA](./10-design-dna.md): the visual language and personality of the master brand and three skins.
+- [12 — Brand Architecture](./12-brand-architecture.md): master brand, experience, program, and division hierarchy.
+- [13 — Skin System Blueprint](./13-skin-system-blueprint.md): skin architecture, token layering, adoption, and implementation sequence.
+- [Asset Brand Kit](../packages/assets/BRAND.md): logo, artwork, usage, and licensing rules.
+- [UI Token Contract](../packages/ui/DESIGN-TOKENS.md): current package token semantics and migration rules.
 
 Messaging:
+
 - Core Promise: **SEE MORE. KNOW MORE.**
 - Brand Manifesto: **WHEN THE MOON RISES, WE SHARE MESSAGES.**
-- Operational verbs: OBSERVE · RECORD · VERIFY · CONNECT · UNDERSTAND · SHARE.
+- Operational verbs: **OBSERVE · RECORD · VERIFY · CONNECT · UNDERSTAND · SHARE**
 
-The Core Promise belongs in product signatures and compact identity contexts. The Manifesto belongs in editorial storytelling, campaign, About, and selected onboarding contexts. Do not repeat both lines in every component.
+The Core Promise belongs in product signatures and compact identity contexts. The Manifesto belongs in editorial storytelling, campaigns, About, and selected onboarding contexts. Do not repeat both lines in every component.
 
-## 3. Token layers
+## 3. Architecture: separate the visual layers
 
-### Primitive colors
-Use the MOONWITNESS palette from `docs/10-design-dna.md`:
-- Void `#090A0F`
-- Observatory `#121521`
-- Slate `#242A38`
-- Moonlight `#F4F1E8`
-- Lunar Silver `#AEB6C6`
-- Signal Gold `#E8BD62`
-- Eclipse Violet `#7664A8`
-- Signal Red `#C95B5B`
-- Deep Ink `#171923`
+Do not implement “skin” as a synonym for dark/light mode. Keep the following layers independent:
 
-### Semantic colors
-Define independent tokens for success, warning, danger, info, neutral, focus, selected, and disabled. Brand accents must not be used as a substitute for semantic status. Never encode meaning through color alone.
+| Layer | Owns | Example |
+|---|---|---|
+| Brand primitives | Stable master-brand values and assets | Moonlight, Void, Signal Gold, master mark |
+| Semantic tokens | Meaning and accessible roles | background, foreground, focus, danger, success |
+| Skin profile | Visual grammar, composition, typography, texture, shape, and component recipes | observatory, archive, signal |
+| Appearance mode | Supported light/dark presentation of a skin | dark, light |
+| Density | Amount of information and spacing | comfortable, compact |
+| Accessibility preferences | Non-negotiable user/system needs | reduced motion, contrast preference, zoom/reflow |
 
-### Surface layers
-- canvas
-- elevated canvas
-- primary panel
-- secondary panel
-- inset panel
-- border
-- strong border
-- overlay
-- scrim
+A skin may define a preferred appearance mode, but it must not redefine what success, danger, focus, selected, disabled, or verified means.
 
-### Typography tokens
-- display-2xl, display-xl, display-lg
-- heading-xl, heading-lg, heading-md
-- body-lg, body-md, body-sm
-- label, overline, mono, metric
+### 3.1 Skin profiles
 
-Use Space Grotesk for display/interface and IBM Plex Mono for technical data, with system fallbacks. Both upstream families are documented under SIL OFL 1.1 in `packages/assets/fonts/`; see the license record for reserved-name and redistribution conditions. Font binaries remain excluded until a pinned, hash-verified import is justified.
+#### Observatory
 
-### Spacing, shape, and border
-Use a consistent 4px base spacing scale. Prefer deliberate grids, generous whitespace, and restrained radii. Use measured lines and rules as editorial structure; avoid ornamental borders that compete with evidence.
+- Dark-first, cinematic, instrument-like.
+- Operational and data-dense layouts with measured grid, stable panels, source trails, timelines, and visible uncertainty.
+- Signal Gold is identity/focus emphasis, not a success state.
+- Default for Headquarter workspaces and operational experiences unless a route has a stronger reading or storytelling purpose.
 
-## 4. Experience themes
+#### Archive
 
-### Observatory
-- Default dark canvas and elevated instrument panels.
-- Lunar Silver for secondary information; Signal Gold for focus and primary emphasis.
-- Fine orbital geometry used at low opacity.
-- Evidence, sources, dates, confidence, and uncertainty remain visible.
+- Light-first, warm paper and editorial.
+- Reading-oriented layouts with citations, indexes, metadata, provenance, and clear document structure.
+- It is not simply the dark theme inverted.
+- Default for long-form research, records, documentation, and knowledge retrieval.
 
-### Archive
-- Warm Moonlight paper surfaces and Deep Ink text.
-- Restrained rules, indexing, metadata, and provenance labels.
-- Editorial reading widths and document-first hierarchy.
-- Avoid treating Archive as a simple inverted dark theme.
+#### Signal
 
-## 5. Layout system
+- Expressive Moonpunk editorial.
+- Poster-like typography, asymmetric compositions, restrained halftone, print grain, manga-line energy, and original illustration.
+- Default only for public storytelling, onboarding introductions, community, campaign, and selected launch surfaces.
+- Not suitable as the default for dense tables, identity/security settings, finance, or long transactional forms.
 
-Desktop:
-- Persistent left navigation.
-- Top command bar.
-- Main canvas.
-- Optional right contextual panel.
-- Content max widths appropriate to the task.
+### 3.2 Appearance modes
 
-Tablet:
-- Collapsible sidebar and contextual drawer.
+Observatory is dark-first; Archive is light-first. Signal may have light and dark expressions only when each pairing has its own contrast and component review. Do not promise every skin in every mode before it is designed and tested.
 
-Mobile:
-- Compact navigation.
-- Prioritized cards and stacked data rows.
-- Persistent access to critical approvals and alerts.
+The package currently has an Archive root fallback and Observatory/Archive selectors. That is a compatibility baseline, not a decision that every application should default to Archive.
 
-Use responsive grids and avoid horizontal page overflow.
+## 4. Token architecture
 
-## 6. Component catalog
+### 4.1 Brand primitive layer
 
-Core:
-- MoonWitnessAppShell
-- MoonWitnessSidebar
-- MoonWitnessTopbar
-- MoonWitnessCommandPalette
-- EvidencePanel
-- ArchiveCard
-- ObservationCard
-- SourceCitation
-- ProvenancePanel
-- Timeline
-- MapPanel
-- MoonWitnessButton
-- MoonWitnessBadge
-- MoonWitnessDialog
-- MoonWitnessToast
-- EvidenceTable
-- FormField
-- EmptyState
-- Skeleton
-- HalftoneSurface
-- OrbitalSurface
-- TechnicalStamp
+Maintain the palette and stable identity assets in the brand source of truth. Do not copy raw palette values into every component.
 
-Components must have typed props, clear variants, sensible empty/loading/error states, keyboard behavior, accessible names and focus, responsive behavior, theme support, and no dead controls.
+### 4.2 Semantic layer
 
-## 7. Status system
+Define tokens for:
 
-Standard status vocabulary:
-- DRAFT
-- QUEUED
-- RUNNING
-- NEEDS REVIEW
-- BLOCKED
-- READY
-- PUBLISHED
-- PAUSED
-- FAILED
-- ARCHIVED
+- Text: primary, secondary, muted, inverse.
+- Surfaces: canvas, panel, elevated, inset, overlay, scrim.
+- Borders: subtle, default, strong.
+- Interaction: hover, pressed, focus, selected, disabled.
+- Status: success, warning, danger, information, neutral, blocked.
+- Evidence: verified, corroborated, unverified, disputed, insufficient, superseded.
+- Data visualization: series palette, threshold, baseline, and accessible fallback.
 
-Evidence quality vocabulary:
-- VERIFIED
-- CORROBORATED
-- UNVERIFIED
-- DISPUTED
-- INSUFFICIENT
-- SUPERSEDED
+Evidence-quality tokens and job/lifecycle status tokens must remain semantically distinct.
 
-Do not conflate product lifecycle, job execution, policy inspection, and evidence quality states.
+### 4.3 Skin layer
 
-## 8. Data visualization
+A skin maps its visual personality to semantic roles through skin-scoped values and composition recipes. It may define typography scale, shape, border treatment, grid, texture, elevation, and component-specific emphasis.
 
-- Use chart labels and units.
-- Mark demo data clearly.
-- Show date range and timezone.
-- Provide accessible table/data alternative when a chart is important.
-- Avoid decorative charts with invented business meaning.
-- Reserve brand colors for emphasis, not arbitrary series coloring.
+Skin-level values must not override semantic status meaning or accessibility requirements.
 
-## 9. Interaction and motion
+### 4.4 Component layer
 
-- Provide visible hover, focus, pressed, selected, disabled, and loading states.
-- Support keyboard navigation.
-- Respect reduced motion.
-- Use short, purposeful transitions.
-- Do not animate evidence or metrics in misleading ways.
-- Toasts confirm only completed prototype actions or verified real actions.
-- Confirm destructive or irreversible actions.
+Create component-specific tokens only when a component has a stable need that cannot be expressed cleanly through semantic or skin tokens. Avoid a token for every CSS declaration.
+
+### 4.5 Typography, spacing, shape, and motion
+
+- Typography roles: display, heading, body, label, overline, mono, metric, caption.
+- Spacing: 4px base scale with named layout and component steps.
+- Shape: skin-aware radii and border treatment, while preserving consistent control affordances.
+- Elevation: restrained, layered, and theme-aware; do not use glow as a universal shadow.
+- Motion: short, purposeful, state-led, with reduced-motion behavior.
+
+## 5. Layout and responsive system
+
+Desktop may use a persistent navigation region, command bar, main canvas, and optional context panel. These are composable regions, not mandatory chrome on every screen.
+
+- Desktop: support deliberate multi-column workspaces and clear content bounds.
+- Tablet: collapse navigation and move context into a drawer or stacked region.
+- Mobile: prioritize the main task, use compact navigation, stack data, and keep critical actions reachable.
+- Reading surfaces: optimize line length and content hierarchy rather than filling the viewport.
+- Poster/editorial surfaces: preserve headline, message, and action order at narrow widths.
+- Dense operational surfaces: avoid horizontal page overflow and provide a deliberate table-to-card or scroll strategy.
+
+## 6. Component model
+
+### Foundation primitives
+
+Buttons, links, fields, selection controls, badges, separators, cards, overlays, tooltips, feedback, and typography utilities. Their semantics and keyboard behavior remain consistent across all skins.
+
+### Compositional patterns
+
+Evidence panel, observation record, source citation, provenance panel, archive entry, timeline, metric group, data table, filter bar, empty state, error state, form field, approval presentation, job monitor, and record inspector.
+
+### Experience compositions
+
+An application may create a skin-specific composition when a real user task requires it. Such compositions must use shared primitives and tokens; they must not fork the same component's business behavior.
+
+Do not build every catalog item in advance. Add components when a real consuming application needs them.
+
+## 7. Application and package boundaries
+
+- `@riotworks/ui` owns reusable components, semantic tokens, skin profiles, composition helpers, interaction/accessibility patterns, and visual workbench examples.
+- `@riotworks/assets` owns original logo, illustration, texture, and pattern sources plus provenance and registry metadata.
+- Applications choose the skin that serves each route or task, compose pages, and own data, permissions, navigation, and workflow state.
+- ARSY and backend packages own authorization, business logic, and persisted state; UI skin configuration is never a security boundary.
+
+The `@riotworks/*` scope is a technical package namespace. Public-facing screens follow MOONWITNESS brand architecture.
+
+## 8. Interaction, evidence, and status semantics
+
+Use explicit state vocabulary and visible feedback. Do not collapse the following into one color-coded badge:
+
+- Product lifecycle: draft, ready, published, archived.
+- Job execution: queued, running, blocked, failed, completed.
+- Evidence quality: verified, corroborated, unverified, disputed, insufficient, superseded.
+- Authorization outcome: allowed, denied, requires review.
+
+Every meaningful claim must retain source context and uncertainty. Demo data must be clearly disclosed. No skin may make mock data look more authoritative.
+
+## 9. Accessibility and motion
+
+Target WCAG 2.2 AA:
+
+- Contrast for text, controls, focus, and important graphics.
+- Semantic headings, landmarks, labels, and relationships.
+- Keyboard-operable navigation and overlays.
+- Visible, unobscured focus indicators.
+- No color-only or texture-only meaning.
+- Reduced motion and no flashing/rapid strobing.
+- Readable zoom/reflow and touch-target behavior.
+- Meaningful artwork has alt text; decorative art is hidden from assistive technology.
+
+A skin is not approved because its token values look correct in source. Verify the rendered component states.
 
 ## 10. Asset rules
 
-- Store original SVG/illustration sources in the repository.
-- Use explicit asset names and static registry metadata.
-- Keep logo, symbol, texture, illustration, and icon families versioned.
-- Avoid hotlinked random images for production identity.
-- Document licensing and source for all third-party assets.
-- Meaningful artwork requires alt text; decorative artwork must be hidden from assistive technology.
-- Never present generated artwork as documentary evidence.
+- Store original SVG/illustration/texture sources in the repository.
+- Use explicit, static asset registry metadata.
+- Record source, ownership, license/usage status, accessibility, dimensions, and skin applicability.
+- Never hotlink random imagery for production identity.
+- Never represent generated artwork as documentary evidence.
+- Keep decorative texture away from body text, data, controls, and focus indicators.
+- No font binary or third-party art is approved for redistribution without verified rights.
 
-## 11. Accessibility
+## 11. Quality and release gates
 
-Target WCAG 2.2 AA:
-- Sufficient contrast.
-- Visible focus.
-- Semantic headings and landmarks.
-- Labels for inputs.
-- Screen-reader descriptions for meaningful artwork.
-- No color-only states.
-- Accessible dialogs and menus.
-- Keyboard-operable navigation.
-- Reduced motion.
-- Readable type and responsive zoom behavior.
+A component or composition is not approved until all applicable checks pass:
 
-## 12. Quality gates
+- Correct MOONWITNESS master identity and intended skin.
+- Semantic colors and evidence/status meanings remain consistent.
+- Supported appearance-mode pairings render correctly.
+- Desktop, tablet, and mobile layouts are verified.
+- Hover, focus, pressed, selected, disabled, loading, empty, error, and success states are defined where relevant.
+- Keyboard, accessible names, roles, states, and focus restoration are verified.
+- Text and important controls pass rendered contrast review.
+- Reduced-motion behavior is verified.
+- No dead controls, misleading prototype state, console errors, or unintended overflow.
+- Asset and font provenance/rights are recorded.
+- Package exports and a real consuming application are tested.
 
-A component is not approved until:
-- Dark Observatory and warm Archive theme states are checked.
-- Desktop and mobile states are checked.
-- Keyboard operation is checked.
-- Focus and contrast are checked.
-- Loading/empty/error states are defined.
-- Provenance and licensing are recorded for assets.
-- No overflow, misleading status, or unsupported certainty appears.
+The complete architecture and staged delivery plan live in [docs/13](./13-skin-system-blueprint.md).
