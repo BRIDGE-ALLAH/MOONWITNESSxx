@@ -93,19 +93,28 @@ export async function claimDeploymentOutbox(
   }
 
   const result = await pool.query(
-    `WITH exhausted AS (
-       UPDATE arsy_deployment_outbox
-       SET dead_lettered_at = now(),
-           locked_by = NULL,
-           locked_until = NULL,
-           lease_token = NULL,
-           last_error_code = COALESCE(last_error_code, 'attempts_exhausted')
+    `WITH exhausted_candidates AS (
+       SELECT id
+       FROM arsy_deployment_outbox
        WHERE delivered_at IS NULL
          AND dead_lettered_at IS NULL
          AND attempt_count >= max_attempts
          AND (locked_until IS NULL OR locked_until <= now())
          AND ($4::text IS NULL OR owner_id = $4)
-       RETURNING id
+       ORDER BY locked_until, created_at, id
+       LIMIT $1
+       FOR UPDATE SKIP LOCKED
+     ),
+     exhausted AS (
+       UPDATE arsy_deployment_outbox AS outbox
+       SET dead_lettered_at = now(),
+           locked_by = NULL,
+           locked_until = NULL,
+           lease_token = NULL,
+           last_error_code = COALESCE(last_error_code, 'attempts_exhausted')
+       FROM exhausted_candidates
+       WHERE outbox.id = exhausted_candidates.id
+       RETURNING outbox.id
      ),
      candidates AS (
        SELECT id
