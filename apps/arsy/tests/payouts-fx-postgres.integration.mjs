@@ -19,18 +19,47 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
 
   try {
     const channels = new ChannelRepository(pool)
-    const channel = await channels.create(ownerId, slug, 'Payout FX integration fixture')
     const now = new Date().toISOString()
-    const reviewed = await channels.review(channel.id, ownerId, {
-      countryEligibility: [{ country: 'ID', status: 'pass', sourceUrl: 'https://example.com/country', checkedAt: now }],
-      payoutRequirements: { status: 'pass', sourceUrl: 'https://example.com/payout', checkedAt: now, notes: 'Integration fixture only.' },
-      policyStatus: 'pass',
-      policyUrl: 'https://example.com/policy',
-      policyCheckedAt: now,
-      manualFallback: 'Integration fixture only; no provider API call is made.',
+    const channel = await channels.create(ownerId, ownerId, {
+      channelKey: slug,
+      displayName: 'Payout FX integration fixture',
+      countryCode: 'ID',
+      accountEligibility: 'eligible',
+      officialPolicyUrl: 'https://example.com/policy',
+      policyReviewedAt: now,
+      policyRecheckAt: new Date(Date.now() + 86_400_000).toISOString(),
+      payoutRequirements: { status: 'verified', sourceUrl: 'https://example.com/payout' },
+      listingRequirements: {},
+      payoutSetupStatus: 'configured',
+      capability: 'C1',
+      grantedScopes: [],
+      quotaNotes: {},
+      channelStatus: 'active',
+      evidence: [
+        {
+          evidenceType: 'account-eligibility',
+          sourceName: 'Synthetic integration eligibility fixture',
+          sourceUrl: 'https://example.com/country',
+          capturedAt: now,
+          reviewedAt: now,
+          evidenceClass: 'observed-fact',
+          summary: 'Synthetic fixture records operator-verified eligibility for ID.',
+          limitations: 'Integration fixture only; recheck before any real payout.',
+        },
+        {
+          evidenceType: 'payout-requirements',
+          sourceName: 'Synthetic integration payout fixture',
+          sourceUrl: 'https://example.com/payout',
+          capturedAt: now,
+          reviewedAt: now,
+          evidenceClass: 'observed-fact',
+          summary: 'Synthetic fixture records payout requirements and configured account status.',
+          limitations: 'Integration fixture only; no provider API call is made.',
+        },
+      ],
     })
-    assert.equal(reviewed?.capability, 'C1')
-    assert.equal(reviewed?.enabled, true)
+    assert.equal(channel.capability, 'C1')
+    assert.equal(channel.accountEligibility, 'eligible')
 
     const payouts = new PayoutRepository(pool)
     const payoutInput = {
