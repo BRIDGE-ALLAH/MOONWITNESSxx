@@ -11,6 +11,20 @@ export async function applyTestMigrations(pool, migrations) {
   try {
     await client.query('SELECT pg_advisory_lock(20261108, 6)')
     locked = true
+    // The CI integration workflow runs the checksum-verified full migration runner first.
+    // Avoid replaying legacy bootstrap SQL over the newer owner-scoped schema.
+    const schemaVersion = await client.query(
+      `SELECT COUNT(*)::int AS applied
+       FROM arsy_schema_migrations
+       WHERE name = ANY($1::text[])`,
+      [[
+        '002_money_maker_core.sql',
+        '005_money_maker_assets.sql',
+        '006_money_maker_channels_and_listings.sql',
+        '007_payout_lifecycle_and_fx.sql',
+      ]],
+    ).catch(() => ({ rows: [{ applied: 0 }] }))
+    if (schemaVersion.rows[0]?.applied === 4) return
     for (const migration of migrations) {
       await client.query(migration)
     }
