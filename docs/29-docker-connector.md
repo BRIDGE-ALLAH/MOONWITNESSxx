@@ -17,6 +17,8 @@ Status: initial read-only connector implementation; not a production deployment 
 - `HEADQUARTER_OPERATOR_PASSWORD`: operator login password (at least 16 characters).
 - `HEADQUARTER_SESSION_SECRET`: random secret with at least 32 UTF-8 bytes.
 - `HEADQUARTER_PUBLIC_ORIGIN`: exact browser origin; HTTPS is mandatory when `NODE_ENV=production`.
+- `HEADQUARTER_TRUSTED_PROXY_HOPS=1`: production requires exactly one trusted ingress hop.
+- `HEADQUARTER_TRUSTED_PROXY_SECRET`: at least 32 random bytes used by the ingress to sign the canonical client IP.
 - `ARSY_API_BASE_URL`: private ARSY origin reachable only from Headquarter.
 - `DOCKER_CREDENTIALS_ENCRYPTION_KEY`: base64 encoding of exactly 32 random bytes. Rotate only with a credential re-encryption procedure.
 - `DOCKER_REMOTE_ALLOWED_HOSTS`: comma-separated exact hostnames approved for remote Docker TLS.
@@ -38,6 +40,8 @@ The production login route fails closed with HTTP 503 when the shared ARSY limit
 ## Database migration
 
 Apply `apps/arsy/migrations/002_docker_connector.sql` to the target PostgreSQL database through the deployment/System Mode migration process. It is safe to reapply. Application startup deliberately does not mutate schema.
+
+The shared login limiter additionally requires `apps/arsy/migrations/006_shared_login_attempts.sql`, applied after the existing migrations 003–005 in numeric order. This migration is idempotent and creates only owner-scoped rate-limit buckets; it does not change existing login/session rows. Apply it through the same reviewed migration process before enabling shared login protection. Application startup does not auto-apply it.
 
 
 ### Rollback
