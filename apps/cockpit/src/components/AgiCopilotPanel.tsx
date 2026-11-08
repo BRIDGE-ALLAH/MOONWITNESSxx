@@ -35,11 +35,13 @@ export function AgiCopilotPanel({ open, onClose, snapshot, onDraftAction }: AgiC
   const [responses, setResponses] = useState<CopilotResponse[]>([])
   const [liveMessage, setLiveMessage] = useState('')
   const [provider, setProvider] = useState<CopilotProviderId>('local-heuristic')
+  const [streaming, setStreaming] = useState(false)
   const [apiKey, setApiKey] = useState('')
   const [keyStatus, setKeyStatus] = useState<string>('')
   const [busy, setBusy] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const tauriMode = isTauri()
+  const canStream = provider === 'remote-llm' && tauriMode
 
   useEffect(() => {
     if (!open) return
@@ -84,16 +86,23 @@ export function AgiCopilotPanel({ open, onClose, snapshot, onDraftAction }: AgiC
   const submit = async (text: string) => {
     const trimmed = text.trim()
     if (!trimmed || busy) return
+    const useStream = provider === 'remote-llm' && tauriMode && streaming
     setBusy(true)
-    setLiveMessage('Analyzing snapshot...')
+    setLiveMessage(
+      useStream
+        ? 'Analyzing snapshot (streaming transport enabled; backend accumulates SSE and returns the final result)...'
+        : 'Analyzing snapshot...'
+    )
     try {
-      const response = await analyzeCopilotProvider(snapshot, trimmed, provider)
+      const response = await analyzeCopilotProvider(snapshot, trimmed, provider, {
+        stream: useStream,
+      })
       setResponses((prev) => [
         { ...response, answer: `Q: ${trimmed}\n${response.answer}` },
         ...prev,
       ])
       setLiveMessage(
-        `AI response ready from ${response.provider}${response.model ? ` (${response.model})` : ''} with ${response.confidence} confidence.`
+        `AI response ready from ${response.provider}${response.model ? ` (${response.model})` : ''} with ${response.confidence} confidence${useStream ? ' (stream transport)' : ''}.`
       )
       setQuestion('')
     } catch (error) {
@@ -197,12 +206,30 @@ export function AgiCopilotPanel({ open, onClose, snapshot, onDraftAction }: AgiC
               <div className="mt-1 rounded border border-slate-800 bg-slate-900 p-2 text-[11px] text-slate-300">
                 {provider === 'remote-llm'
                   ? tauriMode
-                    ? 'Remote LLM uses Tauri llm_analyze with OS keychain secret `llm-api-key`. Fallback to local on error.'
+                    ? `Remote LLM uses Tauri ${streaming ? 'llm_analyze_stream (SSE accumulation, final result)' : 'llm_analyze'} with OS keychain secret \`llm-api-key\`. Fallback to local on error.`
                     : 'Remote LLM provider is not configured in web mode; local fallback will be used.'
                   : 'Local heuristic uses in-memory snapshot analysis only.'}
               </div>
             </div>
           </div>
+
+          {provider === 'remote-llm' ? (
+            <label className="flex items-start gap-2 rounded border border-slate-800 bg-slate-900/60 p-3 text-[11px] font-mono text-slate-300">
+              <input
+                type="checkbox"
+                checked={streaming}
+                disabled={!tauriMode || busy}
+                onChange={(e) => setStreaming(e.target.checked)}
+                className="mt-0.5"
+                aria-label="Enable streaming transport for remote analysis"
+              />
+              <span>
+                Opt-in streaming transport (remote LLM + Tauri only, default off). Backend
+                accumulates SSE chunks and returns the final result; the UI is not per-chunk
+                streamed. While analyzing, draft-action requests are disabled.
+              </span>
+            </label>
+          ) : null}
 
           {provider === 'remote-llm' ? (
             <div className="rounded border border-slate-800 bg-slate-900/60 p-3">

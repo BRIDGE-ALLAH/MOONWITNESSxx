@@ -11,6 +11,7 @@ import {
 import { AgiCopilotPanel } from '../components/AgiCopilotPanel'
 import { AuditTrail } from '../components/AuditTrail'
 import { ConfirmationDialog } from '../components/ConfirmationDialog'
+import { RunbookPanel } from '../components/RunbookPanel'
 import type { CockpitSnapshot, SuggestedAction } from '../lib/agiCopilot'
 import {
   fetchCockpitTelemetry,
@@ -438,6 +439,13 @@ export default function CockpitDashboard() {
             </div>
           ) : null}
         </div>
+
+        {telemetry ? (
+          <RunbookPanel
+            snapshot={telemetry}
+            onDispatchDraft={(actionId) => requestAction(actionId, 'copilot-draft')}
+          />
+        ) : null}
 
         <div>
           <div className="mb-3 flex items-center justify-between">

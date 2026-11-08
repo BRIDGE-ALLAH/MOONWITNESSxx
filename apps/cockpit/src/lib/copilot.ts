@@ -36,33 +36,45 @@ export async function saveKey(secret: string): Promise<void> {
   await invoke('keychain_set', { account: COPILOT_KEYCHAIN_ACCOUNT, secret: value })
 }
 
+export interface AnalyzeCopilotOptions {
+  stream?: boolean
+  correlationId?: string
+}
+
 export async function analyzeCopilotProvider(
   snapshot: CockpitSnapshot,
   question: string,
   provider: CopilotProviderId,
-  correlationId?: string
+  options: AnalyzeCopilotOptions = {}
 ): Promise<CopilotResponse> {
+  const { stream = false, correlationId } = options
   if (provider === 'local-heuristic') {
     return localAnalyze(snapshot, question)
   }
   // remote
   if (isTauri()) {
+    const command = stream ? 'llm_analyze_stream' : 'llm_analyze'
     try {
-      const res = await invoke<CopilotResponse>('llm_analyze', { snapshot, question })
+      const res = await invoke<CopilotResponse>(command, { snapshot, question })
       return { ...res, provider: 'remote-llm' }
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
       await appendAudit({
         id: crypto.randomUUID(),
         ts: new Date().toISOString(),
         type: 'provider-switch',
         correlationId,
-        metadata: { from: 'remote-llm', to: 'local-heuristic', reason: String(e?.message ?? e) },
+        metadata: {
+          from: stream ? 'remote-llm-stream' : 'remote-llm',
+          to: 'local-heuristic',
+          reason: message,
+        },
       })
       const r = localAnalyze(snapshot, question)
       return {
         ...r,
         provider: 'local-heuristic',
-        fallbackReason: `Remote LLM unavailable (${String(e?.message ?? e)}); used local heuristic.`,
+        fallbackReason: `Remote LLM unavailable (${message}); used local heuristic.`,
       }
     }
   }

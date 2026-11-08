@@ -534,6 +534,8 @@ async fn llm_analyze(snapshot: serde_json::Value, question: String) -> Result<Ag
 
 #[tauri::command]
 async fn llm_analyze_stream(snapshot: serde_json::Value, question: String) -> Result<AgiAnalysis, String> {
+    // MVP: requests OpenAI-compatible SSE (`stream: true`) but accumulates chunks server-side
+    // and returns the final AgiAnalysis. The UI is not per-chunk streamed.
     let entry = keyring::Entry::new(LLM_SERVICE, LLM_ACCOUNT).map_err(|e| e.to_string())?;
     let secret = entry.get_password().map_err(|_| "llm-secret-not-configured".to_string())?;
     let client = reqwest::Client::new();
@@ -554,6 +556,11 @@ async fn llm_analyze_stream(snapshot: serde_json::Value, question: String) -> Re
         .send()
         .await
         .map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let body = resp.text().await.unwrap_or_default();
+        return Err(format!("llm-http-error {}: {}", status, bound_text(&body, 300)));
+    }
     let text = resp.text().await.map_err(|e| e.to_string())?;
     let mut answer = String::new();
     let mut model: Option<String> = None;
@@ -561,7 +568,7 @@ async fn llm_analyze_stream(snapshot: serde_json::Value, question: String) -> Re
         let line = line.trim();
         if !line.starts_with("data:") { continue; }
         let payload = line.trim_start_matches("data:").trim();
-        if payload == "[DONE]" { continue; }
+        if payload.is_empty() || payload == "[DONE]" { continue; }
         if let Ok(v) = serde_json::from_str::<serde_json::Value>(payload) {
             if let Some(c) = v["choices"][0]["delta"]["content"].as_str() {
                 answer.push_str(c);
@@ -570,6 +577,9 @@ async fn llm_analyze_stream(snapshot: serde_json::Value, question: String) -> Re
                 model = v.get("model").and_then(|x| x.as_str()).map(|s| s.to_string());
             }
         }
+    }
+    if answer.trim().is_empty() {
+        return Err("llm-stream-empty-response".to_string());
     }
     if model.is_none() { model = Some(LLM_DEFAULT_MODEL.to_string()); }
     let confidence = parse_confidence(&answer);
@@ -803,6 +813,7 @@ fn main() {
             keychain_set,
             keychain_delete,
             llm_analyze,
+            llm_analyze_stream,
             audit_append,
             audit_read
         ])

@@ -87,6 +87,7 @@ test('cockpit app contract & desktop runtime integrity', async (t) => {
     assert.match(rustContent, /agi_analyze/)
     assert.match(rustContent, /get_cockpit_telemetry/)
     assert.match(rustContent, /llm_analyze/)
+    assert.match(rustContent, /llm_analyze_stream/)
     assert.match(rustContent, /keychain_get|keychain_set|keychain_delete/)
     assert.match(rustContent, /audit_append|audit_read/)
     // Governed read-only execution boundary (item #10): only DIAGNOSTIC_HEALTH_CHECK may

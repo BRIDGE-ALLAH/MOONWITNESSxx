@@ -82,6 +82,88 @@ test('copilot provider switching/fallback', async (t) => {
     resetGlobals()
   })
 
+  await t.test('remote-llm opt-in streaming calls llm_analyze_stream in Tauri', async () => {
+    resetGlobals()
+    globalThis.window = {
+      __TAURI__: {
+        invoke: async (cmd, args) => {
+          assert.equal(cmd, 'llm_analyze_stream')
+          assert.equal(args.question, 'q')
+          return {
+            answer: 'streamed',
+            confidence: 'Medium',
+            citations: ['c1'],
+            suggestedActions: [],
+            provider: 'remote-llm',
+            disclaimer: 'd',
+            model: 'llama3',
+          }
+        },
+      },
+    }
+    const { analyzeCopilotProvider } = await import(`../src/lib/copilot.ts?stream=${Date.now()}`)
+    const res = await analyzeCopilotProvider(baseSnapshot(), 'q', 'remote-llm', { stream: true })
+    assert.equal(res.provider, 'remote-llm')
+    assert.equal(res.answer, 'streamed')
+    resetGlobals()
+  })
+
+  await t.test('remote-llm non-streaming default does not call stream command', async () => {
+    resetGlobals()
+    globalThis.window = {
+      __TAURI__: {
+        invoke: async (cmd) => {
+          assert.equal(cmd, 'llm_analyze')
+          return {
+            answer: 'ok',
+            confidence: 'High',
+            citations: [],
+            suggestedActions: [],
+            provider: 'remote-llm',
+            disclaimer: 'd',
+          }
+        },
+      },
+    }
+    const { analyzeCopilotProvider } = await import(`../src/lib/copilot.ts?nostream=${Date.now()}`)
+    const res = await analyzeCopilotProvider(baseSnapshot(), 'q', 'remote-llm', { stream: false })
+    assert.equal(res.provider, 'remote-llm')
+    resetGlobals()
+  })
+
+  await t.test(
+    'remote-llm stream failure falls back to local with provider-switch audit',
+    async () => {
+      resetGlobals()
+      globalThis.localStorage = makeLocalStorage()
+      globalThis.window = {
+        __TAURI__: {
+          invoke: async (cmd) => {
+            assert.equal(cmd, 'llm_analyze_stream')
+            throw new Error('stream down')
+          },
+        },
+      }
+      const { analyzeCopilotProvider } = await import(
+        `../src/lib/copilot.ts?streamfail=${Date.now()}`
+      )
+      const res = await analyzeCopilotProvider(baseSnapshot(), 'status summary', 'remote-llm', {
+        stream: true,
+        correlationId: 'corr-1',
+      })
+      assert.equal(res.provider, 'local-heuristic')
+      assert.match(res.fallbackReason ?? '', /Remote LLM unavailable/)
+      const raw = globalThis.localStorage.getItem('cockpit-audit-v1')
+      const events = raw ? JSON.parse(raw) : []
+      const sw = events.find((e) => e.type === 'provider-switch')
+      assert.ok(sw)
+      assert.equal(sw.correlationId, 'corr-1')
+      assert.equal(sw.metadata?.from, 'remote-llm-stream')
+      assert.equal(sw.metadata?.to, 'local-heuristic')
+      resetGlobals()
+    }
+  )
+
   await t.test(
     'remote-llm invoke failure falls back to local and records provider-switch audit',
     async () => {
