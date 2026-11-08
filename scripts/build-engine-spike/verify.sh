@@ -20,6 +20,8 @@ OUTPUT="$WORK/image.oci.tar"
 METADATA="$WORK/metadata.json"
 BUILD_LOG="$WORK/build.log"
 RUN_SCRIPT="$TMP_DIR/run-build.sh"
+DOCKER_CONFIG="$WORK/docker-config"
+BUILDER_NAME="mw-build-remote-$"
 EXTRACT="$WORK/extracted"
 BUILDER_UID=""
 HOST_PID=""
@@ -28,13 +30,14 @@ WORK_MOUNTED=0
 fail() { echo "BUILD ENGINE SPIKE FAILED: $*" >&2; exit 1; }
 require() { command -v "$1" >/dev/null 2>&1 || fail "missing prerequisite: $1"; }
 
-for cmd in curl jq sha256sum tar python3 systemd-run systemctl mount umount useradd userdel mktemp; do require "$cmd"; done
+for cmd in curl jq sha256sum tar python3 systemd-run systemctl mount umount useradd userdel mktemp docker; do require "$cmd"; done
 [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || fail "GITHUB_SHA must be a 40-character commit SHA"
 require sudo
 require timeout
 require slirp4netns
 require newuidmap
 require newgidmap
+docker buildx version >/dev/null || fail "Docker Buildx plugin is required for native provenance attestations"
 
 [[ "$(uname -s)" == "Linux" ]] || fail "Linux worker required"
 [[ -f /etc/subuid && -f /etc/subgid ]] || fail "subuid/subgid support required"
@@ -113,7 +116,7 @@ if [[ -S /var/run/docker.sock ]] && sudo -u "$BUILDER_USER" test -r /var/run/doc
   fail "builder identity can read the host Docker socket"
 fi
 
-mkdir -p "$RUNTIME_DIR" "$STATE_DIR" "$BUILDKIT_ROOT" "$CONTEXT" "$EXTRACT" "$WORK/tmp"
+mkdir -p "$RUNTIME_DIR" "$STATE_DIR" "$BUILDKIT_ROOT" "$CONTEXT" "$EXTRACT" "$WORK/tmp" "$DOCKER_CONFIG"
 chmod 700 "$RUNTIME_DIR" "$STATE_DIR"
 cat > "$CONFIG" <<EOF
 root = "$BUILDKIT_ROOT"
@@ -198,16 +201,19 @@ cat > "$RUN_SCRIPT" <<EOF
 #!/usr/bin/env bash
 set -Eeuo pipefail
 ulimit -f 20480
-exec timeout 180s "$BUILDCTL" --addr "$SOCKET" build \
-  --frontend dockerfile.v0 \
-  --local context="$CONTEXT" \
-  --local dockerfile="$CONTEXT" \
-  --opt "build-arg:SPIKE_SOURCE_COMMIT=$SOURCE_COMMIT" \
+export DOCKER_HOST="unix://$TMP_DIR/no-docker-daemon.sock"
+export DOCKER_CONFIG="$DOCKER_CONFIG"
+docker buildx create --name "$BUILDER_NAME" --driver remote "$SOCKET" >/dev/null
+docker buildx inspect --bootstrap "$BUILDER_NAME" >/dev/null
+exec timeout 180s docker buildx build \
+  --builder "$BUILDER_NAME" \
+  --tag "local/build-engine-spike:$SOURCE_COMMIT" \
+  --build-arg "SPIKE_SOURCE_COMMIT=$SOURCE_COMMIT" \
+  --provenance=mode=max \
   --output "type=oci,dest=$OUTPUT" \
-  --attest "type=provenance,mode=max" \
   --metadata-file "$METADATA" \
   --progress plain \
-  --proxy-network > "$BUILD_LOG" 2>&1
+  "$CONTEXT" > "$BUILD_LOG" 2>&1
 EOF
 chmod 644 "$RUN_SCRIPT"
 sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" XDG_RUNTIME_DIR="$RUNTIME_DIR" bash "$RUN_SCRIPT" || {
