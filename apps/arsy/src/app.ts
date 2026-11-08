@@ -13,6 +13,8 @@ import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { registerOpportunityRoutes } from './opportunities/routes.ts'
 import { registerAssetRoutes } from './assets/routes.ts'
 import type { AssetStorage } from './assets/storage.ts'
+import { registerChannelRoutes } from './channels/routes.ts'
+import { registerListingRoutes } from './listings/routes.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { createOracleClient, type OracleClient } from './oracle/client.ts'
 import { registerOracleRoutes } from './oracle/routes.ts'
@@ -75,6 +77,8 @@ export function createApp(options: CreateAppOptions = {}) {
     registerLoginAttemptRoutes(instance, databasePool)
     registerOpportunityRoutes(instance, databasePool, env)
     registerAssetRoutes(instance, databasePool, env, options.assetStorage)
+    registerChannelRoutes(instance, databasePool, env)
+    registerListingRoutes(instance, databasePool, env)
     registerOracleRoutes(instance, oracleClient)
   })
 
