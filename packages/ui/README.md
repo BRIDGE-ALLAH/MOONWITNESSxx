@@ -123,6 +123,7 @@ The semantic source of truth is `src/styles/globals.css`; skin metadata and conf
 - `SkinRoot` scopes the selected skin to an application or route boundary using `data-mw-skin`, `data-mw-mode`, and `data-mw-density`.
 - `resolveSkinConfig` validates untrusted configuration and records safe fallback reasons in `data-mw-fallback`.
 - CSS maps the three initially supported pairs: Observatory/dark, Archive/light, and Signal/dark.
+- Compact density changes shared Card spacing and Badge padding through skin tokens; button and form-control dimensions remain unchanged to preserve usable hit areas.
 - Semantic status colors remain independent from expressive skin accents.
 
 ```tsx

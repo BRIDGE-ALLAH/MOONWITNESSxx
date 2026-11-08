@@ -7,6 +7,8 @@ const resolver = await readFile(new URL('../src/skin/resolve.ts', import.meta.ur
 const skinRoot = await readFile(new URL('../src/skin/skin-root.tsx', import.meta.url), 'utf8')
 const index = await readFile(new URL('../src/index.ts', import.meta.url), 'utf8')
 const stylesheet = await readFile(new URL('../src/styles/globals.css', import.meta.url), 'utf8')
+const card = await readFile(new URL('../src/components/card.tsx', import.meta.url), 'utf8')
+const badge = await readFile(new URL('../src/components/badge.tsx', import.meta.url), 'utf8')
 
 function readRule(source, selector) {
   const start = source.indexOf(selector)
@@ -86,4 +88,23 @@ test('all skin profiles define the full semantic token set', () => {
     assert.match(block, /--mw-skin-graphic-accent:/)
     assert.match(block, /--mw-skin-heading-transform:/)
   }
+})
+
+
+test('compact density is consumed by shared Card and Badge primitives', () => {
+  const comfortable = readRule(stylesheet, ':root')
+  const compact = readRule(stylesheet, '.mw-skin-root[data-mw-density="compact"]')
+
+  assert.match(comfortable, /--mw-skin-card-padding: 1\.5rem/)
+  assert.match(compact, /--mw-skin-card-padding: 1rem/)
+  assert.match(comfortable, /--mw-skin-badge-padding-inline: 0\.625rem/)
+  assert.match(compact, /--mw-skin-badge-padding-inline: 0\.5rem/)
+
+  assert.match(card, /mw-skin-card-header/)
+  assert.match(card, /mw-skin-card-content/)
+  assert.match(card, /mw-skin-card-footer/)
+  assert.doesNotMatch(card, /p-6/)
+  assert.match(badge, /mw-skin-badge/)
+  assert.doesNotMatch(badge, /px-2\.5|py-0\.5/)
+  assert.match(stylesheet, /\.mw-skin-badge[\s\S]*?padding-block:/)
 })

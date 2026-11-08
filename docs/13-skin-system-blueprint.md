@@ -321,6 +321,7 @@ The following describes the checked-in baseline at the time of this blueprint; i
 - The existing primitive set includes Button, Card composition, Badge, Separator, HalftoneSurface, and the `cn` utility.
 - The Skin Engine feature branch adds a typed static registry for Observatory, Archive, and Signal; a deterministic resolver; and a server-compatible `SkinRoot`.
 - The stylesheet maps the first supported pairs: Observatory/dark, Archive/light, and Signal/dark. The Archive root fallback and legacy selectors remain for compatibility.
+- Compact density tokens are consumed by shared Card header/content/footer spacing and Badge padding. Form and button dimensions remain unchanged; browser-level touch-target and rendered layout verification is still required.
 - Source-level contract tests cover registry declarations, supported mode pairs, resolver fallback metadata, root attributes, and semantic token presence.
 - Browser visual regression, rendered contrast review, screen-reader QA, and complete component-state verification remain open release gates.
 - An initial internal Headquarter specimen route exists at `/ui-lab/skin-system`, comparing the three profiles with illustrative content. It is not yet a complete component-state workbench or visual-regression suite. No global skin picker, persisted preference, React context, or automatic Headquarter route mapping is implemented.

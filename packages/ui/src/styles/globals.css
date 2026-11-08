@@ -50,6 +50,9 @@
     --mw-skin-graphic-accent: 41 52% 29%;
     --mw-skin-content-max-width: 72rem;
     --mw-skin-density-scale: 1;
+    --mw-skin-card-padding: 1.5rem;
+    --mw-skin-badge-padding-inline: 0.625rem;
+    --mw-skin-badge-padding-block: 0.125rem;
   }
 
   .dark,
@@ -95,6 +98,9 @@
     --mw-skin-graphic-accent: 41 74% 65%;
     --mw-skin-content-max-width: 90rem;
     --mw-skin-density-scale: 1;
+    --mw-skin-card-padding: 1.25rem;
+    --mw-skin-badge-padding-inline: 0.625rem;
+    --mw-skin-badge-padding-block: 0.125rem;
   }
 
   .theme-archive,
@@ -139,6 +145,9 @@
     --mw-skin-graphic-accent: 41 52% 29%;
     --mw-skin-content-max-width: 68rem;
     --mw-skin-density-scale: 1;
+    --mw-skin-card-padding: 1.5rem;
+    --mw-skin-badge-padding-inline: 0.625rem;
+    --mw-skin-badge-padding-block: 0.125rem;
   }
 
   .theme-signal,
@@ -185,6 +194,9 @@
     --mw-skin-graphic-accent: 0 48% 57%;
     --mw-skin-content-max-width: 80rem;
     --mw-skin-density-scale: 1;
+    --mw-skin-card-padding: 1.25rem;
+    --mw-skin-badge-padding-inline: 0.625rem;
+    --mw-skin-badge-padding-block: 0.125rem;
   }
 
   * {
@@ -210,6 +222,8 @@
 
   .mw-skin-root[data-mw-density="compact"] {
     --mw-skin-density-scale: 0.875;
+    --mw-skin-card-padding: 1rem;
+    --mw-skin-badge-padding-inline: 0.5rem;
   }
 
   .mw-skin-root :is(h1, h2, h3, h4, h5, h6) {
@@ -238,5 +252,26 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+
+@layer components {
+  /* Density affects presentation spacing, not form/control hit areas. */
+  .mw-skin-card-header {
+    padding: var(--mw-skin-card-padding, 1.5rem);
+  }
+
+  .mw-skin-card-content {
+    padding: 0 var(--mw-skin-card-padding, 1.5rem) var(--mw-skin-card-padding, 1.5rem);
+  }
+
+  .mw-skin-card-footer {
+    padding: 0 var(--mw-skin-card-padding, 1.5rem) var(--mw-skin-card-padding, 1.5rem);
+  }
+
+  .mw-skin-badge {
+    padding-block: var(--mw-skin-badge-padding-block, 0.125rem);
+    padding-inline: var(--mw-skin-badge-padding-inline, 0.625rem);
   }
 }

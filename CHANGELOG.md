@@ -9,6 +9,7 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 - Runtime rate limiting for ARSY database health and readiness endpoints.
 - Persistent accessible prototype/demo disclosure in Headquarter.
 - Container build verification for ARSY and Headquarter.
+- Compact density tokens now control shared Card spacing and Badge padding without shrinking form/button hit areas.
 
 ### Fixed
 - ARSY application owns its build contract instead of delegating HTTP lifecycle to the framework-neutral core.
