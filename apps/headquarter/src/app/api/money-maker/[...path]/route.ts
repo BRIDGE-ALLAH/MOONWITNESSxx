@@ -18,7 +18,6 @@ const routes: Array<{ pattern: RegExp; methods: Method[] }> = [
   { pattern: new RegExp(`^products/${uuid}/lifecycle$`), methods: ['PATCH'] },
   { pattern: /^assets$/, methods: ['GET', 'POST'] },
   { pattern: new RegExp(`^assets/${uuid}$`), methods: ['GET'] },
-  { pattern: new RegExp(`^assets/${uuid}/download$`), methods: ['GET'] },
   { pattern: new RegExp(`^assets/${uuid}/inspections$`), methods: ['GET', 'POST'] },
   { pattern: new RegExp(`^assets/${uuid}/readiness$`), methods: ['GET'] },
   { pattern: /^channels$/, methods: ['GET', 'POST'] },
