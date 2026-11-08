@@ -101,6 +101,19 @@ The build receipt records:
 
 A worker restart must never be interpreted as build success. If an outcome is ambiguous, ARSY reconciles the registry digest/receipt before any retry. Image digest and provenance are durable evidence; a tag is only a mutable locator.
 
+### Build client and provenance interface
+
+Use the **Docker Buildx remote driver over the BuildKit Unix socket** for the first implementation. The remote driver supports a Unix-socket endpoint and can produce native provenance attestations with `--provenance`; it connects directly to the externally managed BuildKit daemon and does not require the Docker Engine. The CI spike sets `DOCKER_HOST` to a deliberately nonexistent socket and uses an isolated `DOCKER_CONFIG` to prove the client does not fall back to the host daemon.
+
+Do not use Buildx's `docker` or `docker-container` driver for this boundary. Do not use `--load`, which requires the Docker Engine image store. Export an OCI layout/archive and consume its immutable digest.
+
+The low-level BuildKit v0.34.2 `buildctl build` CLI does not expose an `--attest` flag. Use Buildx remote for native provenance/SBOM generation rather than silently dropping attestations or fabricating a BuildKit-native claim. If a future implementation uses raw `buildctl`, it must provide a separate, independently signed in-toto/SLSA attestation service and must not label that as a BuildKit-native attestation.
+
+References:
+- [Buildx remote driver and Unix socket endpoint](https://docs.docker.com/build/builders/drivers/remote/)
+- [Build attestations and supported drivers](https://docs.docker.com/build/metadata/attestations/)
+- [BuildKit v0.34.2 buildctl CLI options](https://pkg.go.dev/github.com/moby/buildkit@v0.34.2/cmd/buildctl)
+
 ## 5. Initial v1 feature boundary
 
 Allowed:
