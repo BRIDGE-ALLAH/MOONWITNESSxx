@@ -324,7 +324,15 @@ async fn create_nas(headers: HeaderMap, Json(input): Json<NasWriteRequest>) -> i
         return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
     }
     match radius::create_nas(&input).await {
-        Ok(item) => (StatusCode::CREATED, Json(item)).into_response(),
+        Ok(item) => (
+            StatusCode::CREATED,
+            Json(serde_json::json!({
+                "data": item,
+                "activation": "pending_radius_restart",
+                "message": "NAS record is persisted; restart FreeRADIUS before this client can authenticate."
+            })),
+        )
+            .into_response(),
         Err(error) => {
             tracing::error!(%error, "failed to create RADIUS NAS client");
             database_error().into_response()
@@ -344,7 +352,15 @@ async fn update_nas(
         return (StatusCode::BAD_REQUEST, Json(ApiError { error: message })).into_response();
     }
     match radius::update_nas(id, &input).await {
-        Ok(Some(item)) => (StatusCode::OK, Json(item)).into_response(),
+        Ok(Some(item)) => (
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "data": item,
+                "activation": "pending_radius_restart",
+                "message": "NAS record is updated; restart FreeRADIUS before the change takes effect."
+            })),
+        )
+            .into_response(),
         Ok(None) => (
             StatusCode::NOT_FOUND,
             Json(ApiError {
@@ -364,7 +380,15 @@ async fn delete_nas(headers: HeaderMap, Path(id): Path<i64>) -> impl IntoRespons
         return error.into_response();
     }
     match radius::delete_nas(id).await {
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Ok(true) => (
+            StatusCode::OK,
+            Json(serde_json::json!({
+                "deleted": true,
+                "activation": "pending_radius_restart",
+                "message": "NAS record is deleted from storage; restart FreeRADIUS to revoke the loaded client."
+            })),
+        )
+            .into_response(),
         Ok(false) => (
             StatusCode::NOT_FOUND,
             Json(ApiError {
