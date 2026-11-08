@@ -246,7 +246,6 @@ jq -e --arg digest "$METADATA_DIGEST" 'any(.manifests[]; .digest == $digest)' "$
 # indexes can lack config/layers; do not treat them as the image payload.
 IMAGE_DIGEST="$(jq -r '[.manifests[]
   | select(.mediaType == "application/vnd.oci.image.manifest.v1+json" or .mediaType == "application/vnd.docker.distribution.manifest.v2+json")
-  | select(.platform.os? != null and .platform.architecture? != null)
   | select((.annotations["vnd.docker.reference.type"] // "") != "attestation-manifest")
   | .digest][0] // empty' "$INDEX")"
 [[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "OCI index has no platform image manifest"
