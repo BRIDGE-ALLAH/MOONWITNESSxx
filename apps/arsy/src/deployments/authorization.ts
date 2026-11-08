@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { DatabasePool } from '../db.ts'
+import type { ArsyOperatorPrincipal } from '../auth/operator-token.ts'
 
 export type DeploymentAction = 'deploy' | 'stop' | 'restart' | 'rollback'
 export type ApprovalState = 'not_required' | 'approved' | 'pending' | 'rejected' | 'unavailable'
@@ -13,10 +14,7 @@ export type DeploymentAuthorizationReason =
   | 'APPROVAL_UNAVAILABLE'
   | 'POLICY_CONTRACT_INVALID'
 
-export interface OperatorPrincipal {
-  kind: 'operator'
-  operatorId: string
-}
+export type OperatorPrincipal = ArsyOperatorPrincipal
 
 export interface DeploymentAuthorizationInput {
   principal: OperatorPrincipal | null
@@ -113,6 +111,10 @@ export async function recordDeploymentAuthorizationDecision(
   input: DeploymentAuthorizationRecordInput,
 ): Promise<{ id: string; recordedAt: string }> {
   const evidence = safeEvidence(input.evidence)
+  const action = requiredText(input.action, 'action', 64)
+  const reasonCode = requiredText(input.reasonCode, 'reasonCode', 120)
+  const policyVersion = input.policyVersion === null ? null : requiredText(input.policyVersion, 'policyVersion', 120)
+  const approvalReference = input.approvalReference === null ? null : requiredText(input.approvalReference, 'approvalReference', 200)
   const result = await pool.query(
     `INSERT INTO arsy_deployment_authorization_decisions
       (id, operation_id, owner_id, actor_id, target_host_id, action, effect,
@@ -125,11 +127,11 @@ export async function recordDeploymentAuthorizationDecision(
       requiredText(input.ownerId, 'ownerId', 128),
       requiredText(input.actorId, 'actorId', 128),
       requiredText(input.targetHostId, 'targetHostId', 64),
-      input.action,
+      action,
       input.effect,
-      requiredText(input.reasonCode, 'reasonCode', 120),
-      input.policyVersion,
-      input.approvalReference,
+      reasonCode,
+      policyVersion,
+      approvalReference,
       evidence,
     ],
   )
