@@ -1,5 +1,16 @@
 import { timingSafeEqual } from 'node:crypto'
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyRequest } from 'fastify'
+
+export interface ArsyOperatorPrincipal {
+  kind: 'operator'
+  operatorId: string
+}
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    arsyPrincipal: ArsyOperatorPrincipal | null
+  }
+}
 
 type OperatorRequest = {
   headers: Record<string, string | string[] | undefined>
@@ -19,6 +30,7 @@ export function hasValidOperatorToken(request: OperatorRequest, token: string | 
 export function registerOperatorApiAuth(app: FastifyInstance, env: NodeJS.ProcessEnv = process.env): void {
   const token = env.ARSY_OPERATOR_TOKEN?.trim()
   const operatorId = env.ARSY_OPERATOR_ID?.trim()
+  app.decorateRequest('arsyPrincipal', null)
   app.addHook('preHandler', async (request, reply) => {
     if (!request.url.startsWith('/api/v1/')) return
     if (!token || !operatorId) {
@@ -37,5 +49,11 @@ export function registerOperatorApiAuth(app: FastifyInstance, env: NodeJS.Proces
         },
       })
     }
+    request.arsyPrincipal = { kind: 'operator', operatorId }
   })
+}
+
+/** Return only the principal established by the authenticated request hook. */
+export function getArsyOperatorPrincipal(request: FastifyRequest): ArsyOperatorPrincipal | null {
+  return request.arsyPrincipal ?? null
 }
