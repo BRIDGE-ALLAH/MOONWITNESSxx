@@ -53,7 +53,7 @@ export function createApp(options: CreateAppOptions = {}) {
       async () => ({
         status: 'ok',
         message: 'ARSY Command Center is running',
-      }),
+      })
     )
 
     typedApp.get('/health/live', async () => ({ status: 'alive' }))
@@ -68,12 +68,15 @@ export function createApp(options: CreateAppOptions = {}) {
         } catch {
           return reply.code(503).send({ status: 'not-ready' })
         }
-      },
+      }
     )
 
     setupDatabase(instance, databasePool)
     registerDockerRoutes(instance, databasePool, env)
-    registerDeploymentRoutes(instance, databasePool, { authorization: options.deploymentAuthorization, env })
+    registerDeploymentRoutes(instance, databasePool, {
+      authorization: options.deploymentAuthorization,
+      env,
+    })
     registerEvidenceRoutes(instance, databasePool as unknown as Pool)
     registerLoginAttemptRoutes(instance, databasePool)
     registerOracleRoutes(instance, oracleClient)

@@ -46,7 +46,7 @@ export function setupDatabase(app: FastifyInstance, pool: DatabasePool): void {
           message: 'Database connection unavailable',
         })
       }
-    },
+    }
   )
 
   app.addHook('onClose', async () => {
