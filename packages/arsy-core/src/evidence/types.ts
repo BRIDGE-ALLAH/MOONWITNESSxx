@@ -33,20 +33,22 @@ export interface EvidenceEventInput {
   evidenceIds?: string[]
 }
 
+export type EvidenceAppendDisposition = 'created' | 'replayed'
+
 export interface EvidenceStore {
-  append(event: EvidenceEvent): Promise<void>
+  append(event: EvidenceEvent): Promise<EvidenceAppendDisposition>
   list(aggregateId: string): Promise<readonly EvidenceEvent[]>
 }
 
 export class InMemoryEvidenceStore implements EvidenceStore {
   private readonly streams = new Map<string, EvidenceEvent[]>()
 
-  async append(event: EvidenceEvent): Promise<void> {
+  async append(event: EvidenceEvent): Promise<EvidenceAppendDisposition> {
     const stream = this.streams.get(event.aggregateId) ?? []
     const existing = stream.find((item) => item.id === event.id)
     if (existing) {
       if (existing.hash !== event.hash) throw new Error('Event id collision')
-      return
+      return 'replayed'
     }
     const currentHead = stream.at(-1)?.hash ?? null
     if (currentHead !== event.previousHash) {
@@ -54,6 +56,7 @@ export class InMemoryEvidenceStore implements EvidenceStore {
     }
     stream.push(event)
     this.streams.set(event.aggregateId, stream)
+    return 'created'
   }
 
   async list(aggregateId: string): Promise<readonly EvidenceEvent[]> {
@@ -83,6 +86,10 @@ export class EvidenceLedger {
   }
 
   async append(input: EvidenceEventInput): Promise<EvidenceEvent> {
+    return (await this.appendWithDisposition(input)).event
+  }
+
+  async appendWithDisposition(input: EvidenceEventInput): Promise<{ event: EvidenceEvent; disposition: EvidenceAppendDisposition }> {
     if (!input.id.trim() || !input.aggregateId.trim() || !input.actorId.trim()) {
       throw new Error('id, aggregateId and actorId are required')
     }
@@ -107,7 +114,7 @@ export class EvidenceLedger {
           existing.actorId === input.actorId &&
           canonicalJson(existing.payload) === canonicalJson(input.payload) &&
           canonicalJson(existing.evidenceIds) === canonicalJson(normalizedEvidenceIds)
-        if (sameInput) return existing
+        if (sameInput) return { event: existing, disposition: 'replayed' }
         throw new Error('Event id collision')
       }
 
@@ -124,8 +131,8 @@ export class EvidenceLedger {
         previousHash: previous?.hash ?? null,
       }
       const event: EvidenceEvent = { ...base, hash: hashEvent(base) }
-      await this.store.append(event)
-      return event
+      const disposition = await this.store.append(event)
+      return { event, disposition }
     } finally {
       release()
       if (this.locks.get(input.aggregateId) === queuedLock) this.locks.delete(input.aggregateId)

@@ -1,12 +1,14 @@
 import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
 import Zod from 'zod'
+import type { Pool } from 'pg'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
 import { registerDockerRoutes } from './docker/routes.ts'
 import { registerDeploymentRoutes } from './deployments/routes.ts'
 import type { AuthorizeDeploymentDependencies } from './deployments/authorization.ts'
+import { registerEvidenceRoutes } from './evidence/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { createOracleClient, type OracleClient } from './oracle/client.ts'
@@ -75,6 +77,7 @@ export function createApp(options: CreateAppOptions = {}) {
       authorization: options.deploymentAuthorization,
       env,
     })
+    registerEvidenceRoutes(instance, databasePool as unknown as Pool)
     registerLoginAttemptRoutes(instance, databasePool)
     registerOracleRoutes(instance, oracleClient)
   })
