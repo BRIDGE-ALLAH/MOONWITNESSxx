@@ -70,8 +70,8 @@ The dashboard is served at http://127.0.0.1:5150/.
 
 ## API
 
-- GET /api/v1/system/health — actual ATLAS MariaDB, RADIUS database, and Redis probe results.
-- GET /api/v1/system/readiness — returns 503 unless ATLAS MariaDB, RADIUS database, and Redis are reachable.
+- GET /api/v1/system/health — actual ATLAS PostgreSQL, RADIUS database, and Redis probe results.
+- GET /api/v1/system/readiness — returns 503 unless ATLAS PostgreSQL, RADIUS database, and Redis are reachable.
 - GET /api/v1/system/version — build/package version.
 - GET /api/v1/engines/catalog — engine integration catalog and adapter status.
 - GET /api/v1/engines — list registered engines (Bearer token required).
@@ -99,14 +99,14 @@ Loco's built-in /_ping, /_health, and /_readiness routes remain available.
 
 An engine being present in Compose or in the catalog does not mean ATLAS has a working adapter or has verified its operational state.
 
-## MariaDB schema
+## PostgreSQL schema
 
-ATLAS uses MariaDB for transactional control-plane metadata only. It does not store DNS query traffic, syslog streams, metrics samples, or raw observability data.
+ATLAS uses PostgreSQL for transactional control-plane metadata and a separate PostgreSQL database for FreeRADIUS SQL persistence. It does not store DNS query traffic, syslog streams, metrics samples, or raw observability data.
 
 Install SQLx CLI and apply versioned migrations:
 
-    cargo install sqlx-cli --no-default-features --features mysql,rustls
-    DATABASE_URL='mysql://atlas:password@127.0.0.1:3306/atlas' sqlx migrate run --source migrations
+    cargo install sqlx-cli --no-default-features --features postgres,rustls
+    DATABASE_URL='postgres://atlas:password@127.0.0.1:5432/atlas' sqlx migrate run --source migrations
 
 The migrations create the engine registry, add non-secret adapter configuration and secret environment-variable references, and seed the local Compose FreeRADIUS, VictoriaMetrics, and VictoriaLogs endpoints. Apply all migrations in order. Application readiness checks the ATLAS database, the separate RADIUS database, and Redis with real connection probes.
 
@@ -128,13 +128,13 @@ The migrations create the engine registry, add non-secret adapter configuration 
 - Persistent engine registry CRUD (list, create, retrieve, update, delete) with input validation.
 - Bearer-token protection for engine and RADIUS management and health probes; control routes remain disabled until a 32+ character ATLAS_CONTROL_TOKEN is configured.
 - PowerDNS Authoritative zone listing/creation/deletion and RRset patching through its HTTP API (register the engine with secret_env_key `ATLAS_ENGINE_SECRET_PDNS_PRIMARY` and set `POWERDNS_API_KEY` in `.env`); live PowerDNS, VictoriaMetrics, and VictoriaLogs probes; native FreeRADIUS Status-Server probe via radclient. Unbound and dnsdist are explicitly reported as unsupported until their native adapters land.
-- MariaDB connectivity probe with bounded connection pool configuration.
+- PostgreSQL connectivity probe with bounded connection pool configuration.
 - Required Redis connectivity probe; readiness fails when Redis is unavailable.
 - Separate RADIUS database connection probe; readiness fails if the AAA database is unavailable.
 - Automatic embedded SQLx migrations and local engine seed records at Compose startup.
-- NAS CRUD, subscriber credential provisioning, group-based VLAN/rate-limit/session policies, active session listing, and accounting summaries including RADIUS gigawords. Passwords are stored as bcrypt or NT hashes, never clear text.
-- Compose services for MariaDB, Redis, VictoriaMetrics, VictoriaLogs, and a derived FreeRADIUS image wired to a dedicated SQL database.
-- FreeRADIUS SQL authentication/accounting schema and SQL module activation in default and inner-tunnel virtual servers.
+- NAS CRUD, subscriber credential provisioning, group-based VLAN/rate-limit/session policies, active session listing, and accounting summaries using FreeRADIUS's combined 64-bit octet counters. Passwords are stored as bcrypt or NT hashes, never clear text.
+- Compose services for PostgreSQL, Redis, VictoriaMetrics, VictoriaLogs, and a derived FreeRADIUS image wired to its dedicated PostgreSQL database.
+- Upstream FreeRADIUS 3.2.10 PostgreSQL authentication/accounting schema and SQL module activation in default and inner-tunnel virtual servers.
 - PowerDNS zone and RRset management adapter with strict zone/record input validation.
 - Initial engine registry schema migration.
 - Dedicated Rust CI workflow.
