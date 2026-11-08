@@ -1,6 +1,6 @@
 # 13 — MOONWITNESS Skin System Blueprint
 
-**Status:** Approved design and architecture target; implementation not yet complete  
+**Status:** Proposed canonical design and architecture baseline; implementation not yet complete  
 **Version:** 1.0  
 **Date:** 2026-11-08  
 **Owner:** `packages/ui`  
