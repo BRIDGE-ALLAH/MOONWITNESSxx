@@ -305,8 +305,42 @@ verify_blob "$CONFIG_DIGEST"
 CONFIG_HEX="${CONFIG_DIGEST#sha256:}"
 jq -e --arg source "$SOURCE_COMMIT" '.config.Labels["org.opencontainers.image.revision"] == $source' "$EXTRACT/blobs/sha256/$CONFIG_HEX" >/dev/null || fail "image config does not bind the source commit"
 
-ATTEST_DIGEST="$(jq -r '.manifests[] | select(.annotations["vnd.docker.reference.type"] == "attestation-manifest") | .digest' "$INDEX" | head -n 1)"
-[[ "$ATTEST_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "OCI provenance attestation manifest missing"
+ATTEST_DIGEST="$(python3 - "$INDEX" "$EXTRACT" <<'PY'
+import json, pathlib, re, sys
+index_path = pathlib.Path(sys.argv[1])
+root = pathlib.Path(sys.argv[2])
+seen = set()
+attestations = []
+
+def read_json(path):
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+def walk(index):
+    for descriptor in index.get("manifests", []):
+        digest = descriptor.get("digest", "")
+        if not re.fullmatch(r"sha256:[a-f0-9]{64}", digest) or digest in seen:
+            continue
+        seen.add(digest)
+        blob = root / "blobs" / "sha256" / digest.split(":", 1)[1]
+        if not blob.is_file():
+            continue
+        try:
+            document = read_json(blob)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if descriptor.get("annotations", {}).get("vnd.docker.reference.type") == "attestation-manifest":
+            attestations.append(digest)
+        elif isinstance(document.get("manifests"), list):
+            walk(document)
+
+walk(read_json(index_path))
+if not attestations:
+    raise SystemExit("OCI export contains no attestation manifest")
+print(attestations[0])
+PY
+)" || fail "OCI provenance attestation manifest missing"
+[[ "$ATTEST_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "OCI provenance attestation digest is invalid"
 verify_blob "$ATTEST_DIGEST"
 ATTEST_HEX="${ATTEST_DIGEST#sha256:}"
 ATTEST_MANIFEST="$EXTRACT/blobs/sha256/$ATTEST_HEX"
