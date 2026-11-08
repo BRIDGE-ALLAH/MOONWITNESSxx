@@ -31,10 +31,11 @@ export interface OracleClient {
   getJob(jobId: string): Promise<OracleJobView>
 }
 
-type OracleEnvironment = Pick<
-  NodeJS.ProcessEnv,
-  'ORACLE_BASE_URL' | 'ORACLE_SERVICE_TOKEN' | 'ORACLE_REQUEST_TIMEOUT_MS'
->
+type OracleEnvironment = {
+  ORACLE_BASE_URL?: string
+  ORACLE_SERVICE_TOKEN?: string
+  ORACLE_REQUEST_TIMEOUT_MS?: string
+}
 
 type FetchLike = typeof fetch
 
@@ -161,7 +162,6 @@ export function createOracleClient(
             ...(options.idempotencyKey ? { 'idempotency-key': options.idempotencyKey } : {}),
           },
           ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
-          cache: 'no-store',
           redirect: 'error',
           signal: controller.signal,
         })
