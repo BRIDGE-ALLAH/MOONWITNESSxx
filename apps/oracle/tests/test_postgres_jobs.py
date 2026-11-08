@@ -45,30 +45,51 @@ async def prepare_database() -> str:
             "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_migrator_test')"
         ):
             await admin.execute(
-                "CREATE ROLE oracle_migrator_test LOGIN PASSWORD 'oracle-migrator-integration-only'"
+                "CREATE ROLE oracle_migrator_test LOGIN PASSWORD 'oracle-migrator-integration-only' "
+                "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
             )
         if not await admin.fetchval(
             "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app_test')"
         ):
             await admin.execute(
-                "CREATE ROLE oracle_app_test LOGIN PASSWORD 'oracle-app-integration-only'"
+                "CREATE ROLE oracle_app_test LOGIN PASSWORD 'oracle-app-integration-only' "
+                "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
             )
         await admin.execute(
-            "ALTER ROLE oracle_migrator_test PASSWORD 'oracle-migrator-integration-only'"
+            "ALTER ROLE oracle_migrator_test WITH LOGIN PASSWORD 'oracle-migrator-integration-only' "
+            "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
         )
-        await admin.execute("ALTER ROLE oracle_app_test PASSWORD 'oracle-app-integration-only'")
+        await admin.execute(
+            "ALTER ROLE oracle_app_test WITH LOGIN PASSWORD 'oracle-app-integration-only' "
+            "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
+        )
         database_name = await admin.fetchval("SELECT current_database()")
         await admin.execute(
             f"GRANT CONNECT ON DATABASE {database_name} TO oracle_migrator_test, oracle_app_test"
         )
+        await admin.execute(
+            f"REVOKE CREATE ON DATABASE {database_name} FROM oracle_migrator_test, oracle_app_test"
+        )
         await admin.execute("CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION oracle_migrator_test")
         await admin.execute("ALTER SCHEMA oracle OWNER TO oracle_migrator_test")
+        await admin.execute("REVOKE ALL ON SCHEMA oracle FROM PUBLIC, oracle_app_test")
         await admin.execute("GRANT USAGE ON SCHEMA oracle TO oracle_app_test")
+        await admin.execute("GRANT USAGE, CREATE ON SCHEMA oracle TO oracle_migrator_test")
+        await admin.execute("REVOKE ALL ON SCHEMA public FROM oracle_migrator_test, oracle_app_test")
         await admin.execute(
-            """
-            ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator_test IN SCHEMA oracle
-            GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO oracle_app_test
-            """
+            "REVOKE ALL ON ALL TABLES IN SCHEMA public FROM oracle_migrator_test, oracle_app_test"
+        )
+        await admin.execute(
+            "REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM oracle_migrator_test, oracle_app_test"
+        )
+        await admin.execute(
+            "ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator_test IN SCHEMA oracle "
+            "REVOKE ALL ON TABLES FROM oracle_app_test"
+        )
+        await admin.execute(
+            "ALTER ROLE oracle_app_test IN DATABASE "
+            + database_name
+            + " SET search_path = oracle"
         )
     finally:
         await admin.close()
@@ -82,6 +103,13 @@ async def prepare_database() -> str:
 
     admin = await asyncpg.connect(TEST_DATABASE_URL)
     try:
+        await admin.execute("REVOKE ALL ON ALL TABLES IN SCHEMA oracle FROM oracle_app_test")
+        await admin.execute(
+            "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE oracle.jobs TO oracle_app_test"
+        )
+        await admin.execute(
+            "REVOKE ALL ON TABLE oracle.schema_migrations FROM oracle_app_test"
+        )
         await admin.execute("DELETE FROM oracle.jobs")
         migration_history_writable = await admin.fetchval(
             "SELECT has_table_privilege($1, 'oracle.schema_migrations', 'UPDATE')",
@@ -93,11 +121,27 @@ async def prepare_database() -> str:
             APP_ROLE,
         )
         assert job_table_writable is True
-        is_superuser = await admin.fetchval(
-            "SELECT rolsuper FROM pg_roles WHERE rolname = $1",
+        database_create = await admin.fetchval(
+            "SELECT has_database_privilege($1, current_database(), 'CREATE')",
             APP_ROLE,
         )
-        assert is_superuser is False
+        schema_create = await admin.fetchval(
+            "SELECT has_schema_privilege($1, 'oracle', 'CREATE')",
+            APP_ROLE,
+        )
+        assert database_create is False
+        assert schema_create is False
+        app_flags = await admin.fetchrow(
+            "SELECT rolinherit, rolcreatedb, rolcreaterole, rolreplication "
+            "FROM pg_roles WHERE rolname = $1",
+            APP_ROLE,
+        )
+        assert app_flags == {
+            "rolinherit": False,
+            "rolcreatedb": False,
+            "rolcreaterole": False,
+            "rolreplication": False,
+        }
     finally:
         await admin.close()
 
