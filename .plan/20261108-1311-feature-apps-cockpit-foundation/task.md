@@ -15,4 +15,3 @@
 - [x] **Task 4: Add Contract Tests & Verification** `[S]`
   - Path: `apps/cockpit/tests/cockpit-contract.test.mjs`
   - Acceptance: Tests pass 100%, type-check passes, Prettier passes.
-

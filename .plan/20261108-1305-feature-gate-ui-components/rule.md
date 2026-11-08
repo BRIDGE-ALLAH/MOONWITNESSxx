@@ -5,4 +5,3 @@
 3. **TypeScript & Formatting Strictness:** Keep strict TypeScript compliance (`noEmit` passes). All code must satisfy Prettier before commit.
 4. **No Direct Backend Coupling:** `apps/gate` must not import backend modules, database pools, or internal services. Only public contracts/types are allowed.
 5. **Deterministic Testing:** Include contract and rendering unit tests for newly introduced UI components under `apps/gate/tests/`.
-

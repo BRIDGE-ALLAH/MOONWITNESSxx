@@ -10,6 +10,7 @@
 ## 2. Component Contract Specification
 
 ### `StatusIndicator`
+
 - **Props:**
   - `status: 'active' | 'target' | 'degraded' | 'offline'`
   - `label?: string`
@@ -17,6 +18,7 @@
   - `size?: 'sm' | 'md'`
 
 ### `UniverseCard`
+
 - **Props:**
   - `id: string`
   - `title: string`
@@ -27,7 +29,7 @@
   - `domainBoundary?: string`
 
 ## 3. Acceptance Criteria
+
 - Unit test passing in `apps/gate/tests/components.test.mjs`.
 - Type checking passes with zero errors (`pnpm --filter @riotworks/gate type-check`).
 - Zero merge conflict against active PRs.
-

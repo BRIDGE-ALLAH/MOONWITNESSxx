@@ -34,8 +34,8 @@ flowchart TD
 ```
 
 ## 2. Port Allocation
+
 - `apps/headquarter`: `3000`
 - `apps/gate`: `3001`
 - `apps/cockpit`: `3002` (Web Preview) & Desktop Window
 - `apps/arsy`: `4000`
-

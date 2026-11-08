@@ -24,4 +24,3 @@
   - Path: `apps/gate/tests/gate-contract.test.mjs`
   - Implementation: Assert component imports and file integrity. Run `pnpm --filter @riotworks/gate test`.
   - Acceptance: Tests pass 100%, type-check passes, Prettier passes.
-
