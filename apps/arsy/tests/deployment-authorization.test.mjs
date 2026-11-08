@@ -15,6 +15,7 @@ class FakePool {
 const base = {
   principal: { kind: 'operator', operatorId: 'operator-1' },
   operationId: '11111111-1111-4111-8111-111111111111',
+  deploymentId: '33333333-3333-4333-8333-333333333333',
   ownerId: 'operator-1',
   targetHostId: '22222222-2222-4222-8222-222222222222',
   action: 'deploy',
@@ -38,8 +39,8 @@ test('deployment authorization denies missing principals and persists the denial
   assert.equal(result.allowed, false)
   assert.equal(result.reasonCode, 'AUTHENTICATION_REQUIRED')
   assert.equal(pool.records.length, 1)
-  assert.equal(pool.records[0][6], 'deny')
-  assert.equal(pool.records[0][3], 'unknown')
+  assert.equal(pool.records[0][7], 'deny')
+  assert.equal(pool.records[0][4], 'unknown')
 })
 
 test('deployment authorization denies cross-owner principals before policy evaluation', async () => {
@@ -72,7 +73,7 @@ test('deployment authorization allows only an explicit policy allow without unme
   assert.equal(result.reasonCode, 'DEPLOYMENT_SCOPE_APPROVED')
   assert.equal(result.policyVersion, 'zill-deployment-v1')
   assert.equal(pool.records[0][6], 'allow')
-  assert.equal(pool.records[0][8], 'zill-deployment-v1')
+  assert.equal(pool.records[0][9], 'zill-deployment-v1')
 })
 
 test('deployment authorization blocks high-risk actions without an approved reference', async () => {
@@ -140,7 +141,7 @@ test('deployment authorization records unknown actions without normalizing them 
   const result = await authorizeAndRecordDeploymentAction(pool, { ...base, action: 'delete-host' }, provider(allowed))
   assert.equal(result.allowed, false)
   assert.equal(result.reasonCode, 'INVALID_ACTION')
-  assert.equal(pool.records[0][5], 'delete-host')
+  assert.equal(pool.records[0][6], 'delete-host')
 })
 
 test('deployment authorization rejects secret-bearing evidence and fails before persistence', async () => {
