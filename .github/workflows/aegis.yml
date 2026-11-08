@@ -65,7 +65,7 @@ jobs:
 
       - name: Build and start AEGIS through root Compose
         run: |
-          docker compose --env-file .env.docker -f docker-compose.yml \\
+          docker compose --env-file .env.docker -f docker-compose.yml \
             up --detach --build --wait --wait-timeout 120 aegis
 
       - name: Verify health endpoints and container isolation
@@ -75,7 +75,7 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:3102/health/ready | grep -q '"status":"ready"'
           test "$(docker inspect moonwitness-aegis --format '{{.Config.User}}')" = "nonroot:nonroot"
           test "$(docker inspect moonwitness-aegis --format '{{.HostConfig.ReadonlyRootfs}}')" = "true"
-          test "$(docker inspect moonwitness-aegis --format '{{index .HostConfig.PortBindings \"3102/tcp\" 0 \"HostIp\"}}')" = "127.0.0.1"
+          docker inspect moonwitness-aegis --format '{{json .HostConfig.PortBindings}}' | grep -q '"HostIp":"127.0.0.1"'
           docker inspect moonwitness-aegis --format '{{json .HostConfig.CapDrop}}' | grep -q '"ALL"'
           docker inspect moonwitness-aegis --format '{{json .HostConfig.SecurityOpt}}' | grep -q 'no-new-privileges'
 
