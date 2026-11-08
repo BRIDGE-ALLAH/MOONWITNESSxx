@@ -17,7 +17,7 @@ export const runtime = 'nodejs'
 
 // Single-process fallback is for local development only. Production requires
 // the shared ARSY/PostgreSQL limiter and fails closed when it is unavailable.
-const LOGIN_FAILURE_LIMIT = 5
+const LOGIN_FAILURE_LIMIT = 6
 const LOGIN_WINDOW_MS = 15 * 60 * 1000
 let loginWindowStartedAt = 0
 let loginFailureCount = 0
