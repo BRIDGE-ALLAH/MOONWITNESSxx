@@ -1,3 +1,6 @@
+// Prevents additional console window on Windows in release, DO NOT REMOVE!!
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -11,35 +14,26 @@ pub struct SystemMetrics {
     pub status: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct OperatorActionPayload {
-    pub target: String,
-    pub action: String,
-    pub actor: String,
-}
-
-#[tokio::main]
-async fn main() {
-    println!(">>> MOONWITNESS COCKPIT DESKTOP RUNTIME (RUST) INITIALIZED <<<");
-    println!(">>> Flight Deck & Telemetry Engine Online");
-
+#[tauri::command]
+fn get_system_telemetry() -> SystemMetrics {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_millis();
 
-    let initial_telemetry = SystemMetrics {
+    SystemMetrics {
         timestamp_ms: now,
         host: "local-operator-workstation".to_string(),
         active_containers: 4,
         memory_used_mb: 1420,
         memory_total_mb: 16384,
         status: "OPERATIONAL".to_string(),
-    };
-
-    println!(
-        ">>> Baseline Metrics: {}",
-        serde_json::to_string(&initial_telemetry).unwrap()
-    );
+    }
 }
 
+fn main() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![get_system_telemetry])
+        .run(tauri::generate_context!())
+        .expect("error while running MOONWITNESS COCKPIT application");
+}

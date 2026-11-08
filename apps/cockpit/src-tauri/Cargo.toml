@@ -5,12 +5,15 @@ description = "MOONWITNESS COCKPIT Desktop Runtime"
 authors = ["BRIDGE-ALLAH / RIOTWORKS"]
 edition = "2021"
 
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
 [dependencies]
+tauri = { version = "2.0", features = [] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.0", features = ["full"] }
 
 [[bin]]
-name = "cockpit-daemon"
+name = "cockpit"
 path = "src/main.rs"
-

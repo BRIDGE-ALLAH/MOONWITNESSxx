@@ -18,3 +18,7 @@ reports/
 # Rust build artifacts
 apps/cockpit/src-tauri/target/
 
+
+apps/cockpit/out/
+apps/cockpit/src-tauri/gen/
+
