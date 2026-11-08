@@ -10,7 +10,7 @@ export const SKIN_REGISTRY = {
     purpose: 'Operate, monitor, compare, research, and decide.',
     avoidFor: ['campaign posters', 'long-form editorial reading when Archive is more appropriate'],
     defaultMode: 'dark',
-    supportedModes: ['dark'],
+    supportedModes: ['dark', 'light'],
     defaultDensity: 'comfortable',
   },
   archive: {
@@ -20,7 +20,7 @@ export const SKIN_REGISTRY = {
     purpose: 'Read, preserve, retrieve, compare, and understand records.',
     avoidFor: ['live operational monitoring', 'high-density command workspaces'],
     defaultMode: 'light',
-    supportedModes: ['light'],
+    supportedModes: ['light', 'dark'],
     defaultDensity: 'comfortable',
   },
   signal: {
