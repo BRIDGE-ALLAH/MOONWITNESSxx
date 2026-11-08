@@ -6,6 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  HalftoneSurface,
   SkinRoot,
 } from '@riotworks/ui'
 
@@ -22,7 +23,7 @@ function ObservatorySpecimen() {
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">01 / The Instrument</p>
           <p className="mt-1 font-display text-sm font-semibold uppercase tracking-wider">MOONWITNESS Observatory</p>
         </div>
-        <Badge variant="info">SPECIMEN</Badge>
+        <Badge variant="outline">SPECIMEN</Badge>
       </div>
 
       <div className="py-8">
@@ -34,7 +35,7 @@ function ObservatorySpecimen() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Card className="border-border bg-card shadow-none">
+        <Card id="observatory-evidence" className="border-border bg-card shadow-none">
           <CardHeader className="space-y-2 p-4">
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Observation / 001</p>
             <CardTitle className="text-lg">Signal detected</CardTitle>
@@ -42,7 +43,7 @@ function ObservatorySpecimen() {
           </CardHeader>
           <CardContent className="flex items-center justify-between p-4 pt-0">
             <span className="font-mono text-xs text-muted-foreground">SOURCE UNKNOWN</span>
-            <Badge variant="warning">UNVERIFIED</Badge>
+            <Badge variant="outline">UNVERIFIED</Badge>
           </CardContent>
         </Card>
         <div className="flex flex-col justify-between gap-4 border border-border bg-secondary/40 p-4">
@@ -51,7 +52,7 @@ function ObservatorySpecimen() {
             <p className="mt-2 text-2xl font-semibold tabular-nums">03</p>
             <p className="text-xs text-muted-foreground">Illustrative records</p>
           </div>
-          <Button className="w-full" size="sm">Review observation</Button>
+          <Button asChild className="w-full" size="sm"><a href="#observatory-evidence">Review observation</a></Button>
         </div>
       </div>
       <p className="mt-5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Dark-first · Instrument grid · Comfortable density</p>
@@ -83,7 +84,7 @@ function ArchiveSpecimen() {
         </p>
       </article>
 
-      <Card className="rounded-none border-x-0 border-b-0 border-t-2 border-border bg-transparent shadow-none">
+      <Card id="archive-record" className="rounded-none border-x-0 border-b-0 border-t-2 border-border bg-transparent shadow-none">
         <CardHeader className="px-0 pb-3 pt-4">
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Provenance / Example</p>
           <CardTitle className="text-lg">Source notes</CardTitle>
@@ -97,7 +98,7 @@ function ArchiveSpecimen() {
             <span className="text-muted-foreground">Recorded</span><span className="font-mono text-xs">2026-11-08</span>
           </div>
           <div className="flex justify-between gap-4 text-sm">
-            <span className="text-muted-foreground">Evidence status</span><Badge variant="warning">UNVERIFIED</Badge>
+            <span className="text-muted-foreground">Evidence status</span><Badge variant="outline">UNVERIFIED</Badge>
           </div>
         </CardContent>
       </Card>
@@ -121,20 +122,22 @@ function SignalSpecimen() {
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">03 / The Message</p>
             <p className="mt-1 font-display text-sm font-semibold uppercase tracking-wider">MOONWITNESS Signal</p>
           </div>
-          <Badge variant="destructive">EDITORIAL</Badge>
+          <Badge variant="outline" className="border-transparent bg-accent text-accent-foreground">EDITORIAL</Badge>
         </div>
 
-        <div className="flex flex-1 flex-col justify-center py-9">
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-primary">Noise / Signal / Meaning</p>
-          <h2 className="mt-5 max-w-lg text-4xl font-black leading-[0.9] tracking-tight md:text-6xl">When the Moon rises.</h2>
-          <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">
-            We share messages. Keep the source. Keep the context. Never mistake volume for truth.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button>Explore the story</Button>
-            <Button variant="outline">Read the record</Button>
+        <HalftoneSurface textureOpacity={0.045} className="my-4 border-y border-border px-3 py-7 md:px-5">
+          <div id="signal-story" className="flex flex-1 flex-col justify-center py-3">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-primary">Noise / Signal / Meaning</p>
+            <h2 className="mt-5 max-w-lg text-4xl font-black leading-[0.9] tracking-tight md:text-6xl">When the Moon rises.</h2>
+            <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">
+              We share messages. Keep the source. Keep the context. Never mistake volume for truth.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button asChild><a href="#signal-story">Explore the story</a></Button>
+              <Button asChild variant="outline"><a href="#archive-record">Read the record</a></Button>
+            </div>
           </div>
-        </div>
+        </HalftoneSurface>
 
         <div className="grid grid-cols-3 gap-2 border-t border-border pt-4 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           <span>Print grain</span><span>Halftone</span><span>Editorial cut</span>
@@ -148,7 +151,7 @@ export default function SkinSystemLabPage() {
   return (
     <main className="space-y-8 p-4 md:p-8">
       <header className="max-w-3xl space-y-3">
-        <Badge variant="info">INTERNAL DESIGN SPECIMEN · NOT PRODUCTION DATA</Badge>
+        <Badge variant="outline">INTERNAL DESIGN SPECIMEN · NOT PRODUCTION DATA</Badge>
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">MOONWITNESS / UI LAB</p>
         <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">Three experiences. One witness.</h1>
         <p className="text-sm leading-7 text-muted-foreground md:text-base">
