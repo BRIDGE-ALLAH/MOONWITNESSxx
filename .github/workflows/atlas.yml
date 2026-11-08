@@ -28,19 +28,19 @@ jobs:
       mariadb:
         image: mariadb:11.4
         env:
-          MARIADB_ROOT_PASSWORD: ci-root-password
+          MARIADB_ROOT_PASSWORD: ci-atlas-root-password-which-is-over-32-chars
           MARIADB_ROOT_HOST: "%"
           MARIADB_DATABASE: atlas
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -pci-root-password --silent"
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot -pci-atlas-root-password-which-is-over-32-chars --silent"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
     env:
-      DATABASE_URL: mysql://root:ci-root-password@127.0.0.1:3306/atlas
-      RADIUS_DATABASE_URL: mysql://root:ci-root-password@127.0.0.1:3306/radius
+      DATABASE_URL: mysql://root:ci-atlas-root-password-which-is-over-32-chars@127.0.0.1:3306/atlas
+      RADIUS_DATABASE_URL: mysql://root:ci-atlas-root-password-which-is-over-32-chars@127.0.0.1:3306/radius
     defaults:
       run:
         working-directory: apps/atlas
@@ -75,9 +75,9 @@ jobs:
 
       - name: Validate Docker Compose
         env:
-          ATLAS_DB_PASSWORD: ci-atlas-db-password
-          ATLAS_DB_ROOT_PASSWORD: ci-root-password
-          ATLAS_REDIS_PASSWORD: ci-redis-password
+          ATLAS_DB_PASSWORD: ci-atlas-db-password-which-is-over-32-chars
+          ATLAS_DB_ROOT_PASSWORD: ci-atlas-root-password-which-is-over-32-chars
+          ATLAS_REDIS_PASSWORD: ci-atlas-redis-password-which-is-over-32-chars
           RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
           RADIUS_STATUS_SECRET: ci-radius-status-secret-which-is-long-enough-32
           ATLAS_CONTROL_TOKEN: ci-atlas-control-token-which-is-long-enough
@@ -98,9 +98,9 @@ jobs:
 
       - name: Run ATLAS and FreeRADIUS end-to-end smoke test
         env:
-          ATLAS_DB_PASSWORD: ci-atlas-db-password
-          ATLAS_DB_ROOT_PASSWORD: ci-root-password
-          ATLAS_REDIS_PASSWORD: ci-redis-password
+          ATLAS_DB_PASSWORD: ci-atlas-db-password-which-is-over-32-chars
+          ATLAS_DB_ROOT_PASSWORD: ci-atlas-root-password-which-is-over-32-chars
+          ATLAS_REDIS_PASSWORD: ci-atlas-redis-password-which-is-over-32-chars
           RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
           RADIUS_STATUS_SECRET: ci-radius-status-secret-which-is-long-enough-32
           ATLAS_CONTROL_TOKEN: ci-atlas-control-token-which-is-long-enough
