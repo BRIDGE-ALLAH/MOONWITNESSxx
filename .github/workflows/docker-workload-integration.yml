@@ -29,8 +29,8 @@ jobs:
         run: docker info
       - name: Pull and pin the disposable workload test image
         run: |
-          docker pull nginx:alpine
-          image="$(docker image inspect --format '{{index .RepoDigests 0}}' nginx:alpine)"
+          docker pull registry.k8s.io/pause:3.10
+          image="$(docker image inspect --format '{{index .RepoDigests 0}}' registry.k8s.io/pause:3.10)"
           echo "DOCKER_WORKLOAD_TEST_IMAGE=$image" >> "$GITHUB_ENV"
       - name: Run ARSY workload adapter unit and real Engine integration tests
         env:
