@@ -61,6 +61,19 @@ The request body is versioned at \`/v1\`; Pydantic rejects unknown fields. Reusi
 - Bounded submitted input is stored in PostgreSQL so work can resume after a process restart. Treat database access and backups as sensitive; the 24-hour default retention is not a substitute for the deployment's required storage encryption, access control, and backup-retention policy.
 - ORACLE stores computation job lifecycle only. ARSY remains caller identity, policy, authorization and orchestration authority; WITNESS FABRIC remains evidence/provenance authority. The ORACLE schema is not canonical audit or source-evidence storage.
 
+## Docker Compose development setup
+
+Because Compose enables PostgreSQL-backed jobs by default, apply the ORACLE schema before starting ORACLE/ARSY. The CI workflow uses the same explicit ordering:
+
+```bash
+docker compose --env-file .env.docker -f docker-compose.yml up -d --wait postgres
+docker compose --env-file .env.docker -f docker-compose.yml exec -T postgres \
+  sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+  < apps/oracle/migrations/001_oracle_jobs.sql
+docker compose --env-file .env.docker -f docker-compose.yml up -d --build --wait redis oracle arsy
+```
+
+Do not apply this development credential pattern to production. Provision a dedicated restricted database role and apply the migration through the production migration/change-control process.
 ## Local development
 
 Requires Python 3.12 or newer.
