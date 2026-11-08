@@ -23,6 +23,22 @@ func TestLoadDefaults(t *testing.T) {
 	}
 }
 
+
+func TestAddressFormatsIPv6Host(t *testing.T) {
+	t.Setenv("AEGIS_HOST", "::1")
+	t.Setenv("AEGIS_PORT", "9999")
+	t.Setenv("AEGIS_READ_HEADER_TIMEOUT", "")
+	t.Setenv("AEGIS_SHUTDOWN_TIMEOUT", "")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if got := cfg.Address(); got != "[::1]:9999" {
+		t.Fatalf("Address() = %q, want [::1]:9999", got)
+	}
+}
+
 func TestLoadRejectsInvalidPort(t *testing.T) {
 	t.Setenv("AEGIS_PORT", "70000")
 	if _, err := Load(); err == nil {
