@@ -121,7 +121,7 @@ pub fn validate(input: &EngineWriteRequest) -> Result<(), &'static str> {
 
 pub async fn list() -> Result<Vec<EngineInstance>, sqlx::Error> {
     sqlx::query_as::<_, EngineInstance>(
-        "SELECT id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key, CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at FROM engine_instances ORDER BY name",
+        "SELECT id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key, created_at::text AS created_at, updated_at::text AS updated_at FROM engine_instances ORDER BY name",
     )
     .fetch_all(database::pool().await?)
     .await
@@ -129,7 +129,7 @@ pub async fn list() -> Result<Vec<EngineInstance>, sqlx::Error> {
 
 pub async fn get(id: &str) -> Result<Option<EngineInstance>, sqlx::Error> {
     sqlx::query_as::<_, EngineInstance>(
-        "SELECT id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key, CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at FROM engine_instances WHERE id = ?",
+        "SELECT id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key, CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at FROM engine_instances WHERE id = $1",
     )
     .bind(id)
     .fetch_optional(database::pool().await?)
@@ -139,7 +139,7 @@ pub async fn get(id: &str) -> Result<Option<EngineInstance>, sqlx::Error> {
 pub async fn create(input: &EngineWriteRequest) -> Result<EngineInstance, sqlx::Error> {
     let id = ulid::Ulid::new().to_string();
     sqlx::query(
-        "INSERT INTO engine_instances (id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO engine_instances (id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
     )
     .bind(&id)
     .bind(input.name.trim())
@@ -160,7 +160,7 @@ pub async fn update(
     input: &EngineWriteRequest,
 ) -> Result<Option<EngineInstance>, sqlx::Error> {
     let result = sqlx::query(
-        "UPDATE engine_instances SET name = ?, engine_type = ?, role = ?, endpoint = ?, enabled = ?, labels = ?, config = ?, secret_env_key = ? WHERE id = ?",
+        "UPDATE engine_instances SET name = $1, engine_type = $2, role = $3, endpoint = $4, enabled = $5, labels = $6, config = $7, secret_env_key = $8, updated_at = NOW() WHERE id = $9",
     )
     .bind(input.name.trim())
     .bind(&input.engine_type)
@@ -180,7 +180,7 @@ pub async fn update(
 }
 
 pub async fn delete(id: &str) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM engine_instances WHERE id = ?")
+    let result = sqlx::query("DELETE FROM engine_instances WHERE id = $1")
         .bind(id)
         .execute(database::pool().await?)
         .await?;
