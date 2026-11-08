@@ -70,11 +70,7 @@ async function readData<T>(path: string): Promise<T> {
   return payload.data as T
 }
 
-function countLabel(value: unknown): string {
-  return Array.isArray(value) ? String(value.length) : '—'
-}
-
-function recordLabel(value: RecordItem): string {
+function recordLabel(value: { title?: unknown; displayName?: unknown; name?: unknown; id?: unknown }): string {
   const candidate = value.title ?? value.displayName ?? value.name ?? value.id
   return typeof candidate === 'string' ? candidate : 'Untitled record'
 }
@@ -368,7 +364,7 @@ export function MoneyMakerWorkspace() {
   )
 }
 
-function RecordPanel({ title, items, empty }: { title: string; items: RecordItem[]; empty: string }) {
+function RecordPanel<T extends { id?: string; title?: unknown; displayName?: unknown; name?: unknown; status?: unknown; lifecycleState?: unknown }>({ title, items, empty }: { title: string; items: T[]; empty: string }) {
   return (
     <Card>
       <CardHeader>
