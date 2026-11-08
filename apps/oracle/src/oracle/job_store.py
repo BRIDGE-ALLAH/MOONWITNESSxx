@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 
 import asyncpg
 
+from .provenance import sha256_digest
 from .jobs import (
     IdempotencyConflictError,
     JobRecord,
@@ -148,8 +149,6 @@ class PostgresJobStore:
             "input": input_payload,
             "evidence": [item.model_dump(mode="json") for item in evidence],
         }
-        from .provenance import sha256_digest
-
         request_digest = sha256_digest(request_body)
         job_id = uuid4()
         try:
@@ -326,6 +325,7 @@ class PostgresJobStore:
                     WHERE job_id = $3
                       AND status = 'running'
                       AND lease_owner = $4
+                      AND lease_until > now()
                     RETURNING job_id
                     """,
                     _encode_json(result),
@@ -353,6 +353,7 @@ class PostgresJobStore:
                     WHERE job_id = $2
                       AND status = 'running'
                       AND lease_owner = $3
+                      AND lease_until > now()
                     RETURNING job_id
                     """,
                     _encode_json(error.model_dump(mode="json")),
