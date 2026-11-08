@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { Pool } from 'pg'
-import type { EvidenceEvent, EvidenceStore } from '@riotworks/arsy-core'
+import type { EvidenceAppendDisposition, EvidenceEvent, EvidenceStore } from '@riotworks/arsy-core'
 
 interface EvidenceRow {
   id: string
@@ -38,7 +38,7 @@ export class PostgresEvidenceStore implements EvidenceStore {
     this.ownerId = ownerId
   }
 
-  async append(event: EvidenceEvent): Promise<void> {
+  async append(event: EvidenceEvent): Promise<EvidenceAppendDisposition> {
     const scopedAggregateId = storageAggregateId(this.ownerId, event.aggregateId)
     const client = await this.pool.connect()
     try {
@@ -66,7 +66,7 @@ export class PostgresEvidenceStore implements EvidenceStore {
         // preserve the first committed event as the canonical stream record.
         if (!existing.rows[0].same_input) throw new Error('Event id collision')
         await client.query('COMMIT')
-        return
+        return 'replayed'
       }
 
       const latest = await client.query<{ event_hash: string; stream_position: string }>(
@@ -89,6 +89,7 @@ export class PostgresEvidenceStore implements EvidenceStore {
         ],
       )
       await client.query('COMMIT')
+      return 'created'
     } catch (error) {
       await client.query('ROLLBACK').catch(() => undefined)
       throw error
