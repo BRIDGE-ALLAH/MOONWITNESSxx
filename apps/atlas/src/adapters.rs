@@ -1,4 +1,10 @@
-use std::{env, os::unix::fs::PermissionsExt, process::Stdio, time::Duration};
+use std::{
+    env,
+    os::unix::fs::{OpenOptionsExt, PermissionsExt},
+    path::PathBuf,
+    process::Stdio,
+    time::Duration,
+};
 
 use tokio::{io::AsyncWriteExt, process::Command};
 
@@ -91,6 +97,24 @@ fn result(engine: &EngineInstance, state: &'static str, detail: &'static str) ->
     }
 }
 
+/// Create the RADIUS probe secret with restrictive permissions from the first
+/// filesystem operation. Changing permissions after writing leaves a disclosure
+/// window on shared temporary filesystems.
+async fn write_probe_secret(secret: &str) -> std::io::Result<PathBuf> {
+    let path = env::temp_dir().join(format!("atlas-radius-{}.secret", ulid::Ulid::new()));
+    let mut options = tokio::fs::OpenOptions::new();
+    options.write(true).create_new(true).mode(0o600);
+    let mut file = options.open(&path).await?;
+
+    if let Err(error) = file.write_all(format!("{secret}\n").as_bytes()).await {
+        drop(file);
+        let _ = tokio::fs::remove_file(&path).await;
+        return Err(error);
+    }
+    drop(file);
+    Ok(path)
+}
+
 async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
     if !engine.enabled {
         return result(engine, "disabled", "engine instance is disabled");
@@ -120,28 +144,17 @@ async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
         );
     };
     let port = url.port().unwrap_or(18121);
-    let secret_path = env::temp_dir().join(format!("atlas-radius-{}.secret", ulid::Ulid::new()));
-    if tokio::fs::write(&secret_path, format!("{secret}\n"))
-        .await
-        .is_err()
-    {
-        return result(
-            engine,
-            "error",
-            "could not prepare protected RADIUS probe secret",
-        );
-    }
-    if tokio::fs::set_permissions(&secret_path, std::fs::Permissions::from_mode(0o600))
-        .await
-        .is_err()
-    {
-        let _ = tokio::fs::remove_file(&secret_path).await;
-        return result(
-            engine,
-            "error",
-            "could not secure temporary RADIUS probe secret",
-        );
-    }
+    let secret_path = match write_probe_secret(&secret).await {
+        Ok(path) => path,
+        Err(error) => {
+            tracing::warn!(engine_id = %engine.id, %error, "could not prepare protected RADIUS probe secret");
+            return result(
+                engine,
+                "error",
+                "could not prepare protected RADIUS probe secret",
+            );
+        }
+    };
     let child = Command::new("radclient")
         .arg("-q")
         .arg("-S")
@@ -190,5 +203,24 @@ async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
             "unreachable",
             "FreeRADIUS Status-Server probe did not receive a valid response",
         )
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn radius_probe_secret_is_private_at_creation_and_removed_after_cleanup() {
+        let path = write_probe_secret("test-radius-shared-secret").await.unwrap();
+        let metadata = tokio::fs::metadata(&path).await.unwrap();
+        assert_eq!(metadata.permissions().mode() & 0o777, 0o600);
+        assert_eq!(
+            tokio::fs::read_to_string(&path).await.unwrap(),
+            "test-radius-shared-secret\\n"
+        );
+        tokio::fs::remove_file(&path).await.unwrap();
+        assert!(!path.exists());
     }
 }
