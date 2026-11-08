@@ -125,6 +125,29 @@ test('PostgreSQL login limiter is atomic across ARSY instances and survives inst
       allowed: true,
       retryAfterSeconds: 0,
     })
+
+    // Bounded pruning removes at most 100 stale network hashes per request.
+    await setupPool.query(
+      `INSERT INTO arsy_login_attempt_buckets
+         (owner_id, bucket_key, window_started_at, attempt_count, blocked_until, updated_at)
+       SELECT $1, 'network:' || lpad(value::text, 64, '0'),
+              now() - interval '2 days', 6,
+              now() - interval '2 days', now() - interval '2 days'
+       FROM generate_series(1, 105) AS value
+       ON CONFLICT (owner_id, bucket_key) DO NOTHING`,
+      [ownerId],
+    )
+    const staleBefore = await setupPool.query(
+      'SELECT count(*)::int AS count FROM arsy_login_attempt_buckets WHERE owner_id = $1 AND updated_at < now() - interval \'1 day\'',
+      [ownerId],
+    )
+    assert.equal(Number(staleBefore.rows[0].count), 105)
+    await send(appB, 'attempt')
+    const staleAfter = await setupPool.query(
+      'SELECT count(*)::int AS count FROM arsy_login_attempt_buckets WHERE owner_id = $1 AND updated_at < now() - interval \'1 day\'',
+      [ownerId],
+    )
+    assert.equal(Number(staleAfter.rows[0].count), 5)
   } finally {
     for (const app of apps) {
       await app.close()
