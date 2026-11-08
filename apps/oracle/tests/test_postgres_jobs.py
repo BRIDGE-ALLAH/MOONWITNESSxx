@@ -98,12 +98,13 @@ async def prepare_database() -> str:
 
     admin = await asyncpg.connect(TEST_DATABASE_URL)
     try:
+        # Simulate the idempotent Compose bootstrap reapplying its privilege
+        # revocations to an existing PostgreSQL volume. The migration runner
+        # must restore only the reviewed jobs-table grant on its next run.
         await admin.execute("REVOKE ALL ON ALL TABLES IN SCHEMA oracle FROM oracle_app_test")
         await admin.execute(
-            "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE oracle.jobs TO oracle_app_test"
-        )
-        await admin.execute(
-            "REVOKE ALL ON TABLE oracle.schema_migrations FROM oracle_app_test"
+            "ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator_test IN SCHEMA oracle "
+            "REVOKE ALL ON TABLES FROM oracle_app_test"
         )
         await admin.execute("DELETE FROM oracle.jobs")
         migration_history_writable = await admin.fetchval(
@@ -140,6 +141,7 @@ async def prepare_database() -> str:
     finally:
         await admin.close()
 
+    await apply_migrations(migrator_dsn, runtime_role=APP_ROLE)
     return database_url_for_role(APP_ROLE, APP_PASSWORD)
 
 
