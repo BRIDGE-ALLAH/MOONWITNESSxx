@@ -100,7 +100,7 @@
 - [x] **P0** Map the initial Observatory/dark, Archive/light, and Signal/dark token profiles.
 - [x] **P0** Keep semantic status tokens separate from expressive skin accent tokens.
 - [x] **P0** Add source-level tests for registry, mode support, fallback metadata, root attributes, and token presence.
-- [ ] **P1** Apply compact density spacing to Card and Badge primitives while retaining control hit areas.
+- [x] **P1** Apply compact density spacing to Card and Badge primitives while retaining control hit areas.
 - [ ] **P0** Run package type-check, lint, and tests in CI on the implementation PR.
 - [ ] **P1** Verify all three skins in a browser at desktop, tablet, mobile, and 200% zoom.
 - [ ] **P1** Complete rendered contrast and keyboard/focus review for every supported skin/mode pair.
