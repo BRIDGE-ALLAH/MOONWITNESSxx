@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import os
+import re
 from pathlib import Path
 
 import asyncpg
@@ -30,7 +31,11 @@ def _resolve_migrations_dir() -> Path:
     )
 
 
-async def apply_migrations(database_url: str | None = None) -> None:
+async def apply_migrations(
+    database_url: str | None = None,
+    *,
+    runtime_role: str = "oracle_app",
+) -> None:
     dsn = (
         database_url
         or os.environ.get("ORACLE_MIGRATION_DATABASE_URL")
@@ -38,6 +43,8 @@ async def apply_migrations(database_url: str | None = None) -> None:
     )
     if not dsn:
         raise RuntimeError("ORACLE_MIGRATION_DATABASE_URL is required")
+    if not re.fullmatch(r"[a-z_][a-z0-9_]*", runtime_role):
+        raise ValueError("ORACLE_APP_DB_ROLE must be a simple PostgreSQL role identifier")
 
     migrations_dir = _resolve_migrations_dir()
     migration_files = sorted(migrations_dir.glob("[0-9][0-9][0-9]_*.sql"))
@@ -68,6 +75,12 @@ async def apply_migrations(database_url: str | None = None) -> None:
               applied_at timestamptz NOT NULL DEFAULT now()
             )
             """
+        )
+        await connection.execute(
+            "REVOKE ALL PRIVILEGES ON TABLE oracle.schema_migrations FROM PUBLIC"
+        )
+        await connection.execute(
+            f'REVOKE ALL PRIVILEGES ON TABLE oracle.schema_migrations FROM "{runtime_role}"'
         )
 
         for path in migration_files:
