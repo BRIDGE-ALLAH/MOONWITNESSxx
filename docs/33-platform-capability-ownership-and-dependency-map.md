@@ -1,6 +1,6 @@
 # 33 — Platform Capability Ownership & Dependency Map
 
-**Status:** Repository-backed planning baseline; Docker deployment ADR remains proposed  
+**Status:** Repository-backed planning baseline; Docker deployment ADR 0002 accepted on 2026-11-08  
 **Audit date:** 2026-11-08  
 **Audited main:** 0746714208c0c816baabe1546b28f92642b1d5f7  
 **Purpose:** Establish one owner per capability, map actual source/API surfaces and existing GitHub work, and prevent duplicate implementation before new platform issues are created.  
@@ -17,7 +17,7 @@
 5. **Build is not deploy.** A future Build Engine creates and attests image artifacts in an isolated environment. ARSY authorizes target deployment; a single Docker Workload Adapter applies the runtime change.
 6. **Queues are transport, not business truth.** A durable job/operation record and outbox/idempotency contract must exist before a queue adapter is selected. Current BullMQ and ORACLE in-memory implementations are not production deployment foundations.
 7. **GitHub Issues are the backlog.** PRs are integration candidates, .plan is session state, and todo.md is historical/roadmap material. Do not create duplicate issues by copying unchecked checklist lines.
-8. **No new PaaS implementation issue until ADR 0002 is accepted.** Existing issues are linked below. This document does not authorize Docker mutations, production deployment, or changes to runtime architecture.
+8. **ADR 0002 is accepted.** Dependency-ordered PaaS implementation issues may now be created within its boundaries. Acceptance does not authorize production deployment, unrestricted Docker mutation, or weakening the existing read-only connector contract.
 
 ## 2. Capability ownership matrix
 
