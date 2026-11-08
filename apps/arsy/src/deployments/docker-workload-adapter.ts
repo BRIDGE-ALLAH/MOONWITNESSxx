@@ -1,6 +1,7 @@
 import http from 'node:http'
 import https from 'node:https'
 import { createHash } from 'node:crypto'
+import { isIP } from 'node:net'
 import type { IncomingMessage } from 'node:http'
 import type { DockerConnection } from '../docker/engine.ts'
 
@@ -79,11 +80,15 @@ export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
     }
 
     const remoteUrl = connection.kind === 'remote' ? new URL(connection.endpointUrl) : null
+    if (connection.kind === 'local' && connection.socketPath !== '/var/run/docker.sock' && connection.socketPath !== '/run/docker.sock') {
+      throw new DockerWorkloadTransportError('Local Docker socket path is not allowed', { outcomeUnknown: false })
+    }
     let pinnedLookup: https.RequestOptions['lookup']
     if (connection.kind === 'remote') {
       if (remoteUrl?.protocol !== 'https:' || remoteUrl.username || remoteUrl.password ||
-          remoteUrl.pathname !== '/' && remoteUrl.pathname !== '' || remoteUrl.search || remoteUrl.hash ||
-          connection.addresses.length === 0) {
+          (remoteUrl.pathname !== '/' && remoteUrl.pathname !== '') || remoteUrl.search || remoteUrl.hash ||
+          (remoteUrl.port && remoteUrl.port !== '2376') || connection.addresses.length === 0 ||
+          connection.addresses.some((address) => isIP(address.address) !== address.family)) {
         throw new DockerWorkloadTransportError('Remote Docker connection is not a validated HTTPS origin', { outcomeUnknown: false })
       }
       pinnedLookup = ((_hostname, options, callback) => {
@@ -266,7 +271,7 @@ function containerName(input: CreateDockerWorkloadInput): string {
   if (!/^[a-z0-9][a-z0-9_.-]{0,62}$/.test(name)) {
     throw new TypeError('Deployment name must use lowercase Docker-safe characters')
   }
-  return `mw-${ownerHash(input.ownerId)}-${input.deploymentId.slice(0, 8)}-${input.operationId.slice(0, 8)}`
+  return `mw-${ownerHash(input.ownerId)}-${input.deploymentId.slice(0, 8)}-${name.slice(0, 32)}-${input.operationId.slice(0, 8)}`
 }
 
 function normalizeEnvironment(input: Record<string, string> | undefined): string[] {
@@ -292,10 +297,13 @@ function normalizePorts(ports: number[] | undefined): Record<string, Record<stri
   const result: Record<string, Record<string, never>> = {}
   if (!ports) return result
   if (ports.length > 8) throw new TypeError('At most eight container ports may be declared')
+  const seen = new Set<number>()
   for (const port of ports) {
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
       throw new TypeError('Exposed container ports must be integers from 1 to 65535')
     }
+    if (seen.has(port)) throw new TypeError('Exposed container ports must be unique')
+    seen.add(port)
     result[`${port}/tcp`] = {}
   }
   return result
