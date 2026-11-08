@@ -47,6 +47,7 @@ jobs:
           --health-retries 10
     env:
       ORACLE_TEST_DATABASE_URL: postgresql://oracle:oracle@127.0.0.1:5432/oracle_test
+      ORACLE_TEST_APP_DATABASE_URL: postgresql://oracle_app:oracle_app_test_password@127.0.0.1:5432/oracle_test
     strategy:
       fail-fast: false
       matrix:
@@ -69,6 +70,30 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
+
+      - name: Provision isolated least-privilege ORACLE application role
+        run: |
+          python - <<'PY'
+          import asyncio
+          import asyncpg
+
+          async def main():
+              connection = await asyncpg.connect("postgresql://oracle:oracle@127.0.0.1:5432/oracle_test")
+              try:
+                  await connection.execute(
+                      "CREATE ROLE oracle_app LOGIN PASSWORD 'oracle_app_test_password' "
+                      "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
+                  )
+                  await connection.execute("GRANT CONNECT ON DATABASE oracle_test TO oracle_app")
+                  await connection.execute("REVOKE CREATE ON DATABASE oracle_test FROM oracle_app")
+                  await connection.execute("REVOKE ALL ON SCHEMA public FROM oracle_app")
+                  await connection.execute("REVOKE ALL ON ALL TABLES IN SCHEMA public FROM oracle_app")
+                  await connection.execute("REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM oracle_app")
+              finally:
+                  await connection.close()
+
+          asyncio.run(main())
+          PY
 
       - name: Check lint
         run: ruff check src tests
