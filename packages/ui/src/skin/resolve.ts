@@ -46,7 +46,7 @@ export function resolveSkinConfig(input: SkinConfigInput = {}): ResolvedSkinConf
     }
   }
 
-  let density = definition.defaultDensity
+  let density: DensityMode = definition.defaultDensity
   if (input.density !== undefined && input.density !== '') {
     if (typeof input.density === 'string' && isDensityMode(input.density)) {
       density = input.density
