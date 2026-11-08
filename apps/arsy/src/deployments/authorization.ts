@@ -13,6 +13,13 @@ const MAX_KEY_BYTES = 16 * 1024
 
 type QueryResult<T> = { rows: T[] }
 
+class PolicyTimeoutError extends Error {
+  constructor() {
+    super('policy_timeout')
+    this.name = 'PolicyTimeoutError'
+  }
+}
+
 export interface DeploymentAuthorizationContext {
   operationId: string
   ownerId: string
@@ -35,7 +42,7 @@ export interface DeploymentPolicyResult {
 }
 
 export interface DeploymentPolicyProvider {
-  evaluate(context: DeploymentAuthorizationContext): Promise<DeploymentPolicyResult>
+  evaluate(context: DeploymentAuthorizationContext, signal: AbortSignal): Promise<DeploymentPolicyResult>
 }
 
 export interface DeploymentAuthorizationDecision {
@@ -406,9 +413,14 @@ export interface AuthorizeDeploymentDependencies {
 }
 
 export async function authorizeDeploymentOperation(
-  input: { operationId: string; ownerId: string; authenticatedActorId: string; now?: string },
+  input: { operationId: string; ownerId: string; authenticatedActorId: string; now?: string; policyTimeoutMs?: number },
   dependencies: AuthorizeDeploymentDependencies,
 ): Promise<DeploymentAuthorizationDecision> {
+  const policyTimeoutMs = input.policyTimeoutMs ?? 3_000
+  if (!Number.isInteger(policyTimeoutMs) || policyTimeoutMs < 1 || policyTimeoutMs > 10_000) {
+    throw new TypeError('policyTimeoutMs must be an integer between 1 and 10000')
+  }
+
   let context: DeploymentAuthorizationContext | null
   try {
     context = await dependencies.store.loadContext(
@@ -430,7 +442,19 @@ export async function authorizeDeploymentOperation(
 
   try {
     if (!dependencies.policyProvider) throw new Error('policy_provider_unavailable')
-    policy = await dependencies.policyProvider.evaluate(context)
+    const controller = new AbortController()
+    let timeout: ReturnType<typeof setTimeout> | undefined
+    policy = await Promise.race([
+      dependencies.policyProvider.evaluate(context, controller.signal),
+      new Promise<never>((_resolve, reject) => {
+        timeout = setTimeout(() => {
+          controller.abort()
+          reject(new PolicyTimeoutError())
+        }, policyTimeoutMs)
+      }),
+    ]).finally(() => {
+      if (timeout) clearTimeout(timeout)
+    })
     if (!policy || typeof policy.allowed !== 'boolean' ||
         !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$/.test(policy.policyVersion ?? '') ||
         !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$/.test(policy.reasonCode ?? '') ||
