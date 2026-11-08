@@ -46,9 +46,7 @@ class Settings:
             max_retained_jobs=positive_int("ORACLE_MAX_RETAINED_JOBS", 1_000),
             max_numeric_values=positive_int("ORACLE_MAX_NUMERIC_VALUES", 10_000),
             max_text_chars=positive_int("ORACLE_MAX_TEXT_CHARS", 100_000),
-            shutdown_grace_seconds=positive_int(
-                "ORACLE_SHUTDOWN_GRACE_SECONDS", 5, minimum=0
-            ),
+            shutdown_grace_seconds=positive_int("ORACLE_SHUTDOWN_GRACE_SECONDS", 5, minimum=0),
         )
         settings.validate()
         return settings
@@ -82,8 +80,6 @@ class Settings:
             raise ValueError("ORACLE_HOST must be an IP address in stage 1") from exc
 
         if not is_loopback and not self.service_token:
-            raise ValueError(
-                "ORACLE_SERVICE_TOKEN is required when ORACLE_HOST is not loopback"
-            )
+            raise ValueError("ORACLE_SERVICE_TOKEN is required when ORACLE_HOST is not loopback")
         if self.service_token is not None and len(self.service_token) < 32:
             raise ValueError("ORACLE_SERVICE_TOKEN must contain at least 32 characters")
