@@ -1,3 +1,18 @@
+-- Preserve the first-generation asset table while introducing the owner-scoped v2 schema.
+-- Existing rows remain available in arsy_assets_legacy; no legacy asset metadata is discarded.
+DO $$
+BEGIN
+  IF to_regclass('arsy_assets') IS NOT NULL
+     AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'arsy_assets' AND column_name = 'product_version_id')
+     AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'arsy_assets' AND column_name = 'product_id') THEN
+    IF to_regclass('arsy_assets_legacy') IS NOT NULL THEN
+      RAISE EXCEPTION 'arsy_assets_legacy already exists; refusing to overwrite preserved asset data';
+    END IF;
+    ALTER TABLE arsy_assets RENAME TO arsy_assets_legacy;
+  END IF;
+END
+$$;
+
 -- Persistent digital asset bytes are stored by an explicit storage adapter.
 -- Provenance and inspection history are owner-scoped and append-only.
 CREATE TABLE IF NOT EXISTS arsy_assets (
