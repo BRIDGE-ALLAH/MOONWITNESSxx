@@ -305,3 +305,36 @@ def test_terminal_job_retention_expires_its_idempotency_record(postgres_database
             await store.close()
 
     asyncio.run(scenario())
+
+
+def test_missing_migration_keeps_store_unready_and_rejects_submissions(postgres_database: str) -> None:
+    migration = (Path(__file__).parents[1] / "migrations" / "001_oracle_jobs.sql").read_text()
+
+    async def scenario() -> None:
+        connection = await asyncpg.connect(postgres_database)
+        await connection.execute("DROP TABLE oracle.jobs")
+        await connection.close()
+
+        store = PostgresJobStore(make_settings(postgres_database))
+        await store.start()
+        try:
+            ready, depth = await store.readiness()
+            assert ready is False
+            assert depth == 0
+            with pytest.raises(Exception) as captured:
+                await store.submit(
+                    **submission(),
+                    idempotency_key="schema-missing-01",
+                )
+            assert captured.type.__name__ == "StorageUnavailableError"
+        finally:
+            await store.close()
+
+        # Restore the fixture schema for teardown and subsequent isolated test runs.
+        connection = await asyncpg.connect(postgres_database)
+        try:
+            await connection.execute(migration)
+        finally:
+            await connection.close()
+
+    asyncio.run(scenario())
