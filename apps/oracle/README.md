@@ -1,8 +1,8 @@
 # ORACLE — Python Intelligence Service
 
-**Stage:** Stage 1 foundation · **Status:** development-only, not production-ready
+**Stage:** Stage 1 computation + Stage 2 durable job-store foundation · **Status:** production deployment remains blocked
 
-ORACLE is the MOONWITNESS Python service for bounded computation and research-oriented analysis. In this first stage it provides a versioned internal API, a bounded in-process job queue, deterministic statistical/text profiling tasks, and digest-based derivation metadata.
+ORACLE is the MOONWITNESS Python service for bounded computation and research-oriented analysis. It provides a versioned internal API, bounded deterministic statistical/text profiling tasks, and digest-based derivation metadata. Local loopback mode can use an in-process queue; configured Compose/shared environments use the PostgreSQL-backed job store.
 
 ## Ownership boundaries
 
@@ -26,7 +26,7 @@ All inputs have explicit size limits. Only aggregate outputs are returned for te
 The service exposes:
 
 - \`GET /health/live\` — process liveness.
-- \`GET /health/ready\` — worker/readiness and queue capacity; explicitly reports that jobs are not durable.
+- \`GET /health/ready\` — worker/readiness, queue capacity and configured durability; returns HTTP 503 while configured storage or its explicit migration is unavailable.
 - \`GET /v1/capabilities\` — available task types and limits.
 - \`POST /v1/jobs\` — submit a job; responds \`202 Accepted\` and a job ID.
 - \`GET /v1/jobs/{job_id}\` — retrieve job status/result/provenance.
@@ -49,6 +49,17 @@ Authorization: Bearer <service-token>
 \`\`\`
 
 The request body is versioned at \`/v1\`; Pydantic rejects unknown fields. Reusing an \`Idempotency-Key\` with the same canonical request returns the original job while reusing it with a different request returns \`409 Conflict\`.
+
+## Job storage and durability
+
+- Without ORACLE_DATABASE_URL, loopback development and isolated unit tests use the bounded in-memory queue. Jobs and idempotency keys are lost on process restart in this mode.
+- With ORACLE_DATABASE_URL, ORACLE stores bounded job payloads, state, result, digest, provenance, and idempotency key in its own oracle.jobs table. Submissions and idempotency replay are serialized transactionally; workers claim jobs with PostgreSQL FOR UPDATE SKIP LOCKED and finite leases.
+- Worker leases have a fencing owner. An expired lease can be reclaimed; an older worker cannot overwrite the newer worker's result. Repeated lease expiry is terminally failed after ORACLE_MAX_JOB_ATTEMPTS.
+- Terminal jobs are pruned after ORACLE_JOB_RETENTION_SECONDS (default 86,400 seconds) and when the configured retained-job ceiling requires it. Queued/running jobs are never pruned. Idempotency replay is guaranteed only while the corresponding job is retained.
+- Apply `apps/oracle/migrations/001_oracle_jobs.sql` explicitly before enabling `ORACLE_DATABASE_URL`. It is safe to apply more than once. Application startup never creates or changes the schema. A missing schema keeps readiness false and job reads/writes fail with HTTP 503.
+- Grant the service a dedicated PostgreSQL login with only the privileges it needs on the `oracle` schema and `oracle.jobs` table (USAGE on schema; SELECT/INSERT/UPDATE/DELETE on table). The root Compose credentials are development-only and must not be reused as production credentials.
+- Bounded submitted input is stored in PostgreSQL so work can resume after a process restart. Treat database access and backups as sensitive; the 24-hour default retention is not a substitute for the deployment's required storage encryption, access control, and backup-retention policy.
+- ORACLE stores computation job lifecycle only. ARSY remains caller identity, policy, authorization and orchestration authority; WITNESS FABRIC remains evidence/provenance authority. The ORACLE schema is not canonical audit or source-evidence storage.
 
 ## Local development
 
@@ -98,14 +109,14 @@ Both routes are protected by ARSY's existing operator authentication boundary. A
 
 The Compose example uses `ORACLE_BASE_URL=http://oracle:8010`, `ORACLE_SERVICE_TOKEN`, and `ORACLE_REQUEST_TIMEOUT_MS`. The sample token in `.env.docker` is for local development only; replace it before any shared or non-local environment. Do not expose ORACLE through public ingress or a host-published port.
 
-The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, ORACLE, and ARSY as real containers, submits both supported analysis tasks through ARSY, checks their computed results and provenance, and verifies idempotency replay. It uses an ephemeral CI operator token and removes the isolated Compose volumes after the run. This verifies service-to-service execution; it does not make Stage 1 jobs durable or prove production readiness.
+The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, ORACLE, and ARSY as real containers, applies the ORACLE migration explicitly, submits both supported analysis tasks through ARSY, checks computed results and provenance, verifies idempotency replay, restarts ORACLE, and confirms the original job/result/idempotency key survive. It uses ephemeral CI credentials and removes the isolated Compose volumes after the run. This verifies the durable development/test path; it does not prove production readiness.
 
-## Stage 1 safety and operational limitations
+## Stage 2 and production safety boundaries
 
-- Jobs and idempotency keys live in process memory only. Restarting the service loses queued/running jobs, results, and idempotency history.
-- The queue, worker count, numeric input size, text size, and retained-job count are bounded. Queue saturation returns \`503\` with \`Retry-After\`.
-- The service is intentionally not a durable queue consumer and does not connect to PostgreSQL, Redis/BullMQ, NATS, an AI provider, a GPU, an RDF store, or a vector database.
-- \`ORACLE_ENV=production\` is rejected at startup until durable job storage/queue, production observability, secrets, network controls, and deployment validation exist.
+- In-memory jobs are intentionally ephemeral when no database URL is configured. The Compose/shared path is PostgreSQL-backed and survives ORACLE process restarts.
+- The queue, worker count, retained-job count, attempt count, lease duration, retention window, numeric input size, and text size are bounded. Queue saturation and unavailable durable storage return HTTP 503 with Retry-After.
+- The ORACLE job store uses PostgreSQL only. Redis/BullMQ, NATS, model providers, GPUs, RDF stores and vector databases are not part of this implementation.
+- ORACLE_ENV=production remains rejected at startup. A durable queue is only one prerequisite; managed least-privilege credentials, backups/restore, observability/alerting, private network policy, deployment ownership and tested rollback still require independent implementation and verification.
 - Caller authentication and authorization belong to ARSY. A configured ORACLE bearer token is only a service-to-service boundary, not a replacement for user authorization.
 - No source text or numeric input values are written to application logs. Result payloads remain accessible to the trusted internal caller through the job API.
 - A SHA-256 digest is a reproducible fingerprint only. Evidence authenticity, signatures, trusted timestamps, retention, and canonical audit storage remain outside ORACLE.
