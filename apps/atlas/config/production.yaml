@@ -4,6 +4,10 @@ logger:
   level: <%= get_env(name="LOG_LEVEL", default="info") %>
   format: json
 
+workers:
+  # No ATLAS background tasks are registered yet. Keep any future task execution explicit and synchronous until a durable queue is deliberately adopted.
+  mode: ForegroundBlocking
+
 server:
   port: <%= get_env(name="PORT", default="5150") %>
   binding: <%= get_env(name="BINDING", default="0.0.0.0") %>
