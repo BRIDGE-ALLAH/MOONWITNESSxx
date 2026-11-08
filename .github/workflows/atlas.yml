@@ -1,0 +1,208 @@
+name: ATLAS CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+      - "fix/**"
+  pull_request:
+    branches:
+      - main
+      - "feat/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: ATLAS Rust quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-postgres-admin-password-32chars
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_ADMIN_URL: postgres://postgres:ci-postgres-admin-password-32chars@127.0.0.1:5432/postgres
+      DATABASE_URL: postgres://atlas:ci-atlas-db-password-which-is-over-32-chars@127.0.0.1:5432/atlas
+      RADIUS_DATABASE_URL: postgres://radius:ci-radius-db-password-which-is-long-enough-32chars@127.0.0.1:5432/radius
+      ATLAS_DB_PASSWORD: ci-atlas-db-password-which-is-over-32-chars
+      RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
+    defaults:
+      run:
+        working-directory: apps/atlas
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/atlas
+
+      - name: Resolve dependencies and generate lockfile
+        run: cargo generate-lockfile
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run tests
+        run: cargo test --locked
+
+      - name: Run Clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: Build release binary
+        run: cargo build --locked --release
+
+      - name: Validate Docker Compose
+        env:
+          ATLAS_DB_PASSWORD: ci-atlas-db-password-which-is-over-32-chars
+          POSTGRES_ADMIN_PASSWORD: ci-postgres-admin-password-32chars
+          ATLAS_REDIS_PASSWORD: ci-atlas-redis-password-which-is-over-32-chars
+          RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
+          RADIUS_STATUS_SECRET: ci-radius-status-secret-which-is-long-enough-32
+          ATLAS_CONTROL_TOKEN: ci-atlas-control-token-which-is-long-enough
+          ATLAS_DOCKER_SUBNET: 172.31.240.0/24
+        run: docker compose config --quiet
+
+      - name: Build ATLAS container
+        run: docker build --tag atlas:ci .
+
+      - name: Build FreeRADIUS image
+        run: docker build --file docker/freeradius/Dockerfile --tag atlas-freeradius:ci .
+
+
+      - name: Run ATLAS and FreeRADIUS end-to-end smoke test
+        env:
+          POSTGRES_ADMIN_PASSWORD: ci-postgres-admin-password-32chars
+          ATLAS_DB_PASSWORD: ci-atlas-db-password-which-is-over-32-chars
+          RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
+          ATLAS_REDIS_PASSWORD: ci-atlas-redis-password-which-is-over-32-chars
+          RADIUS_STATUS_SECRET: ci-radius-status-secret-which-is-long-enough-32
+          ATLAS_CONTROL_TOKEN: ci-atlas-control-token-which-is-long-enough
+          ATLAS_DOCKER_SUBNET: 172.31.240.0/24
+          RADIUS_BIND_ADDRESS: 127.0.0.1
+        run: |
+          set -euo pipefail
+          if ! docker compose up -d --build --wait --wait-timeout 120; then
+            docker compose ps
+            docker compose logs --no-color postgres freeradius migrate atlas || true
+            exit 1
+          fi
+
+          ready=false
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail --max-time 5 http://127.0.0.1:5150/api/v1/system/readiness > /tmp/atlas-readiness.json 2>/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" != true ]; then
+            echo "ATLAS readiness endpoint did not become reachable on the published host port."
+            docker compose ps
+            docker compose logs --no-color --tail=200 atlas migrate freeradius redis postgres || true
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json
+          with open("/tmp/atlas-readiness.json", encoding="utf-8") as handle:
+              readiness = json.load(handle)
+          assert readiness["ready"] is True, readiness
+          assert readiness["database"] == "available", readiness
+          assert readiness["redis"] == "available", readiness
+          assert readiness["radius_database"] == "available", readiness
+          PY
+
+          curl --silent --show-error --fail \
+            -H "Authorization: Bearer $ATLAS_CONTROL_TOKEN" \
+            http://127.0.0.1:5150/api/v1/engines/01K9Z0J8A1B2C3D4E5F6G7H8J9/health \
+            > /tmp/atlas-radius-health.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/atlas-radius-health.json", encoding="utf-8") as handle:
+              health = json.load(handle)
+          assert health["state"] == "healthy", health
+          PY
+
+          curl --silent --show-error --fail --request POST \
+            -H "Authorization: Bearer $ATLAS_CONTROL_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"nasname":"172.31.240.10","shortname":"ci-atlas","nas_type":"other","ports":16,"secret":"ci-radius-nas-secret-which-is-over-32","description":"Ephemeral end-to-end test NAS"}' \
+            http://127.0.0.1:5150/api/v1/radius/nas > /tmp/atlas-nas.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/atlas-nas.json", encoding="utf-8") as handle:
+              result = json.load(handle)
+          assert result["activation"] == "pending_radius_restart", result
+          assert result["data"]["secret_configured"] is True, result
+          PY
+
+          curl --silent --show-error --fail --request POST \
+            -H "Authorization: Bearer $ATLAS_CONTROL_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"username":"ci-radius-user","password":"correct horse battery staple","credential_mode":"bcrypt"}' \
+            http://127.0.0.1:5150/api/v1/radius/subscribers > /tmp/atlas-subscriber.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/atlas-subscriber.json", encoding="utf-8") as handle:
+              result = json.load(handle)
+          assert result["credential_storage"] == "hashed", result
+          assert result["activation"] == "stored_in_radius_sql", result
+          assert result["restart_required"] is False, result
+          PY
+
+          docker compose restart freeradius
+
+          echo "ATLAS readiness, engine health, NAS registration, and subscriber persistence checks passed."
+          echo "Verifying actual RADIUS PAP authentication after the FreeRADIUS restart."
+          radius_auth_ok=false
+          auth_status=1
+          auth_result="No RADIUS response received."
+          for attempt in $(seq 1 45); do
+            auth_status=0
+            auth_result="$(printf 'User-Name = "ci-radius-user"\\nUser-Password = "correct horse battery staple"\\nNAS-IP-Address = 172.31.240.10\\nNAS-Port = 1\\n' | docker compose exec -T atlas radclient -r 1 -t 1 freeradius:1812 auth ci-radius-nas-secret-which-is-over-32 2>&1)" || auth_status=$?
+            if [ "$auth_status" -eq 0 ] && printf '%s\\n' "$auth_result" | grep -q 'Access-Accept'; then
+              radius_auth_ok=true
+              break
+            fi
+            sleep 2
+          done
+          printf '%s\\n' "$auth_result"
+          if [ "$radius_auth_ok" != true ]; then
+            echo "RADIUS PAP authentication did not return Access-Accept (radclient exit status: $auth_status)."
+            docker compose logs --no-color --tail=200 freeradius atlas || true
+            exit 1
+          fi
+
+      - name: Collect ATLAS Compose diagnostics on smoke failure
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail=300 atlas freeradius migrate redis postgres || true
+          container_id="$(docker compose ps -aq freeradius | head -n 1)"
+          if [ -n "$container_id" ]; then
+            docker inspect --format '{{json .State.Health}}' "$container_id" || true
+          fi
