@@ -248,7 +248,7 @@ def test_durable_mode_fails_closed_without_database_or_migration() -> None:
     with TestClient(create_app(settings)) as client:
         assert client.get("/health/live").status_code == 200
         ready = client.get("/health/ready")
-        assert ready.status_code == 200
+        assert ready.status_code == 503
         assert ready.json()["ready"] is False
         assert ready.json()["durable_jobs"] is True
         assert ready.json()["database_available"] is False
