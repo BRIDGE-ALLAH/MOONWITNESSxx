@@ -150,3 +150,16 @@ The separate full-workspace typecheck/build workflow was skipped by workflow con
 - CodeQL passed (run `42398091462`).
 - The full-workspace job is no longer conditional on `FULL_QUALITY_CI`.
 - Phase 6 Headquarter engineering-foundation gate is complete. Production rollout gates remain explicitly external: browser accessibility/E2E, ARSY identity/workspace/permission/API contracts, deployment smoke test, and rollback ownership.
+
+
+## Shell truthfulness and module maturity — 2026-11-09
+
+- Removed the local-only notification toast and locale toggle from the global topbar. They did not deliver notifications or change the route locale; presenting them as working controls was misleading.
+- Kept the actual theme toggle and command palette controls.
+- Removed the static `Witness` profile badge because it was not backed by a real profile/session identity view.
+- Replaced the static `Workspace: Observatory` label with the non-interactive `Operator console` label; persisted workspace switching remains unimplemented.
+- Navigation now distinguishes `prototype`, `partial`, `integrated`, and `planned` maturity. Docker is marked integrated because the authenticated ARSY/Docker connector path is implemented; an operator still has to configure a server before live inventory is available; Governance Lab is partial because persisted, owner-scoped governance snapshots coexist with explicitly separate demo mode; legacy sample-oriented modules remain prototype.
+- Added navigation contract tests for unique route paths, disabled planned entries, and module-maturity labels.
+- Locale routing and notification delivery remain deferred until real platform services and route contracts exist. No fake replacement behavior was added.
+
+This is a shell truthfulness correction, not a claim that Headquarter as a whole is production-ready.

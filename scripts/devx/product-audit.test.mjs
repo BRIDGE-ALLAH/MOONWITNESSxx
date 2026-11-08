@@ -131,3 +131,39 @@ test('current repository workspace and Headquarter navigation contracts are cohe
   assert.equal(workspace.ok, true, JSON.stringify(workspace.findings))
   assert.equal(experience.ok, true, JSON.stringify(experience.findings))
 })
+
+
+test('Headquarter audit accepts explicit partial and integrated maturity without claiming live production data', async () => {
+  const root = await fixture()
+  try {
+    await mkdir(join(root, 'apps/headquarter/src/app/docker'), { recursive: true })
+    await mkdir(join(root, 'apps/headquarter/src/app/governance'), { recursive: true })
+    await mkdir(join(root, 'apps/headquarter/src/shell'), { recursive: true })
+    await writeFile(join(root, 'apps/headquarter/src/app/docker/page.tsx'), 'export default function Page() { return null }')
+    await writeFile(join(root, 'apps/headquarter/src/app/governance/page.tsx'), 'export default function Page() { return null }')
+    await writeFile(join(root, 'apps/headquarter/src/shell/navigation.ts'), [
+      "export const items = [",
+      "  { href: '/docker', label: 'Docker', status: 'integrated' },",
+      "  { href: '/governance', label: 'Governance', status: 'partial' },",
+      "]",
+    ].join('\n'))
+    await writeFile(join(root, 'apps/headquarter/src/shell/topbar.tsx'), '<Badge role="status" aria-label={labels.demo}>{labels.demo}</Badge>')
+    const report = await auditHeadquarterExperience({ root })
+    assert.equal(report.ok, true, JSON.stringify(report.findings))
+    assert.equal(report.navigableCount, 2)
+  } finally { await rm(root, { recursive: true, force: true }) }
+})
+
+test('Headquarter audit rejects unsupported maturity statuses', async () => {
+  const root = await fixture()
+  try {
+    await mkdir(join(root, 'apps/headquarter/src/app/overview'), { recursive: true })
+    await mkdir(join(root, 'apps/headquarter/src/shell'), { recursive: true })
+    await writeFile(join(root, 'apps/headquarter/src/app/overview/page.tsx'), 'export default function Page() { return null }')
+    await writeFile(join(root, 'apps/headquarter/src/shell/navigation.ts'), "export const items = [{ href: '/overview', label: 'Overview', status: 'live' }]")
+    await writeFile(join(root, 'apps/headquarter/src/shell/topbar.tsx'), '<Badge role="status" aria-label={labels.demo}>{labels.demo}</Badge>')
+    const report = await auditHeadquarterExperience({ root })
+    assert.equal(report.ok, false)
+    assert.ok(report.findings.some((item) => item.id === 'route-status-invalid'))
+  } finally { await rm(root, { recursive: true, force: true }) }
+})
