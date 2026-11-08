@@ -135,7 +135,7 @@ test('deploy requests are recorded durably but fail closed when policy provider 
     assert.equal(response.json().data.status, 'blocked')
     assert.equal(response.json().authorization.allowed, false)
     assert.deepEqual(response.json().authorization.reasonCodes, ['policy_provider_unavailable'])
-    assert.equal(response.json().dispatch.workerEnabled, false)
+    assert.deepEqual(response.json().dispatch, { outbox: 'queued', worker: 'disabled', providerSideEffects: 'not_started' })
     assert.equal(pool.calls.some((call) => call.sql.includes('INSERT INTO arsy_deployment_authorization_decisions')), true)
     assert.equal(pool.calls.some((call) => call.sql.includes('UPDATE arsy_deployment_operations')), true)
     assert.equal(pool.calls.some((call) => call.sql.includes('/containers/')), false)
