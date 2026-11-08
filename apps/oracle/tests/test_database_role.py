@@ -25,7 +25,8 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
             migration = migration_path.read_text()
             await admin.execute(migration)
             owner = await admin.fetchval(
-                "SELECT tableowner FROM pg_tables WHERE schemaname = 'oracle' AND tablename = 'jobs'"
+                "SELECT tableowner FROM pg_tables "
+                "WHERE schemaname = 'oracle' AND tablename = 'jobs'"
             )
             assert owner == "oracle_migrator"
             await admin.execute(
