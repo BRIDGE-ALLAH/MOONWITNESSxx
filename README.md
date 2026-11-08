@@ -12,6 +12,7 @@ MOONWITNESS is the master product identity within the wider **GODPROMISE → EMP
 
 - `apps/headquarter` — Next.js human-facing command center and current prototype/demo experience.
 - `apps/arsy` — Fastify API/runtime, application orchestration, health/readiness, and bounded integrations.
+- `apps/oracle` — standalone Python/FastAPI deterministic computation service; intentionally outside the pnpm workspace and reached privately through ARSY.
 - `packages/*` — shared UI, contracts/types, policy, notifications, feature flags, assets, evidence, Divine research, and developer tooling.
 - `services/*` — legacy prototypes intentionally excluded from the pnpm workspace; not a second runtime ownership layer.
 - `docs/` — canonical narrative, product, design, technical architecture, governance, research, and current-state documentation.
@@ -31,6 +32,7 @@ This is a product catalog, not a statement that nine apps exist in the current w
 
 - HEADQUARTER is a Next.js prototype. Demo/sample data must not be mistaken for live production data.
 - ARSY is the canonical Fastify backend application. It owns HTTP lifecycle and the central application/API authority.
+- ORACLE provides bounded deterministic analysis behind ARSY; Stage 1 job/idempotency state is process-memory only, with no durable queue/job persistence or production readiness claim.
 - The authenticated Docker connector is deliberately read-only and bounded; it does not provide container start/stop/exec/deploy or production deployment management.
 - WITNESS FABRIC, Divine research tooling, repository automation, and developer-experience capabilities have implementation evidence in the repository.
 - The custom ORM, database adapters, and Base Platform addon suite remain target architecture; do not describe them as complete mainline implementations.
