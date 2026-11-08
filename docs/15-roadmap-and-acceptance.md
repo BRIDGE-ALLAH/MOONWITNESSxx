@@ -67,7 +67,7 @@ Opportunity scores cite dated evidence and confidence. Products have a clear buy
 
 ## 7. Design acceptance
 
-MOONWITNESS master identity per docs/01 and docs/10, Observatory and Archive experience themes per docs/11, consistent original illustration and asset provenance, accessible data/forms, responsive and keyboard use, and reduced motion. RIOTWORKS division identity remains subordinate to the MOONWITNESS master brand; division-specific visual expression is limited to RIOTWORKS-owned product surfaces. Avoid generic SaaS drift.
+MOONWITNESS master identity per docs/01, docs/10, and docs/12; route-appropriate Observatory, Archive, and Signal skins per docs/11 and docs/13; consistent semantic status/evidence meanings; original illustration and asset provenance; accessible data/forms; responsive and keyboard use; rendered contrast review; and reduced motion. RIOTWORKS remains the product and operating division subordinate to the MOONWITNESS master brand. Avoid generic SaaS drift, decorative HUD noise, and unbounded poster styling.
 
 ## 8. Definition of done
 

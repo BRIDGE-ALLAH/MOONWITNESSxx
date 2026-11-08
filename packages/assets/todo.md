@@ -2,7 +2,7 @@
 
 ## Phase 0 — Brand governance
 - [x] Establish MOONWITNESS as the master brand.
-- [x] Define Observatory and Archive as experience families, XV as a program descriptor, and RIOTWORKS as a separate studio identity.
+- [x] Define Observatory, Archive, and Signal as MOONWITNESS experience skins; keep XV as a program descriptor and RIOTWORKS as the product and operating division within MOONWITNESS.
 - [x] Define Core Promise: SEE MORE. KNOW MORE.
 - [x] Define Brand Manifesto: WHEN THE MOON RISES, WE SHARE MESSAGES. (WMR-WSM)
 - [x] Define operational verbs and messaging hierarchy.
@@ -18,7 +18,7 @@
 
 ## Phase 2 — Visual DNA
 - [x] Define core palette and typography roles.
-- [x] Define editorial, observatory, and evidence visual principles.
+- [x] Define the shared visual principles for Observatory, Archive, and the expressive Signal / Moonpunk editorial skin.
 - [x] Define texture, illustration, accessibility, and motion rules.
 - [x] Define Core Promise and Manifesto placement rules.
 - [x] Map brand primitives to semantic semantic tokens for default Archive, .theme-archive, .dark, and .theme-observatory.
@@ -44,6 +44,7 @@
 - [x] Map primary UI colors and typography to MoonWitness design tokens.
 - [x] Review Headquarter product screens and replace visible RIOTWORKS product branding with MOONWITNESS identity.
 - [x] Create semantic Observatory and Archive theme mappings and apply them to Headquarter route roots.
+- [ ] Implement and verify the Signal skin profile after the token and skin registry contract is ready.
 - [ ] Run browser visual regression and full component accessibility review (manual release gate; browser evidence not available in this execution).
 
 ## Phase 6 — Release

@@ -77,7 +77,10 @@ Use the committed lockfile and repository scripts. If frozen install fails becau
 | [01 — Ecosystem Narrative](./docs/01-ecosystem-narrative.md) | Master brand, story, values, and narrative boundaries |
 | [02 — Product Charter](./docs/02-product-charter.md) | Initial product purpose, users, scope, and principles |
 | [09 — Headquarter IA](./docs/09-information-architecture.md) | Current application and module ownership |
-| [10 — Design DNA](./docs/10-design-dna.md) | MOONWITNESS visual identity and design principles |
+| [10 — Design DNA](./docs/10-design-dna.md) | MOONWITNESS master visual identity and three skin personalities |
+| [11 — Design System](./docs/11-design-system.md) | Shared UI, semantic tokens, accessibility, and component contract |
+| [12 — Brand Architecture](./docs/12-brand-architecture.md) | Master brand, experience, program, and division hierarchy |
+| [13 — Skin System Blueprint](./docs/13-skin-system-blueprint.md) | Skin architecture, selection rules, implementation phases, and acceptance gates |
 | [15 — Roadmap](./docs/15-roadmap-and-acceptance.md) | Delivery phases and acceptance gates |
 | [18–22 — Architecture](./docs/18-monorepo-and-orm-addon-architecture.md) | Backend, ORM, addons, schema, and database target contracts |
 | [23 — Repository Audit](./docs/23-repository-audit-and-current-execution-plan.md) | Historical implementation audit and execution order |
