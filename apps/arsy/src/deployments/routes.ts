@@ -12,6 +12,7 @@ import {
 import {
   createDeployment,
   createDeploymentOperation,
+  enqueueDeploymentOperation,
   IdempotencyConflictError,
   OperationStateConflictError,
   transitionDeploymentOperation,
@@ -179,7 +180,6 @@ export function registerDeploymentRoutes(
 ): void {
   const authorizationDependencies = options.authorization ?? {}
   const clock = options.now ?? (() => new Date())
-  const authorizationStore = new PostgresDeploymentAuthorizationStore(pool)
   const publicKeys = createTrustedPublicKeyring((options.env ?? process.env).ARSY_DEPLOYMENT_TRUSTED_PUBLIC_KEYS)
   const capabilityVerifier = authorizationDependencies.capabilityVerifier ??
     createEd25519CapabilityVerifier(publicKeys)
@@ -313,32 +313,55 @@ export function registerDeploymentRoutes(
         header.trim().length < 8 || header.length > 200) {
       return reply.code(400).send({ error: { code: 'VALIDATION_ERROR' } })
     }
+    if (typeof pool.connect !== 'function') {
+      return reply.code(503).send({ error: { code: 'DEPLOYMENT_TRANSACTION_UNAVAILABLE' } })
+    }
+
     const requestPayload: JsonObject = parsed.data.source
       ? { source: { repository: parsed.data.source.repository, commit: parsed.data.source.commit.toLowerCase(), dockerfile: parsed.data.source.dockerfile } }
       : {}
+    let client: Awaited<ReturnType<NonNullable<DatabasePool['connect']>>> | null = null
+    let transactionOpen = false
     try {
-      const created = await createDeploymentOperation(pool, {
+      client = await pool.connect()
+      const txPool: DatabasePool = {
+        query: (statement, values) => client!.query(statement, values),
+        end: async () => {},
+      }
+      await client.query('BEGIN')
+      transactionOpen = true
+
+      const created = await createDeploymentOperation(txPool, {
         ownerId: principal.operatorId,
         actorId: principal.operatorId,
         deploymentId: params.data.deploymentId,
         kind: parsed.data.kind,
         idempotencyKey: header.trim(),
         requestPayload,
-      })
-      let decision = null
+      }, { enqueueOutbox: false })
+
+      let decision: ReturnType<typeof serializeAuthorization> = null
+      let operationStatus = created.operation.status
+      let outboxQueued = false
       if (created.disposition === 'created') {
         const authorization = await authorizeDeploymentOperation(
           { operationId: created.operation.id, ownerId: principal.operatorId, authenticatedActorId: principal.operatorId },
-          { ...authorizationDependencies, store: authorizationStore, capabilityVerifier, approvalKeyring },
+          {
+            ...authorizationDependencies,
+            store: new PostgresDeploymentAuthorizationStore(txPool),
+            capabilityVerifier,
+            approvalKeyring,
+          },
         )
-        decision = {
-          allowed: authorization.allowed,
-          reasonCodes: authorization.reasonCodes,
-          policyVersion: authorization.policyVersion,
-          recordedAt: clock().toISOString(),
-        }
+        const decisionRows = queryRows<AuthorizationRow>(await txPool.query(
+          'SELECT allowed, reason_codes, policy_version, recorded_at FROM arsy_deployment_authorization_decisions WHERE owner_id = $1 AND operation_id = $2 ORDER BY recorded_at DESC, id DESC LIMIT 1',
+          [principal.operatorId, created.operation.id],
+        ))
+        decision = serializeAuthorization(decisionRows[0])
+        if (!decision) throw new Error('authorization_audit_missing')
+
         if (!authorization.allowed) {
-          await transitionDeploymentOperation(pool, {
+          const blocked = await transitionDeploymentOperation(txPool, {
             operationId: created.operation.id,
             ownerId: principal.operatorId,
             actorId: principal.operatorId,
@@ -348,22 +371,43 @@ export function registerDeploymentRoutes(
             details: { reasonCodes: authorization.reasonCodes, policyVersion: authorization.policyVersion },
             errorCode: authorization.reasonCodes[0] ?? 'authorization_denied',
           })
+          operationStatus = blocked.status
+        } else {
+          await enqueueDeploymentOperation(txPool, {
+            operationId: created.operation.id,
+            ownerId: principal.operatorId,
+          })
+          outboxQueued = true
         }
       } else {
-        const rows = queryRows<AuthorizationRow>(await pool.query(
+        const rows = queryRows<AuthorizationRow>(await txPool.query(
           'SELECT allowed, reason_codes, policy_version, recorded_at FROM arsy_deployment_authorization_decisions WHERE owner_id = $1 AND operation_id = $2 ORDER BY recorded_at DESC, id DESC LIMIT 1',
           [principal.operatorId, created.operation.id],
         ))
         decision = serializeAuthorization(rows[0])
+        if (!decision) throw new Error('authorization_audit_missing')
+        outboxQueued = decision.allowed && created.operation.status === 'queued'
       }
+
+      await client.query('COMMIT')
+      transactionOpen = false
       return reply.code(created.disposition === 'created' ? 202 : 200).send({
-        data: { ...created.operation, status: created.disposition === 'created' && decision && !decision.allowed ? 'blocked' : created.operation.status },
+        data: { ...created.operation, status: operationStatus },
         disposition: created.disposition,
         authorization: decision,
-        dispatch: { outbox: 'queued', worker: 'disabled', providerSideEffects: 'not_started' },
+        dispatch: {
+          outbox: outboxQueued ? 'queued' : 'not_enqueued',
+          worker: 'disabled',
+          providerSideEffects: 'not_started',
+        },
       })
     } catch (error) {
+      if (transactionOpen && client) {
+        try { await client.query('ROLLBACK') } catch { /* original error remains authoritative */ }
+      }
       return reply.code(statusCodeForError(error)).send({ error: { code: safeErrorCode(error) } })
+    } finally {
+      client?.release()
     }
   })
 }
