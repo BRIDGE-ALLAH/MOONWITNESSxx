@@ -101,6 +101,21 @@ test('deployment authorization accepts high-risk action only with approved refer
   assert.equal(pool.records[0][9], 'approval-2026-001')
 })
 
+test('deployment authorization times out policy evaluation and records a denial', async () => {
+  const pool = new FakePool()
+  let aborted = false
+  const result = await authorizeAndRecordDeploymentAction(pool, base, {
+    evaluate: async ({ signal }) => {
+      signal.addEventListener('abort', () => { aborted = true }, { once: true })
+      return await new Promise(() => {})
+    },
+  }, 5)
+  assert.equal(result.allowed, false)
+  assert.equal(result.reasonCode, 'POLICY_TIMEOUT')
+  assert.equal(aborted, true)
+  assert.equal(pool.records[0][6], 'deny')
+})
+
 test('deployment authorization fails closed on policy exceptions and malformed decisions', async () => {
   const pool = new FakePool()
   const unavailable = await authorizeAndRecordDeploymentAction(pool, base, {
