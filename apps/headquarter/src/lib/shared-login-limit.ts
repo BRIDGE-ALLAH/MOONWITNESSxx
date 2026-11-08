@@ -57,7 +57,7 @@ export async function requestSharedLoginLimit(
   const operatorToken = env.ARSY_OPERATOR_TOKEN?.trim()
   if (!networkHash || !baseUrl || !operatorToken) throw new Error('SHARED_LOGIN_LIMIT_NOT_CONFIGURED')
 
-  const response = await fetch(`${baseUrl.replace(/\\/+$/, '')}/api/v1/auth/login-attempts`, {
+  const response = await fetch(`${baseUrl.replace(/\/+$/, '')}/api/v1/auth/login-attempts`, {
     method: 'POST',
     headers: {
       accept: 'application/json',
