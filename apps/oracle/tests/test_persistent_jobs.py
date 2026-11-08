@@ -325,6 +325,61 @@ def test_terminal_job_retention_expires_its_idempotency_record(postgres_database
     asyncio.run(scenario())
 
 
+def test_capacity_rejection_commits_terminal_record_cleanup(
+    postgres_database: str,
+) -> None:
+    async def scenario() -> None:
+        first_store = PostgresJobStore(
+            make_settings(postgres_database, max_retained_jobs=2)
+        )
+        await first_store.start()
+        try:
+            completed, _ = await first_store.submit(
+                **submission(),
+                idempotency_key="capacity-cleanup-terminal",
+            )
+            claimed = await first_store.claim("worker-terminal")
+            assert claimed is not None
+            result = {"count": 3}
+            await first_store.complete(
+                job_id=completed.job_id,
+                worker_id="worker-terminal",
+                result=result,
+                provenance=provenance(claimed, result),
+            )
+
+            active, _ = await first_store.submit(
+                **submission([10, 20]),
+                idempotency_key="capacity-cleanup-active",
+            )
+            active_claim = await first_store.claim("worker-active")
+            assert active_claim is not None
+        finally:
+            await first_store.close()
+
+        limited_store = PostgresJobStore(
+            make_settings(postgres_database, max_retained_jobs=1)
+        )
+        await limited_store.start()
+        try:
+            with pytest.raises(QueueSaturatedError):
+                await limited_store.submit(
+                    **submission([30, 40]),
+                    idempotency_key="capacity-cleanup-new",
+                )
+
+            # The active record still fills the cap, but the terminal row's deletion
+            # must have committed despite the failed new submission.
+            assert await limited_store.get(completed.job_id) is None
+            active_after = await limited_store.get(active.job_id)
+            assert active_after is not None
+            assert active_after.status.value == "running"
+        finally:
+            await limited_store.close()
+
+    asyncio.run(scenario())
+
+
 def test_missing_migration_keeps_store_unready_and_rejects_submissions(
     postgres_database: str,
 ) -> None:
