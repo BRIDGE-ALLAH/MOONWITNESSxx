@@ -5,6 +5,8 @@ import { createDatabasePool } from '../src/db.ts'
 import { AssetRepository } from '../src/assets/repository.ts'
 import { ChannelRepository } from '../src/channels/repository.ts'
 import { ListingRepository } from '../src/listings/repository.ts'
+import { readFile } from 'node:fs/promises'
+import { applyTestMigrations } from './helpers/apply-migrations.mjs'
 
 test('PostgreSQL builds a deterministic manual listing package and records real submission receipts', {
   skip: !process.env.DATABASE_URL,
@@ -17,6 +19,17 @@ test('PostgreSQL builds a deterministic manual listing package and records real 
   const policyUrl = 'https://example.com/official-policy'
   let pool = createDatabasePool()
   try {
+    const migrationNames = [
+      '002_money_maker_core.sql',
+      '003_opportunity_version.sql',
+      '004_product_promotion_lock.sql',
+      '005_money_maker_assets.sql',
+      '006_money_maker_channels_and_listings.sql',
+    ]
+    const migrations = await Promise.all(migrationNames.map((name) =>
+      readFile(new URL(`../migrations/${name}`, import.meta.url), 'utf8'),
+    ))
+    await applyTestMigrations(pool, migrations)
     await pool.query(
       `INSERT INTO arsy_products
         (id, owner_id, opportunity_id, title, product_family, lifecycle_state, created_by, updated_by)
