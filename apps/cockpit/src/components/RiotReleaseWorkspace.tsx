@@ -40,8 +40,9 @@ function providerLabel(remoteUrl: string | null): string {
   // Accept URL remotes and the common SSH scp-like form (git@host:owner/repo).
   // Compare the parsed hostname, never a substring of the complete remote URL.
   let hostname = ''
-  const scpRemote = /^(?:[^@/\\s]+@)?([^:/\\s]+):/.exec(remoteUrl.trim())
-  if (scpRemote && !remoteUrl.trim().includes('://')) {
+  const trimmedRemote = remoteUrl.trim()
+  const scpRemote = /^[^@/]+@([^:/]+):/.exec(trimmedRemote)
+  if (scpRemote && !trimmedRemote.includes('://')) {
     hostname = scpRemote[1]
   } else {
     try {
@@ -51,7 +52,8 @@ function providerLabel(remoteUrl: string | null): string {
     }
   }
 
-  const host = hostname.toLowerCase().replace(/\\.$/, '')
+  const normalizedHost = hostname.toLowerCase()
+  const host = normalizedHost.endsWith('.') ? normalizedHost.slice(0, -1) : normalizedHost
   if (host === 'github.com') return 'GITHUB REMOTE'
   if (host === 'gitlab.com') return 'GITLAB REMOTE'
   return 'CUSTOM REMOTE'
