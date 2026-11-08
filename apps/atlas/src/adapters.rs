@@ -218,7 +218,7 @@ mod tests {
         assert_eq!(metadata.permissions().mode() & 0o777, 0o600);
         assert_eq!(
             tokio::fs::read_to_string(&path).await.unwrap(),
-            "test-radius-shared-secret\\n"
+            "test-radius-shared-secret\n"
         );
         tokio::fs::remove_file(&path).await.unwrap();
         assert!(!path.exists());
