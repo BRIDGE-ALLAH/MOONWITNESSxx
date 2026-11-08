@@ -85,7 +85,7 @@ download_verified() {
   [[ "$actual" == "$expected" ]] || fail "SHA-256 mismatch for $asset"
 }
 
-mkdir -p "$TMP_DIR/buildkit" "$TMP_DIR/rootlesskit" "$BUILDER_HOME"
+mkdir -p "$TMP_DIR/buildkit" "$TMP_DIR/rootlesskit"
 chmod 755 "$TMP_DIR"
 download_verified "moby/buildkit" "v$BUILDKIT_VERSION" "buildkit-v$BUILDKIT_VERSION.linux-amd64.tar.gz" "$TMP_DIR/buildkit.tar.gz"
 download_verified "rootless-containers/rootlesskit" "v$ROOTLESSKIT_VERSION" "rootlesskit-x86_64.tar.gz" "$TMP_DIR/rootlesskit.tar.gz"
