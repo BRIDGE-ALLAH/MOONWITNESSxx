@@ -199,6 +199,7 @@ This section prevents duplicate backlog creation. State below was re-fetched dur
 ADR 0002 is accepted. The following non-overlapping issues now represent the initial dependency graph:
 
 1. [#179 — durable deployment and idempotent operation journal](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/179) — ARSY schema/store foundation; PR #188 is the first implementation candidate.
+2. [#197 — fenced deployment outbox dispatcher](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/197) — generic ARSY outbox claiming, lease fencing, ack/retry/dead-letter transport; deliberately separate from deployment-specific orchestration in #184.
 2. [#180 — deny-by-default deployment authorization and approval](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/180) — ARSY authorization gate; valid service-token authentication alone is insufficient.
 3. [#181 — isolated Docker Workload Adapter](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/181) — ARSY-only mutation boundary, separate from the read-only Docker Connector.
 4. [#182 — isolated OCI build architecture](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/182) — choose and adversarially test build isolation before code is enabled.
