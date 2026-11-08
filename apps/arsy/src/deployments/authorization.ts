@@ -89,7 +89,7 @@ function assertSafeEvidence(value: unknown, depth = 0): void {
   if (depth > 8) throw new TypeError('Authorization evidence exceeds the maximum nesting depth')
   if (value === null || typeof value === 'boolean') return
   if (typeof value === 'string') {
-    if (value.length > 512 || /(?:bearer\\s+\\S+|(?:password|token|api[_-]?key|secret)\\s*[:=]\\s*\\S+)/i.test(value)) {
+    if (value.length > 512 || /(?:bearer\s+\S+|(?:password|token|api[_-]?key|secret)\s*[:=]\s*\S+)/i.test(value)) {
       throw new TypeError('Authorization evidence contains an unbounded or secret-like string')
     }
     return
