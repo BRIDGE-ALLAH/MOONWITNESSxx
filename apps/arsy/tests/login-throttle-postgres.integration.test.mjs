@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { Pool } from 'pg'
 import { createApp } from '../src/app.ts'
+import { applyTestMigrations } from './helpers/apply-migrations.mjs'
 
 const databaseUrl = process.env.TEST_DATABASE_URL
 const networkHash = 'a'.repeat(64)
@@ -49,8 +50,7 @@ test('PostgreSQL login limiter is atomic across ARSY instances and survives inst
       new URL('../migrations/006_shared_login_attempts.sql', import.meta.url),
       'utf8',
     )
-    await setupPool.query(migration)
-    await setupPool.query(migration)
+    await applyTestMigrations(setupPool, [migration, migration])
     migrationApplied = true
 
     const appA = startInstance()
