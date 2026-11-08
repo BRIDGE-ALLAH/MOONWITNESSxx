@@ -114,13 +114,18 @@ jobs:
 
           ready=false
           for attempt in $(seq 1 60); do
-            if curl --silent --show-error --fail http://127.0.0.1:5150/api/v1/system/readiness > /tmp/atlas-readiness.json; then
+            if curl --silent --fail --max-time 5 http://127.0.0.1:5150/api/v1/system/readiness > /tmp/atlas-readiness.json 2>/dev/null; then
               ready=true
               break
             fi
             sleep 2
           done
-          test "$ready" = true
+          if [ "$ready" != true ]; then
+            echo "ATLAS readiness endpoint did not become reachable on the published host port."
+            docker compose ps
+            docker compose logs --no-color --tail=200 atlas migrate freeradius redis postgres || true
+            exit 1
+          fi
           python3 - <<'PY'
           import json
           with open("/tmp/atlas-readiness.json", encoding="utf-8") as handle:
