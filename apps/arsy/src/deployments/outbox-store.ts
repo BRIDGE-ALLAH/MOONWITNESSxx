@@ -66,7 +66,11 @@ function boundedInteger(value: number | undefined, fallback: number, min: number
 function requiredOwnerId(value: string): string {
   if (typeof value !== 'string') throw new TypeError('ownerId must be a string')
   const normalized = value.trim()
-  if (!normalized || normalized.length > 128 || /[\u0000-\u001f\u007f]/.test(normalized)) {
+  if (!normalized || normalized.length > 128 ||
+      [...normalized].some((character) => {
+        const code = character.charCodeAt(0)
+        return code < 32 || code === 127
+      })) {
     throw new TypeError('ownerId must contain 1-128 printable characters')
   }
   return normalized
