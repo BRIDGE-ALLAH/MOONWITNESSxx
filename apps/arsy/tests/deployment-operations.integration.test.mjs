@@ -9,6 +9,11 @@ import {
   IdempotencyConflictError,
   transitionDeploymentOperation,
 } from '../src/deployments/operation-store.ts'
+import {
+  acknowledgeDeploymentOutbox,
+  claimDeploymentOutbox,
+  retryDeploymentOutbox,
+} from '../src/deployments/outbox-store.ts'
 
 const databaseUrl = process.env.TEST_DATABASE_URL
 
@@ -21,9 +26,12 @@ test('deployment journal migrations are repeatable and persist owner-bound opera
   try {
     const dockerMigration = await readFile(new URL('../migrations/002_docker_connector.sql', import.meta.url), 'utf8')
     const deploymentMigration = await readFile(new URL('../migrations/003_arsy_deployment_operations.sql', import.meta.url), 'utf8')
+    const outboxMigration = await readFile(new URL('../migrations/005_arsy_deployment_outbox_leases.sql', import.meta.url), 'utf8')
     await pool.query(dockerMigration)
     await pool.query(deploymentMigration)
     await pool.query(deploymentMigration)
+    await pool.query(outboxMigration)
+    await pool.query(outboxMigration)
 
     await pool.query(
       'INSERT INTO docker_connector_servers (id, owner_id, name, kind, endpoint_url, encrypted_credentials) VALUES ($1, $2, $3, $4, NULL, NULL)',
@@ -73,6 +81,61 @@ test('deployment journal migrations are repeatable and persist owner-bound opera
     assert.equal(operationRows.rows[0].status, 'running')
     assert.deepEqual(events.rows.map(row => Number(row.sequence)), [1, 2])
     assert.equal(outbox.rowCount, 1)
+
+    const [claimedA, claimedB] = await Promise.all([
+      claimDeploymentOutbox(pool, { workerId: `worker-a-${randomUUID()}`, limit: 10 }),
+      claimDeploymentOutbox(pool, { workerId: `worker-b-${randomUUID()}`, limit: 10 }),
+    ])
+    const allClaims = [...claimedA, ...claimedB].filter(message => message.id === outbox.rows[0].id)
+    assert.equal(allClaims.length, 1, 'one concurrent worker may own the event lease')
+    const firstLease = allClaims[0]
+    await pool.query(
+      'UPDATE arsy_deployment_outbox SET locked_until = now() - interval \'1 second\' WHERE id = $1',
+      [firstLease.id],
+    )
+    const secondLease = (await claimDeploymentOutbox(pool, {
+      workerId: `worker-reclaim-${randomUUID()}`,
+      limit: 10,
+    })).find(message => message.id === firstLease.id)
+    assert.ok(secondLease)
+    assert.notEqual(secondLease.leaseToken, firstLease.leaseToken)
+    assert.equal(await acknowledgeDeploymentOutbox(pool, firstLease), false, 'expired lease token must be fenced')
+    assert.equal(await acknowledgeDeploymentOutbox(pool, secondLease), true)
+
+    const retryOperation = await createDeploymentOperation(pool, {
+      ...request,
+      idempotencyKey: `deploy-retry-${randomUUID()}`,
+    })
+    const retryOutbox = await pool.query(
+      'SELECT id FROM arsy_deployment_outbox WHERE operation_id = $1 AND owner_id = $2',
+      [retryOperation.operation.id, ownerId],
+    )
+    await pool.query(
+      'UPDATE arsy_deployment_outbox SET max_attempts = 2 WHERE id = $1',
+      [retryOutbox.rows[0].id],
+    )
+    const firstRetryLease = (await claimDeploymentOutbox(pool, {
+      workerId: `worker-retry-a-${randomUUID()}`,
+    })).find(message => message.id === retryOutbox.rows[0].id)
+    assert.ok(firstRetryLease)
+    assert.equal(await retryDeploymentOutbox(pool, firstRetryLease, 'handler_failed'), 'retry_scheduled')
+    await pool.query(
+      'UPDATE arsy_deployment_outbox SET available_at = now() - interval \'1 second\' WHERE id = $1',
+      [retryOutbox.rows[0].id],
+    )
+    const finalRetryLease = (await claimDeploymentOutbox(pool, {
+      workerId: `worker-retry-b-${randomUUID()}`,
+    })).find(message => message.id === retryOutbox.rows[0].id)
+    assert.ok(finalRetryLease)
+    assert.equal(finalRetryLease.attemptCount, 2)
+    assert.equal(await retryDeploymentOutbox(pool, finalRetryLease, 'handler_failed'), 'dead_lettered')
+    const deadLetter = await pool.query(
+      'SELECT dead_lettered_at, last_error_code FROM arsy_deployment_outbox WHERE id = $1',
+      [retryOutbox.rows[0].id],
+    )
+    assert.ok(deadLetter.rows[0].dead_lettered_at)
+    assert.equal(deadLetter.rows[0].last_error_code, 'handler_failed')
+
     await assert.rejects(
       pool.query('UPDATE arsy_deployment_operation_events SET event_type = $1 WHERE operation_id = $2', ['tampered', first.operation.id]),
       /append-only/,
