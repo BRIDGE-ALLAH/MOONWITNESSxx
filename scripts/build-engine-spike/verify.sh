@@ -240,15 +240,48 @@ INDEX="$EXTRACT/index.json"
 METADATA_DIGEST="$(jq -r '."containerimage.digest" // empty' "$METADATA")"
 [[ "$METADATA_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "BuildKit did not return an immutable image digest"
 jq -e --arg digest "$METADATA_DIGEST" 'any(.manifests[]; .digest == $digest)' "$INDEX" >/dev/null || fail "metadata digest is not present in OCI index"
-# Buildx metadata may identify an index descriptor; select the runnable image
-# manifest explicitly so config/layer verification never targets an index or attestation.
-# Only a platform image manifest is runnable. Attestation descriptors and nested
-# indexes can lack config/layers; do not treat them as the image payload.
-IMAGE_DIGEST="$(jq -r '[.manifests[]
-  | select(.mediaType == "application/vnd.oci.image.manifest.v1+json" or .mediaType == "application/vnd.docker.distribution.manifest.v2+json")
-  | select((.annotations["vnd.docker.reference.type"] // "") != "attestation-manifest")
-  | .digest][0] // empty' "$INDEX")"
-[[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "OCI index has no platform image manifest"
+# The OCI export can contain a top-level index and nested platform indexes.
+# Walk descriptors and select a real image manifest by its config/layers shape;
+# mediaType/platform annotations vary across BuildKit/Buildx exporter versions.
+IMAGE_DIGEST="$(python3 - "$INDEX" "$EXTRACT" <<'PY'
+import json, pathlib, re, sys
+index_path = pathlib.Path(sys.argv[1])
+root = pathlib.Path(sys.argv[2])
+seen = set()
+candidates = []
+
+def read_json(path):
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+def walk(index):
+    for descriptor in index.get("manifests", []):
+        if descriptor.get("annotations", {}).get("vnd.docker.reference.type") == "attestation-manifest":
+            continue
+        digest = descriptor.get("digest", "")
+        if not re.fullmatch(r"sha256:[a-f0-9]{64}", digest) or digest in seen:
+            continue
+        seen.add(digest)
+        blob = root / "blobs" / "sha256" / digest.split(":", 1)[1]
+        if not blob.is_file():
+            continue
+        try:
+            document = read_json(blob)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(document.get("config"), dict) and isinstance(document.get("layers"), list):
+            candidates.append((digest, descriptor.get("platform", {})))
+        elif isinstance(document.get("manifests"), list):
+            walk(document)
+
+walk(read_json(index_path))
+if not candidates:
+    raise SystemExit("OCI export contains no runnable image manifest")
+linux_amd64 = [item for item in candidates if item[1].get("os") == "linux" and item[1].get("architecture") == "amd64"]
+print((linux_amd64 or candidates)[0][0])
+PY
+)" || fail "OCI export has no readable runnable image manifest"
+[[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "OCI image manifest digest is invalid"
 IMAGE_HEX="${IMAGE_DIGEST#sha256:}"
 IMAGE_MANIFEST="$EXTRACT/blobs/sha256/$IMAGE_HEX"
 CONFIG_DIGEST="$(jq -r '.config.digest // empty' "$IMAGE_MANIFEST")"
