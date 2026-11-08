@@ -56,9 +56,9 @@ services:
     entrypoint: ["/bin/sh", "-ec"]
     command: >-
       psql -v ON_ERROR_STOP=1
-      -v oracle_password="$ORACLE_DB_PASSWORD"
-      -v postgres_db="$POSTGRES_DB"
-      -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+      -v oracle_password="$$ORACLE_DB_PASSWORD"
+      -v postgres_db="$$POSTGRES_DB"
+      -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
       -f /bootstrap/000_oracle_app_role.sql
     restart: "no"
     networks:
