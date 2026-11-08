@@ -10,6 +10,7 @@ import type { AuthorizeDeploymentDependencies } from './deployments/authorizatio
 import { registerEvidenceRoutes } from './evidence/routes.ts'
 import { registerGovernanceRoutes } from './governance/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
+import { registerOpportunityRoutes } from './opportunities/routes.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { createOracleClient, type OracleClient } from './oracle/client.ts'
 import { registerOracleRoutes } from './oracle/routes.ts'
@@ -69,6 +70,7 @@ export function createApp(options: CreateAppOptions = {}) {
     registerEvidenceRoutes(instance, databasePool as unknown as Pool)
     registerGovernanceRoutes(instance, databasePool as unknown as Pool)
     registerLoginAttemptRoutes(instance, databasePool)
+    registerOpportunityRoutes(instance, databasePool, env)
     registerOracleRoutes(instance, oracleClient)
   })
 
