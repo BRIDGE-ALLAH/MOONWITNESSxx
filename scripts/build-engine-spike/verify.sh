@@ -23,12 +23,12 @@ EXTRACT="$WORK/extracted"
 BUILDER_UID=""
 HOST_PID=""
 WORK_MOUNTED=0
-[[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || fail "GITHUB_SHA must be a 40-character commit SHA"
 
 fail() { echo "BUILD ENGINE SPIKE FAILED: $*" >&2; exit 1; }
 require() { command -v "$1" >/dev/null 2>&1 || fail "missing prerequisite: $1"; }
 
 for cmd in curl jq sha256sum tar python3 systemd-run systemctl mount umount useradd userdel; do require "$cmd"; done
+[[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || fail "GITHUB_SHA must be a 40-character commit SHA"
 require sudo
 require timeout
 require slirp4netns
