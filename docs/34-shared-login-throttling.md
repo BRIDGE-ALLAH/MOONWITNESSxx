@@ -5,9 +5,10 @@
 Headquarter delegates login-attempt state to ARSY over the private operator API. PostgreSQL is the source of truth, so separate Headquarter and ARSY instances observe the same account and network buckets.
 
 - Five failed attempts within a 15-minute window block the operator account and the trusted client network for 15 minutes.
+- Each login request reserves a shared verification slot before password KDF work. At most five verifications can be in flight for an account/network bucket; an additional concurrent request is denied. The fifth request is still allowed to verify, so a correct password can succeed and clear the buckets.
 - Headquarter returns HTTP 429 with a `Retry-After` value in seconds.
 - Successful authentication clears the account bucket and the successful request's network bucket.
-- The network identifier is HMAC-SHA256 keyed with `HEADQUARTER_SESSION_SECRET`; raw client addresses are not persisted.
+- The database stores a bounded `attempt_count` reservation counter, not passwords or raw client addresses. The network identifier is HMAC-SHA256 keyed with `HEADQUARTER_SESSION_SECRET`.
 - ARSY's `/api/v1/auth/login-attempts` endpoint is protected by the existing `ARSY_OPERATOR_TOKEN` pre-handler.
 - Missing configuration, invalid responses, timeouts, or ARSY failures deny login with HTTP 503. No process-local fallback is used.
 
