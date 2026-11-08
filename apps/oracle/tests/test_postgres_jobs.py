@@ -314,6 +314,47 @@ def test_queue_and_retained_job_ceilings_are_enforced_in_postgresql() -> None:
         finally:
             await retained_limited.stop()
 
+        # Only terminal rows older than the retention window are pruned; idempotency
+        # replay expires with the owning retained job row.
+        await prepare_database()
+        retention_coordinator = PostgresJobCoordinator(
+            make_settings(app_dsn, max_queue_size=10, max_retained_jobs=2, job_retention_seconds=60)
+        )
+        await retention_coordinator._connect(start_workers=False)
+        try:
+            old_record, _ = await retention_coordinator.submit(
+                task_type="statistics.describe",
+                input_payload={"values": [4, 5]},
+                evidence=[],
+                idempotency_key="retention-old-key",
+            )
+            admin = await asyncpg.connect(TEST_DATABASE_URL)
+            try:
+                await admin.execute(
+                    """
+                    UPDATE oracle.jobs
+                    SET status = 'failed',
+                        completed_at = now() - interval '120 seconds',
+                        error = '{"code":"test","message":"expired test row"}'::jsonb
+                    WHERE job_id = $1
+                    """,
+                    old_record.job_id,
+                )
+            finally:
+                await admin.close()
+
+            replacement, replayed = await retention_coordinator.submit(
+                task_type="statistics.describe",
+                input_payload={"values": [4, 5]},
+                evidence=[],
+                idempotency_key="retention-old-key",
+            )
+            assert replayed is False
+            assert replacement.job_id != old_record.job_id
+            assert await retention_coordinator.get(old_record.job_id) is None
+        finally:
+            await retention_coordinator.stop()
+
     asyncio.run(run())
 
 
