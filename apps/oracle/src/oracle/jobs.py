@@ -1,4 +1,4 @@
-"""Bounded in-process job lifecycle used only by the stage-1 development service."""
+"""Bounded ORACLE job coordinator with in-memory and PostgreSQL backends."""
 
 from __future__ import annotations
 
