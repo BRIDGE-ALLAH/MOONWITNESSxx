@@ -55,7 +55,9 @@ jobs:
       - name: Start PostgreSQL for explicit schema migration
         run: |
           docker compose --env-file .env.docker -f docker-compose.yml \
-            up --detach --wait --wait-timeout 120 postgres oracle-db-bootstrap
+            up --detach --wait --wait-timeout 120 postgres
+          docker compose --env-file .env.docker -f docker-compose.yml \
+            run --rm oracle-db-bootstrap
 
       - name: Apply ORACLE job migration explicitly as the database migration owner
         run: |
