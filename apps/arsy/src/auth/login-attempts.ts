@@ -82,7 +82,10 @@ export function registerLoginAttemptRoutes(app: FastifyInstance, db: DatabasePoo
                WHEN existing_bucket.attempt_count + 1 >= 5 THEN now() + interval '15 minutes'
                ELSE NULL
              END,
-             updated_at = now()
+             updated_at = CASE
+               WHEN existing_bucket.blocked_until > now() THEN existing_bucket.updated_at
+               ELSE now()
+             END
            RETURNING blocked_until
          )
          SELECT COALESCE(
@@ -97,6 +100,24 @@ export function registerLoginAttemptRoutes(app: FastifyInstance, db: DatabasePoo
         0,
         Number(queryRows<{ retry_after_seconds: number }>(result)[0]?.retry_after_seconds ?? 0),
       )
+
+      // Remove at most 100 expired network buckets per attempt so years of
+      // distinct client addresses cannot grow this operator's table forever.
+      await db.query(
+        `WITH stale AS (
+           SELECT owner_id, bucket_key
+           FROM arsy_login_attempt_buckets
+           WHERE owner_id = $1 AND updated_at < now() - interval '1 day'
+           ORDER BY updated_at, bucket_key
+           LIMIT 100
+           FOR UPDATE SKIP LOCKED
+         )
+         DELETE FROM arsy_login_attempt_buckets AS bucket
+         USING stale
+         WHERE bucket.owner_id = stale.owner_id AND bucket.bucket_key = stale.bucket_key`,
+        [ownerId],
+      )
+
       return {
         data: {
           allowed: retryAfterSeconds === 0,
