@@ -75,7 +75,9 @@ async def prepare_database() -> str:
         await admin.execute("REVOKE ALL ON SCHEMA oracle FROM PUBLIC, oracle_app_test")
         await admin.execute("GRANT USAGE ON SCHEMA oracle TO oracle_app_test")
         await admin.execute("GRANT USAGE, CREATE ON SCHEMA oracle TO oracle_migrator_test")
-        await admin.execute("REVOKE ALL ON SCHEMA public FROM oracle_migrator_test, oracle_app_test")
+        await admin.execute(
+            "REVOKE ALL ON SCHEMA public FROM oracle_migrator_test, oracle_app_test"
+        )
         await admin.execute(
             "REVOKE ALL ON ALL TABLES IN SCHEMA public FROM oracle_migrator_test, oracle_app_test"
         )
