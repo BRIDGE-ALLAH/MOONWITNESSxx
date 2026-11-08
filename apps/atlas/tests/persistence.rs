@@ -23,8 +23,7 @@ async fn postgres_migrations_engine_and_radius_crud_are_persistent() {
     }
 
     let atlas_password = env::var("ATLAS_DB_PASSWORD").expect("ATLAS_DB_PASSWORD is configured");
-    let radius_password =
-        env::var("RADIUS_DB_PASSWORD").expect("RADIUS_DB_PASSWORD is configured");
+    let radius_password = env::var("RADIUS_DB_PASSWORD").expect("RADIUS_DB_PASSWORD is configured");
     for password in [&atlas_password, &radius_password] {
         assert!(
             password
@@ -32,7 +31,10 @@ async fn postgres_migrations_engine_and_radius_crud_are_persistent() {
                 .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-'),
             "test database passwords must be URL-safe"
         );
-        assert!(password.len() >= 32, "test database passwords must be at least 32 characters");
+        assert!(
+            password.len() >= 32,
+            "test database passwords must be at least 32 characters"
+        );
     }
 
     let admin_pool = PgPoolOptions::new()
@@ -40,14 +42,18 @@ async fn postgres_migrations_engine_and_radius_crud_are_persistent() {
         .connect(&env::var("DATABASE_ADMIN_URL").expect("DATABASE_ADMIN_URL is configured"))
         .await
         .expect("connect to PostgreSQL admin database");
-    sqlx::raw_sql(&format!("CREATE ROLE atlas LOGIN PASSWORD '{atlas_password}'"))
-        .execute(&admin_pool)
-        .await
-        .expect("create least-privilege ATLAS database role");
-    sqlx::raw_sql(&format!("CREATE ROLE radius LOGIN PASSWORD '{radius_password}'"))
-        .execute(&admin_pool)
-        .await
-        .expect("create least-privilege RADIUS database role");
+    sqlx::raw_sql(&format!(
+        "CREATE ROLE atlas LOGIN PASSWORD '{atlas_password}'"
+    ))
+    .execute(&admin_pool)
+    .await
+    .expect("create least-privilege ATLAS database role");
+    sqlx::raw_sql(&format!(
+        "CREATE ROLE radius LOGIN PASSWORD '{radius_password}'"
+    ))
+    .execute(&admin_pool)
+    .await
+    .expect("create least-privilege RADIUS database role");
     sqlx::query("CREATE DATABASE atlas OWNER atlas")
         .execute(&admin_pool)
         .await
