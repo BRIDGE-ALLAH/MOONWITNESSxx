@@ -55,7 +55,7 @@ services:
       - ./apps/oracle/migrations/000_oracle_app_role.sql:/bootstrap/000_oracle_app_role.sql:ro
     entrypoint: ["/bin/sh", "-ec"]
     command: >-
-      psql -v ON_ERROR_STOP=1
+      exec psql -v ON_ERROR_STOP=1
       -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB"
       -f /bootstrap/000_oracle_app_role.sql
     restart: "no"
