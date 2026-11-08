@@ -7,6 +7,8 @@ import { randomUUID, createHash } from 'node:crypto'
 import { createDatabasePool } from '../src/db.ts'
 import { AssetRepository } from '../src/assets/repository.ts'
 import { LocalAssetStorage } from '../src/assets/storage.ts'
+import { readFile } from 'node:fs/promises'
+import { applyTestMigrations } from './helpers/apply-migrations.mjs'
 
 test('PostgreSQL persists asset bytes, provenance and append-only inspections across reconnects', {
   skip: !process.env.DATABASE_URL,
@@ -17,7 +19,19 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
   const root = await mkdtemp(path.join(os.tmpdir(), 'arsy-asset-integration-'))
   const storage = new LocalAssetStorage(root)
   let pool = createDatabasePool()
+  let migrationsApplied = false
   try {
+    const migrationNames = [
+      '002_money_maker_core.sql',
+      '003_opportunity_version.sql',
+      '004_product_promotion_lock.sql',
+      '005_money_maker_assets.sql',
+    ]
+    const migrations = await Promise.all(migrationNames.map((name) =>
+      readFile(new URL(`../migrations/${name}`, import.meta.url), 'utf8'),
+    ))
+    await applyTestMigrations(pool, migrations)
+    migrationsApplied = true
     await pool.query(
       `INSERT INTO arsy_products
         (id, owner_id, opportunity_id, title, product_family, lifecycle_state, created_by, updated_by)
@@ -140,7 +154,9 @@ test('PostgreSQL persists asset bytes, provenance and append-only inspections ac
     assert.ok(actions.includes('uploaded-with-provenance'))
     assert.equal(actions.filter((action) => action === 'inspection-recorded').length, 5)
   } finally {
-    await pool.query('DELETE FROM arsy_commerce_audit_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    if (migrationsApplied) {
+      await pool.query('DELETE FROM arsy_commerce_audit_events WHERE owner_id = $1', [ownerId]).catch(() => undefined)
+    }
     await pool.query('DELETE FROM arsy_asset_inspections WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_asset_provenance WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await pool.query('DELETE FROM arsy_assets WHERE owner_id = $1', [ownerId]).catch(() => undefined)
