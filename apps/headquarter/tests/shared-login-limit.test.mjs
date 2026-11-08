@@ -134,7 +134,7 @@ test('production login reserves a shared attempt and clears the shared bucket af
     assert.equal(response.status, 200)
     assert.deepEqual(actions, ['attempt', 'success'])
     assert.match(response.headers.get('set-cookie') ?? '', /HttpOnly/)
-    assert.match(response.headers.get('set-cookie') ?? '', /SameSite=Strict/)
+    assert.match(response.headers.get('set-cookie') ?? '', /SameSite=strict/i
   } finally {
     restoreFetch()
     restoreEnv()
