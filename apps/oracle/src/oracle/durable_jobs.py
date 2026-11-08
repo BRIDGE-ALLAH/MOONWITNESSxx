@@ -204,6 +204,16 @@ class PostgresJobCoordinator:
                         "SELECT pg_advisory_xact_lock($1::bigint)",
                         _CAPACITY_LOCK_KEY,
                     )
+                    # Enforce the retention boundary before idempotency lookup. Once a
+                    # terminal row expires, its key is eligible for a new operation.
+                    await connection.execute(
+                        """
+                        DELETE FROM oracle.jobs
+                        WHERE status IN ('succeeded', 'failed')
+                          AND completed_at < now() - make_interval(secs => $1::double precision)
+                        """,
+                        self.settings.job_retention_seconds,
+                    )
                     if idempotency_key:
                         existing = await connection.fetchrow(
                             """
@@ -217,14 +227,6 @@ class PostgresJobCoordinator:
                                 raise IdempotencyConflictError
                             return _to_record(existing), True
 
-                    await connection.execute(
-                        """
-                        DELETE FROM oracle.jobs
-                        WHERE status IN ('succeeded', 'failed')
-                          AND completed_at < now() - make_interval(secs => $1::double precision)
-                        """,
-                        self.settings.job_retention_seconds,
-                    )
                     counts = await connection.fetchrow(
                         """
                         SELECT
