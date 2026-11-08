@@ -90,6 +90,7 @@ Use the committed lockfile and repository scripts. If frozen install fails becau
 | [24 — Repository Governance](./docs/24-repository-and-automation-governance.md)             | Workspace, automation, CI, and ownership rules                                   |
 | [28 — Current-State Revalidation](./docs/28-current-state-revalidation-2026-11-08.md)       | Dated mainline and production-readiness evidence                                 |
 | [35 — Current-State Revalidation](./docs/35-current-state-revalidation-2026-11-09.md)       | Latest mainline CI, release, integration queue, and production gate snapshot      |
+| [36 — Headquarter Route Skin Runtime](./docs/36-headquarter-route-skin-integration-2026-11-09.md) | Route-aware Observatory/Archive skins, dual-mode behavior, and remaining UI gates |
 | [29 — Docker Connector](./docs/29-docker-connector.md)                                      | Read-only Docker integration and security boundaries                             |
 | [30 — ARSY Hardening](./docs/30-arsy-phases-18-20-hardening.md)                             | Runtime trust-boundary hardening                                                 |
 | [31 — Product Integrity](./docs/31-product-integrity-phases-36-38.md)                       | Data-truth and release preflight                                                 |
