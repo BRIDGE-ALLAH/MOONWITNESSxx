@@ -1,5 +1,5 @@
--- Seed local Compose-managed engines once without overwriting operator-managed edits on replay.
-INSERT IGNORE INTO engine_instances (
+-- Seed local Compose-managed engines without overwriting operator-managed edits on replay.
+INSERT INTO engine_instances (
     id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key
 ) VALUES
 (
@@ -9,8 +9,8 @@ INSERT IGNORE INTO engine_instances (
     'radius_authentication_accounting',
     'radius://freeradius:18121',
     TRUE,
-    JSON_OBJECT('managed_by', 'atlas-compose'),
-    JSON_OBJECT('status_port', 18121),
+    jsonb_build_object('managed_by', 'atlas-compose'),
+    jsonb_build_object('status_port', 18121),
     'ATLAS_ENGINE_SECRET_RADIUS_STATUS'
 ),
 (
@@ -20,7 +20,7 @@ INSERT IGNORE INTO engine_instances (
     'metrics_storage',
     'http://victoriametrics:8428',
     TRUE,
-    JSON_OBJECT('managed_by', 'atlas-compose'),
+    jsonb_build_object('managed_by', 'atlas-compose'),
     NULL,
     NULL
 ),
@@ -31,7 +31,8 @@ INSERT IGNORE INTO engine_instances (
     'log_storage_and_search',
     'http://victorialogs:9428',
     TRUE,
-    JSON_OBJECT('managed_by', 'atlas-compose'),
+    jsonb_build_object('managed_by', 'atlas-compose'),
     NULL,
     NULL
-);
+)
+ON CONFLICT (id) DO NOTHING;
