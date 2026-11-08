@@ -23,7 +23,7 @@ class FakePool {
   retryRows = [{ dead_lettered_at: null }]
   async query(statement, values) {
     this.statements.push({ statement, values })
-    if (statement.includes('WITH exhausted AS')) return { rows: this.claimRows }
+    if (statement.includes('WITH exhausted_candidates AS')) return { rows: this.claimRows }
     if (statement.includes('SET delivered_at')) return { rows: this.ackRows }
     if (statement.includes('SET last_error_code')) return { rows: this.retryRows }
     throw new Error('Unexpected outbox SQL statement')
