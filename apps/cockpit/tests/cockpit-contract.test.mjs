@@ -47,10 +47,13 @@ test('cockpit app contract & desktop runtime integrity', async (t) => {
     const copilotPath = path.join(appRoot, 'src/lib/copilot.ts')
     const pagePath = path.join(appRoot, 'src/app/page.tsx')
     const rustPath = path.join(appRoot, 'src-tauri/src/main.rs')
+    const cargoPath = path.join(appRoot, 'src-tauri/Cargo.toml')
+    const actionsPath = path.join(appRoot, 'src/lib/actions.ts')
 
     assert.ok(fs.existsSync(panelPath), 'AgiCopilotPanel must exist')
     assert.ok(fs.existsSync(libPath), 'agiCopilot lib must exist')
     assert.ok(fs.existsSync(copilotPath), 'copilot provider lib must exist')
+    assert.ok(fs.existsSync(actionsPath), 'actions lib must exist')
 
     const panelContent = fs.readFileSync(panelPath, 'utf-8')
     assert.match(panelContent, /export function AgiCopilotPanel/)
@@ -78,12 +81,34 @@ test('cockpit app contract & desktop runtime integrity', async (t) => {
     assert.doesNotMatch(pageContent, /window\.confirm/, 'page must not use window.confirm')
 
     const rustContent = fs.readFileSync(rustPath, 'utf-8')
+    const cargoContent = fs.readFileSync(cargoPath, 'utf-8')
+    const actionsContent = fs.readFileSync(actionsPath, 'utf-8')
     assert.match(rustContent, /fn agi_analyze/)
     assert.match(rustContent, /agi_analyze/)
     assert.match(rustContent, /get_cockpit_telemetry/)
     assert.match(rustContent, /llm_analyze/)
     assert.match(rustContent, /keychain_get|keychain_set|keychain_delete/)
     assert.match(rustContent, /audit_append|audit_read/)
+    // Governed read-only execution boundary (item #10): only DIAGNOSTIC_HEALTH_CHECK may
+    // invoke real read-only Tauri diagnostic; command is allowlisted/registered.
+    assert.match(rustContent, /run_diagnostic_health_check/)
+    assert.match(rustContent, /DiagnosticResult|read-only diagnostic/i)
+    assert.match(cargoContent, /sysinfo/, 'sysinfo used for read-only host/memory/process probe')
+    assert.match(actionsContent, /executeGovernedDiagnostic/)
+    assert.match(actionsContent, /DIAGNOSTIC_HEALTH_CHECK/, 'allowlist names diagnostic action')
+    assert.match(actionsContent, /read-only-tauri/)
+    assert.match(actionsContent, /intent-only/)
+    // Strict allowlist assertion: only the DIAGNOSTIC_HEALTH_CHECK meta entry may be read-only-tauri.
+    const roEntries = actionsContent.match(/realExecution:\s*'read-only-tauri'\s*,/g) ?? []
+    assert.equal(roEntries.length, 1, 'exactly one action meta entry may be read-only-tauri')
+    assert.match(
+      actionsContent,
+      /DIAGNOSTIC_HEALTH_CHECK[\s\S]{0,160}realExecution:\s*'read-only-tauri'/
+    )
+    assert.match(pageContent, /executeGovernedDiagnostic/)
+    assert.match(pageContent, /isTauri\(\)/)
+    assert.match(pageContent, /read-only-executed|intent-only/)
+    assert.match(pageContent, /ConfirmationDialog/, 'confirm dialog gate preserved')
   })
 
   await t.test('new frontend artifacts exist', () => {

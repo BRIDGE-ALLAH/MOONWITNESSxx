@@ -532,6 +532,62 @@ async fn llm_analyze(snapshot: serde_json::Value, question: String) -> Result<Ag
     })
 }
 
+#[tauri::command]
+async fn llm_analyze_stream(snapshot: serde_json::Value, question: String) -> Result<AgiAnalysis, String> {
+    let entry = keyring::Entry::new(LLM_SERVICE, LLM_ACCOUNT).map_err(|e| e.to_string())?;
+    let secret = entry.get_password().map_err(|_| "llm-secret-not-configured".to_string())?;
+    let client = reqwest::Client::new();
+    let user_prompt = build_user_prompt(&snapshot, &question);
+    let body = serde_json::json!({
+        "model": LLM_DEFAULT_MODEL,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        "stream": true,
+        "temperature": 0.2
+    });
+    let resp = client
+        .post(LLM_BASE_URL)
+        .bearer_auth(&secret)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    let text = resp.text().await.map_err(|e| e.to_string())?;
+    let mut answer = String::new();
+    let mut model: Option<String> = None;
+    for line in text.lines() {
+        let line = line.trim();
+        if !line.starts_with("data:") { continue; }
+        let payload = line.trim_start_matches("data:").trim();
+        if payload == "[DONE]" { continue; }
+        if let Ok(v) = serde_json::from_str::<serde_json::Value>(payload) {
+            if let Some(c) = v["choices"][0]["delta"]["content"].as_str() {
+                answer.push_str(c);
+            }
+            if model.is_none() {
+                model = v.get("model").and_then(|x| x.as_str()).map(|s| s.to_string());
+            }
+        }
+    }
+    if model.is_none() { model = Some(LLM_DEFAULT_MODEL.to_string()); }
+    let confidence = parse_confidence(&answer);
+    let citations = build_citations(&snapshot);
+    let suggested_actions = parse_suggested_actions(&answer);
+
+    Ok(AgiAnalysis {
+        answer,
+        confidence,
+        citations,
+        suggested_actions,
+        provider: "remote-llm".to_string(),
+        disclaimer: "AI assistive output only. Verify telemetry and obtain human approval before taking operator actions."
+            .to_string(),
+        model,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -20,7 +20,13 @@ import {
 import { computeSnapshotDiff, type NodeChange } from '../lib/snapshotDiff'
 import { useRef } from 'react'
 import { isTauri } from '../lib/tauri'
-import { auditCancelled, auditConfirmed, auditRequested, type ActionId } from '../lib/actions'
+import {
+  auditCancelled,
+  auditConfirmed,
+  auditRequested,
+  executeGovernedDiagnostic,
+  type ActionId,
+} from '../lib/actions'
 
 const INITIAL_LOGS = [
   '[INIT] Cockpit dashboard mounted',
@@ -247,11 +253,41 @@ export default function CockpitDashboard() {
     if (!pendingAction) return
     const { actionId, source, correlationId } = pendingAction
     setPendingAction(null)
-    void auditConfirmed(actionId, source, selectedEnv, correlationId).then(refreshAudit)
-    addLog(
-      setLogs,
-      `${source === 'copilot-draft' ? 'COPILOT_DRAFT' : 'OPERATOR_ACTION'}: ${actionId} confirmed (intent recorded; no execution)`
-    )
+    void (async () => {
+      if (actionId === 'DIAGNOSTIC_HEALTH_CHECK' && isTauri()) {
+        const result = await executeGovernedDiagnostic(actionId)
+        if (result.ok) {
+          await auditConfirmed(actionId, source, selectedEnv, correlationId, {
+            mode: 'read-only-executed',
+            outcome: 'executed',
+            command: 'run_diagnostic_health_check',
+            detail: 'governed read-only desktop diagnostic completed',
+            data: result.data,
+          })
+          addLog(
+            setLogs,
+            `${source === 'copilot-draft' ? 'COPILOT_DRAFT' : 'OPERATOR_ACTION'}: ${actionId} read-only executed (desktop/Tauri) — host=${String(result.data.host ?? '?')} mem=${String(result.data.memoryUsedMb ?? '?')}/${String(result.data.memoryTotalMb ?? '?')}MB procs=${String(result.data.processCount ?? '?')}`
+          )
+        } else {
+          await auditConfirmed(actionId, source, selectedEnv, correlationId, {
+            mode: 'read-only-executed',
+            outcome: 'error',
+            command: 'run_diagnostic_health_check',
+            detail: result.error,
+          })
+          addLog(setLogs, `ERROR: ${actionId} read-only execution failed — ${result.error}`)
+        }
+      } else {
+        await auditConfirmed(actionId, source, selectedEnv, correlationId, { mode: 'intent-only' })
+        const webNote =
+          actionId === 'DIAGNOSTIC_HEALTH_CHECK' && !isTauri() ? ' (web mode; intent-only)' : ''
+        addLog(
+          setLogs,
+          `${source === 'copilot-draft' ? 'COPILOT_DRAFT' : 'OPERATOR_ACTION'}: ${actionId} confirmed (intent recorded; no execution${webNote})`
+        )
+      }
+      refreshAudit()
+    })()
   }, [pendingAction, selectedEnv])
 
   const handleCancel = useCallback(() => {
