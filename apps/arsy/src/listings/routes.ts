@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
+import { httpUrlSchema } from '../http-url.ts'
 import { ListingRepository, type ReceiptInput } from './repository.ts'
 
 const idSchema = z.string().uuid()
@@ -13,10 +14,10 @@ const packageSchema = z.object({
 const receiptSchema = z.object({
   receiptType: z.enum(['manual-submission', 'publication-confirmation', 'withdrawal-confirmation']),
   externalListingId: z.string().trim().min(1).max(300).optional(),
-  publicUrl: z.string().url().max(2048).optional(),
+  publicUrl: httpUrlSchema.optional(),
   evidence: z.array(z.object({
     label: z.string().trim().min(2).max(200),
-    url: z.string().url().max(2048).optional(),
+    url: httpUrlSchema.optional(),
     reference: z.string().trim().min(2).max(500).optional(),
   }).refine((item) => Boolean(item.url || item.reference), 'Evidence needs a URL or reference.')).min(1).max(50),
   operatorConfirmation: z.string().trim().min(20).max(2000),
