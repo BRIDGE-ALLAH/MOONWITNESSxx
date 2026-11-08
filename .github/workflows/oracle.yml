@@ -85,6 +85,10 @@ jobs:
                       "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
                   )
                   await connection.execute("GRANT CONNECT ON DATABASE oracle_test TO oracle_app")
+                  await connection.execute(
+                      "CREATE ROLE oracle_migrator NOLOGIN NOCREATEDB NOCREATEROLE NOREPLICATION"
+                  )
+                  await connection.execute("GRANT CREATE ON DATABASE oracle_test TO oracle_migrator")
                   await connection.execute("REVOKE CREATE ON DATABASE oracle_test FROM oracle_app")
                   await connection.execute("REVOKE ALL ON SCHEMA public FROM oracle_app")
                   await connection.execute("REVOKE ALL ON ALL TABLES IN SCHEMA public FROM oracle_app")
