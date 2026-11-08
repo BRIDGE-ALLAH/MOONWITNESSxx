@@ -14,10 +14,48 @@ const SEEDED_RADIUS_ID: &str = "01K9Z0J8A1B2C3D4E5F6G7H8J9";
 
 #[tokio::test]
 async fn postgres_migrations_engine_and_radius_crud_are_persistent() {
-    if env::var("DATABASE_URL").is_err() || env::var("RADIUS_DATABASE_URL").is_err() {
+    if env::var("DATABASE_ADMIN_URL").is_err()
+        || env::var("DATABASE_URL").is_err()
+        || env::var("RADIUS_DATABASE_URL").is_err()
+    {
         eprintln!("Skipping PostgreSQL persistence test: database URLs are not configured");
         return;
     }
+
+    let atlas_password = env::var("ATLAS_DB_PASSWORD").expect("ATLAS_DB_PASSWORD is configured");
+    let radius_password =
+        env::var("RADIUS_DB_PASSWORD").expect("RADIUS_DB_PASSWORD is configured");
+    for password in [&atlas_password, &radius_password] {
+        assert!(
+            password
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-'),
+            "test database passwords must be URL-safe"
+        );
+        assert!(password.len() >= 32, "test database passwords must be at least 32 characters");
+    }
+
+    let admin_pool = PgPoolOptions::new()
+        .max_connections(2)
+        .connect(&env::var("DATABASE_ADMIN_URL").expect("DATABASE_ADMIN_URL is configured"))
+        .await
+        .expect("connect to PostgreSQL admin database");
+    sqlx::raw_sql(&format!("CREATE ROLE atlas LOGIN PASSWORD '{atlas_password}'"))
+        .execute(&admin_pool)
+        .await
+        .expect("create least-privilege ATLAS database role");
+    sqlx::raw_sql(&format!("CREATE ROLE radius LOGIN PASSWORD '{radius_password}'"))
+        .execute(&admin_pool)
+        .await
+        .expect("create least-privilege RADIUS database role");
+    sqlx::query("CREATE DATABASE atlas OWNER atlas")
+        .execute(&admin_pool)
+        .await
+        .expect("create ATLAS database");
+    sqlx::query("CREATE DATABASE radius OWNER radius")
+        .execute(&admin_pool)
+        .await
+        .expect("create RADIUS database");
 
     let pool = database::pool().await.expect("connect to test PostgreSQL");
     sqlx::migrate!("./migrations")
@@ -104,25 +142,8 @@ async fn postgres_migrations_engine_and_radius_crud_are_persistent() {
     let total: i64 = row.try_get("total").expect("read count");
     assert_eq!(total, 0);
 
-    let admin_pool = PgPoolOptions::new()
-        .max_connections(2)
-        .connect(&env::var("DATABASE_URL").expect("DATABASE_URL is configured"))
-        .await
-        .expect("connect to PostgreSQL admin database");
-    let radius_exists: bool =
-        sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'radius')")
-            .fetch_one(&admin_pool)
-            .await
-            .expect("check whether isolated RADIUS database exists");
-    if !radius_exists {
-        sqlx::query("CREATE DATABASE radius")
-            .execute(&admin_pool)
-            .await
-            .expect("create isolated RADIUS database");
-    }
-
     let radius_pool = radius_db::pool().await.expect("connect to RADIUS database");
-    sqlx::raw_sql("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+    sqlx::raw_sql("DROP SCHEMA public CASCADE; CREATE SCHEMA public AUTHORIZATION radius;")
         .execute(radius_pool)
         .await
         .expect("reset isolated RADIUS test schema");
