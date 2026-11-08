@@ -39,7 +39,7 @@ function providerLabel(remoteUrl: string | null): string {
 
   // Accept URL remotes and the common SSH scp-like form (git@host:owner/repo).
   // Compare the parsed hostname, never a substring of the complete remote URL.
-  let hostname = ''
+  let hostname: string
   const trimmedRemote = remoteUrl.trim()
   const scpRemote = /^[^@/]+@([^:/]+):/.exec(trimmedRemote)
   if (scpRemote && !trimmedRemote.includes('://')) {
