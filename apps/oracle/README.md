@@ -100,6 +100,12 @@ The Compose example uses `ORACLE_BASE_URL=http://oracle:8010`, `ORACLE_SERVICE_T
 
 The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, the explicit ORACLE migration step, ORACLE, and ARSY as real containers. It submits both supported analysis tasks through ARSY, checks computed results and provenance, restarts ORACLE, then verifies the existing result and idempotency replay survive that restart. It uses ephemeral CI credentials and removes isolated Compose volumes after the run.
 
+## Design and research rationale
+
+- PostgreSQL 16 documents `FOR UPDATE SKIP LOCKED` as suitable for queue-like tables with multiple consumers, while explicitly warning that skipped rows make the view inconsistent for general-purpose queries. ORACLE uses it narrowly to atomically claim one queued or expired lease row inside a transaction; normal job reads do not use it. ([PostgreSQL 16 SELECT](https://www.postgresql.org/docs/16/sql-select.html))
+- PostgreSQL role membership is more than the `NOINHERIT` flag: membership can still enable `SET ROLE`. The bootstrap therefore sets non-privileged attributes and revokes existing role memberships from the ORACLE login roles. ([PostgreSQL 16 CREATE ROLE](https://www.postgresql.org/docs/16/sql-createrole.html), [Role membership](https://www.postgresql.org/docs/current/role-membership.html))
+- `asyncpg` is designed for PostgreSQL with Python `asyncio`; its official guidance recommends connection pooling for server applications that frequently borrow short-lived database connections. ORACLE keeps the pool bounded and the persistence layer behind its coordinator boundary. ([asyncpg usage](https://magicstack.github.io/asyncpg/current/usage.html), [asyncpg pool API](https://magicstack.github.io/asyncpg/current/api/index.html#connection-pools))
+
 ## Stage 2 durable job behavior and operational limitations
 
 - `ORACLE_DATABASE_URL` selects the PostgreSQL coordinator. In Compose, the application connects only as the least-privilege `oracle_app` role; the one-shot migration service connects as `oracle_migrator`. Neither role is a superuser or can create databases/roles. Direct privileges on `public` objects are revoked, the runtime search path is restricted to `oracle`, and the application role receives no access to ARSY-owned public tables. The migrator can create objects only in the dedicated `oracle` schema; the runtime role can read/write only `oracle.jobs`.
