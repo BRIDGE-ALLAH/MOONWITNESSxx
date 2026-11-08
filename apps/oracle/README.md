@@ -1,8 +1,8 @@
 # ORACLE — Python Intelligence Service
 
-**Stage:** Stage 1 foundation · **Status:** development-only, not production-ready
+**Stage:** Stage 1 computation + Stage 2 durable-job candidate · **Status:** development/CI verified candidate; production remains blocked
 
-ORACLE is the MOONWITNESS Python service for bounded computation and research-oriented analysis. In this first stage it provides a versioned internal API, a bounded in-process job queue, deterministic statistical/text profiling tasks, and digest-based derivation metadata.
+ORACLE is the MOONWITNESS Python service for bounded computation and research-oriented analysis. It provides a versioned internal API, deterministic statistical/text profiling tasks, and digest-based derivation metadata. With `ORACLE_DATABASE_URL` configured, Stage 2 stores the job lifecycle and idempotency state in PostgreSQL and uses database leases for worker recovery. Without that URL, loopback development/test mode retains the bounded in-memory coordinator.
 
 ## Ownership boundaries
 
@@ -87,7 +87,7 @@ The container binds to \`0.0.0.0\` and therefore requires a service token. Do no
 
 ## ARSY integration
 
-The Docker Compose development stack runs ORACLE as a private service at `http://oracle:8010` on the existing `moonwitness` bridge network. ORACLE has no published host port. Its readiness endpoint is used by Compose before ARSY starts.
+The Docker Compose development stack runs ORACLE as a private service at `http://oracle:8010` on the existing `moonwitness` bridge network. ORACLE has no published host port. PostgreSQL provisions separate `oracle_app` and `oracle_migrator` roles, and a one-shot `oracle-migrate` service applies checksum-verified SQL migrations before ORACLE starts. ORACLE connects only with the runtime role; the schema-owner credential is used only by the migration service. Compose readiness waits for the durable store and worker pool.
 
 ARSY exposes the caller-facing integration routes:
 
@@ -98,7 +98,7 @@ Both routes are protected by ARSY's existing operator authentication boundary. A
 
 The Compose example uses `ORACLE_BASE_URL=http://oracle:8010`, `ORACLE_SERVICE_TOKEN`, and `ORACLE_REQUEST_TIMEOUT_MS`. The sample token in `.env.docker` is for local development only; replace it before any shared or non-local environment. Do not expose ORACLE through public ingress or a host-published port.
 
-The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, ORACLE, and ARSY as real containers, submits both supported analysis tasks through ARSY, checks their computed results and provenance, and verifies idempotency replay. It uses an ephemeral CI operator token and removes the isolated Compose volumes after the run. This verifies service-to-service execution; it does not make Stage 1 jobs durable or prove production readiness.
+The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, the explicit ORACLE migration step, ORACLE, and ARSY as real containers. It submits both supported analysis tasks through ARSY, checks computed results and provenance, restarts ORACLE, then verifies the existing result and idempotency replay survive that restart. It uses ephemeral CI credentials and removes isolated Compose volumes after the run.
 
 ## Stage 1 safety and operational limitations
 
