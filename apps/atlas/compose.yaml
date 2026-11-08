@@ -13,7 +13,7 @@ services:
       - atlas_postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init/20-create-databases.sh:/docker-entrypoint-initdb.d/20-create-databases.sh:ro
       - ./docker/postgres/init/21-install-radius-schema.sh:/docker-entrypoint-initdb.d/21-install-radius-schema.sh:ro
-      - ./docker/freeradius/postgresql/schema.sql:/docker-entrypoint-initdb.d/22-radius-schema.sql:ro
+      - ./docker/freeradius/postgresql/schema.sql:/tmp/atlas-radius-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
