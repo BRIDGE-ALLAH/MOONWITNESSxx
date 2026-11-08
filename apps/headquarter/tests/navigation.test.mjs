@@ -16,7 +16,7 @@ test('Headquarter module maturity does not mislabel implemented integrations as 
   const governance = NAVIGATION_ITEMS.find((item) => item.href === '/governance-lab')
   const prototype = NAVIGATION_ITEMS.find((item) => item.href === '/signal-room')
 
-  assert.equal(docker?.status, 'connected')
+  assert.equal(docker?.status, 'integrated')
   assert.equal(governance?.status, 'partial')
   assert.equal(prototype?.status, 'prototype')
 })
