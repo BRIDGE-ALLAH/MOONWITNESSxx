@@ -56,7 +56,6 @@ export function ServiceNodeGrid({
   }
 
   const selected = nodes.find((n) => n.id === selectedNodeId) ?? null
-  const triggerRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!selected) return
