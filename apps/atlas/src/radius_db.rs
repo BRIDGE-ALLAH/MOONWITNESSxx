@@ -1,13 +1,13 @@
 use std::{env, time::Duration};
 
-use sqlx::{MySqlPool, mysql::MySqlPoolOptions};
+use sqlx::{PgPool, postgres::PgPoolOptions};
 use tokio::sync::OnceCell;
 
 use crate::database::DatabaseStatus;
 
-static POOL: OnceCell<MySqlPool> = OnceCell::const_new();
+static POOL: OnceCell<PgPool> = OnceCell::const_new();
 
-pub async fn pool() -> Result<&'static MySqlPool, sqlx::Error> {
+pub async fn pool() -> Result<&'static PgPool, sqlx::Error> {
     POOL.get_or_try_init(|| async {
         let database_url = env::var("RADIUS_DATABASE_URL")
             .map_err(|error| sqlx::Error::Configuration(Box::new(error)))?;
@@ -16,7 +16,7 @@ pub async fn pool() -> Result<&'static MySqlPool, sqlx::Error> {
                 std::io::Error::other("RADIUS_DATABASE_URL is empty").into(),
             ));
         }
-        MySqlPoolOptions::new()
+        PgPoolOptions::new()
             .max_connections(10)
             .acquire_timeout(Duration::from_secs(3))
             .connect(&database_url)
