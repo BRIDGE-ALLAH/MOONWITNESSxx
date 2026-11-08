@@ -45,29 +45,45 @@ export class DockerWorkloadTransportError extends Error {
   }
 }
 
-function assertEnginePath(path: string): void {
-  if (path.length > 2048 || path.includes('\\\\') || path.includes('\\r') || path.includes('\\n')) {
+function assertEnginePath(method: DockerWorkloadRequest['method'], path: string): void {
+  if (path.length > 2048 || path.includes(String.fromCharCode(92)) ||
+      path.includes(String.fromCharCode(10)) || path.includes(String.fromCharCode(13))) {
     throw new TypeError('Docker workload adapter rejected an unsupported Engine API path')
   }
-  const route = path.split('?', 1)[0]
+  const queryIndex = path.indexOf('?')
+  const route = queryIndex < 0 ? path : path.slice(0, queryIndex)
+  const query = queryIndex < 0 ? '' : path.slice(queryIndex + 1)
   const segments = route.split('/').filter(Boolean)
+  const containerId = segments[1] ?? ''
+  const isId = /^[a-f0-9]{12,64}$/i.test(containerId)
   const allowed = (
-    segments.length === 2 && segments[0] === 'containers' && segments[1] === 'create'
+    method === 'POST' && segments.length === 2 &&
+    segments[0] === 'containers' && segments[1] === 'create' &&
+    /^name=[a-z0-9_.-]{1,128}$/.test(query)
   ) || (
-    (segments.length === 2 || segments.length === 3) &&
-    segments[0] === 'containers' &&
-    /^[a-f0-9]{12,64}$/i.test(segments[1]) &&
-    (segments.length === 2 || ['json', 'start', 'stop'].includes(segments[2]))
+    method === 'GET' && segments.length === 3 &&
+    segments[0] === 'containers' && isId && segments[2] === 'json' && query === ''
   ) || (
-    segments.length === 2 && segments[0] === 'volumes' &&
-    (segments[1] === 'create' || /^[a-z0-9][a-z0-9_.-]{0,180}$/.test(segments[1]))
+    method === 'POST' && segments.length === 3 &&
+    segments[0] === 'containers' && isId && segments[2] === 'start' && query === ''
+  ) || (
+    method === 'POST' && segments.length === 3 &&
+    segments[0] === 'containers' && isId && segments[2] === 'stop' &&
+    /^t=(?:[1-9]|[12][0-9]|30)$/.test(query)
+  ) || (
+    method === 'DELETE' && segments.length === 2 &&
+    segments[0] === 'containers' && isId && query === 'v=0&force=0'
+  ) || (
+    method === 'POST' && segments.length === 2 &&
+    segments[0] === 'volumes' && segments[1] === 'create' && query === ''
+  ) || (
+    method === 'GET' && segments.length === 2 &&
+    segments[0] === 'volumes' && /^[a-z0-9][a-z0-9_.-]{0,180}$/.test(segments[1]) && query === ''
   )
   if (!allowed) {
-    throw new TypeError('Docker workload adapter rejected an unsupported Engine API path')
+    throw new TypeError('Docker workload adapter rejected an unsupported Engine API path or method')
   }
 }
-}
-
 function parseResponseBody(buffer: Buffer): unknown {
   if (buffer.length === 0) return null
   const text = buffer.toString('utf8')
@@ -80,7 +96,7 @@ export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
     connection: DockerConnection,
     input: DockerWorkloadRequest,
   ): Promise<DockerWorkloadResponse> {
-    assertEnginePath(input.path)
+    assertEnginePath(input.method, input.path)
     const bodyText = input.body === undefined ? undefined : JSON.stringify(input.body)
     const body = bodyText === undefined ? undefined : Buffer.from(bodyText, 'utf8')
     if (body && body.length > MAX_BODY_BYTES) {
@@ -379,7 +395,7 @@ function normalizeVolumes(scope: DockerWorkloadScope, volumes: DockerWorkloadVol
     seenKeys.add(volume.key)
     const parts = volume.target.split('/')
     if (!volume.target.startsWith('/data/') ||
-        parts.some((part) => part === '.' || part === '..' || part.includes('\\\\')) ||
+        parts.some((part) => part === '.' || part === '..' || part.includes(String.fromCharCode(92))) ||
         parts.slice(2).length === 0 ||
         parts.slice(2).some((part) => !/^[a-zA-Z0-9._-]+$/.test(part)) ||
         volume.target.length > 128) {
