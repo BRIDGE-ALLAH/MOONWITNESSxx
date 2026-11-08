@@ -49,6 +49,7 @@ test('deployment authorization persists append-only policy evidence with owner a
       {
         principal: { kind: 'operator', operatorId: ownerId },
         operationId: operation.operation.id,
+        deploymentId: deployment.id,
         ownerId,
         targetHostId: hostId,
         action: 'deploy',
@@ -67,18 +68,20 @@ test('deployment authorization persists append-only policy evidence with owner a
     assert.equal(result.allowed, true)
 
     const stored = await pool.query(
-      'SELECT operation_id, owner_id, actor_id, target_host_id, action, effect, policy_version FROM arsy_deployment_authorization_decisions WHERE operation_id = $1 AND owner_id = $2',
+      'SELECT operation_id, deployment_id, owner_id, actor_id, target_host_id, action, effect, policy_version FROM arsy_deployment_authorization_decisions WHERE operation_id = $1 AND owner_id = $2',
       [operation.operation.id, ownerId],
     )
     assert.equal(stored.rowCount, 1)
+    assert.equal(stored.rows[0].deployment_id, deployment.id)
+    assert.equal(stored.rows[0].target_host_id, hostId)
     assert.equal(stored.rows[0].actor_id, ownerId)
     assert.equal(stored.rows[0].effect, 'allow')
     assert.equal(stored.rows[0].policy_version, 'integration-policy-v1')
 
     await assert.rejects(
       pool.query(
-        'INSERT INTO arsy_deployment_authorization_decisions (id, operation_id, owner_id, actor_id, target_host_id, action, effect, reason_code, evidence) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)',
-        [randomUUID(), operation.operation.id, otherOwnerId, otherOwnerId, hostId, 'deploy', 'allow', 'CROSS_OWNER', '{}'],
+        'INSERT INTO arsy_deployment_authorization_decisions (id, operation_id, deployment_id, owner_id, actor_id, target_host_id, action, effect, reason_code, evidence) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)',
+        [randomUUID(), operation.operation.id, deployment.id, otherOwnerId, otherOwnerId, hostId, 'deploy', 'allow', 'CROSS_OWNER', '{}'],
       ),
     )
     await assert.rejects(
