@@ -251,3 +251,8 @@ Public web entry points may expose only deliberately designed frontends and API 
 
 When a source document conflicts with this registry, update the owning source document and this registry in the same reviewed change. Do not copy full technical specifications into this page; link to the canonical owner.
 
+
+
+### ADR 0003 — Isolated OCI Build Engine
+
+The application build boundary is specified in [ADR 0003](adr/0003-isolated-build-engine.md). BuildKit rootless is the proposed v1 choice only behind disposable per-job worker isolation and adversarial network/process/secret tests. This remains Proposed until maintainer acceptance. Docker build and runtime deployment are separate capabilities; ARSY is the control-plane authority.
