@@ -1,3 +1,27 @@
+-- Preserve first-generation channel/listing tables before creating owner-scoped v2 tables.
+-- Existing records and their indexes/constraints remain attached to the renamed legacy tables.
+DO $$
+BEGIN
+  IF to_regclass('arsy_channels') IS NOT NULL
+     AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'arsy_channels' AND column_name = 'slug')
+     AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'arsy_channels' AND column_name = 'owner_id') THEN
+    IF to_regclass('arsy_channels_legacy') IS NOT NULL THEN
+      RAISE EXCEPTION 'arsy_channels_legacy already exists; refusing to overwrite preserved channel data';
+    END IF;
+    ALTER TABLE arsy_channels RENAME TO arsy_channels_legacy;
+  END IF;
+
+  IF to_regclass('arsy_listings') IS NOT NULL
+     AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'arsy_listings' AND column_name = 'product_version_id')
+     AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'arsy_listings' AND column_name = 'product_id') THEN
+    IF to_regclass('arsy_listings_legacy') IS NOT NULL THEN
+      RAISE EXCEPTION 'arsy_listings_legacy already exists; refusing to overwrite preserved listing data';
+    END IF;
+    ALTER TABLE arsy_listings RENAME TO arsy_listings_legacy;
+  END IF;
+END
+$$;
+
 -- Channel registry and manual listing workflow. No external publishing integration is enabled.
 CREATE TABLE IF NOT EXISTS arsy_channels (
   id uuid PRIMARY KEY,
@@ -73,6 +97,23 @@ CREATE TABLE IF NOT EXISTS arsy_listings (
   FOREIGN KEY (product_id, product_version) REFERENCES arsy_product_versions (product_id, version),
   FOREIGN KEY (owner_id, channel_id) REFERENCES arsy_channels (owner_id, id)
 );
+
+-- Repoint commerce references from the preserved legacy listing/channel tables to v2 tables.
+ALTER TABLE arsy_financial_events DROP CONSTRAINT IF EXISTS arsy_financial_events_owner_id_listing_id_fkey;
+ALTER TABLE arsy_payouts DROP CONSTRAINT IF EXISTS arsy_payouts_channel_id_fkey;
+
+DO $
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'arsy_financial_events_owner_listing_fk' AND conrelid = 'arsy_financial_events'::regclass) THEN
+    ALTER TABLE arsy_financial_events ADD CONSTRAINT arsy_financial_events_owner_listing_fk
+      FOREIGN KEY (owner_id, listing_id) REFERENCES arsy_listings (owner_id, id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'arsy_payouts_channel_v2_fk' AND conrelid = 'arsy_payouts'::regclass) THEN
+    ALTER TABLE arsy_payouts ADD CONSTRAINT arsy_payouts_channel_v2_fk
+      FOREIGN KEY (channel_id) REFERENCES arsy_channels (id);
+  END IF;
+END
+$;
 
 CREATE INDEX IF NOT EXISTS arsy_listings_owner_status_idx
   ON arsy_listings (owner_id, status, updated_at DESC);
