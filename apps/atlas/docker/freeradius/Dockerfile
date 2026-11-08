@@ -6,7 +6,7 @@ COPY docker/freeradius/raddb/mods-available/sql.template /etc/raddb/mods-availab
 COPY docker/freeradius/raddb/sites-available/default /etc/raddb/sites-available/default
 COPY docker/freeradius/raddb/sites-available/inner-tunnel /etc/raddb/sites-available/inner-tunnel
 COPY docker/freeradius/raddb/sites-available/status /etc/raddb/sites-available/status
-COPY docker/freeradius/raddb/mods-config/sql/main/mysql/queries.conf /etc/raddb/mods-config/sql/main/mysql/queries.conf
+COPY docker/freeradius/raddb/mods-config/sql/main/postgresql/queries.conf /etc/raddb/mods-config/sql/main/postgresql/queries.conf
 COPY docker/freeradius/entrypoint.sh /usr/local/sbin/atlas-freeradius-entrypoint
 
 RUN ln -sf ../mods-available/sql /etc/raddb/mods-enabled/sql \
