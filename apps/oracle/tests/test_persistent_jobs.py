@@ -9,6 +9,7 @@ import asyncpg
 import pytest
 
 from oracle.job_store import PostgresJobStore
+from oracle.jobs import IdempotencyConflictError, QueueSaturatedError
 from oracle.schemas import EvidenceRef, Provenance
 from oracle.settings import Settings
 
@@ -108,12 +109,11 @@ def test_postgres_submission_is_atomic_and_replays_the_original_job(postgres_dat
             assert replayed is True
             assert original.job_id in job_ids
 
-            with pytest.raises(Exception) as captured:
+            with pytest.raises(IdempotencyConflictError):
                 await store.submit(
                     **submission([2, 4, 99]),
                     idempotency_key="concurrent-request-01",
                 )
-            assert captured.type.__name__ == "IdempotencyConflictError"
 
             ready, depth = await store.readiness()
             assert ready is True
@@ -130,9 +130,8 @@ def test_postgres_queue_capacity_is_enforced_transactionally(postgres_database: 
         await store.start()
         try:
             await store.submit(**submission(), idempotency_key="capacity-first")
-            with pytest.raises(Exception) as captured:
+            with pytest.raises(QueueSaturatedError):
                 await store.submit(**submission([7]), idempotency_key="capacity-second")
-            assert captured.type.__name__ == "QueueSaturatedError"
             ready, depth = await store.readiness()
             assert ready is True
             assert depth == 1
@@ -235,7 +234,7 @@ def test_expired_leases_exhaust_attempts_without_fabricating_success(postgres_da
 def test_terminal_job_retention_expires_its_idempotency_record(postgres_database: str) -> None:
     async def scenario() -> None:
         store = PostgresJobStore(
-            make_settings(postgres_database, max_retained_jobs=1, job_retention_seconds=60)
+            make_settings(postgres_database, max_queue_size=1, max_retained_jobs=1, job_retention_seconds=60)
         )
         await store.start()
         try:
