@@ -237,15 +237,20 @@ output_bytes="$(stat -c '%s' "$OUTPUT")"
 sudo -u "$BUILDER_USER" tar -xf "$OUTPUT" -C "$EXTRACT"
 INDEX="$EXTRACT/index.json"
 [[ -s "$INDEX" ]] || fail "OCI index missing"
-IMAGE_DIGEST="$(jq -r '."containerimage.digest" // empty' "$METADATA")"
-[[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "BuildKit did not return an immutable image digest"
-jq -e --arg digest "$IMAGE_DIGEST" 'any(.manifests[]; .digest == $digest)' "$INDEX" >/dev/null || fail "metadata digest is not present in OCI index"
+METADATA_DIGEST="$(jq -r '."containerimage.digest" // empty' "$METADATA")"
+[[ "$METADATA_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "BuildKit did not return an immutable image digest"
+jq -e --arg digest "$METADATA_DIGEST" 'any(.manifests[]; .digest == $digest)' "$INDEX" >/dev/null || fail "metadata digest is not present in OCI index"
+# Buildx metadata may identify an index descriptor; select the runnable image
+# manifest explicitly so config/layer verification never targets an index or attestation.
+IMAGE_DIGEST="$(jq -r '[.manifests[] | select((.annotations["vnd.docker.reference.type"] // "") != "attestation-manifest") | .digest][0] // empty' "$INDEX")"
+[[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "OCI index has no runnable image manifest"
 
 verify_blob() {
   local digest="$1" algorithm hex file actual
   algorithm="${digest%%:*}"
   hex="${digest#*:}"
   file="$EXTRACT/blobs/$algorithm/$hex"
+  [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "invalid OCI blob digest: $digest"
   [[ -s "$file" ]] || fail "missing OCI blob $digest"
   actual="$(sha256sum "$file" | awk '{print $1}')"
   [[ "$actual" == "$hex" ]] || fail "OCI blob digest mismatch: $digest"
