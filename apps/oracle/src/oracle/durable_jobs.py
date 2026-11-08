@@ -72,8 +72,7 @@ class PostgresJobCoordinator:
         return (
             self._accepting
             and self._database_available
-            and bool(self._workers)
-            and all(not worker.done() for worker in self._workers)
+            and (not self._workers or all(not worker.done() for worker in self._workers))
         )
 
     @property
@@ -81,6 +80,9 @@ class PostgresJobCoordinator:
         return 0
 
     async def start(self) -> None:
+        await self._connect(start_workers=True)
+
+    async def _connect(self, *, start_workers: bool) -> None:
         try:
             self._pool = await asyncpg.create_pool(
                 self.settings.database_url,
@@ -105,17 +107,18 @@ class PostgresJobCoordinator:
 
         self._database_available = True
         self._accepting = True
-        self._workers = [
-            asyncio.create_task(self._worker_loop(), name=f"oracle-db-worker-{index + 1}")
-            for index in range(self.settings.worker_count)
-        ]
-        logger.info(
-            "ORACLE durable workers started",
-            extra={
-                "event": "durable_workers_started",
-                "worker_count": len(self._workers),
-            },
-        )
+        if start_workers:
+            self._workers = [
+                asyncio.create_task(self._worker_loop(), name=f"oracle-db-worker-{index + 1}")
+                for index in range(self.settings.worker_count)
+            ]
+            logger.info(
+                "ORACLE durable workers started",
+                extra={
+                    "event": "durable_workers_started",
+                    "worker_count": len(self._workers),
+                },
+            )
 
     async def stop(self) -> None:
         self._accepting = False
