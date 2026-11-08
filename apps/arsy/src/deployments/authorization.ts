@@ -283,7 +283,11 @@ function mapApproval(row: DeploymentApprovalRow): DeploymentApproval {
 }
 
 export class PostgresDeploymentAuthorizationStore {
-  constructor(private readonly pool: DatabasePool) {}
+  private readonly pool: DatabasePool
+
+  constructor(pool: DatabasePool) {
+    this.pool = pool
+  }
 
   async loadContext(operationId: string, ownerId: string, authenticatedActorId: string): Promise<DeploymentAuthorizationContext | null> {
     const result = await this.pool.query(
