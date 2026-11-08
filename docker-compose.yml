@@ -86,6 +86,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    depends_on:
+      oracle-migrate:
+        condition: service_completed_successfully
 
   # ARSY backend — Fastify application
   arsy:
