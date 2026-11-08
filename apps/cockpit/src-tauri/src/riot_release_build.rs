@@ -201,9 +201,28 @@ fn allowed_output_roots(root: &Path) -> Vec<PathBuf> {
     detect_profiles(root)
         .into_iter()
         .flat_map(|profile| profile.output_directories)
-        .filter_map(|relative| root.join(relative).canonicalize().ok())
-        .filter(|path| path.is_dir() && is_inside(root, path))
+        .filter_map(|relative| {
+            let requested = root.join(relative);
+            let metadata = fs::symlink_metadata(&requested).ok()?;
+            if !metadata.file_type().is_dir() {
+                return None;
+            }
+            let canonical = requested.canonicalize().ok()?;
+            (canonical.is_dir() && is_inside(root, &canonical)).then_some(canonical)
+        })
         .collect()
+}
+
+fn is_intermediate_artifact(path: &Path) -> bool {
+    let extension = path
+        .extension()
+        .and_then(|value| value.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    matches!(
+        extension.as_str(),
+        "d" | "rmeta" | "pdb" | "ilk" | "obj" | "o" | "exp"
+    ) || path.file_name().is_some_and(|name| name == ".ds_store")
 }
 
 fn safe_file_name(path: &Path) -> String {
@@ -260,7 +279,10 @@ fn scan_directory(
             continue;
         }
         let Ok(canonical) = path.canonicalize() else { continue };
-        if !is_inside(output_root, &canonical) || !is_inside(root, &canonical) {
+        if !is_inside(output_root, &canonical)
+            || !is_inside(root, &canonical)
+            || is_intermediate_artifact(&canonical)
+        {
             continue;
         }
         let Ok((size_bytes, sha256)) = sha256_file(&canonical) else { continue };
@@ -526,6 +548,23 @@ mod tests {
         assert_eq!(size, 3);
         assert_eq!(hash, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn refuses_a_symlinked_output_directory() {
+        use std::os::unix::fs::symlink;
+        let root = temp_dir("symlink-root");
+        let outside = temp_dir("symlink-outside");
+        fs::write(root.join("Cargo.toml"), "[package]\\nname='demo'\\nversion='0.1.0'\\n").unwrap();
+        fs::create_dir_all(root.join("target")).unwrap();
+        fs::write(outside.join("secret.bin"), b"do not index").unwrap();
+        symlink(&outside, root.join("target/release")).unwrap();
+        let canonical_root = root.canonicalize().unwrap();
+        assert!(allowed_output_roots(&canonical_root).is_empty());
+        assert!(artifact_candidates(&canonical_root, "cargo-release").unwrap().is_empty());
+        fs::remove_dir_all(root).unwrap();
+        fs::remove_dir_all(outside).unwrap();
     }
 
     #[test]
