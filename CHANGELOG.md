@@ -10,6 +10,7 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 - Persistent accessible prototype/demo disclosure in Headquarter.
 - Container build verification for ARSY and Headquarter.
 - Compact density tokens now control shared Card spacing and Badge padding without shrinking form/button hit areas.
+- Headquarter now applies route-scoped Observatory and Archive skins; the unsupported prototype light/dark toggle and unused `next-themes` dependencies were removed.
 
 ### Fixed
 - ARSY application owns its build contract instead of delegating HTTP lifecycle to the framework-neutral core.
