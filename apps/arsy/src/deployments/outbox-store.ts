@@ -93,30 +93,7 @@ export async function claimDeploymentOutbox(
   }
 
   const result = await pool.query(
-    `WITH exhausted_candidates AS (
-       SELECT id
-       FROM arsy_deployment_outbox
-       WHERE delivered_at IS NULL
-         AND dead_lettered_at IS NULL
-         AND attempt_count >= max_attempts
-         AND (locked_until IS NULL OR locked_until <= now())
-         AND ($4::text IS NULL OR owner_id = $4)
-       ORDER BY locked_until, created_at, id
-       LIMIT $1
-       FOR UPDATE SKIP LOCKED
-     ),
-     exhausted AS (
-       UPDATE arsy_deployment_outbox AS outbox
-       SET dead_lettered_at = now(),
-           locked_by = NULL,
-           locked_until = NULL,
-           lease_token = NULL,
-           last_error_code = COALESCE(last_error_code, 'attempts_exhausted')
-       FROM exhausted_candidates
-       WHERE outbox.id = exhausted_candidates.id
-       RETURNING outbox.id
-     ),
-     candidates AS (
+    `WITH candidates AS (
        SELECT id
        FROM arsy_deployment_outbox
        WHERE delivered_at IS NULL
@@ -170,6 +147,46 @@ export async function claimDeploymentOutbox(
       leaseUntil: isoTimestamp(row.locked_until),
     }
   })
+}
+
+export interface ReapOutboxInput {
+  limit: number
+  ownerId?: string
+}
+
+export async function reapExpiredDeploymentOutbox(
+  pool: DatabasePool,
+  input: ReapOutboxInput,
+): Promise<number> {
+  if (!Number.isInteger(input.limit) || input.limit < 1 || input.limit > 50) {
+    throw new TypeError('Outbox reaper limit must be an integer between 1 and 50')
+  }
+  const ownerId = input.ownerId === undefined ? null : requiredText(input.ownerId, 'ownerId', 128)
+  const result = await pool.query(
+    `WITH expired AS (
+       SELECT id
+       FROM arsy_deployment_outbox
+       WHERE delivered_at IS NULL
+         AND dead_lettered_at IS NULL
+         AND attempt_count >= max_attempts
+         AND (locked_until IS NULL OR locked_until <= now())
+         AND ($2::text IS NULL OR owner_id = $2)
+       ORDER BY locked_until, created_at, id
+       LIMIT $1
+       FOR UPDATE SKIP LOCKED
+     )
+     UPDATE arsy_deployment_outbox AS outbox
+     SET dead_lettered_at = now(),
+         locked_by = NULL,
+         locked_until = NULL,
+         lease_token = NULL,
+         last_error_code = COALESCE(outbox.last_error_code, 'attempts_exhausted')
+     FROM expired
+     WHERE outbox.id = expired.id
+     RETURNING outbox.id`,
+    [input.limit, ownerId],
+  )
+  return queryRows<{ id: string }>(result).length
 }
 
 export async function acknowledgeDeploymentOutbox(
