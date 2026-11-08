@@ -155,3 +155,40 @@ def test_openapi_exposes_versioned_job_contract() -> None:
     ]["schema"]
     assert "/v1/jobs" in spec["paths"]
     assert len(request_schema["oneOf"]) == 2
+
+
+def test_configured_but_unavailable_durable_store_fails_readiness_and_writes_closed() -> None:
+    app = create_app(
+        Settings(
+            environment="test",
+            host="127.0.0.1",
+            database_url="postgresql://oracle:wrong@127.0.0.1:1/oracle",
+            service_token="x" * 40,
+            max_queue_size=4,
+            max_retained_jobs=20,
+        )
+    )
+    with TestClient(app) as client:
+        live = client.get("/health/live")
+        ready = client.get("/health/ready")
+        capabilities = client.get(
+            "/v1/capabilities",
+            headers={"Authorization": f"Bearer {'x' * 40}"},
+        )
+        submission = client.post(
+            "/v1/jobs",
+            headers={
+                "Authorization": f"Bearer {'x' * 40}",
+                "Idempotency-Key": "db-unavailable-01",
+            },
+            json={"task_type": "statistics.describe", "input": {"values": [1, 2, 3]}},
+        )
+
+        assert live.status_code == 200
+        assert ready.status_code == 503
+        assert ready.json()["ready"] is False
+        assert ready.json()["durable_jobs"] is True
+        assert capabilities.status_code == 200
+        assert capabilities.json()["durable_jobs"] is True
+        assert submission.status_code == 503
+        assert submission.json()["detail"] == "ORACLE durable job storage is unavailable"
