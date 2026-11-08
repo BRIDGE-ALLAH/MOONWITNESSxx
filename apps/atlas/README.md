@@ -17,11 +17,11 @@ ATLAS can run standalone. When integrated, it must honor ARSY governance and del
 
 - Rust 2024, minimum Rust 1.94
 - Loco.rs 1.3 with Axum handlers
-- MariaDB 11.4 for transactional control-plane metadata, accessed through SQLx MySQL protocol driver
+- PostgreSQL 17 for transactional control-plane metadata and FreeRADIUS SQL persistence, accessed through SQLx's PostgreSQL driver
 - Redis 7.4 is a **required** ATLAS dependency for cache and ephemeral coordination
 - Server-served dashboard; no separate frontend runtime
 
-Loco's built-in SeaORM database integration currently targets PostgreSQL and SQLite. ATLAS therefore uses SQLx's MySQL driver directly for MariaDB rather than claiming native Loco/SeaORM MariaDB support.
+Loco's built-in SeaORM integration supports PostgreSQL. ATLAS uses SQLx's PostgreSQL driver for explicit pool lifecycle and typed persistence queries; Loco owns the HTTP application lifecycle.
 
 ## External engine stack
 
@@ -42,7 +42,7 @@ FreeRADIUS is the RADIUS data-plane engine. ATLAS owns NAS inventory, subscriber
 
 FreeRADIUS runs from a derived official 3.2.10 image with SQL authentication/accounting enabled. Its management Status-Server is isolated on the internal Docker network and accepts probes only from ATLAS. The RADIUS status secret is separate from NAS shared secrets. The upstream sample EAP certificates remain development-only and must be replaced before production.
 
-On a fresh MariaDB volume, Compose initializes a separate MariaDB database named radius and a dedicated radius SQL user, then imports the upstream FreeRADIUS 3.2.10 MySQL schema. The initialization scripts run only when the MariaDB data directory is first created; an existing volume must be provisioned manually. This database is intentionally separate from ATLAS control-plane tables. NAS clients are read from the `nas` table at FreeRADIUS startup; adding, changing, or removing a NAS row requires a FreeRADIUS process restart before it takes effect; a configuration reload is not sufficient for SQL-loaded clients. The NAS create/update/delete API responses therefore return `activation: pending_radius_restart` rather than claiming the runtime has already applied the change. ATLAS exposes NAS and subscriber CRUD endpoints. Subscriber credentials are never stored in clear text. The API defaults to bcrypt (`Crypt-Password`) for PAP-compatible password verification. Set `credential_mode: "nt_hash"` only when MS-CHAPv2 compatibility is required; NT hashes are legacy and materially weaker, so prefer EAP-TLS where possible. Only one credential attribute is stored per subscriber to avoid ambiguous FreeRADIUS password selection. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
+On a fresh PostgreSQL volume, Compose creates separate `atlas` and `radius` databases with dedicated least-privilege roles, then imports the upstream FreeRADIUS 3.2.10 PostgreSQL schema. Initialization scripts run only when the PostgreSQL data directory is first created; an existing volume must be migrated deliberately before switching database engines. This database is intentionally separate from ATLAS control-plane tables. NAS clients are read from the `nas` table at FreeRADIUS startup; adding, changing, or removing a NAS row requires a FreeRADIUS process restart before it takes effect; a configuration reload is not sufficient for SQL-loaded clients. The NAS create/update/delete API responses therefore return `activation: pending_radius_restart` rather than claiming the runtime has already applied the change. ATLAS exposes NAS and subscriber CRUD endpoints. Subscriber credentials are never stored in clear text. The API defaults to bcrypt (`Crypt-Password`) for PAP-compatible password verification. Set `credential_mode: "nt_hash"` only when MS-CHAPv2 compatibility is required; NT hashes are legacy and materially weaker, so prefer EAP-TLS where possible. Only one credential attribute is stored per subscriber to avoid ambiguous FreeRADIUS password selection. Redis is required by ATLAS but is not a mandatory FreeRADIUS dependency.
 
 ## Run with Docker Compose
 
@@ -51,7 +51,7 @@ From apps/atlas, copy .env.example to .env, replace all placeholder passwords an
     cp .env.example .env
     docker compose up --build -d
 
-The dashboard is bound to 127.0.0.1:5150 by default. Set `ATLAS_CONTROL_TOKEN`, `RADIUS_STATUS_SECRET`, and database/cache passwords to at least 32 random characters. Engine and RADIUS management endpoints require `ATLAS_CONTROL_TOKEN` as a Bearer token. The default internal subnet is `172.31.240.0/24`. If it conflicts with an existing route, change the subnet and the fixed ATLAS/FreeRADIUS status-client addresses together in Compose and the FreeRADIUS status virtual-server config. MariaDB and Redis are internal-only. VictoriaMetrics and VictoriaLogs are exposed on loopback at ports 8428 and 9428. FreeRADIUS UDP ports 1812 and 1813 are also loopback-bound by default.
+The dashboard is bound to 127.0.0.1:5150 by default. Set `ATLAS_CONTROL_TOKEN`, `RADIUS_STATUS_SECRET`, and database/cache passwords to at least 32 random characters. Engine and RADIUS management endpoints require `ATLAS_CONTROL_TOKEN` as a Bearer token. The default internal subnet is `172.31.240.0/24`. If it conflicts with an existing route, change the subnet and the fixed ATLAS/FreeRADIUS status-client addresses together in Compose and the FreeRADIUS status virtual-server config. PostgreSQL and Redis are internal-only. VictoriaMetrics and VictoriaLogs are exposed on loopback at ports 8428 and 9428. FreeRADIUS UDP ports 1812 and 1813 are also loopback-bound by default.
 
 Do not change RADIUS_BIND_ADDRESS to a public or LAN interface until you have replaced sample EAP certificates, provisioned real NAS clients with unique strong secrets through ATLAS, configured firewall rules, and tested the authentication/accounting backend.
 
