@@ -51,8 +51,8 @@ async def prepare_database() -> str:
               IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app_test') THEN
                 CREATE ROLE oracle_app_test LOGIN PASSWORD 'oracle-app-integration-only';
               END IF;
-            END
-            $$
+            END;
+            $
             """
         )
         await admin.execute(
