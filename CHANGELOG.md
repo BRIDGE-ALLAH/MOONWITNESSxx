@@ -8,8 +8,6 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 - ORACLE PostgreSQL-backed job lifecycle with atomic idempotency, bounded queue/retention, leased workers, fencing, and restart recovery.
 - Explicit checksum-verified ORACLE SQL migrations and separate database migration/runtime roles.
 - PostgreSQL integration coverage and Compose E2E restart-persistence verification.
-
-### Added
 - Product-integrity audit for workspace contracts, navigation truth, and release blockers.
 - Runtime rate limiting for ARSY database health and readiness endpoints.
 - Persistent accessible prototype/demo disclosure in Headquarter.
