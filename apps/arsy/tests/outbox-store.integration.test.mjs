@@ -7,6 +7,7 @@ import { createDeployment, createDeploymentOperation } from '../src/deployments/
 import {
   acknowledgeDeploymentOutbox,
   claimDeploymentOutbox,
+  reapExpiredDeploymentOutbox,
   retryDeploymentOutbox,
 } from '../src/deployments/outbox-store.ts'
 
@@ -127,6 +128,8 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
     }))[0]
     assert.equal(finalLease.operationId, exhausted.operation.id)
     await new Promise((resolve) => setTimeout(resolve, 5_200))
+    const reaped = await reapExpiredDeploymentOutbox(pool, { ownerId, limit: 10 })
+    assert.equal(reaped, 1)
     const noClaim = await claimDeploymentOutbox(pool, {
       workerId: 'reaper',
       ownerId,
