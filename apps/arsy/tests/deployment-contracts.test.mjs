@@ -18,6 +18,7 @@ test('deployment metadata rejects secret-bearing and environment-value fields', 
   for (const value of [
     { password: 'plaintext' },
     { registryToken: 'plaintext' },
+    { apiKey: 'plaintext' },
     { privateKey: 'plaintext' },
     { environment: { DATABASE_URL: 'postgres://secret' } },
     { nested: { clientCertificate: 'plaintext' } },
@@ -30,6 +31,7 @@ test('deployment metadata rejects secret-bearing and environment-value fields', 
 test('deployment metadata rejects non-JSON values, non-finite numbers and oversize payloads', () => {
   assert.throws(() => canonicalJson({ at: new Date() }), /plain JSON objects/)
   assert.throws(() => canonicalJson({ amount: Number.NaN }), /non-finite number/)
+  assert.throws(() => canonicalJson([]), /plain JSON objects/)
   assert.throws(() => canonicalJson({ data: 'x'.repeat(70 * 1024) }), /64 KiB limit/)
 })
 
