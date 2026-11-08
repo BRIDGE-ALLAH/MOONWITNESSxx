@@ -44,6 +44,7 @@ mkdir -p "$TMP_DIR" "$WORK"
 chmod 700 "$TMP_DIR"
 sudo mount -t tmpfs -o size=1g,mode=0755 tmpfs "$WORK"
 WORK_MOUNTED=1
+sudo chown "$(id -u):$(id -g)" "$WORK"
 
 cleanup() {
   set +e
