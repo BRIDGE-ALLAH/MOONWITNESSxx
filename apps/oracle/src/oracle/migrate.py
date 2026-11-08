@@ -9,7 +9,25 @@ from pathlib import Path
 
 import asyncpg
 
-MIGRATIONS_DIR = Path(__file__).resolve().parent.parent.parent / "migrations"
+
+def _resolve_migrations_dir() -> Path:
+    candidates: list[Path] = []
+    configured = os.environ.get("ORACLE_MIGRATIONS_DIR")
+    if configured:
+        candidates.append(Path(configured).expanduser().resolve())
+    candidates.extend(
+        [
+            Path(__file__).resolve().parents[2] / "migrations",
+            Path.cwd() / "migrations",
+        ]
+    )
+    for candidate in candidates:
+        if candidate.is_dir():
+            return candidate
+    raise RuntimeError(
+        "ORACLE SQL migrations directory is missing; set ORACLE_MIGRATIONS_DIR "
+        "or include the migrations directory in the application image"
+    )
 
 
 async def apply_migrations(database_url: str | None = None) -> None:
@@ -20,6 +38,11 @@ async def apply_migrations(database_url: str | None = None) -> None:
     )
     if not dsn:
         raise RuntimeError("ORACLE_MIGRATION_DATABASE_URL is required")
+
+    migrations_dir = _resolve_migrations_dir()
+    migration_files = sorted(migrations_dir.glob("[0-9][0-9][0-9]_*.sql"))
+    if not migration_files:
+        raise RuntimeError(f"No ORACLE SQL migration files found in {migrations_dir}")
 
     connection = await asyncpg.connect(dsn, command_timeout=15)
     try:
@@ -47,7 +70,7 @@ async def apply_migrations(database_url: str | None = None) -> None:
             """
         )
 
-        for path in sorted(MIGRATIONS_DIR.glob("[0-9][0-9][0-9]_*.sql")):
+        for path in migration_files:
             sql = path.read_text(encoding="utf-8")
             checksum = hashlib.sha256(sql.encode("utf-8")).hexdigest()
             existing = await connection.fetchrow(
