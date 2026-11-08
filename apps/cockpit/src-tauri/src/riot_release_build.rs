@@ -392,7 +392,7 @@ pub fn riot_release_list_build_history(
             .map(|canonical| canonical.to_string_lossy().to_string())
             .unwrap_or(value)
     });
-    let _guard = std::sync::Mutex::new(()).lock().map_err(|_| "Build history lock failed.".to_string())?;
+    let _guard = BUILD_STORE_LOCK.lock().map_err(|_| "Build history lock failed.".to_string())?;
     let file = store_file(&app, "builds.json")?;
     let mut history: Vec<ReleaseBuildRecord> = read_store(&file)?;
     if let Some(path) = target {
@@ -472,7 +472,7 @@ pub fn riot_release_list_vault(
             .map(|canonical| canonical.to_string_lossy().to_string())
             .unwrap_or(value)
     });
-    let _guard = std::sync::Mutex::new(()).lock().map_err(|_| "Artifact vault lock failed.".to_string())?;
+    let _guard = BUILD_STORE_LOCK.lock().map_err(|_| "Artifact vault lock failed.".to_string())?;
     let file = store_file(&app, "artifacts.json")?;
     let mut records: Vec<VaultArtifact> = read_store(&file)?;
     if let Some(path) = target {
