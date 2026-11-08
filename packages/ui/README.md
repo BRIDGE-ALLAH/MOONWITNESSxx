@@ -2,7 +2,7 @@
 
 Private shared React UI foundation for MOONWITNESS applications.
 
-This package owns reusable presentation primitives, semantic theme tokens, and small visual compositions. It does not own domain rules, API clients, authentication, authorization, persistence, or application workflows.
+This package owns reusable presentation primitives, semantic theme tokens, accessible interactions, and (as implementation progresses) the MOONWITNESS Skin System. It does not own domain rules, API clients, authentication, authorization, persistence, or application workflows.
 
 ## Current public API
 
@@ -110,17 +110,29 @@ export function ExamplePanel() {
 
 The UI components receive application data and callbacks. The consuming application remains responsible for fetching records, enforcing permissions, performing mutations, and reporting the result.
 
-## Themes and tokens
+## Themes and Skin System
 
-The semantic source of truth is `src/styles/globals.css`.
+The current semantic source of truth is `src/styles/globals.css`.
 
-- The default root theme is the light **Archive** experience.
-- Use `.theme-archive` to explicitly select Archive, including inside an application-level `.dark` class.
-- Use `.theme-observatory` or the application-level `.dark` class for the dark **Observatory** experience.
+Current implementation:
+
+- The default root token set is the light **Archive** fallback.
+- `.theme-archive` explicitly selects Archive, including inside an application-level `.dark` class.
+- `.theme-observatory` or the application-level `.dark` class selects the dark **Observatory** token set.
 - Prefer semantic utilities such as `bg-background`, `text-foreground`, `bg-card`, `border-border`, `bg-success`, and `ring-focus`.
-- Legacy RIOTWORKS palette aliases remain for existing prototype consumers only. Do not introduce them into new MOONWITNESS product screens.
+- Legacy RIOTWORKS palette aliases remain for existing prototype consumers only. Do not introduce them into new MOONWITNESS screens.
 
-See [DESIGN-TOKENS.md](./DESIGN-TOKENS.md) for the theme contract and accessibility constraints.
+The planned first-party Skin System has three visual experiences:
+
+| Skin | Intended use | Status |
+|---|---|---|
+| Observatory | Operational, monitoring, research, decision workspaces | Existing semantic theme foundation; complete skin profile still in progress |
+| Archive | Reading, records, documentation, knowledge, provenance | Existing semantic theme foundation; editorial composition still in progress |
+| Signal / Moonpunk Editorial | Landing, onboarding, public stories, community, campaigns | Design/blueprint only; not implemented on current mainline |
+
+**Skin is not a dark/light toggle.** A skin defines visual grammar, composition, typography, surface character, texture, and component recipes. Appearance mode (dark/light), density (comfortable/compact), and accessibility preferences remain separate concerns.
+
+The complete decision, intended runtime contract, implementation phases, non-goals, and acceptance criteria are in [docs/13 — Skin System Blueprint](../../docs/13-skin-system-blueprint.md). The current package does not yet provide a complete skin registry/provider, route-level skin API, or Signal runtime profile.
 
 ## Typography and assets
 
