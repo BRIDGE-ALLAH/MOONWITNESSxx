@@ -65,7 +65,9 @@
         <h2>RADIUS data plane</h2>
         <div class="value">FreeRADIUS 3.2</div>
         <p class="muted">Authentication · Authorization · Accounting</p>
-        <span class="status"><span class="dot"></span>SQL AAA + Status-Server probe</span>
+        <div class="value" id="radius-db-status">Checking</div>
+        <p class="muted">MariaDB · subscriber and accounting persistence</p>
+        <span class="status"><span class="dot"></span>Container healthcheck verifies the RADIUS Status-Server probe</span>
       </article>
       <article class="panel">
         <h2>Observability data plane</h2>
@@ -85,15 +87,17 @@
     const text = (id, value) => { document.getElementById(id).textContent = value; };
     async function refresh() {
       try {
-        const [health, version, catalog] = await Promise.all([
+        const [health, readiness, version, catalog] = await Promise.all([
           fetch('/api/v1/system/health').then(r => r.json()),
+          fetch('/api/v1/system/readiness').then(r => r.json()),
           fetch('/api/v1/system/version').then(r => r.json()),
           fetch('/api/v1/engines/catalog').then(r => r.json())
         ]);
-        text('app-status', 'Running');
+        text('app-status', readiness.ready ? 'Ready' : 'Running · degraded');
         text('version', version.version);
         text('db-status', health.database);
         text('redis-status', health.redis);
+        text('radius-db-status', health.radius_database);
         document.getElementById('engines').replaceChildren(...catalog.items.map(item => {
           const row = document.createElement('div');
           row.className = 'engine';
@@ -109,6 +113,7 @@
         text('app-status', 'API unavailable');
         text('db-status', 'Unknown');
         text('redis-status', 'Unknown');
+        text('radius-db-status', 'Unknown');
       }
     }
     refresh();
