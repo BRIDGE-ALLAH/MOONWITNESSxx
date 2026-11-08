@@ -318,10 +318,12 @@ Shared primitive semantics do not change. A `Button` remains a button, a danger 
 The following describes the checked-in baseline at the time of this blueprint; it is not a completion claim:
 
 - `packages/ui` is a private workspace package consumed by Headquarter.
-- It exports a small primitive set: Button, Card composition, Badge, Separator, HalftoneSurface, and the `cn` utility.
-- Its CSS provides an Archive root fallback and Observatory/Archive semantic token sets.
-- It has source-level theme contract tests, but not a full browser visual-regression or screen-reader test suite.
-- There is no complete skin registry/provider, no route-level skin API, and no Signal skin implementation on the current mainline baseline.
+- The existing primitive set includes Button, Card composition, Badge, Separator, HalftoneSurface, and the `cn` utility.
+- The Skin Engine feature branch adds a typed static registry for Observatory, Archive, and Signal; a deterministic resolver; and a server-compatible `SkinRoot`.
+- The stylesheet maps the first supported pairs: Observatory/dark, Archive/light, and Signal/dark. The Archive root fallback and legacy selectors remain for compatibility.
+- Source-level contract tests cover registry declarations, supported mode pairs, resolver fallback metadata, root attributes, and semantic token presence.
+- Browser visual regression, rendered contrast review, screen-reader QA, and complete component-state verification remain open release gates.
+- No global skin picker, persisted preference, React context, automatic Headquarter route mapping, or complete visual workbench is implemented yet.
 - `apps/headquarter` owns its application shell and page compositions; the package does not yet own a complete shared app shell.
 - The custom MOONWITNESS Signal WOFF2 is not approved for runtime use; use licensed font families and robust system fallbacks.
 
