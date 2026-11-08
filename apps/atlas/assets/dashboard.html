@@ -48,7 +48,7 @@
       <article class="panel">
         <h2>Operational database</h2>
         <div class="value" id="db-status">Checking</div>
-        <p class="muted">MariaDB · SQLx · Control-plane metadata only</p>
+        <p class="muted">PostgreSQL · SQLx · Control-plane metadata only</p>
       </article>
       <article class="panel">
         <h2>Cache and coordination</h2>
@@ -59,21 +59,21 @@
         <h2>DNS data plane</h2>
         <div class="value">External engines</div>
         <p class="muted">PowerDNS · Unbound · dnsdist</p>
-        <span class="status"><span class="dot"></span>Adapters not implemented</span>
+        <span class="status"><span class="dot"></span>PowerDNS adapter available · Unbound/dnsdist pending</span>
       </article>
       <article class="panel">
         <h2>RADIUS data plane</h2>
         <div class="value">FreeRADIUS 3.2</div>
         <p class="muted">Authentication · Authorization · Accounting</p>
         <div class="value" id="radius-db-status">Checking</div>
-        <p class="muted">MariaDB · subscriber and accounting persistence</p>
+        <p class="muted">PostgreSQL · subscriber and accounting persistence</p>
         <span class="status"><span class="dot"></span>Container healthcheck verifies the RADIUS Status-Server probe</span>
       </article>
       <article class="panel">
         <h2>Observability data plane</h2>
         <div class="value">External backends</div>
         <p class="muted">VictoriaMetrics · VictoriaLogs · Collectors</p>
-        <span class="status"><span class="dot"></span>Adapters not implemented</span>
+        <span class="status"><span class="dot"></span>Health probes available · query/configuration APIs pending</span>
       </article>
     </section>
     <section class="panel" style="margin-top:1rem">
