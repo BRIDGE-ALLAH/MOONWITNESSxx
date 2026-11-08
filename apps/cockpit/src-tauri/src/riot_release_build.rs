@@ -362,6 +362,8 @@ pub async fn riot_release_run_build(
         .env("CI", "1")
         .env("GIT_TERMINAL_PROMPT", "0")
         .env("npm_config_update_notifier", "false");
+    #[cfg(unix)]
+    command.process_group(0);
 
     let mut child = command.spawn().map_err(|error| {
         format!("Cannot start {}. Install the selected build tool and add it to PATH: {error}", profile.executable)
@@ -374,6 +376,29 @@ pub async fn riot_release_run_build(
     let (status, timed_out) = match timeout(Duration::from_secs(BUILD_TIMEOUT_SECS), child.wait()).await {
         Ok(result) => (Some(result.map_err(|error| format!("Build process wait failed: {error}"))?), false),
         Err(_) => {
+            #[cfg(unix)]
+            if let Some(pid) = child.id() {
+                // Build tools may spawn child processes. Kill the dedicated process group,
+                // then reap the direct child below.
+                unsafe {
+                    let _ = libc::kill(-(pid as i32), libc::SIGKILL);
+                }
+            }
+            #[cfg(windows)]
+            if let Some(pid) = child.id() {
+                // taskkill /T terminates the build tool's descendants as well as its root.
+                let system_root = std::env::var_os("SystemRoot")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| PathBuf::from(r"C:\Windows"));
+                let taskkill = system_root.join("System32").join("taskkill.exe");
+                let pid = pid.to_string();
+                let _ = std::process::Command::new(taskkill)
+                    .args(["/PID", &pid, "/T", "/F"])
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status();
+            }
             let _ = child.kill().await;
             let _ = child.wait().await;
             (None, true)
