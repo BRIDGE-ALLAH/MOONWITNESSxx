@@ -12,6 +12,16 @@ import { registerGovernanceRoutes } from './governance/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { createOracleClient, type OracleClient } from './oracle/client.ts'
+import { registerOpportunityRoutes } from './opportunities/routes.ts'
+import { registerProductRoutes } from './products/routes.ts'
+import { registerAssetRoutes } from './assets/routes.ts'
+import type { AssetStorage } from './assets/storage.ts'
+import { registerChannelRoutes } from './channels/routes.ts'
+import { registerListingRoutes } from './listings/routes.ts'
+import { registerInspectionRoutes } from './inspections/routes.ts'
+import { registerFinancialRoutes } from './finance/routes.ts'
+import { registerPayoutAndFxRoutes } from './finance/payout-routes.ts'
+import { registerPortfolioMetricsRoutes } from './analytics/routes.ts'
 import { registerOracleRoutes } from './oracle/routes.ts'
 
 export interface CreateAppOptions {
@@ -19,6 +29,7 @@ export interface CreateAppOptions {
   logger?: boolean
   env?: NodeJS.ProcessEnv
   oracleClient?: OracleClient
+  assetStorage?: AssetStorage
   /** Optional trusted policy/capability adapters; omitted configuration fails closed. */
   deploymentAuthorization?: Omit<AuthorizeDeploymentDependencies, 'store'>
 }
@@ -69,6 +80,15 @@ export function createApp(options: CreateAppOptions = {}) {
     registerEvidenceRoutes(instance, databasePool as unknown as Pool)
     registerGovernanceRoutes(instance, databasePool as unknown as Pool)
     registerLoginAttemptRoutes(instance, databasePool)
+    registerOpportunityRoutes(instance, databasePool, env)
+    registerProductRoutes(instance, databasePool, env)
+    registerAssetRoutes(instance, databasePool, env, options.assetStorage)
+    registerChannelRoutes(instance, databasePool, env)
+    registerListingRoutes(instance, databasePool, env)
+    registerInspectionRoutes(instance, databasePool, env)
+    registerFinancialRoutes(instance, databasePool, env)
+    registerPayoutAndFxRoutes(instance, databasePool, env)
+    registerPortfolioMetricsRoutes(instance, databasePool, env)
     registerOracleRoutes(instance, oracleClient)
   })
 
