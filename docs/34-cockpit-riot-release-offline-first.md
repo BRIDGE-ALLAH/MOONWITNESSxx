@@ -47,9 +47,9 @@ The local Git working tree and filesystem are the source of operational truth. R
 - Local tag creation requires a clean working tree and refuses an existing tag.
 - Tag creation and build execution each require an explicit second-step operator confirmation.
 - Build profiles are detected from repository manifests. The frontend cannot submit an arbitrary executable or argument list.
-- Build scripts are project-controlled code. Cargo build scripts, package manager lifecycle scripts, and MSBuild targets may execute; the UI displays this trust boundary before the build starts.
+- Build scripts are project-controlled code and run with the current user's permissions. Cargo build scripts, package manager lifecycle scripts, and MSBuild targets may execute; the UI displays this trust boundary before the build starts.
 - The release core itself needs no network. Project build scripts or package tools may access a network according to their own configuration and behavior.
-- Build execution has a 15-minute timeout, null stdin, and bounded captured output. The child process is configured to terminate on cancellation/timeout.
+- Build execution has a 15-minute timeout, null stdin, bounded captured output, and one-build-at-a-time exclusion. Timeout handling terminates the process group on Unix and invokes Windows taskkill with descendant-tree termination before reaping the direct child. Build history is capped at 200 local records.
 - Artifact discovery skips symbolic links, dependency/cache folders, and files above the 2 GiB import limit. Traversal is depth- and count-bounded.
 - Artifact imports must resolve inside a known build output directory. SHA-256 and size are checked again after the file is copied into the vault.
 - Provider APIs are not contacted. An origin URL does not prove that a remote is online or authenticated.
