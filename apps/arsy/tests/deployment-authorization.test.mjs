@@ -17,7 +17,7 @@ const deploymentId = '22222222-2222-4222-8222-222222222222'
 const dockerServerId = '33333333-3333-4333-8333-333333333333'
 const argumentHash = 'a'.repeat(64)
 const action = 'deployment:deploy'
-const resource = `docker-server:${dockerServerId}/deployment:${deploymentId}'
+const resource = `docker-server:${dockerServerId}/deployment:${deploymentId}`
 const now = '2026-11-08T06:00:00.000Z'
 
 function keyPair() {
@@ -268,7 +268,7 @@ test('self-approval, forged approvals and policy denial fail closed', async () =
   assert.equal(rejectedDecision.allowed, false)
   assert.deepEqual(rejectedDecision.reasonCodes, ['approval_denied', 'approver_rejected'])
 
-    const blockedPolicy = { evaluate: async () => ({
+  const blockedPolicy = { evaluate: async () => ({
     allowed: false, policyVersion: 'deploy-policy-v1', reasonCode: 'maintenance_window', requiresApproval: false,
   }) }
   const policyDenied = await authorizeDeploymentOperation(
