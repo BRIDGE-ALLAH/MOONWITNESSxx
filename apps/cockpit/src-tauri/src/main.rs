@@ -7,6 +7,7 @@ use sysinfo::System;
 use tauri::Manager;
 
 mod riot_release;
+mod riot_release_build;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SystemMetrics {
@@ -825,7 +826,13 @@ fn main() {
             riot_release::riot_release_save_draft,
             riot_release::riot_release_list_drafts,
             riot_release::riot_release_list_history,
-            riot_release::riot_release_create_local_tag
+            riot_release::riot_release_create_local_tag,
+            riot_release_build::riot_release_list_build_profiles,
+            riot_release_build::riot_release_run_build,
+            riot_release_build::riot_release_list_build_history,
+            riot_release_build::riot_release_list_artifact_candidates,
+            riot_release_build::riot_release_import_artifact,
+            riot_release_build::riot_release_list_vault
         ])
         .run(tauri::generate_context!())
         .expect("error while running MOONWITNESS COCKPIT application");
