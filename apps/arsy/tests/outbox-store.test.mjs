@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   acknowledgeDeploymentOutbox,
   claimDeploymentOutbox,
+  reapExpiredDeploymentOutbox,
   retryDeploymentOutbox,
 } from '../src/deployments/outbox-store.ts'
 
@@ -49,6 +50,17 @@ test('claim rejects invalid worker, batch and lease bounds before querying', asy
   await assert.rejects(claimDeploymentOutbox(pool, { workerId: 'worker-a', limit: 51, leaseSeconds: 30 }), /limit/)
   await assert.rejects(claimDeploymentOutbox(pool, { workerId: 'worker-a', limit: 1, leaseSeconds: 4 }), /lease/)
   assert.equal(pool.statements.length, 0)
+})
+
+test('expired exhausted leases are reaped in bounded owner-scoped batches', async () => {
+  const pool = new FakePool()
+  pool.nextRows = [{ id: row.id }]
+  assert.equal(await reapExpiredDeploymentOutbox(pool, { ownerId: 'owner-1', limit: 10 }), 1)
+  assert.match(pool.statements[0].statement, /attempt_count >= max_attempts/)
+  assert.match(pool.statements[0].statement, /FOR UPDATE SKIP LOCKED/)
+  assert.match(pool.statements[0].statement, /dead_lettered_at = now\(\)/)
+  assert.equal(pool.statements[0].values[1], 'owner-1')
+  await assert.rejects(reapExpiredDeploymentOutbox(pool, { limit: 51 }), /reaper limit/)
 })
 
 test('acknowledgement requires the exact unexpired worker lease token', async () => {
