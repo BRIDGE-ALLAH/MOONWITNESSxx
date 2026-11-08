@@ -125,7 +125,7 @@ async def prepare_database() -> str:
             "FROM pg_roles WHERE rolname = $1",
             APP_ROLE,
         )
-        assert app_flags == {
+        assert dict(app_flags) == {
             "rolinherit": False,
             "rolsuper": False,
             "rolcreatedb": False,
@@ -554,8 +554,6 @@ def test_missing_migration_keeps_durable_mode_unready_and_returns_503() -> None:
                 await admin.close()
 
         asyncio.run(drop_database())
-
-
 
 
 def test_runtime_role_is_confined_to_oracle_jobs() -> None:
