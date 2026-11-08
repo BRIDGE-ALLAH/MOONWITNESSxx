@@ -60,7 +60,7 @@ export interface DeploymentAuthorizationRecordInput {
   ownerId: string
   actorId: string
   targetHostId: string
-  action: DeploymentAction
+  action: string
   effect: 'allow' | 'deny'
   reasonCode: string
   policyVersion: string | null
@@ -76,14 +76,34 @@ function requiredText(value: string, field: string, max: number): string {
   return normalized
 }
 
+function assertSafeEvidence(value: unknown, depth = 0): void {
+  if (depth > 8) throw new TypeError('Authorization evidence exceeds the maximum nesting depth')
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new TypeError('Authorization evidence contains a non-finite number')
+    return
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) assertSafeEvidence(item, depth + 1)
+    return
+  }
+  if (!value || typeof value !== 'object') throw new TypeError('Authorization evidence must be JSON-compatible')
+  const prototype = Object.getPrototypeOf(value)
+  if (prototype !== Object.prototype && prototype !== null) throw new TypeError('Authorization evidence must use plain JSON objects')
+  for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+    if (/(password|token|api.?key|private.?key|credential|certificate|secret.?value|environment|authorization|^env$)/i.test(key)) {
+      throw new TypeError('Authorization evidence must not contain secret-bearing fields')
+    }
+    assertSafeEvidence(item, depth + 1)
+  }
+}
+
 function safeEvidence(value: Record<string, unknown> | undefined): string {
   const evidence = value ?? {}
+  assertSafeEvidence(evidence)
   const serialized = JSON.stringify(evidence)
   if (!serialized || Buffer.byteLength(serialized, 'utf8') > 16 * 1024) {
     throw new TypeError('Authorization evidence must be valid JSON no larger than 16 KiB')
-  }
-  if (/(password|token|api.?key|private.?key|credential|certificate|secret.?value|environment|authorization)/i.test(serialized)) {
-    throw new TypeError('Authorization evidence must not contain secret-bearing keys or values')
   }
   return serialized
 }
@@ -200,7 +220,7 @@ export async function authorizeAndRecordDeploymentAction(
     ownerId,
     actorId: actorId ?? 'unknown',
     targetHostId,
-    action: ['deploy', 'stop', 'restart', 'rollback'].includes(action) ? action as DeploymentAction : 'deploy',
+    action: action.slice(0, 64) || 'unknown',
     effect,
     reasonCode,
     policyVersion,
