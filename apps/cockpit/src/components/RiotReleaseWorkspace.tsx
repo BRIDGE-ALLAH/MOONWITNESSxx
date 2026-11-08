@@ -44,7 +44,11 @@ function downloadMarkdown(notes: string, version: string): void {
 }
 
 export function RiotReleaseWorkspace() {
-  const desktop = isTauri()
+  const [desktop, setDesktop] = useState(false)
+
+  useEffect(() => {
+    setDesktop(isTauri())
+  }, [])
   const [repositories, setRepositories] = useState<ReleaseRepository[]>([])
   const [selectedPath, setSelectedPath] = useState('')
   const [pathInput, setPathInput] = useState('')
