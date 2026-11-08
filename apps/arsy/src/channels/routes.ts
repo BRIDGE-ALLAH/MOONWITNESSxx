@@ -1,12 +1,13 @@
 import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
+import { httpUrlSchema } from '../http-url.ts'
 import { ChannelRepository, type ChannelInput } from './repository.ts'
 
 const evidenceSchema = z.object({
   evidenceType: z.enum(['official-policy', 'account-eligibility', 'payout-requirements', 'format-requirements', 'api-capability', 'other']),
   sourceName: z.string().trim().min(2).max(160),
-  sourceUrl: z.string().url().max(2048),
+  sourceUrl: httpUrlSchema,
   capturedAt: z.string().datetime({ offset: true }),
   reviewedAt: z.string().datetime({ offset: true }).nullable().optional(),
   evidenceClass: z.enum(['observed-fact', 'operator-attestation', 'inference', 'unknown']),
@@ -18,7 +19,7 @@ const channelObjectSchema = z.object({
   displayName: z.string().trim().min(2).max(160),
   countryCode: z.string().trim().regex(/^[A-Z]{2}$/),
   accountEligibility: z.enum(['eligible', 'ineligible', 'unknown']),
-  officialPolicyUrl: z.string().url().max(2048).nullable().optional(),
+  officialPolicyUrl: httpUrlSchema.nullable().optional(),
   policyReviewedAt: z.string().datetime({ offset: true }).nullable().optional(),
   policyRecheckAt: z.string().datetime({ offset: true }).nullable().optional(),
   payoutRequirements: z.record(z.string(), z.unknown()),
