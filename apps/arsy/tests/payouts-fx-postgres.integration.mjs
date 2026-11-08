@@ -37,6 +37,16 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
       channelStatus: 'active',
       evidence: [
         {
+          evidenceType: 'official-policy',
+          sourceName: 'Synthetic integration policy fixture',
+          sourceUrl: 'https://example.com/policy',
+          capturedAt: now,
+          reviewedAt: now,
+          evidenceClass: 'observed-fact',
+          summary: 'Synthetic fixture captures the published policy record.',
+          limitations: 'Integration fixture only; recheck before any real payout.',
+        },
+        {
           evidenceType: 'account-eligibility',
           sourceName: 'Synthetic integration eligibility fixture',
           sourceUrl: 'https://example.com/country',
@@ -55,6 +65,16 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
           evidenceClass: 'observed-fact',
           summary: 'Synthetic fixture records payout requirements and configured account status.',
           limitations: 'Integration fixture only; no provider API call is made.',
+        },
+        {
+          evidenceType: 'format-requirements',
+          sourceName: 'Synthetic integration format fixture',
+          sourceUrl: 'https://example.com/formats',
+          capturedAt: now,
+          reviewedAt: now,
+          evidenceClass: 'observed-fact',
+          summary: 'Synthetic fixture captures accepted listing media and product family.',
+          limitations: 'Integration fixture only; does not grant marketplace publishing access.',
         },
       ],
     })
