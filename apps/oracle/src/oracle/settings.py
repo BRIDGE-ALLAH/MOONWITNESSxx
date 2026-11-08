@@ -96,7 +96,7 @@ class Settings:
         if self.environment not in {"development", "test"}:
             if self.environment == "production":
                 raise ValueError(
-                    "ORACLE production mode remains blocked until independent operational "
+                    "ORACLE production mode is blocked until independent operational "
                     "controls, monitoring, secret rotation, network policy and recovery drills pass"
                 )
             raise ValueError("ORACLE_ENV must be development or test")
