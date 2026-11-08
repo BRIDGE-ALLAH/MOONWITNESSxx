@@ -23,7 +23,20 @@ async def apply_migrations(database_url: str | None = None) -> None:
 
     connection = await asyncpg.connect(dsn, command_timeout=15)
     try:
-        await connection.execute("CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION CURRENT_USER")
+        schema_exists = await connection.fetchval(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.schemata
+                WHERE schema_name = 'oracle'
+            )
+            """
+        )
+        if not schema_exists:
+            raise RuntimeError(
+                "ORACLE schema is missing; run the privileged role/bootstrap step before migrations"
+            )
+
         await connection.execute(
             """
             CREATE TABLE IF NOT EXISTS oracle.schema_migrations (
