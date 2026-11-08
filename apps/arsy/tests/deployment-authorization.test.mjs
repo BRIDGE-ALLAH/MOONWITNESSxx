@@ -258,7 +258,17 @@ test('self-approval, forged approvals and policy denial fail closed', async () =
   assert.equal(forgedDenied.allowed, false)
   assert.equal(forgedDenied.reasonCodes[0], 'approval_evidence_invalid')
 
-  const blockedPolicy = { evaluate: async () => ({
+  const rejected = { ...makeApproval(approver.privateKey), decision: 'rejected', reasonCode: 'approver_rejected' }
+  rejected.signature = sign(null, Buffer.from(approvalSigningPayload(rejected)), approver.privateKey).toString('base64url')
+  pool.approvalRow = approvalRow(rejected)
+  const rejectedDecision = await authorizeDeploymentOperation(
+    { operationId, ownerId, authenticatedActorId: actorId, now },
+    dependencies(pool, { policyProvider: requireApproval, grantKeys, approvalKeys }),
+  )
+  assert.equal(rejectedDecision.allowed, false)
+  assert.deepEqual(rejectedDecision.reasonCodes, ['approval_denied', 'approver_rejected'])
+
+    const blockedPolicy = { evaluate: async () => ({
     allowed: false, policyVersion: 'deploy-policy-v1', reasonCode: 'maintenance_window', requiresApproval: false,
   }) }
   const policyDenied = await authorizeDeploymentOperation(
