@@ -1,3 +1,3 @@
 ALTER TABLE engine_instances
-    ADD COLUMN config JSON NULL AFTER labels,
-    ADD COLUMN secret_env_key VARCHAR(128) NULL AFTER config;
+    ADD COLUMN IF NOT EXISTS config JSONB NULL,
+    ADD COLUMN IF NOT EXISTS secret_env_key VARCHAR(128) NULL;
