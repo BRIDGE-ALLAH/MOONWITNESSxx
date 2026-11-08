@@ -127,6 +127,16 @@ test('concurrent workers cannot claim the same outbox event', async () => {
   assert.equal(first.length + second.length, 1)
 })
 
+test('claim can be scoped to one owner without changing the global default', async () => {
+  const pool = new FakePool()
+  pool.add({ id: 'owner-a-message', ownerId: 'owner-a' })
+  pool.add({ id: 'owner-b-message', ownerId: 'owner-b' })
+  const claimed = await claimDeploymentOutbox(pool, { workerId: 'worker-a', ownerId: 'owner-a', limit: 10 })
+  assert.deepEqual(claimed.map(message => message.id), ['owner-a-message'])
+  assert.equal(pool.messages[1].locked_by, null)
+  assert.equal(pool.statements[0].values[3], 'owner-a')
+})
+
 test('an expired lease is reclaimed with a new fencing token; stale ack and retry fail', async () => {
   const pool = new FakePool()
   pool.add()
