@@ -381,7 +381,7 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
         { statusCode: existing.statusCode },
       )
     }
-    await this.call(connection, {
+    const created = await this.call(connection, {
       method: 'POST',
       path: '/volumes/create',
       body: {
@@ -390,6 +390,13 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
         Labels: labels,
       },
     }, [201], 'volume creation', true)
+    const createdLabels = isRecord(created.Labels) ? created.Labels : null
+    if (created.Name !== volume.name || !createdLabels ||
+        createdLabels['io.moonwitness.managed-by'] !== MANAGED_BY ||
+        createdLabels['io.moonwitness.owner-hash'] !== labels['io.moonwitness.owner-hash'] ||
+        createdLabels['io.moonwitness.deployment-id'] !== scope.deploymentId) {
+      throw new DockerWorkloadTransportError('Docker Engine did not confirm the owner-bound persistent volume', { outcomeUnknown: true })
+    }
     return volume.name
   }
 
