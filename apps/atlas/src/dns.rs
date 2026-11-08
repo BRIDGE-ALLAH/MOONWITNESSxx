@@ -303,7 +303,10 @@ mod tests {
         let primary = ZoneCreateRequest {
             name: "primary.example.org.".to_string(),
             kind: "Native".to_string(),
-            nameservers: vec!["ns1.example.org.".to_string(), "ns2.example.org.".to_string()],
+            nameservers: vec![
+                "ns1.example.org.".to_string(),
+                "ns2.example.org.".to_string(),
+            ],
             masters: vec!["192.0.2.53".to_string()],
         };
         assert!(validate_zone(&primary).is_err());
