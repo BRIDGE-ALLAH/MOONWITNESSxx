@@ -1,7 +1,0 @@
-export type ExtractionKind="entity"|"claim"|"evidence-selector"|"relation"|"ontology-mapping";
-export type Authorship="human-authored"|"machine-suggested"|"machine-derived"|"human-reviewed";
-export interface SourceSpan {readonly sourceRef:string;readonly passageRef:string;readonly start:number;readonly end:number;readonly exactText:string;readonly language:string}
-export interface ExtractionCandidate {readonly id:string;readonly kind:ExtractionKind;readonly value:Readonly<Record<string,unknown>>;readonly source:SourceSpan;readonly model:{readonly provider:string;readonly model:string;readonly version:string;readonly promptVersion:string;readonly pipelineVersion:string};readonly inputRelease:string;readonly authorship:Authorship;readonly status:"pending-review"|"approved"|"rejected";readonly confidence?:number}
-export interface CandidateReview {readonly candidateId:string;readonly reviewerRef:string;readonly role:string;readonly decision:"approve"|"reject";readonly reason:string;readonly reviewedAt:string;readonly edits?:Readonly<Record<string,unknown>>}
-export interface ExtractionTask {readonly id:string;readonly kind:ExtractionKind;readonly sourceRef:string;readonly inputRelease:string;readonly promptVersion:string}
-export interface Abstention {readonly abstain:true;readonly reason:"insufficient-evidence"|"unobservable"|"outside-scope"|"rights-restricted";readonly missingEvidence:readonly string[]}

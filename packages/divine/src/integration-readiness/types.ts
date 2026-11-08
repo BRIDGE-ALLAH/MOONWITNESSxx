@@ -1,4 +1,0 @@
-export interface PlatformPort {readonly id:"corpus"|"orm"|"arsy"|"zill"|"mizan";readonly required:boolean;readonly minimumVersion?:string;readonly capabilities:readonly string[]}
-export interface AdapterDescriptor {readonly port:PlatformPort["id"];readonly version:string;readonly capabilities:readonly string[];readonly contractVerified:boolean;readonly productionReady:boolean}
-export interface IntegrationReadinessInput {readonly ports:readonly PlatformPort[];readonly adapters:readonly AdapterDescriptor[]}
-export interface IntegrationReadinessReport {readonly ready:boolean;readonly productionReady:boolean;readonly satisfiedPorts:readonly string[];readonly missingPorts:readonly string[];readonly incompatiblePorts:readonly string[];readonly unverifiedPorts:readonly string[];readonly blockers:readonly string[];readonly deferredAdapters:readonly string[]}
