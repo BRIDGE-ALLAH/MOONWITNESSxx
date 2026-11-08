@@ -80,15 +80,20 @@ class Settings:
             raise ValueError("ORACLE_MAX_JOB_ATTEMPTS must be between 1 and 10")
         if not 60 <= self.job_retention_seconds <= 2_592_000:
             raise ValueError("ORACLE_JOB_RETENTION_SECONDS must be between 60 and 2592000")
-        if self.database_url is not None and not self.database_url.startswith(("postgresql://", "postgres://")):
+        if self.database_url is not None and not self.database_url.startswith(
+            ("postgresql://", "postgres://")
+        ):
             raise ValueError("ORACLE_DATABASE_URL must use the PostgreSQL URL scheme")
         if self.environment not in {"development", "test"}:
             if self.environment == "production":
                 raise ValueError(
                     "ORACLE production mode is blocked until managed database credentials, "
-                    "backups and restore, production observability, network policy, and deployment/rollback controls are verified"
+                    "backups and restore, production observability, network policy, and "
+                    "deployment/rollback controls are verified"
                 )
-            raise ValueError("ORACLE_ENV must be development or test until production controls are approved")
+            raise ValueError(
+                "ORACLE_ENV must be development or test until production controls are approved"
+            )
 
         try:
             is_loopback = ip_address(self.host).is_loopback
