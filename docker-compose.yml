@@ -43,6 +43,27 @@ services:
       - moonwitness
     restart: unless-stopped
 
+  # Idempotently provisions ORACLE's separate DB roles, including on existing volumes.
+  oracle-db-bootstrap:
+    image: postgres:16-alpine
+    container_name: moonwitness-oracle-db-bootstrap
+    entrypoint: ['/bin/sh', '/scripts/10-create-db-roles.sh']
+    environment:
+      PGHOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-moonwitness}
+      ORACLE_APP_DB_PASSWORD: ${ORACLE_APP_DB_PASSWORD:?ORACLE_APP_DB_PASSWORD must be set}
+      ORACLE_MIGRATOR_DB_PASSWORD: ${ORACLE_MIGRATOR_DB_PASSWORD:?ORACLE_MIGRATOR_DB_PASSWORD must be set}
+    volumes:
+      - ./apps/oracle/migrations/10-create-db-roles.sh:/scripts/10-create-db-roles.sh:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - moonwitness
+    restart: 'no'
+
   # Explicit, repeatable schema migration. Uses a dedicated schema-owner credential.
   oracle-migrate:
     build:
@@ -53,8 +74,8 @@ services:
     environment:
       ORACLE_MIGRATION_DATABASE_URL: postgresql://oracle_migrator:${ORACLE_MIGRATOR_DB_PASSWORD:?ORACLE_MIGRATOR_DB_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-moonwitness}
     depends_on:
-      postgres:
-        condition: service_healthy
+      oracle-db-bootstrap:
+        condition: service_completed_successfully
     networks:
       - moonwitness
     restart: 'no'
