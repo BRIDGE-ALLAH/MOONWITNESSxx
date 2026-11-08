@@ -1,6 +1,6 @@
 # 33 — Platform Capability Ownership & Dependency Map
 
-**Status:** Repository-backed planning baseline; Docker deployment ADR 0002 accepted on 2026-11-08  
+**Status:** Repository-backed planning baseline; ADR 0002 accepted; adapter #181 merged on 2026-11-08  
 **Audit date:** 2026-11-08  
 **Audited main:** 0746714208c0c816baabe1546b28f92642b1d5f7  
 **Purpose:** Establish one owner per capability, map actual source/API surfaces and existing GitHub work, and prevent duplicate implementation before new platform issues are created.  
