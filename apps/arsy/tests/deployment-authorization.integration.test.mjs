@@ -10,7 +10,6 @@ import {
   createEd25519CapabilityVerifier,
   createTrustedPublicKeyring,
   PostgresDeploymentAuthorizationStore,
-  type DeploymentApproval,
 } from '../src/deployments/authorization.ts'
 import {
   createDeployment,
@@ -94,7 +93,7 @@ test('signed deployment authorization persists an immutable, owner-bound decisio
       ],
     )
 
-    const approval: Omit<DeploymentApproval, 'signature'> & { signature: string } = {
+    const approval = {
       id: `approval-${randomUUID()}`,
       ownerId,
       operationId: operation.id,
