@@ -329,9 +329,7 @@ def test_capacity_rejection_commits_terminal_record_cleanup(
     postgres_database: str,
 ) -> None:
     async def scenario() -> None:
-        first_store = PostgresJobStore(
-            make_settings(postgres_database, max_retained_jobs=2)
-        )
+        first_store = PostgresJobStore(make_settings(postgres_database, max_retained_jobs=2))
         await first_store.start()
         try:
             completed, _ = await first_store.submit(
@@ -357,9 +355,7 @@ def test_capacity_rejection_commits_terminal_record_cleanup(
         finally:
             await first_store.close()
 
-        limited_store = PostgresJobStore(
-            make_settings(postgres_database, max_retained_jobs=1)
-        )
+        limited_store = PostgresJobStore(make_settings(postgres_database, max_retained_jobs=1))
         await limited_store.start()
         try:
             with pytest.raises(QueueSaturatedError):
