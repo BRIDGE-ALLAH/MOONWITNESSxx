@@ -140,12 +140,14 @@ class PostgresJobCoordinator:
         logger.info("ORACLE durable workers stopped", extra={"event": "durable_workers_stopped"})
 
     async def readiness(self) -> dict[str, Any]:
-        if self._pool is None or not self._database_available:
+        if self._pool is None:
+            await self._connect(start_workers=True)
+        if self._pool is None:
             return {
                 "ready": False,
                 "queue_depth": 0,
                 "database_available": False,
-                "workers": self.settings.worker_count,
+                "workers": 0,
             }
         try:
             queued = await self._pool.fetchval(
@@ -163,6 +165,7 @@ class PostgresJobCoordinator:
                 "database_available": False,
                 "workers": self.settings.worker_count,
             }
+        self._database_available = True
         workers_ready = (
             self._accepting
             and bool(self._workers)
@@ -270,7 +273,9 @@ class PostgresJobCoordinator:
             raise PersistenceUnavailableError from exc
 
     def _require_pool(self) -> asyncpg.Pool:
-        if not self.accepting or self._pool is None:
+        # Keep attempting bounded database operations after a transient outage. The
+        # readiness probe restores the availability flag once PostgreSQL recovers.
+        if not self._accepting or self._pool is None:
             raise PersistenceUnavailableError
         return self._pool
 
