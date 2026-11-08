@@ -156,6 +156,8 @@ PY
 HOST_PID=$!
 for _ in $(seq 1 20); do [[ -S "$HOST_SOCKET" ]] && break; sleep 0.1; done
 [[ -S "$HOST_SOCKET" ]] || fail "host socket sentinel did not start"
+kill -0 "$HOST_PID" 2>/dev/null || fail "host loopback sentinel process exited"
+curl -fsS "http://127.0.0.1:$HOST_PORT/" >/dev/null || fail "host loopback sentinel is not reachable from the host"
 
 sudo systemd-run --no-block --collect --unit="$UNIT" \
   --property="User=$BUILDER_USER" \
