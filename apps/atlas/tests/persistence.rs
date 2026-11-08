@@ -8,32 +8,32 @@ use atlas::{
     },
     radius_db,
 };
-use sqlx::{Row, mysql::MySqlPoolOptions};
+use sqlx::{Row, postgres::PgPoolOptions};
 
 const SEEDED_RADIUS_ID: &str = "01K9Z0J8A1B2C3D4E5F6G7H8J9";
 
 #[tokio::test]
-async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
+async fn postgres_migrations_engine_and_radius_crud_are_persistent() {
     if env::var("DATABASE_URL").is_err() || env::var("RADIUS_DATABASE_URL").is_err() {
-        eprintln!("Skipping MariaDB persistence test: database URLs are not configured");
+        eprintln!("Skipping PostgreSQL persistence test: database URLs are not configured");
         return;
     }
 
-    let pool = database::pool().await.expect("connect to test MariaDB");
+    let pool = database::pool().await.expect("connect to test PostgreSQL");
     sqlx::migrate!("./migrations")
         .run(pool)
         .await
         .expect("apply ATLAS migrations");
 
     let seeded_endpoint: String =
-        sqlx::query_scalar("SELECT endpoint FROM engine_instances WHERE id = ?")
+        sqlx::query_scalar("SELECT endpoint FROM engine_instances WHERE id = $1")
             .bind(SEEDED_RADIUS_ID)
             .fetch_one(pool)
             .await
             .expect("find seeded FreeRADIUS engine");
     assert_eq!(seeded_endpoint, "radius://freeradius:18121");
 
-    sqlx::query("UPDATE engine_instances SET endpoint = ? WHERE id = ?")
+    sqlx::query("UPDATE engine_instances SET endpoint = $1 WHERE id = $2")
         .bind("radius://radius-operator-change:18121")
         .bind(SEEDED_RADIUS_ID)
         .execute(pool)
@@ -104,21 +104,32 @@ async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
     let total: i64 = row.try_get("total").expect("read count");
     assert_eq!(total, 0);
 
-    let admin_pool = MySqlPoolOptions::new()
+    let admin_pool = PgPoolOptions::new()
         .max_connections(2)
         .connect(&env::var("DATABASE_URL").expect("DATABASE_URL is configured"))
         .await
-        .expect("connect to MariaDB admin database");
-    sqlx::query("CREATE DATABASE IF NOT EXISTS radius")
-        .execute(&admin_pool)
-        .await
-        .expect("create isolated RADIUS database");
-    sqlx::raw_sql(include_str!("../docker/freeradius/mysql/schema.sql"))
-        .execute(&admin_pool)
-        .await
-        .expect("install FreeRADIUS SQL schema");
+        .expect("connect to PostgreSQL admin database");
+    let radius_exists: bool =
+        sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'radius')")
+            .fetch_one(&admin_pool)
+            .await
+            .expect("check whether isolated RADIUS database exists");
+    if !radius_exists {
+        sqlx::query("CREATE DATABASE radius")
+            .execute(&admin_pool)
+            .await
+            .expect("create isolated RADIUS database");
+    }
 
     let radius_pool = radius_db::pool().await.expect("connect to RADIUS database");
+    sqlx::raw_sql("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+        .execute(radius_pool)
+        .await
+        .expect("reset isolated RADIUS test schema");
+    sqlx::raw_sql(include_str!("../docker/freeradius/postgresql/schema.sql"))
+        .execute(radius_pool)
+        .await
+        .expect("install upstream FreeRADIUS PostgreSQL schema");
     let nas_input = NasWriteRequest {
         nasname: "192.0.2.44".to_string(),
         shortname: Some("ci-nas".to_string()),
@@ -163,7 +174,7 @@ async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
             .any(|item| item.username == subscriber.username)
     );
     let (attribute, stored_value): (String, String) =
-        sqlx::query_as("SELECT attribute, value FROM radcheck WHERE username = ?")
+        sqlx::query_as("SELECT attribute, value FROM radcheck WHERE username = $1")
             .bind(&subscriber.username)
             .fetch_one(radius_pool)
             .await
@@ -204,7 +215,7 @@ async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
 
     let accounting_id = format!("ci{}", ulid::Ulid::new());
     sqlx::query(
-        "INSERT INTO radacct (acctsessionid, acctuniqueid, username, nasipaddress, acctstarttime, acctinputoctets, acctoutputoctets, acctstoptime) VALUES (?, ?, ?, ?, NOW(), ?, ?, NULL)",
+        "INSERT INTO radacct (acctsessionid, acctuniqueid, username, nasipaddress, acctstarttime, acctinputoctets, acctoutputoctets, acctstoptime) VALUES ($1, $2, $3, $4::inet, NOW(), $5, $6, NULL)",
     )
     .bind(&accounting_id)
     .bind(&accounting_id)
@@ -233,7 +244,7 @@ async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
     assert_eq!(summary.input_octets, 5_000_000_000);
     assert_eq!(summary.output_octets, 7_000_000_000);
 
-    sqlx::query("DELETE FROM radacct WHERE acctuniqueid = ?")
+    sqlx::query("DELETE FROM radacct WHERE acctuniqueid = $1")
         .bind(&accounting_id)
         .execute(radius_pool)
         .await
