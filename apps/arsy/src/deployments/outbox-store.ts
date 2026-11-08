@@ -164,7 +164,7 @@ export async function reapExpiredDeploymentOutbox(
   input: ReapOutboxInput,
 ): Promise<number> {
   const limit = boundedInteger(input.limit, 10, 1, 50, 'reaper limit')
-  const ownerId = input.ownerId === undefined ? null : requiredWorkerId(input.ownerId)
+  const ownerId = input.ownerId === undefined ? null : requiredOwnerId(input.ownerId)
   const result = await pool.query(
     `WITH expired AS (
        SELECT id
