@@ -158,6 +158,16 @@ class PostgresJobStore:
                         "SELECT pg_advisory_xact_lock($1::bigint)",
                         _SUBMISSION_ADVISORY_LOCK,
                     )
+                    # Idempotency is guaranteed while a job is retained. Expired terminal
+                    # jobs are pruned before key lookup; queued/running work is never removed.
+                    await connection.execute(
+                        """
+                        DELETE FROM oracle.jobs
+                        WHERE status IN ('succeeded', 'failed')
+                          AND completed_at < now() - ($1::integer * INTERVAL '1 second')
+                        """,
+                        self.settings.job_retention_seconds,
+                    )
                     if idempotency_key:
                         existing = await connection.fetchrow(
                             "SELECT * FROM oracle.jobs WHERE idempotency_key = $1",
@@ -168,16 +178,6 @@ class PostgresJobStore:
                                 raise IdempotencyConflictError
                             return _map_record(existing), True
 
-                    # Idempotency is guaranteed while a job is retained. Expired terminal
-                    # jobs are pruned first; queued/running work is never removed.
-                    await connection.execute(
-                        """
-                        DELETE FROM oracle.jobs
-                        WHERE status IN ('succeeded', 'failed')
-                          AND completed_at < now() - ($1::integer * INTERVAL '1 second')
-                        """,
-                        self.settings.job_retention_seconds,
-                    )
                     retained = await connection.fetchval(
                         "SELECT count(*)::integer FROM oracle.jobs"
                     )
