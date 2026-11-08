@@ -432,7 +432,8 @@ async fn upsert_subscriber(
             Json(serde_json::json!({
                 "username": input.username,
                 "credential_storage": "hashed",
-                "authentication_effective": true
+                "activation": "stored_in_radius_sql",
+                "restart_required": false
             })),
         )
             .into_response(),
