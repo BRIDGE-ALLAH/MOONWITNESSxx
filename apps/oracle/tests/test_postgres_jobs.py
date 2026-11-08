@@ -46,22 +46,22 @@ async def prepare_database() -> str:
         ):
             await admin.execute(
                 "CREATE ROLE oracle_migrator_test LOGIN PASSWORD 'oracle-migrator-integration-only' "
-                "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
+                "NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS"
             )
         if not await admin.fetchval(
             "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app_test')"
         ):
             await admin.execute(
                 "CREATE ROLE oracle_app_test LOGIN PASSWORD 'oracle-app-integration-only' "
-                "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
+                "NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS"
             )
         await admin.execute(
             "ALTER ROLE oracle_migrator_test WITH LOGIN PASSWORD 'oracle-migrator-integration-only' "
-            "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
+            "NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS"
         )
         await admin.execute(
             "ALTER ROLE oracle_app_test WITH LOGIN PASSWORD 'oracle-app-integration-only' "
-            "NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION"
+            "NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS"
         )
         database_name = await admin.fetchval("SELECT current_database()")
         await admin.execute(
@@ -121,15 +121,17 @@ async def prepare_database() -> str:
         assert database_create is False
         assert schema_create is False
         app_flags = await admin.fetchrow(
-            "SELECT rolinherit, rolcreatedb, rolcreaterole, rolreplication "
+            "SELECT rolinherit, rolsuper, rolcreatedb, rolcreaterole, rolreplication, rolbypassrls "
             "FROM pg_roles WHERE rolname = $1",
             APP_ROLE,
         )
         assert app_flags == {
             "rolinherit": False,
+            "rolsuper": False,
             "rolcreatedb": False,
             "rolcreaterole": False,
             "rolreplication": False,
+            "rolbypassrls": False,
         }
     finally:
         await admin.close()
