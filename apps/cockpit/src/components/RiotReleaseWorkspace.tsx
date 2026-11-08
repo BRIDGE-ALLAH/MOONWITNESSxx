@@ -36,8 +36,24 @@ function nextPatchVersion(latestTag: string | null): string {
 
 function providerLabel(remoteUrl: string | null): string {
   if (!remoteUrl) return 'NO ORIGIN'
-  if (remoteUrl.toLowerCase().includes('github.com')) return 'GITHUB REMOTE'
-  if (remoteUrl.toLowerCase().includes('gitlab.com')) return 'GITLAB REMOTE'
+
+  // Accept URL remotes and the common SSH scp-like form (git@host:owner/repo).
+  // Compare the parsed hostname, never a substring of the complete remote URL.
+  let hostname = ''
+  const scpRemote = /^(?:[^@/\\s]+@)?([^:/\\s]+):/.exec(remoteUrl.trim())
+  if (scpRemote && !remoteUrl.trim().includes('://')) {
+    hostname = scpRemote[1]
+  } else {
+    try {
+      hostname = new URL(remoteUrl).hostname
+    } catch {
+      return 'CUSTOM REMOTE'
+    }
+  }
+
+  const host = hostname.toLowerCase().replace(/\\.$/, '')
+  if (host === 'github.com') return 'GITHUB REMOTE'
+  if (host === 'gitlab.com') return 'GITLAB REMOTE'
   return 'CUSTOM REMOTE'
 }
 
