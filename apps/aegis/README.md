@@ -22,7 +22,7 @@ This initial implementation provides:
 - `GET /health/live` and `GET /health/ready`.
 - Structured JSON access/startup logs.
 - Graceful SIGINT/SIGTERM shutdown.
-- Unit tests for configuration and HTTP health behavior.
+- Unit tests for configuration, IPv4/IPv6 bind addresses, HTTP health behavior, graceful shutdown, and forced close at the shutdown deadline.
 - Non-root, multi-stage Docker image and local Compose service.
 
 The readiness endpoint currently means only that the process is initialized and able to serve requests. It does not attest to VPN, router, firewall, or external infrastructure health.
