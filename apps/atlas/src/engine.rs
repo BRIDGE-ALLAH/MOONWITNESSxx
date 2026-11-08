@@ -102,6 +102,11 @@ pub fn validate(input: &EngineWriteRequest) -> Result<(), &'static str> {
             "endpoint scheme must match engine type and must not contain embedded credentials",
         );
     }
+    if let Some(config) = &input.config
+        && contains_secret_key(config)
+    {
+        return Err("config must not contain secret values; reference them through secret_env_key");
+    }
     if let Some(key) = &input.secret_env_key
         && (!key.starts_with("ATLAS_ENGINE_SECRET_")
             || key.len() > 128
@@ -202,6 +207,21 @@ mod tests {
     #[test]
     fn accepts_supported_engine_with_safe_endpoint() {
         assert!(validate(&sample()).is_ok());
+    }
+
+    #[test]
+    fn rejects_secret_values_in_engine_config() {
+        let mut input = sample();
+        input.config = Some(serde_json::json!({
+            "http": { "api_key": "must-not-be-persisted" }
+        }));
+        assert!(validate(&input).is_err());
+
+        input.config = Some(serde_json::json!({
+            "http": { "timeout_seconds": 5 },
+            "labels": ["dns", "primary"]
+        }));
+        assert!(validate(&input).is_ok());
     }
 
     #[test]
