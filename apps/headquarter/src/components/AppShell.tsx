@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
+import { usePathname } from 'next/navigation'
 import { Texture } from '@riotworks/assets'
+import { SkinRoot } from '@riotworks/ui'
 import { CommandPalette } from '../shell/command-palette'
 import { NAVIGATION_ITEMS } from '../shell/navigation'
 import { Sidebar } from '../shell/sidebar'
 import { Topbar } from '../shell/topbar'
+import { resolveHeadquarterSkin } from '../shell/route-skin'
 
 const LABELS = {
   search: 'Search / Command Palette',
@@ -17,6 +20,8 @@ const LABELS = {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { resolvedTheme, setTheme } = useTheme()
+  const pathname = usePathname()
+  const routeSkin = resolveHeadquarterSkin(pathname)
   const [mounted, setMounted] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
@@ -35,10 +40,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const openPalette = useCallback(() => setPaletteOpen(true), [])
   const closePalette = useCallback(() => setPaletteOpen(false), [])
-  const isDark = mounted ? resolvedTheme === 'dark' : true
+  const mode = mounted && resolvedTheme === 'light'
+    ? 'light'
+    : mounted && resolvedTheme === 'dark'
+      ? 'dark'
+      : routeSkin.mode
+  const isDark = mode === 'dark'
 
   return (
-    <div className="relative isolate min-h-screen bg-background text-foreground">
+    <SkinRoot
+      skin={routeSkin.skin}
+      mode={mode}
+      density={routeSkin.density}
+      className="relative isolate min-h-screen bg-background text-foreground"
+    >
       <Texture name="texture.lunar-contours" opacity={0.025} className="pointer-events-none absolute inset-0 z-0" />
       <div className="relative z-10 min-h-screen">
         <div className="flex min-h-screen">
@@ -56,6 +71,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <CommandPalette open={paletteOpen} items={NAVIGATION_ITEMS} onClose={closePalette} />
       </div>
-    </div>
+    </SkinRoot>
   )
 }
