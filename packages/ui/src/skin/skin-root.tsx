@@ -31,7 +31,7 @@ export function SkinRoot({
   return (
     <div
       {...props}
-      className={cn('mw-skin-root', className)}
+      className={cn('mw-skin-root bg-background text-foreground', className)}
       data-mw-skin={config.skin}
       data-mw-mode={config.mode}
       data-mw-density={config.density}
