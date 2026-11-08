@@ -4,7 +4,7 @@
 **Version:** 1.0  
 **Date:** 2026-11-08  
 **Repository authority:** `BRIDGE-ALLAH/MOONWITNESS`  
-**Related:** [01 Ecosystem Narrative](./01-ecosystem-narrative.md), [02 Product Charter](./02-product-charter.md), [09 Headquarter IA](./09-information-architecture.md), [10 Design DNA](./10-design-dna.md), [15 Roadmap](./15-roadmap-and-acceptance.md), [23 Repository Audit](./23-repository-audit-and-current-execution-plan.md), [24 Repository Governance](./24-repository-and-automation-governance.md), [28 Current-State Revalidation](./28-current-state-revalidation-2026-11-08.md), [31 Product Integrity](./31-product-integrity-phases-36-38.md).
+**Related:** [01 Ecosystem Narrative](./01-ecosystem-narrative.md), [02 Product Charter](./02-product-charter.md), [09 Headquarter IA](./09-information-architecture.md), [10 Design DNA](./10-design-dna.md), [15 Roadmap](./15-roadmap-and-acceptance.md), [23 Repository Audit](./23-repository-audit-and-current-execution-plan.md), [24 Repository Governance](./24-repository-and-automation-governance.md), [28 Current-State Revalidation](./28-current-state-revalidation-2026-11-08.md), [31 Product Integrity](./31-product-integrity-phases-36-38.md), [ADR 0002 — Docker Workload Ownership](./adr/0002-docker-workload-deployment-ownership.md), [33 — Platform Capability Ownership Map](./33-platform-capability-ownership-and-dependency-map.md).
 
 > This document reconciles the wider product universe with the actual MOONWITNESS repository. It is not a claim that every named application, platform, domain, or service has been implemented, deployed, purchased, or approved for production.
 
@@ -103,6 +103,10 @@ The current GitHub work records ATLAS as a proposed standalone control-plane app
 Resolved stack decision: ATLAS uses PostgreSQL for control-plane metadata and a separate PostgreSQL database/role for FreeRADIUS SQL persistence. Redis remains cache/transient coordination, VictoriaMetrics remains metrics storage, and VictoriaLogs remains log storage/search. MariaDB/MySQL, ClickHouse, and DuckDB are not part of the adopted ATLAS stack. The decision and operational boundaries are recorded in [ADR 0001 — ATLAS PostgreSQL Storage](adr/0001-atlas-postgresql-storage.md). The implementation is tracked in [PR #156](https://github.com/BRIDGE-ALLAH/MOONWITNESS/pull/156) and is not production-ready until its PostgreSQL integration, FreeRADIUS driver, Compose smoke tests, and repository CI are verified.
 
 ARSY remains the identity, authorization, policy, approval, orchestration, and canonical audit authority. ATLAS controls domain infrastructure configuration. AEGIS executes narrowly scoped infrastructure actions. DNS, RADIUS, VPN, firewall, metrics, and log engines retain their own runtime boundaries.
+
+### 4.2 Application deployment and Docker workload boundary
+
+The current ARSY Docker Connector is an authenticated, owner-scoped **read-only** inspection capability. It is not the application deployment manager. Docker workload mutations, image builds, deployment history, rollback, ingress/TLS, and durable deployment recovery remain unimplemented on main. The proposed ownership and execution boundary is recorded in [ADR 0002](./adr/0002-docker-workload-deployment-ownership.md); the current capability, source/API inventory, existing issue/PR map and dependency sequence are in [docs/33](./33-platform-capability-ownership-and-dependency-map.md). Until ADR 0002 is accepted, do not add mutating routes to the read-only connector, grant Docker workload privileges to ATLAS/AEGIS, or create a second deployment orchestrator.
 
 ## 5. Knowledge, research, and narrative domains
 
@@ -242,6 +246,7 @@ Public web entry points may expose only deliberately designed frontends and API 
 - Automation/governance: docs/24.
 - Research: docs/16, docs/25–27 and package-level research records.
 - Product/runtime integrity: docs/29–31.
+- Platform capability ownership, dependency graph, and Docker deployment boundary: docs/33 and ADR 0002.
 - This registry: wider universe, product application catalog, brand/domain relationships, and cross-platform ownership map.
 
 When a source document conflicts with this registry, update the owning source document and this registry in the same reviewed change. Do not copy full technical specifications into this page; link to the canonical owner.
