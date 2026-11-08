@@ -29,13 +29,14 @@
 - [x] Add archive ruled-paper pattern.
 - [x] Add observation desk and evidence constellation illustrations.
 - [x] Register new assets with static TypeScript declarations and provenance.
-- [x] Add dedicated logo SVG safety, external-reference, and viewBox/registry-dimension tests.
+- [x] Add SVG safety, external-reference, and viewBox/registry-dimension tests across the complete registered asset library.
 - [ ] Add optimized raster artwork only where a real use case requires it.
 
 ## Phase 4 — Typography
 - [x] Specify display, body, and technical font families with fallback stacks.
 - [x] Verify Space Grotesk and IBM Plex Mono upstream SIL OFL 1.1 licenses and permitted software embedding/redistribution conditions.
 - [x] Document compliant font-bundling policy, copyright notices, license text, and pinned-source/hash requirements; defer binaries until a reproducible pinned import is justified.
+- [ ] Owner decision on the experimental MOONWITNESS Signal font: approve its rights and required glyph/QA work, or exclude it from any product/package release.
 
 ## Phase 5 — Product integration
 - [x] Replace RIOTWORKS master-brand lockup in Headquarter shell and metadata.
@@ -49,4 +50,4 @@
 - [ ] Owner approval of logo and brand DNA.
 - [ ] Declare asset licensing policy at repository root.
 - [ ] Publish usage guidelines and migration checklist.
-- [ ] Validate all assets, run package tests/type-check, and verify production builds.
+- [x] Validate all registered assets, run package tests/type-check, and verify production builds in [PR #159 Repository CI](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42420420648) (Asset Integrity and full-workspace typecheck/build passed on PR head).

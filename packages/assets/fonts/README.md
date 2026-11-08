@@ -1,23 +1,32 @@
 # MOONWITNESS typography assets
 
-The identity uses original vector lettering and the in-house **MOONWITNESS Signal** display font.
+This folder contains an experimental custom display-font prototype. **The prototype is not part of the current product runtime.**
 
-## Runtime
-- `MOONWITNESS-SignalDisplay-SemiBold.woff2` — original display font, weight 600, loaded by the shared UI stylesheet.
-- The wordmark and MW monogram remain outlined SVG paths and do not depend on fonts.
-- Signal Text uses native platform UI sans; Signal Instrument uses native system monospace.
-- The display font maps lowercase characters to uppercase forms and is for headings/short display copy only. Do not use it for body text or dense tables.
+## Current product runtime
 
-## Editable source and build
-- Glyph source: `source/moonwitness-signal-glyphs.json`
-- Builder: `source/build_signal_font.py`
-- Pinned build dependencies: `requirements-font-build.txt`
-- Build command: `python source/build_signal_font.py`
+- The shared UI stylesheet uses **Space Grotesk** for display/interface typography.
+- It uses **IBM Plex Mono** for technical data.
+- Both use documented system fallback stacks.
+- The current stylesheet does not declare an `@font-face` for MOONWITNESS Signal and does not load the committed WOFF2 file.
 
-The builder emits WOFF2 and TTF outputs. The committed WOFF2 is the browser runtime asset; the TTF is a local build artifact.
+This matches the current typography direction in `docs/10-design-dna.md` and `docs/11-design-system.md`.
+
+## Experimental prototype files
+
+- `MOONWITNESS-SignalDisplay-SemiBold.woff2` — compiled prototype artifact, weight 600; not loaded by the product stylesheet.
+- `source/moonwitness-signal-glyphs.json` — editable vector-stroke source for 53 glyphs.
+- `source/build_signal_font.py` — reproducible FontTools builder.
+- `requirements-font-build.txt` — pinned build dependencies.
+- Build command: `python source/build_signal_font.py`.
+
+The builder emits WOFF2 and TTF outputs. The tracked WOFF2 is retained as an internal design experiment; the TTF is a local build artifact.
 
 ## Coverage and release gates
-The prototype contains uppercase Latin, digits, common punctuation, and lowercase codepoints mapped to uppercase. Distinct lowercase glyphs, Indonesian diacritics, extended Latin, kerning refinement, browser shaping, hinting, and cross-platform QA remain open.
+
+The prototype contains uppercase Latin, digits, common punctuation, and lowercase codepoints mapped to uppercase. It does not provide distinct lowercase glyphs, Indonesian diacritics, extended Latin, complete punctuation, or a full typographic family. Browser shaping, hinting, cross-platform rendering, and full product visual QA remain open.
+
+Do not switch the product runtime to this font until the owner approves its use, the required glyph coverage is complete, and browser/platform QA passes.
 
 ## Rights
-The font and vector artwork are original project-authored starting assets and remain UNLICENSED / internal project use only pending owner approval. The old `OFL-1.1.txt` is a historical research record; Space Grotesk and IBM Plex Mono are not runtime dependencies.
+
+The font and vector artwork are original project-authored starting assets and remain **UNLICENSED / internal project use only** pending owner approval. Do not redistribute externally. The historical `OFL-1.1.txt` file is research evidence, not a license grant for this custom font.

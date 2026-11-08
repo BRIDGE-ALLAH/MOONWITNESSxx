@@ -4,17 +4,17 @@ on:
   push:
     branches:
       - main
-      - "feat-*"
-      - "feat/**"
-      - "fix-*"
-      - "fix/**"
-      - "chore-*"
-      - "headquarter/**"
+      - 'feat-*'
+      - 'feat/**'
+      - 'fix-*'
+      - 'fix/**'
+      - 'chore-*'
+      - 'headquarter/**'
   pull_request:
     branches:
       - main
-      - "feat-*"
-      - "feat/**"
+      - 'feat-*'
+      - 'feat/**'
   workflow_dispatch:
 
 concurrency:
@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -39,7 +39,7 @@ jobs:
           version: 12.16.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -63,7 +63,9 @@ jobs:
         run: pnpm --filter @riotworks/arsy test
 
       - name: Validate Docker Compose configuration
-        run: docker compose --env-file .env.docker config --quiet
+        run: |
+          docker compose --env-file .env.docker -f docker-compose.yml config --quiet
+          docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.docker-socket.yml config --quiet
 
       - name: Test Divine epistemic and provenance suites
         run: pnpm --filter @riotworks/divine test
@@ -83,7 +85,7 @@ jobs:
 
       - name: Upload repository audit
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: moonwitness-repository-audit
           path: .artifacts/
@@ -96,7 +98,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -104,7 +106,7 @@ jobs:
           version: 12.16.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
 
@@ -189,7 +191,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -197,7 +199,7 @@ jobs:
           version: 12.16.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
 
@@ -209,6 +211,8 @@ jobs:
 
       - name: Type-check shared UI package
         run: pnpm --filter @riotworks/ui type-check
+      - name: Test shared UI theme contracts
+        run: pnpm --filter @riotworks/ui test
 
       - name: Type-check Headquarter application
         run: pnpm --filter @riotworks/headquarter type-check
@@ -231,7 +235,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -239,7 +243,7 @@ jobs:
           version: 12.16.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
 
@@ -256,7 +260,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -264,7 +268,7 @@ jobs:
           version: 12.16.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm

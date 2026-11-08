@@ -215,11 +215,167 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  apps/cockpit:
+    dependencies:
+      '@riotworks/assets':
+        specifier: workspace:*
+        version: link:../../packages/assets
+      '@riotworks/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
+      '@riotworks/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: 15.1.0
+        version: 15.1.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      next-themes:
+        specifier: ^0.4.4
+        version: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react:
+        specifier: ^19.0.0
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.1(react@19.3.1)
+    devDependencies:
+      '@tauri-apps/cli':
+        specifier: ^2.12.4
+        version: 2.12.4
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.5
+      '@types/react':
+        specifier: ^19.0.2
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.0.2
+        version: 19.3.0(@types/react@19.3.0)
+      autoprefixer:
+        specifier: ^10.6.2
+        version: 10.6.2(postcss@8.5.32)
+      eslint:
+        specifier: ^9.17.0
+        version: 9.39.5(jiti@1.21.7)(supports-color@7.2.0)
+      eslint-config-next:
+        specifier: 15.1.0
+        version: 15.1.0(eslint@9.39.5(jiti@1.21.7)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
+      postcss:
+        specifier: ^8.5.1
+        version: 8.5.32
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(tsx@4.23.15)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  apps/gate:
+    dependencies:
+      '@riotworks/assets':
+        specifier: workspace:*
+        version: link:../../packages/assets
+      '@riotworks/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: 15.1.0
+        version: 15.1.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      next-themes:
+        specifier: ^0.4.4
+        version: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react:
+        specifier: ^19.0.0
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.1(react@19.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.5
+      '@types/react':
+        specifier: ^19.0.2
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.0.2
+        version: 19.3.0(@types/react@19.3.0)
+      autoprefixer:
+        specifier: ^10.6.2
+        version: 10.6.2(postcss@8.5.32)
+      eslint:
+        specifier: ^9.17.0
+        version: 9.39.5(jiti@1.21.7)(supports-color@7.2.0)
+      eslint-config-next:
+        specifier: 15.1.0
+        version: 15.1.0(eslint@9.39.5(jiti@1.21.7)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
+      postcss:
+        specifier: ^8.5.1
+        version: 8.5.32
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(tsx@4.23.15)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   apps/headquarter:
     dependencies:
       '@riotworks/assets':
         specifier: workspace:*
         version: link:../../packages/assets
+      '@riotworks/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: 15.1.0
+        version: 15.1.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      next-themes:
+        specifier: ^0.4.4
+        version: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react:
+        specifier: ^19.0.0
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.1(react@19.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.5
+      '@types/react':
+        specifier: ^19.0.2
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.0.2
+        version: 19.3.0(@types/react@19.3.0)
+      autoprefixer:
+        specifier: ^10.6.2
+        version: 10.6.2(postcss@8.5.32)
+      eslint:
+        specifier: ^9.17.0
+        version: 9.39.5(jiti@1.21.7)(supports-color@7.2.0)
+      eslint-config-next:
+        specifier: 15.1.0
+        version: 15.1.0(eslint@9.39.5(jiti@1.21.7)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
+      postcss:
+        specifier: ^8.5.1
+        version: 8.5.32
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(tsx@4.23.15)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  apps/id:
+    dependencies:
+      '@riotworks/assets':
+        specifier: workspace:*
+        version: link:../../packages/assets
+      '@riotworks/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
       '@riotworks/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -304,8 +460,8 @@ importers:
         specifier: ^5.0.0
         version: 5.81.5(supports-color@7.2.0)
       ioredis:
-        specifier: ^5.3.0
-        version: 5.11.1(supports-color@7.2.0)
+        specifier: ^6.0.0
+        version: 6.0.0(supports-color@7.2.0)
     devDependencies:
       tsx:
         specifier: ^4.0.0
@@ -319,6 +475,13 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.5
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
 
   packages/divine:
     devDependencies:
@@ -872,6 +1035,9 @@ packages:
 
   '@ioredis/commands@1.10.0':
     resolution: {integrity: sha512-UmeW7z4LfctwoQ5wkhVzgq8tXkreED2xZGpX+Bg+zA+WJFZCT6c062AfCK/Dfk81xZnnwdhJCUMkitihRaoC2Q==}
+
+  '@ioredis/commands@2.0.0':
+    resolution: {integrity: sha512-vrx0AE/T0h7cRZwfo1M39Cr+ZhZrkf0V8mQN75wucKCxCLD9l/VX6no3gFvrLqD1IlG/1LtzWovqEw3t0Vr9zg==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1485,6 +1651,82 @@ packages:
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
+
+  '@tauri-apps/cli-darwin-arm64@2.12.4':
+    resolution: {integrity: sha512-OxqKSckIkoJ6vX2AjifIJpTasFC0Hbdoo7gEiCmAjauABO3U8m2MRsLWe+QTiBwDx1mIrvgA+rvI7tvDnbnHVg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@tauri-apps/cli-darwin-x64@2.12.4':
+    resolution: {integrity: sha512-fz76/77wMMJOaaUN6n3CybRG0P/MTEjjqYk81mGPyhi9m6Ue5T+LWBnJP/AkPooNatBPI2vtulGqomyMJ44lCQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@tauri-apps/cli-linux-arm-gnueabihf@2.12.4':
+    resolution: {integrity: sha512-K0w8Bof6Lt8QKLAYhRy0yy36ZH5iA/35VuSOvnxyjvCUZ+A3JKsUTlALviH/sVgAlisaPzzmeJSH8XOn4Q2HBA==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
+
+  '@tauri-apps/cli-linux-arm64-gnu@2.12.4':
+    resolution: {integrity: sha512-j5rOnjmRUwWrm1oosf0zBYl4D+fqydgUROFCk0hvKZxvbTT8SOERes0QB7rBV/XWNy+kM6pCKzb3oSm2sRglzg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tauri-apps/cli-linux-arm64-musl@2.12.4':
+    resolution: {integrity: sha512-aOue3Fy6Jb7+oWcfAVUsVHfeTybSCt2CZoU06aO4jv4d2Ks/KnaTPwMAK3CLEduGOvBLY1lbBBrIyomqLLH5Sg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@tauri-apps/cli-linux-riscv64-gnu@2.12.4':
+    resolution: {integrity: sha512-Fx6GShY/RvST+t6LMlTHAwd66+1tEaAAGrnU7cysVfaiRP1BKng5Vl6rVmO6rSLOA1Sp1dRzNYM4f0OWQGb7qA==}
+    engines: {node: '>= 10'}
+    cpu: [riscv64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tauri-apps/cli-linux-x64-gnu@2.12.4':
+    resolution: {integrity: sha512-tNzZSa79Z1nRpHxEpQ38lsAFpKlFlYvoXzjTV+lRRn/zSf3wrdUC3wnLcq2XEadchPu4ttK0zivhYzr+XGD19Q==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tauri-apps/cli-linux-x64-musl@2.12.4':
+    resolution: {integrity: sha512-jmZ1pr0xEqUhuEusWtt9Yt+GF6lCnGHUmIL+KIknpbjK/XQ2qkhDBhaxK/JMHM2A8dAacVXCxXJk2EXpwhQUfA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@tauri-apps/cli-win32-arm64-msvc@2.12.4':
+    resolution: {integrity: sha512-fGo8pgEHZxdSYgZ/J98m1usJ7NHKmKbq7k6uT0x1rpOq6Bg2YVzzpaAblWk710f5LHYBJIL5QIFS5IrD+4gmTg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@tauri-apps/cli-win32-ia32-msvc@2.12.4':
+    resolution: {integrity: sha512-ezl8sQIcjYsye3TUnTH5VcWmWzccZASlQm7hlZt0dYyj1XD0qpVW47u2xYVrIKui0F8uQv/7QGZixdWiClBsbg==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@tauri-apps/cli-win32-x64-msvc@2.12.4':
+    resolution: {integrity: sha512-DJhDeCqjLDNMWYFy7ZS8cfeAHX2RK0RbQMLiA3bMVVkXRDJ4NBYiHriGqsUhsr9iG41aTb+dJGkFPmPw1gWwVw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@tauri-apps/cli@2.12.4':
+    resolution: {integrity: sha512-JI9bHfudSRJikGOrjbXEm6RjzzvmKuLc+JixB1NE8hNzQkNlCCIC3pTES3uypkR9lxHrsbxzcnSwhI2IxBQphw==}
+    engines: {node: '>= 10'}
+    hasBin: true
 
   '@turbo/darwin-64@2.11.10':
     resolution: {integrity: sha512-By4idRap5+nLnMuRzLB4qkOPRlvNdyY1ne4VJYDyUoUB11H94k7uif9mbe3JT8JSNXs1D68uMcBj6hJ/jMQRvA==}
@@ -2543,6 +2785,10 @@ packages:
   ioredis@5.11.1:
     resolution: {integrity: sha512-ehuGcf94bQXhfagULNXrJdfnWO38v070jxSx/qE87Kjzmu2fU7ro5EFAb+OPituLqgfyuQaym5DlrNydW2sJ9A==}
     engines: {node: '>=12.22.0'}
+
+  ioredis@6.0.0:
+    resolution: {integrity: sha512-f+Dtubxfpf6KYFq7WVXJoOLn0bk4TJrMrN9SzeE+jrWrCWj7XX3fA6vkryafhADX+GMymRxgDJDOI33COkJc0w==}
+    engines: {node: '>=20.0.0'}
 
   ip-address@10.7.6:
     resolution: {integrity: sha512-00LYkM6byILa9eQIx6qoaXCM40xTLd56AZ4vyaPW3YTyb49VZYPo5xsiAq4tuQ54GH4R7gVdYScJ1B7B77PuTg==}
@@ -4051,6 +4297,8 @@ snapshots:
 
   '@ioredis/commands@1.10.0': {}
 
+  '@ioredis/commands@2.0.0': {}
+
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
@@ -4649,6 +4897,53 @@ snapshots:
   '@swc/helpers@0.5.15':
     dependencies:
       tslib: 2.9.1
+
+  '@tauri-apps/cli-darwin-arm64@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-darwin-x64@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-arm-gnueabihf@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-arm64-gnu@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-arm64-musl@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-riscv64-gnu@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-x64-gnu@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-linux-x64-musl@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-win32-arm64-msvc@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-win32-ia32-msvc@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli-win32-x64-msvc@2.12.4':
+    optional: true
+
+  '@tauri-apps/cli@2.12.4':
+    optionalDependencies:
+      '@tauri-apps/cli-darwin-arm64': 2.12.4
+      '@tauri-apps/cli-darwin-x64': 2.12.4
+      '@tauri-apps/cli-linux-arm-gnueabihf': 2.12.4
+      '@tauri-apps/cli-linux-arm64-gnu': 2.12.4
+      '@tauri-apps/cli-linux-arm64-musl': 2.12.4
+      '@tauri-apps/cli-linux-riscv64-gnu': 2.12.4
+      '@tauri-apps/cli-linux-x64-gnu': 2.12.4
+      '@tauri-apps/cli-linux-x64-musl': 2.12.4
+      '@tauri-apps/cli-win32-arm64-msvc': 2.12.4
+      '@tauri-apps/cli-win32-ia32-msvc': 2.12.4
+      '@tauri-apps/cli-win32-x64-msvc': 2.12.4
 
   '@turbo/darwin-64@2.11.10':
     optional: true
@@ -5914,6 +6209,17 @@ snapshots:
       denque: 2.1.0
       redis-errors: 1.2.0
       redis-parser: 3.0.0
+      standard-as-callback: 2.1.0
+    transitivePeerDependencies:
+      - supports-color
+
+  ioredis@6.0.0(supports-color@7.2.0):
+    dependencies:
+      '@ioredis/commands': 2.0.0
+      cluster-key-slot: 1.1.1
+      debug: 4.4.3(supports-color@7.2.0)
+      denque: 2.1.0
+      redis-errors: 1.2.0
       standard-as-callback: 2.1.0
     transitivePeerDependencies:
       - supports-color

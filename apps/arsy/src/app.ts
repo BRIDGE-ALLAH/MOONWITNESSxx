@@ -4,19 +4,33 @@ import Zod from 'zod'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
+import { registerDockerRoutes } from './docker/routes.ts'
+import { registerDeploymentRoutes } from './deployments/routes.ts'
+import type { AuthorizeDeploymentDependencies } from './deployments/authorization.ts'
+import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
+import { registerOperatorApiAuth } from './auth/operator-token.ts'
+import { createOracleClient, type OracleClient } from './oracle/client.ts'
+import { registerOracleRoutes } from './oracle/routes.ts'
 
 export interface CreateAppOptions {
   databasePool?: DatabasePool
   logger?: boolean
+  env?: NodeJS.ProcessEnv
+  oracleClient?: OracleClient
+  /** Optional trusted policy/capability adapters; omitted configuration fails closed. */
+  deploymentAuthorization?: Omit<AuthorizeDeploymentDependencies, 'store'>
 }
 
 export function createApp(options: CreateAppOptions = {}) {
   const app = Fastify({ logger: options.logger ?? true })
-  const databasePool = options.databasePool ?? createDatabasePool()
+  const env = options.env ?? process.env
+  const databasePool = options.databasePool ?? createDatabasePool(env)
+  const oracleClient = options.oracleClient ?? createOracleClient(env)
+  registerOperatorApiAuth(app, env)
 
   app.register(async (instance) => {
     // Register the onRoute hook before declaring routes in this encapsulated scope.
-    await instance.register(rateLimit, { global: false })
+    await instance.register(rateLimit, { global: true, max: 120, timeWindow: '1 minute' })
     instance.setValidatorCompiler(validatorCompiler)
     instance.setSerializerCompiler(serializerCompiler)
 
@@ -37,7 +51,7 @@ export function createApp(options: CreateAppOptions = {}) {
       async () => ({
         status: 'ok',
         message: 'ARSY Command Center is running',
-      }),
+      })
     )
 
     typedApp.get('/health/live', async () => ({ status: 'alive' }))
@@ -52,10 +66,17 @@ export function createApp(options: CreateAppOptions = {}) {
         } catch {
           return reply.code(503).send({ status: 'not-ready' })
         }
-      },
+      }
     )
 
     setupDatabase(instance, databasePool)
+    registerDockerRoutes(instance, databasePool, env)
+    registerDeploymentRoutes(instance, databasePool, {
+      authorization: options.deploymentAuthorization,
+      env,
+    })
+    registerLoginAttemptRoutes(instance, databasePool)
+    registerOracleRoutes(instance, oracleClient)
   })
 
   return app

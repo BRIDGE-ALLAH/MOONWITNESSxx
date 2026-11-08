@@ -1,12 +1,12 @@
 # @riotworks/assets
 
-The source-controlled visual asset library for MOONWITNESS applications and the separately governed RIOTWORKS studio identity.
+The source-controlled visual asset library for MOONWITNESS applications and its RIOTWORKS product division.
 
 ## Brand ownership
 
-**MOONWITNESS is the master product brand.** Its canonical identity, brand DNA, and usage rules are documented in [docs/10-design-dna.md](../../docs/10-design-dna.md), [docs/12-brand-architecture.md](../../docs/12-brand-architecture.md), and [BRAND.md](./BRAND.md).
+**MOONWITNESS is the master product brand.** Its canonical identity, brand DNA, and usage rules are documented in [docs/10-design-dna.md](../../docs/10-design-dna.md), [docs/01-ecosystem-narrative.md](../../docs/01-ecosystem-narrative.md), and [BRAND.md](./BRAND.md).
 
-RIOTWORKS is an independent creative/engineering studio identity. It is not the MOONWITNESS master brand and must not appear in MOONWITNESS product lockups by default. Keep studio marks, artwork, and tokens separately governed.
+RIOTWORKS is the product and operating division within MOONWITNESS. Division-specific artwork and tokens may be used on RIOTWORKS-owned product surfaces; MOONWITNESS remains the master identity. Keep division assets explicitly scoped.
 
 ## Responsibilities
 
@@ -14,7 +14,7 @@ RIOTWORKS is an independent creative/engineering studio identity. It is not the 
 - Expose a small, statically declared TypeScript registry.
 - Provide lightweight React helpers for rendering approved assets.
 - Keep provenance, licensing, accessibility, and theme applicability close to each declaration.
-- Validate missing, malformed, oversized, or unsafe SVG resources.
+- Validate missing, malformed, oversized, or unsafe SVG resources, including positive `viewBox` dimensions and aspect-ratio agreement with registry metadata.
 
 This package is **not** a CMS, database, remote asset service, user-upload store, or replacement for `@riotworks/ui`.
 
@@ -59,7 +59,7 @@ Functional UI icons remain the responsibility of the existing functional icon li
 
 ## Typography
 
-The brand kit recommends Space Grotesk for display/interface and IBM Plex Mono for technical data. Font binaries are intentionally not bundled until font licenses and hosting/redistribution rights are verified. See `brand-tokens.css` for fallback stacks.
+The current product runtime uses Space Grotesk for display/interface and IBM Plex Mono for technical data, with documented system fallbacks. The shared UI stylesheet does not load the experimental MOONWITNESS Signal WOFF2. That prototype is retained under `fonts/` for internal design work only; it is not approved for runtime use or redistribution until owner approval, complete glyph coverage, and browser/platform QA.
 
 ## Ownership and licensing
 

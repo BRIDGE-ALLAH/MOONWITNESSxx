@@ -19,11 +19,8 @@ docker-compose up -d
 # View logs
 docker-compose logs -f
 
-# Stop services
-docker-compose down
-
-# Remove volumes (destructive — deletes database)
-docker-compose down -v
+# Stop containers while preserving named PostgreSQL and Redis data volumes
+docker compose down
 ```
 
 ### Environment variables
@@ -49,7 +46,7 @@ Key variables:
 - **PostgreSQL**: localhost:5432 (user: postgres, password: postgres)
 - **Redis**: localhost:6379
 
-ARSY listens on the configured PORT (3001 in Compose). Its liveness endpoint is `/health/live`; readiness at `/health/ready` checks PostgreSQL before Compose marks the service healthy.
+ARSY always listens on the fixed internal container port 3001. `ARSY_PORT` changes only the host-side published port and must not change the port used by its healthcheck or container-to-container requests. Headquarter likewise listens on fixed internal port 3000; `HEADQUARTER_PORT` changes only its host-side published port. ARSY liveness is `/health/live`; readiness at `/health/ready` checks PostgreSQL before Compose marks the service healthy.
 
 ## Service descriptions
 
@@ -162,13 +159,28 @@ Verify PostgreSQL is healthy:
 docker-compose exec postgres pg_isready
 ```
 
-### Clear everything and restart fresh
+### Troubleshoot an unhealthy ARSY container
+
+The development Compose stack bind-mounts `apps/arsy`, `apps/headquarter`, and `packages` over directories from the image. Those mounts hide pnpm's package-local `node_modules` links unless nested anonymous dependency volumes are retained. The Compose file keeps those nested dependency volumes for ARSY, Headquarter, and their shared packages.
+
+Inspect the actual startup failure before rebuilding:
 
 ```bash
-docker-compose down -v
-docker system prune -a
-docker-compose up -d
+docker compose logs --tail=200 --no-color arsy
+docker inspect --format '{{json .State.Health}}' moonwitness-arsy
+docker compose ps -a
 ```
+
+After a dependency-volume or image change, recreate only the application services and renew their anonymous dependency volumes. The named PostgreSQL and Redis data volumes remain attached:
+
+```bash
+docker compose config --quiet
+docker compose up --build --force-recreate --renew-anon-volumes -d arsy headquarter
+docker compose ps
+docker compose logs --tail=100 --no-color arsy
+```
+
+Do not use `docker compose down -v` or `docker system prune --volumes` as a startup troubleshooting shortcut; they can delete persistent database data. If ARSY remains unhealthy, use its startup log and health history to identify the next failure rather than resetting data.
 
 ## File structure
 
@@ -190,3 +202,8 @@ docker-compose up -d
 - [docs/08-technical-architecture.md](../docs/08-technical-architecture.md) — Backend/ORM architecture
 - [docs/24-repository-and-automation-governance.md](../docs/24-repository-and-automation-governance.md) — Git/CI setup
 - [README.md](../README.md) — Project overview
+
+## Docker Connector
+
+See [docs/29-docker-connector.md](docs/29-docker-connector.md) for the read-only Docker Engine connector, operator authentication requirements, remote mutual-TLS allowlist, database migration, and the explicit local-socket security boundary. The host Docker socket is intentionally not mounted into ARSY by default.
+

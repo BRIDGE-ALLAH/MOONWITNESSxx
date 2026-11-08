@@ -19,7 +19,7 @@
 
 Source of truth:
 - `docs/10-design-dna.md` — visual DNA and brand principles.
-- `docs/12-brand-architecture.md` — hierarchy and message architecture.
+- `docs/01-ecosystem-narrative.md` — ecosystem hierarchy, narrative, and message architecture.
 - `packages/assets/BRAND.md` — asset usage and licensing.
 - `packages/assets/brand-tokens.css` — primitive brand tokens.
 

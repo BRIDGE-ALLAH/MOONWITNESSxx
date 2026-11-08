@@ -8,7 +8,7 @@
 
 - Structural and ownership baseline documented in `ARCHITECTURE.md`.
 - ARSY browser transport boundary with timeout, cancellation, request IDs, safe error normalization, GET-only retry, and relative-path traversal protection.
-- Night Riot / Paper Riot semantic token foundation in `packages/ui`.
+- MOONWITNESS Observatory / Archive semantic token foundation in `packages/ui`.
 - ARSY DECK reference feature with explicit synthetic fixture and no fake mutation capability.
 - Navigation and administration IA with planned capabilities disabled.
 - Native Node 24 test suite for ARSY client, ARSY DECK fixture, Decision Graph, and Scenario Forge.
@@ -62,3 +62,26 @@ The **Headquarter foundation workstream** can close when required workspace CI a
 ## Required full-workspace CI result
 
 PR #43 head `44d5cb62413e2e03de89b46961439ea8953001b0`: Repository Integrity, Asset Integrity, full-workspace validation/build, and CodeQL all passed. The former optional `FULL_QUALITY_CI` gate has been removed.
+
+
+## Current mainline update — 2026-11-08
+
+**Observed main:** `1f16b12c77cab5f73a6d05fb1fbc4f12689a6f0b`.
+
+- PR #154 has merged the authenticated, owner-scoped, read-only Docker Engine connector. ARSY persists connection metadata in PostgreSQL; remote TLS credentials are encrypted; Headquarter displays real Engine information and container inventory/logs through a server-side proxy.
+- Exact PR-head verification passed: Docker/PostgreSQL integration, Headquarter browser E2E including reload/persistence, Repository CI including full workspace typecheck/build, Asset Integrity, Developer Experience, WITNESS FABRIC, CodeQL, and container image build.
+- The delivered connector intentionally has no start/stop/exec/deploy operations. A configured local Docker socket is host-root-equivalent. The current fallback login limiter is not a distributed security boundary; shared login throttling remains a separate blocker tracked in Issue #123.
+- The Money Maker workflows (opportunity, versioned product, asset, inspection, channel, listing, finance, payout/FX, shared login throttling, and portfolio metrics) remain on unmerged draft PR #126 and are not on main. Latest inspected head `1920e635...` is 116 commits ahead / 78 behind main, diverged and non-mergeable; exact-head checks are not registered. It still has a browser empty-payout locator mismatch, an Aftershock all-time vs selected-cohort window ambiguity, legacy RIOTWORKS styling on new product boards, and incomplete payout disputed-resolution integration coverage.
+- UI/Assets package documentation and SVG/font governance corrections are merged; rendered accessibility/visual review, logo-owner approval, and redistribution licensing remain open.
+
+## Current production promotion decision
+
+**NO-GO.** No production target or deployment workflow, managed secrets, TLS/ingress, backup/restore, monitoring, rollback authority, production smoke-test credentials or verified production URL are evidenced. Do not equate CI/container build success with a production deployment. Root package version `1.0.11` differs from the latest stable tag/release `v1.0.0`; the tagged package manifest was `1.0.8`, and main is 450 commits beyond the tag. The `1.0.9`–`1.0.11` source version changes have no numbered changelog/release entries; determine whether they were internal-only bumps or missing release records before choosing the next version.
+
+
+## Version and tag history verified — 2026-11-08
+
+- Only tag currently listed: `v1.0.0`; latest stable GitHub Release is `v1.0.0` (published 2026-11-07).
+- Tagged commit: `45b769c4639ee12d472655ed2dae858ecb6d1e44`; package manifest at tag: `1.0.8`.
+- Current main package manifest: `1.0.11`; main is 450 commits ahead of the tag target. The changelog still has no numbered entries between `1.0.0` and Unreleased.
+- The annotated tag is unsigned. Do not create a new release until the post-tag version policy, changelog scope, and production readiness are explicitly reconciled.
