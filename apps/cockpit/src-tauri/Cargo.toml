@@ -16,6 +16,7 @@ tokio = { version = "1.0", features = ["full"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 keyring = "3"
 sysinfo = { version = "0.32", default-features = false, features = ["system"] }
+sha2 = "0.10"
 
 [[bin]]
 name = "cockpit"
