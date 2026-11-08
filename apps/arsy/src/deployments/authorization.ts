@@ -20,6 +20,7 @@ export type OperatorPrincipal = ArsyOperatorPrincipal
 export interface DeploymentAuthorizationInput {
   principal: OperatorPrincipal | null
   operationId: string
+  deploymentId: string
   ownerId: string
   targetHostId: string
   action: string
@@ -57,6 +58,7 @@ export interface DeploymentAuthorizationResult {
 
 export interface DeploymentAuthorizationRecordInput {
   operationId: string
+  deploymentId: string
   ownerId: string
   actorId: string
   targetHostId: string
@@ -126,13 +128,14 @@ export async function recordDeploymentAuthorizationDecision(
   const approvalReference = input.approvalReference === null ? null : requiredText(input.approvalReference, 'approvalReference', 200)
   const result = await pool.query(
     `INSERT INTO arsy_deployment_authorization_decisions
-      (id, operation_id, owner_id, actor_id, target_host_id, action, effect,
+      (id, operation_id, deployment_id, owner_id, actor_id, target_host_id, action, effect,
        reason_code, policy_version, approval_reference, evidence)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb)
      RETURNING id, recorded_at`,
     [
       randomUUID(),
       requiredText(input.operationId, 'operationId', 64),
+      requiredText(input.deploymentId, 'deploymentId', 64),
       requiredText(input.ownerId, 'ownerId', 128),
       requiredText(input.actorId, 'actorId', 128),
       requiredText(input.targetHostId, 'targetHostId', 64),
@@ -160,6 +163,7 @@ export async function authorizeAndRecordDeploymentAction(
   policyTimeoutMs = 3_000,
 ): Promise<DeploymentAuthorizationResult> {
   const operationId = requiredText(input.operationId, 'operationId', 64)
+  const deploymentId = requiredText(input.deploymentId, 'deploymentId', 64)
   const ownerId = requiredText(input.ownerId, 'ownerId', 128)
   const targetHostId = requiredText(input.targetHostId, 'targetHostId', 64)
   const action = input.action
@@ -245,6 +249,7 @@ export async function authorizeAndRecordDeploymentAction(
   // A policy exception or malformed result never becomes an allow decision.
   await recordDeploymentAuthorizationDecision(pool, {
     operationId,
+    deploymentId,
     ownerId,
     actorId: actorId ?? 'unknown',
     targetHostId,
