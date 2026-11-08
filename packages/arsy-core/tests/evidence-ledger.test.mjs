@@ -47,3 +47,16 @@ test('in-memory store rejects a stale writer that would fork the chain', async (
     /stream head changed/,
   )
 })
+
+test('append disposition reports creation and idempotent replay explicitly', async () => {
+  const ledger = new EvidenceLedger(new InMemoryEvidenceStore())
+  const input = {
+    id: 'event-disposition-1', kind: 'observation.recorded', aggregateId: 'case-disposition',
+    occurredAt: '2026-11-08T00:00:00Z', actorId: 'system', payload: { value: 1 },
+  }
+  const created = await ledger.appendWithDisposition(input)
+  const replayed = await ledger.appendWithDisposition(input)
+  assert.equal(created.disposition, 'created')
+  assert.equal(replayed.disposition, 'replayed')
+  assert.equal(replayed.event.hash, created.event.hash)
+})
