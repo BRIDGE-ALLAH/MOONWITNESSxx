@@ -28,7 +28,7 @@ The options are compared for the actual initial MOONWITNESS requirement: single-
 ### Evidence and current project state
 
 - BuildKit documents rootless daemon operation, the network.host limitation, RootlessKit network isolation guidance, and why --oci-worker-no-process-sandbox is discouraged. See the [official BuildKit rootless guide](https://github.com/moby/buildkit/blob/master/docs/rootless.md).
-- The BuildKit project published v0.34.1 on 2026-10-20. Pin a reviewed release by immutable image/binary digest; do not follow a mutable latest tag. See [BuildKit releases](https://github.com/moby/buildkit/releases).
+- The BuildKit project published v0.34.2 on 2026-11-03. The isolation spike pins v0.34.2 and verifies the GitHub-published SHA-256 release asset digest; production must separately review release attestations and pin the exact binary/image digest. See [BuildKit releases](https://github.com/moby/buildkit/releases).
 - Buildah's official build documentation describes Dockerfile/Containerfile builds, rootless isolation and network options including private/pasta. It remains a credible fallback. See [Buildah build documentation](https://github.com/podman-container-tools/buildah/blob/main/docs/buildah-build.1.md).
 - Buildah's project site announced v1.46.0 on 2026-10-21. See [Buildah releases](https://buildah.io/).
 - The original GoogleContainerTools/kaniko repository was archived on 2025-06-03. A maintained fork exists, but choosing it would require separately accepting that fork's source, build-image publisher and release-signing supply chain. See [archived upstream](https://github.com/GoogleContainerTools/kaniko) and [osscontainertools/kaniko](https://github.com/osscontainertools/kaniko).
@@ -94,6 +94,18 @@ The build receipt records:
 - policy version, bounded result/error code and log reference.
 
 A worker restart must never be interpreted as build success. If an outcome is ambiguous, ARSY reconciles the registry digest/receipt before any retry. Image digest and provenance are durable evidence; a tag is only a mutable locator.
+
+### BuildKit isolation proof — 2026-11-09
+
+A bounded disposable-VM proof is implemented under `scripts/build-engine-spike/`. It pins BuildKit v0.34.2 and RootlessKit v3.3.0, verifies release asset SHA-256 digests, runs BuildKit under a dedicated unprivileged OS identity inside RootlessKit/slirp4netns, applies cgroup/resource and scratch/output/log limits, and exercises hostile Dockerfile assertions for daemon-environment leakage, host Docker/UNIX socket visibility, host-loopback reachability, and `RUN --network=none`. It exports OCI output through Buildx's remote driver over the BuildKit Unix socket, verifies OCI blob digests and native provenance subject/source-commit binding, then checks worker cleanup.
+
+The proof is a disposable GitHub-hosted VM acceptance slice, not a production worker provider. It does not establish a production firewall/NSG allowlist for registry/Git/DNS/build-step egress, a secret broker, cross-tenant cache isolation, registry push integration, image signing, or complete ARSY orchestration.
+
+BuildKit v0.34.2 `proxyNetwork` is not a complete egress allowlist: it does not cover image-resolver, Git, HTTP-source or other non-exec fetches. Its proxy does not currently chain through daemon upstream HTTP(S) proxy settings (upstream issue [moby/buildkit#6991](https://github.com/moby/buildkit/issues/6991)); policy visibility/conversion is limited to proxy-visible HTTP(S) requests. Production therefore still requires default-deny egress at the disposable worker VM/network boundary, explicit destination allowlists, and DNS-rebinding protections. `proxyNetwork=true` alone must never be treated as satisfying that requirement.
+
+The proof uses Buildx's remote driver because BuildKit v0.34.2 `buildctl build` does not expose a native `--attest` flag. Do not use Buildx's `docker` or `docker-container` driver, or `--load`, for this boundary. Native provenance must be generated and checked through the remote builder; a future raw-buildctl implementation needs a separate independently signed attestation service and must not mislabel it as BuildKit-native provenance.
+
+References: [Buildx remote driver](https://docs.docker.com/build/builders/drivers/remote/), [build attestations](https://docs.docker.com/build/metadata/attestations/), [BuildKit v0.34.2 CLI](https://pkg.go.dev/github.com/moby/buildkit@v0.34.2/cmd/buildctl).
 
 ## 5. Initial v1 feature boundary
 
