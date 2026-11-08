@@ -5,7 +5,7 @@ use std::{
     fs::{self, File},
     io::Read,
     path::{Path, PathBuf},
-    sync::atomic::{AtomicU64, Ordering},
+    sync::{atomic::{AtomicU64, Ordering}, Mutex},
     time::Duration,
 };
 use tauri::Manager;
@@ -21,6 +21,7 @@ const MAX_ARTIFACT_FILES: usize = 250;
 const MAX_ARTIFACT_DEPTH: usize = 5;
 const MAX_ARTIFACT_BYTES: u64 = 2 * 1024 * 1024 * 1024;
 static BUILD_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+static BUILD_STORE_LOCK: Mutex<()> = Mutex::new(());
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -124,8 +125,7 @@ fn detect_profiles(root: &Path) -> Vec<ReleaseBuildProfile> {
         });
     }
 
-    if root.join("*.sln").exists()
-        || fs::read_dir(root)
+    if fs::read_dir(root)
             .ok()
             .into_iter()
             .flatten()
@@ -355,8 +355,8 @@ pub async fn riot_release_run_build(
 
     let (stdout, stdout_truncated) = stdout_task.await.map_err(|error| error.to_string())?;
     let (stderr, stderr_truncated) = stderr_task.await.map_err(|error| error.to_string())?;
-    let exit_code = status.and_then(|status| status.code());
-    let success = status.is_some_and(|status| status.success());
+    let exit_code = status.as_ref().and_then(|status| status.code());
+    let success = status.as_ref().is_some_and(|status| status.success());
     let record = ReleaseBuildRecord {
         id,
         repository_path: root.to_string_lossy().to_string(),
@@ -373,7 +373,7 @@ pub async fn riot_release_run_build(
         created_at_ms: now_ms(),
     };
 
-    let _guard = std::sync::Mutex::new(()).lock().map_err(|_| "Build history lock failed.".to_string())?;
+    let _guard = BUILD_STORE_LOCK.lock().map_err(|_| "Build history lock failed.".to_string())?;
     let file = store_file(&app, "builds.json")?;
     let mut history: Vec<ReleaseBuildRecord> = read_store(&file)?;
     history.push(record.clone());
@@ -453,7 +453,7 @@ pub fn riot_release_import_artifact(
         sha256,
         created_at_ms: now_ms(),
     };
-    let _guard = std::sync::Mutex::new(()).lock().map_err(|_| "Artifact vault lock failed.".to_string())?;
+    let _guard = BUILD_STORE_LOCK.lock().map_err(|_| "Artifact vault lock failed.".to_string())?;
     let file = store_file(&app, "artifacts.json")?;
     let mut records: Vec<VaultArtifact> = read_store(&file)?;
     records.push(record.clone());
