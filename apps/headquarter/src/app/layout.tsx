@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-ui antialiased">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AppShell>{children}</AppShell>
         </ThemeProvider>
       </body>
