@@ -10,7 +10,7 @@ This is a bounded, disposable-VM proof for ADR 0003. It is not a production Buil
 - Injects a non-secret ARSY sentinel into the daemon environment and proves a malicious Dockerfile cannot see it.
 - Proves the build step cannot see the host Docker socket or a host-only UNIX socket, and cannot reach a host-loopback HTTP sentinel.
 - Proves `RUN --network=none` cannot reach an external IP.
-- Exports an OCI image plus BuildKit provenance, independently verifies OCI blob hashes, binds the source commit into image metadata and checks the provenance subject/source commit.
+- Exports an OCI image plus native BuildKit provenance through Buildx, independently verifies OCI blob hashes, binds the source commit into image metadata and checks the provenance subject/source commit.
 - Stops the worker, verifies no worker processes remain, unmounts scratch storage and removes the temporary OS identity/state.
 
 The GitHub Actions job runs on a fresh `ubuntu-24.04` hosted VM and does not mount or use the runner Docker socket for the build. The temporary AppArmor user-namespace sysctl adjustment is confined to that disposable CI VM; it is not a production deployment instruction.
