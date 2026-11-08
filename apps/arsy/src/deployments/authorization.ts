@@ -9,6 +9,7 @@ export type DeploymentAuthorizationReason =
   | 'OWNER_SCOPE_DENIED'
   | 'INVALID_ACTION'
   | 'POLICY_UNAVAILABLE'
+  | 'POLICY_TIMEOUT'
   | 'POLICY_DENIED'
   | 'APPROVAL_REQUIRED'
   | 'APPROVAL_UNAVAILABLE'
@@ -42,6 +43,7 @@ export interface DeploymentPolicyProvider {
     targetHostId: string
     action: DeploymentAction
     approvalReference: string | null
+    signal: AbortSignal
   }): Promise<DeploymentPolicyDecision>
 }
 
@@ -67,6 +69,13 @@ export interface DeploymentAuthorizationRecordInput {
 }
 
 type QueryResult<T> = { rows: T[] }
+
+class PolicyTimeoutError extends Error {
+  constructor() {
+    super('Deployment policy evaluation timed out')
+    this.name = 'PolicyTimeoutError'
+  }
+}
 
 function requiredText(value: string, field: string, max: number): string {
   const normalized = value.trim()
@@ -148,12 +157,16 @@ export async function authorizeAndRecordDeploymentAction(
   pool: DatabasePool,
   input: DeploymentAuthorizationInput,
   provider?: DeploymentPolicyProvider,
+  policyTimeoutMs = 3_000,
 ): Promise<DeploymentAuthorizationResult> {
   const operationId = requiredText(input.operationId, 'operationId', 64)
   const ownerId = requiredText(input.ownerId, 'ownerId', 128)
   const targetHostId = requiredText(input.targetHostId, 'targetHostId', 64)
   const action = input.action
   const principal = input.principal
+  if (!Number.isInteger(policyTimeoutMs) || policyTimeoutMs < 1 || policyTimeoutMs > 10_000) {
+    throw new TypeError('policyTimeoutMs must be an integer between 1 and 10000')
+  }
 
   let actorId = principal?.operatorId?.trim() || null
   let reasonCode: DeploymentAuthorizationReason | string = 'POLICY_UNAVAILABLE'
@@ -172,12 +185,25 @@ export async function authorizeAndRecordDeploymentAction(
     reasonCode = 'POLICY_UNAVAILABLE'
   } else {
     try {
-      const decision = await provider.evaluate({
-        actorId,
-        ownerId,
-        targetHostId,
-        action: action as DeploymentAction,
-        approvalReference,
+      const controller = new AbortController()
+      let timeout: ReturnType<typeof setTimeout> | undefined
+      const decision = await Promise.race([
+        provider.evaluate({
+          actorId,
+          ownerId,
+          targetHostId,
+          action: action as DeploymentAction,
+          approvalReference,
+          signal: controller.signal,
+        }),
+        new Promise<never>((_resolve, reject) => {
+          timeout = setTimeout(() => {
+            controller.abort()
+            reject(new PolicyTimeoutError())
+          }, policyTimeoutMs)
+        }),
+      ]).finally(() => {
+        if (timeout) clearTimeout(timeout)
       })
       if (
         !decision ||
@@ -210,9 +236,9 @@ export async function authorizeAndRecordDeploymentAction(
           reasonCode = decision.reasonCode.trim()
         }
       }
-    } catch {
-      reasonCode = 'POLICY_UNAVAILABLE'
-      evidence = { decisionSource: 'policy-provider-error' }
+    } catch (error) {
+      reasonCode = error instanceof PolicyTimeoutError ? 'POLICY_TIMEOUT' : 'POLICY_UNAVAILABLE'
+      evidence = { decisionSource: error instanceof PolicyTimeoutError ? 'policy-provider-timeout' : 'policy-provider-error' }
     }
   }
 
