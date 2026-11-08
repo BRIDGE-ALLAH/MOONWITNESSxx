@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { Pool } from 'pg'
 import { generateKeyPairSync, randomUUID, sign } from 'node:crypto'
+import { applyTestMigrations } from './helpers/apply-migrations.mjs'
 import {
   approvalSigningPayload,
   authorizeDeploymentOperation,
@@ -34,10 +35,12 @@ test('signed deployment authorization persists an immutable, owner-bound decisio
     const dockerMigration = await readFile(new URL('../migrations/002_docker_connector.sql', import.meta.url), 'utf8')
     const operationMigration = await readFile(new URL('../migrations/003_arsy_deployment_operations.sql', import.meta.url), 'utf8')
     const authorizationMigration = await readFile(new URL('../migrations/004_arsy_deployment_authorization.sql', import.meta.url), 'utf8')
-    await pool.query(dockerMigration)
-    await pool.query(operationMigration)
-    await pool.query(authorizationMigration)
-    await pool.query(authorizationMigration)
+    await applyTestMigrations(pool, [
+      dockerMigration,
+      operationMigration,
+      authorizationMigration,
+      authorizationMigration,
+    ])
 
     await pool.query(
       'INSERT INTO docker_connector_servers (id, owner_id, name, kind, endpoint_url, encrypted_credentials) VALUES ($1, $2, $3, $4, NULL, NULL)',
