@@ -40,6 +40,30 @@ services:
       - moonwitness
     restart: unless-stopped
 
+  # Provision a dedicated non-owner ORACLE application role on every Compose bring-up.
+  oracle-db-bootstrap:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-moonwitness}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      ORACLE_DB_PASSWORD: ${ORACLE_DB_PASSWORD:?ORACLE_DB_PASSWORD must be set}
+    volumes:
+      - ./apps/oracle/migrations/000_oracle_app_role.sql:/bootstrap/000_oracle_app_role.sql:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command: >-
+      psql -v ON_ERROR_STOP=1
+      -v oracle_password="$ORACLE_DB_PASSWORD"
+      -v postgres_db="$POSTGRES_DB"
+      -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+      -f /bootstrap/000_oracle_app_role.sql
+    restart: "no"
+    networks:
+      - moonwitness
+
   # ORACLE computation service — private to the MOONWITNESS bridge network
   oracle:
     build:
@@ -51,10 +75,13 @@ services:
       ORACLE_HOST: 0.0.0.0
       ORACLE_PORT: 8010
       ORACLE_SERVICE_TOKEN: ${ORACLE_SERVICE_TOKEN:?ORACLE_SERVICE_TOKEN must be set}
-      ORACLE_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-moonwitness}
+      ORACLE_DATABASE_URL: postgresql://oracle_app:${ORACLE_DB_PASSWORD:?ORACLE_DB_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-moonwitness}
       ORACLE_JOB_LEASE_SECONDS: ${ORACLE_JOB_LEASE_SECONDS:-120}
       ORACLE_JOB_RETENTION_SECONDS: ${ORACLE_JOB_RETENTION_SECONDS:-86400}
       ORACLE_MAX_JOB_ATTEMPTS: ${ORACLE_MAX_JOB_ATTEMPTS:-3}
+    depends_on:
+      oracle-db-bootstrap:
+        condition: service_completed_successfully
     networks:
       - moonwitness
     restart: unless-stopped
@@ -64,7 +91,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-
   # ARSY backend — Fastify application
   arsy:
     build:
@@ -133,6 +159,7 @@ services:
       HEADQUARTER_SESSION_SECRET: ${HEADQUARTER_SESSION_SECRET:-}
       HEADQUARTER_PUBLIC_ORIGIN: ${HEADQUARTER_PUBLIC_ORIGIN:-http://localhost:3000}
       HEADQUARTER_TRUSTED_PROXY_HOPS: ${HEADQUARTER_TRUSTED_PROXY_HOPS:-0}
+      HEADQUARTER_TRUSTED_PROXY_SECRET: ${HEADQUARTER_TRUSTED_PROXY_SECRET:-}
     ports:
       - '127.0.0.1:${HEADQUARTER_PORT:-3000}:3000'
     depends_on:
