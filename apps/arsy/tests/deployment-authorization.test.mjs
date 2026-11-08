@@ -130,6 +130,29 @@ function dependencies(pool, { policyProvider, grantKeys, approvalKeys } = {}) {
   }
 }
 
+test('deployment policy timeout aborts evaluation, denies and persists an audit decision', async () => {
+  const pool = new FakePool()
+  let aborted = false
+  const result = await authorizeDeploymentOperation(
+    { operationId, ownerId, authenticatedActorId: actorId, now, policyTimeoutMs: 5 },
+    dependencies(pool, {
+      policyProvider: {
+        evaluate: async (_context, signal) => {
+          signal.addEventListener('abort', () => { aborted = true }, { once: true })
+          return await new Promise(() => {})
+        },
+      },
+    }),
+  )
+  assert.equal(result.allowed, false)
+  assert.deepEqual(result.reasonCodes, ['policy_timeout'])
+  assert.equal(aborted, true)
+  assert.equal(pool.decisions.at(-1).allowed, false)
+})
+
+
+
+
 test('deployment authorization denies when policy, signature verifier or capability is unavailable', async () => {
   const pool = new FakePool()
   const noPolicy = await authorizeDeploymentOperation(
