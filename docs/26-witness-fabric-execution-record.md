@@ -14,7 +14,7 @@ ARSY separately delivered an `EvidenceLedger`, a PostgreSQL adapter, and migrati
 
 ## Runtime integration addendum — 2026-11-08
 
-**Status:** Exact-head CI and PostgreSQL E2E verified on `115da8e480f04123d3eb8b58e4e52c2b500c3ab1`; PR #226 remains Draft pending independent security review.
+**Status:** Exact-head CI and PostgreSQL E2E verified on `115da8e480f04123d3eb8b58e4e52c2b500c3ab1`; PR #226 is Ready for review; independent security review remains pending.
 
 ### Implemented in the candidate branch
 
