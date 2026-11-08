@@ -6,12 +6,13 @@ MOONWITNESS is an evidence-first knowledge, intelligence, and operations ecosyst
 
 MOONWITNESS is the master product identity within the wider **GODPROMISE → EMPIRE OF THE LIGHT** narrative universe. **A-L-L-A-H.COM** is the intended unified public home. **ROCKSOUL** is a distinct creative/narrative identity and runtime direction. **E-ISP.ID** is the connectivity business identity. **RIOTWORKS** is the product and operating division within MOONWITNESS, associated with the initial creative-commerce workflow; it is not a competing master brand.
 
-> **Repository truth:** this monorepo currently has two canonical application workspaces—HEADQUARTER and ARSY. The wider product universe contains additional target application identities, but those are not all implemented or deployed here. See the [Universe & Product Architecture Registry](./docs/32-universe-and-product-architecture-registry.md).
+> **Repository truth:** this monorepo contains the HEADQUARTER and ARSY application workspaces plus standalone Go (AEGIS) and Python (ORACLE) runtimes. Their integration and production status are tracked independently; a service foundation is not a claim of complete infrastructure capability. See the [Universe & Product Architecture Registry](./docs/32-universe-and-product-architecture-registry.md).
 
 ## What this repository contains
 
 - `apps/headquarter` — Next.js human-facing command center and current prototype/demo experience.
-- `apps/arsy` — Fastify API/runtime, application orchestration, health/readiness, and bounded integrations.
+- `apps/arsy` — Fastify API/runtime, application orchestration, identity/policy boundary, health/readiness, and bounded integrations.
+- `apps/aegis` — standalone Go network-infrastructure runtime foundation; currently process health only, with no VPN/router/firewall operations or ARSY command integration.
 - `apps/oracle` — standalone Python/FastAPI deterministic computation service; intentionally outside the pnpm workspace and reached privately through ARSY.
 - `packages/*` — shared UI, contracts/types, policy, notifications, feature flags, assets, evidence, Divine research, and developer tooling.
 - `services/*` — legacy prototypes intentionally excluded from the pnpm workspace; not a second runtime ownership layer.
