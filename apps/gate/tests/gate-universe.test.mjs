@@ -22,6 +22,7 @@ test('gate universe experiences and portal contracts', async (t) => {
     assert.match(content, /http:\/\/localhost:3000/, 'Headquarter port must be 3000')
     assert.match(content, /http:\/\/localhost:3001/, 'Gate port must be 3001')
     assert.match(content, /http:\/\/localhost:3002/, 'Cockpit port must be 3002')
+    assert.match(content, /http:\/\/localhost:3003/, 'ID port must be 3003')
   })
 
   await t.test('UniverseCard renders proper accessibility attributes', () => {

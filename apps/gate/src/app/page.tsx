@@ -41,9 +41,10 @@ const EXPERIENCES: UniverseExperience[] = [
     name: 'MOONWITNESS ID',
     classification: 'Core Application',
     role: 'Human and service identity experience, account and session management, access visibility.',
-    status: 'target',
-    statusLabel: 'Target Experience',
-    boundary: 'Shared Identity / Auth Authority',
+    status: 'active',
+    statusLabel: 'Operational Authority',
+    boundary: 'apps/id — Identity & Auth Authority',
+    href: 'http://localhost:3003',
   },
   {
     id: 'observatory',
