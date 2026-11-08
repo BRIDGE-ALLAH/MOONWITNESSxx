@@ -1,18 +1,21 @@
+use std::env;
+
 use atlas::{
     database,
     engine::{self, EngineWriteRequest},
-    radius::{self, GroupPolicyItem, GroupPolicyWriteRequest, NasWriteRequest, SubscriberWriteRequest},
+    radius::{
+        self, GroupPolicyItem, GroupPolicyWriteRequest, NasWriteRequest, SubscriberWriteRequest,
+    },
     radius_db,
 };
-use sqlx::{Row, mysql::MySqlPoolOptions};
-use std::env;
+use sqlx::{mysql::MySqlPoolOptions, Row};
 
 const SEEDED_RADIUS_ID: &str = "01K9Z0J8A1B2C3D4E5F6G7H8J9";
 
 #[tokio::test]
-async fn mariadb_migrations_seed_and_engine_crud_are_persistent() {
-    if env::var("DATABASE_URL").is_err() {
-        eprintln!("Skipping MariaDB persistence test: DATABASE_URL is not configured");
+async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
+    if env::var("DATABASE_URL").is_err() || env::var("RADIUS_DATABASE_URL").is_err() {
+        eprintln!("Skipping MariaDB persistence test: database URLs are not configured");
         return;
     }
 
@@ -125,7 +128,9 @@ async fn mariadb_migrations_seed_and_engine_crud_are_persistent() {
         description: Some("Isolated integration-test NAS".to_string()),
     };
     assert!(radius::validate_nas(&nas_input).is_ok());
-    let nas = radius::create_nas(&nas_input).await.expect("create NAS client");
+    let nas = radius::create_nas(&nas_input)
+        .await
+        .expect("create NAS client");
     assert!(nas.secret_configured);
     let updated_nas = NasWriteRequest {
         description: Some("Updated integration-test NAS".to_string()),
@@ -135,7 +140,10 @@ async fn mariadb_migrations_seed_and_engine_crud_are_persistent() {
         .await
         .expect("update NAS client")
         .expect("NAS client remains present");
-    assert_eq!(nas.description.as_deref(), Some("Updated integration-test NAS"));
+    assert_eq!(
+        nas.description.as_deref(),
+        Some("Updated integration-test NAS")
+    );
     assert!(radius::delete_nas(nas.id).await.expect("delete NAS client"));
 
     let subscriber = SubscriberWriteRequest {
@@ -149,7 +157,11 @@ async fn mariadb_migrations_seed_and_engine_crud_are_persistent() {
         .await
         .expect("persist bcrypt subscriber credential");
     let subscribers = radius::list_subscribers().await.expect("list subscribers");
-    assert!(subscribers.iter().any(|item| item.username == subscriber.username));
+    assert!(
+        subscribers
+            .iter()
+            .any(|item| item.username == subscriber.username)
+    );
     let (attribute, stored_value): (String, String) =
         sqlx::query_as("SELECT attribute, value FROM radcheck WHERE username = ?")
             .bind(&subscriber.username)
@@ -158,9 +170,11 @@ async fn mariadb_migrations_seed_and_engine_crud_are_persistent() {
             .expect("read stored subscriber credential");
     assert_eq!(attribute, "Crypt-Password");
     assert_ne!(stored_value, subscriber.password);
-    assert!(radius::delete_subscriber(&subscriber.username)
-        .await
-        .expect("delete subscriber"));
+    assert!(
+        radius::delete_subscriber(&subscriber.username)
+            .await
+            .expect("delete subscriber")
+    );
 
     let group_policy = GroupPolicyWriteRequest {
         groupname: "ci-integration-policy".to_string(),
@@ -177,12 +191,16 @@ async fn mariadb_migrations_seed_and_engine_crud_are_persistent() {
     let policies = radius::list_group_policies()
         .await
         .expect("list RADIUS group policies");
-    assert!(policies.iter().any(|item| {
-        item.groupname == "ci-integration-policy" && item.value == "10M/10M"
-    }));
-    assert!(radius::delete_group_policy("ci-integration-policy")
-        .await
-        .expect("delete RADIUS group policy"));
+    assert!(
+        policies.iter().any(|item| {
+            item.groupname == "ci-integration-policy" && item.value == "10M/10M"
+        })
+    );
+    assert!(
+        radius::delete_group_policy("ci-integration-policy")
+            .await
+            .expect("delete RADIUS group policy")
+    );
 
     let summary = radius::accounting_summary()
         .await
