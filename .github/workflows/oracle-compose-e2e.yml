@@ -64,7 +64,7 @@ jobs:
         if: failure()
         run: |
           docker compose --env-file .env.docker -f docker-compose.yml \
-            logs --no-color --tail=200 postgres redis oracle arsy
+            logs --no-color --tail=200 postgres redis oracle-db-bootstrap oracle-migrate oracle arsy
 
       - name: Tear down isolated stack and test data
         if: always()
