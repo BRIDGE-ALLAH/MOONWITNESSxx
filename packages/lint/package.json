@@ -4,14 +4,17 @@
   "private": true,
   "description": "RIOTWORKS lint configuration — shared ESLint config",
   "scripts": {
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint index.js --max-warnings 0"
+    "lint": "eslint index.js --max-warnings 0"
   },
   "dependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@eslint/js": "^10.0.1",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^10.14.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-unicorn": "^56.0.0"
+    "eslint-plugin-unicorn": "^56.0.0",
+    "globals": "^15.15.0"
   },
   "main": "index.js"
 }

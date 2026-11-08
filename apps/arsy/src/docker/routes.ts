@@ -82,27 +82,24 @@ export function registerDockerRoutes(
     const name = typeof body?.name === 'string' ? body.name.trim() : ''
     const kind = body?.kind
     if (!name || name.length > 80 || !['local', 'remote'].includes(String(kind))) {
-      return reply
-        .code(400)
-        .send({
-          error: {
-            code: 'INVALID_DOCKER_SERVER',
-            message: 'Name and a supported connection kind are required.',
-          },
-        })
+      return reply.code(400).send({
+        error: {
+          code: 'INVALID_DOCKER_SERVER',
+          message: 'Name and a supported connection kind are required.',
+        },
+      })
     }
 
     let connection: DockerConnection
     let endpointUrl: string | null = null
     let encryptedCredentials: string | null = null
-    let remoteAddresses: Array<{ address: string; family: number }> = []
     try {
       if (kind === 'local') {
         connection = localConnection(env)
       } else {
         const endpoint = await resolveRemoteDockerEndpoint(String(body?.endpointUrl ?? ''), env)
         endpointUrl = endpoint.url.origin
-        remoteAddresses = endpoint.addresses
+        const remoteAddresses: Array<{ address: string; family: number }> = endpoint.addresses
         const tls = validateTlsCredentials(body?.tls)
         encryptedCredentials = encryptDockerCredentials(tls, env)
         connection = { kind: 'remote', endpointUrl, addresses: remoteAddresses, tls }
@@ -110,14 +107,12 @@ export function registerDockerRoutes(
       const info = await getDockerInfo(connection)
       if (!info.ServerVersion) throw new Error('Docker Engine did not return a server version')
     } catch (error) {
-      return reply
-        .code(400)
-        .send({
-          error: {
-            code: 'DOCKER_CONNECTION_FAILED',
-            message: error instanceof Error ? error.message : 'Docker connection failed.',
-          },
-        })
+      return reply.code(400).send({
+        error: {
+          code: 'DOCKER_CONNECTION_FAILED',
+          message: error instanceof Error ? error.message : 'Docker connection failed.',
+        },
+      })
     }
 
     const id = randomUUID()
@@ -164,14 +159,12 @@ export function registerDockerRoutes(
         },
       }
     } catch {
-      return reply
-        .code(502)
-        .send({
-          error: {
-            code: 'DOCKER_ENGINE_UNAVAILABLE',
-            message: 'Docker Engine is unavailable or rejected the connection.',
-          },
-        })
+      return reply.code(502).send({
+        error: {
+          code: 'DOCKER_ENGINE_UNAVAILABLE',
+          message: 'Docker Engine is unavailable or rejected the connection.',
+        },
+      })
     }
   })
 
@@ -190,14 +183,12 @@ export function registerDockerRoutes(
       const containers = await listDockerContainers(await connectionFor(row, env))
       return { data: { containers, truncated: containers.length === 100 } }
     } catch {
-      return reply
-        .code(502)
-        .send({
-          error: {
-            code: 'DOCKER_ENGINE_UNAVAILABLE',
-            message: 'Docker container inventory is unavailable.',
-          },
-        })
+      return reply.code(502).send({
+        error: {
+          code: 'DOCKER_ENGINE_UNAVAILABLE',
+          message: 'Docker container inventory is unavailable.',
+        },
+      })
     }
   })
 
@@ -224,14 +215,12 @@ export function registerDockerRoutes(
         if (error instanceof DockerEngineResponseError && error.statusCode === 404) {
           return reply.code(404).send({ error: { code: 'DOCKER_CONTAINER_NOT_FOUND' } })
         }
-        return reply
-          .code(502)
-          .send({
-            error: {
-              code: 'DOCKER_STATS_UNAVAILABLE',
-              message: 'Container runtime telemetry is unavailable.',
-            },
-          })
+        return reply.code(502).send({
+          error: {
+            code: 'DOCKER_STATS_UNAVAILABLE',
+            message: 'Container runtime telemetry is unavailable.',
+          },
+        })
       }
     }
   )
@@ -256,11 +245,9 @@ export function registerDockerRoutes(
         const logs = await getDockerContainerLogs(await connectionFor(row, env), containerId)
         return { data: { containerId, logs, tail: 200 } }
       } catch {
-        return reply
-          .code(502)
-          .send({
-            error: { code: 'DOCKER_LOGS_UNAVAILABLE', message: 'Container logs are unavailable.' },
-          })
+        return reply.code(502).send({
+          error: { code: 'DOCKER_LOGS_UNAVAILABLE', message: 'Container logs are unavailable.' },
+        })
       }
     }
   )

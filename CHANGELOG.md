@@ -4,6 +4,11 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- Restored the workspace ESLint quality gate after the ESLint v10 bump removed legacy `.eslintrc`/`ESLINT_USE_FLAT_CONFIG` support: migrated `@riotworks/lint`, ARSY, COCKPIT, Gate, ID and UI to flat config (`eslint.config.js`) backed by a shared FlatCompat wrapper, and Headquarter to native `eslint-config-next@16` flat config.
+- Removed dead `remoteAddresses` initializer in the ARSY Docker server-connect route and dead `status`/`latency` initializers in COCKPIT frontend telemetry, surfaced by the ESLint v10 `no-useless-assignment` recommended rule.
+
 ## [1.2.0] - 2026-11-08
 
 ### Added
