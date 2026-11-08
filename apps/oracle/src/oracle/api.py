@@ -48,9 +48,7 @@ def _to_job_view(record: JobRecord) -> JobView:
 def create_app(settings: Settings | None = None) -> FastAPI:
     config = settings or Settings.from_env()
     config.validate()
-    coordinator = (
-        PostgresJobCoordinator(config) if config.durable_jobs else JobCoordinator(config)
-    )
+    coordinator = PostgresJobCoordinator(config) if config.durable_jobs else JobCoordinator(config)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
