@@ -13,8 +13,10 @@ MIGRATIONS_DIR = Path(__file__).resolve().parent.parent.parent / "migrations"
 
 
 async def apply_migrations(database_url: str | None = None) -> None:
-    dsn = database_url or os.environ.get("ORACLE_MIGRATION_DATABASE_URL") or os.environ.get(
-        "ORACLE_DATABASE_URL"
+    dsn = (
+        database_url
+        or os.environ.get("ORACLE_MIGRATION_DATABASE_URL")
+        or os.environ.get("ORACLE_DATABASE_URL")
     )
     if not dsn:
         raise RuntimeError("ORACLE_MIGRATION_DATABASE_URL is required")
