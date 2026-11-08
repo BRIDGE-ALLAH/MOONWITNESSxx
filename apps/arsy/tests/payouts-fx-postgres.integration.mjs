@@ -74,6 +74,27 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
       evidenceCapturedAt: now,
       evidenceSummary: 'Synthetic fixture representing a pending payout line.',
     }
+    const unverifiedChannel = await channels.create(ownerId, ownerId, {
+      channelKey: `unverified-${randomUUID()}`,
+      displayName: 'Unverified payout channel fixture',
+      countryCode: 'ID',
+      accountEligibility: 'unknown',
+      payoutRequirements: {},
+      listingRequirements: {},
+      payoutSetupStatus: 'unknown',
+      capability: 'C1',
+      grantedScopes: [],
+      quotaNotes: {},
+      channelStatus: 'active',
+      evidence: [],
+    })
+    const blockedPayout = await payouts.create(ownerId, ownerId, {
+      ...payoutInput,
+      channelId: unverifiedChannel.id,
+      idempotencyKey: `blocked-payout-${randomUUID()}`,
+    })
+    assert.equal(blockedPayout, null, 'unverified account and payout evidence must block payout recording')
+
     const created = await payouts.create(ownerId, ownerId, payoutInput)
     assert.ok(created)
     assert.equal(created.payout.status, 'pending')
