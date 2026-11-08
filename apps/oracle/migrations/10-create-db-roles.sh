@@ -17,7 +17,7 @@ ALTER ROLE oracle_migrator PASSWORD :'oracle_migrator_password';
 ALTER ROLE oracle_app PASSWORD :'oracle_app_password';
 CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION oracle_migrator;
 ALTER SCHEMA oracle OWNER TO oracle_migrator;
-SELECT format('GRANT CONNECT ON DATABASE %I TO oracle_app', current_database()) \gexec
+SELECT format('GRANT CONNECT ON DATABASE %I TO oracle_migrator, oracle_app', current_database()) \gexec
 GRANT USAGE ON SCHEMA oracle TO oracle_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA oracle TO oracle_app;
 ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator IN SCHEMA oracle
