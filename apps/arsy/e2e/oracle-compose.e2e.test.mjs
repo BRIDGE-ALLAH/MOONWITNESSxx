@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { writeFileSync } from 'node:fs'
 import test from 'node:test'
 
 const baseUrl = (process.env.ARSY_E2E_BASE_URL ?? 'http://127.0.0.1:3001').replace(/\/$/, '')
@@ -64,7 +65,14 @@ test('real ARSY-to-ORACLE statistics job returns computed result and provenance'
     evidence: [{ ref: 'witness:e2e:oracle-compose', relation: 'wasDerivedFrom' }],
   }
 
-  const job = await submitAndWait(payload, 'oracle-compose-statistics-001')
+  const idempotencyKey = 'oracle-compose-statistics-001'
+  const job = await submitAndWait(payload, idempotencyKey)
+  if (process.env.ORACLE_E2E_PERSISTENCE_REPORT) {
+    writeFileSync(
+      process.env.ORACLE_E2E_PERSISTENCE_REPORT,
+      JSON.stringify({ jobId: job.job_id, idempotencyKey, payload }),
+    )
+  }
 
   assert.equal(job.task_type, 'statistics.describe')
   assert.equal(job.status, 'succeeded')
@@ -78,7 +86,7 @@ test('real ARSY-to-ORACLE statistics job returns computed result and provenance'
 
   const replayResponse = await fetch(baseUrl + '/api/v1/oracle/jobs', {
     method: 'POST',
-    headers: { ...headers, 'idempotency-key': 'oracle-compose-statistics-001' },
+    headers: { ...headers, 'idempotency-key': idempotencyKey },
     body: JSON.stringify(payload),
     signal: AbortSignal.timeout(5_000),
   })
