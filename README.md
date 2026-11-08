@@ -33,6 +33,7 @@ This is a product catalog, not a statement that nine apps exist in the current w
 
 - HEADQUARTER is a Next.js prototype. Demo/sample data must not be mistaken for live production data.
 - ARSY is the canonical Fastify backend application. It owns HTTP lifecycle and the central application/API authority.
+- AEGIS is a standalone Go runtime foundation. Phase 1 exposes process health only; ARSY command authentication and network provisioning adapters are not implemented.
 - ORACLE provides bounded deterministic analysis behind ARSY; Stage 1 job/idempotency state is process-memory only, with no durable queue/job persistence or production readiness claim.
 - The authenticated Docker connector is deliberately read-only and bounded; it does not provide container start/stop/exec/deploy or production deployment management.
 - WITNESS FABRIC, Divine research tooling, repository automation, and developer-experience capabilities have implementation evidence in the repository.
@@ -48,6 +49,9 @@ Requirements: Node.js 22+ (CI uses Node.js 24) and pnpm 12.16.1 as pinned in the
 pnpm install
 pnpm dev:headquarter
 pnpm dev:arsy
+
+# AEGIS is a standalone Go module, not a pnpm package:
+cd apps/aegis && go test -race ./... && go run ./cmd/aegis
 ```
 
 Useful validation commands:
