@@ -16,6 +16,7 @@ import { TelemetryVisualizer } from '../components/TelemetryVisualizer'
 import { GateDaemonBridgePanel } from '../components/GateDaemonBridgePanel'
 import { PlaybookPipelineRunner } from '../components/PlaybookPipelineRunner'
 import { WindowsMaintenanceSuite } from '../components/WindowsMaintenanceSuite'
+import { WindowsAdvancedSuite } from '../components/WindowsAdvancedSuite'
 import type { CockpitSnapshot, SuggestedAction } from '../lib/agiCopilot'
 import {
   fetchCockpitTelemetry,
@@ -463,6 +464,8 @@ export default function CockpitDashboard() {
         </div>
 
         <WindowsMaintenanceSuite />
+
+        <WindowsAdvancedSuite />
 
         <div>
           <div className="mb-3 flex items-center justify-between">
