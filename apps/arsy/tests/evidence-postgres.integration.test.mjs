@@ -38,6 +38,13 @@ test('authenticated ARSY evidence API persists, scopes and verifies append-only 
     env: { ARSY_OPERATOR_ID: otherOwnerId, ARSY_OPERATOR_TOKEN: otherToken },
   })
 
+  const replicaPool = new Pool({ connectionString: databaseUrl, max: 2 })
+  const replicaApp = createApp({
+    databasePool: replicaPool,
+    logger: false,
+    env: { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token },
+  })
+
   const eventInput = {
     id: `event-${randomUUID()}`,
     kind: 'observation.recorded',
@@ -109,6 +116,19 @@ test('authenticated ARSY evidence API persists, scopes and verifies append-only 
     )
     await assert.rejects(pool.query('TRUNCATE TABLE arsy_evidence_events'), /append-only/)
 
+    const parallelInput = {
+      ...eventInput,
+      id: `parallel-event-${randomUUID()}`,
+      payload: { content: { source: 'concurrent-identical-retry' } },
+    }
+    const [parallelA, parallelB] = await Promise.all([
+      app.inject({ method: 'POST', url: eventsUrl, headers, payload: parallelInput }),
+      replicaApp.inject({ method: 'POST', url: eventsUrl, headers, payload: parallelInput }),
+    ])
+    assert.deepEqual([parallelA.statusCode, parallelB.statusCode].sort(), [200, 201])
+    assert.equal(parallelA.json().data.event.hash, parallelB.json().data.event.hash)
+    assert.equal(parallelA.json().data.event.hash, (await app.inject({ method: 'GET', url: eventsUrl, headers })).json().data.events[1].hash)
+
     const otherOwnerRead = await otherApp.inject({ method: 'GET', url: eventsUrl, headers: otherHeaders })
     assert.equal(otherOwnerRead.statusCode, 200)
     assert.equal(otherOwnerRead.json().data.events.length, 0)
@@ -122,7 +142,7 @@ test('authenticated ARSY evidence API persists, scopes and verifies append-only 
     assert.equal(otherOwnerWrite.statusCode, 201, otherOwnerWrite.body)
 
     const originalOwnerRead = await app.inject({ method: 'GET', url: eventsUrl, headers })
-    assert.equal(originalOwnerRead.json().data.events.length, 1)
+    assert.equal(originalOwnerRead.json().data.events.length, 2)
 
     const staleStore = new PostgresEvidenceStore(pool, ownerId)
     await assert.rejects(
@@ -135,6 +155,7 @@ test('authenticated ARSY evidence API persists, scopes and verifies append-only 
       /stream head changed/,
     )
   } finally {
+    await replicaApp.close()
     await otherApp.close()
     await app.close()
   }
@@ -148,7 +169,7 @@ test('authenticated ARSY evidence API persists, scopes and verifies append-only 
   try {
     const afterRestart = await restartedApp.inject({ method: 'GET', url: eventsUrl, headers })
     assert.equal(afterRestart.statusCode, 200, afterRestart.body)
-    assert.equal(afterRestart.json().data.events.length, 1)
+    assert.equal(afterRestart.json().data.events.length, 2)
     assert.equal(afterRestart.json().data.events[0].actorId, ownerId)
     const afterRestartVerify = await restartedApp.inject({
       method: 'GET',
