@@ -98,6 +98,8 @@ Both routes are protected by ARSY's existing operator authentication boundary. A
 
 The Compose example uses `ORACLE_BASE_URL=http://oracle:8010`, `ORACLE_SERVICE_TOKEN`, and `ORACLE_REQUEST_TIMEOUT_MS`. The sample token in `.env.docker` is for local development only; replace it before any shared or non-local environment. Do not expose ORACLE through public ingress or a host-published port.
 
+The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, ORACLE, and ARSY as real containers, submits both supported analysis tasks through ARSY, checks their computed results and provenance, and verifies idempotency replay. It uses an ephemeral CI operator token and removes the isolated Compose volumes after the run. This verifies service-to-service execution; it does not make Stage 1 jobs durable or prove production readiness.
+
 ## Stage 1 safety and operational limitations
 
 - Jobs and idempotency keys live in process memory only. Restarting the service loses queued/running jobs, results, and idempotency history.
