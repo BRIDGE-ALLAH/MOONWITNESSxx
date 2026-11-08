@@ -22,6 +22,7 @@ export interface ClaimedDeploymentOutboxMessage extends DeploymentOutboxMessage 
 
 export interface ClaimOutboxInput {
   workerId: string
+  ownerId?: string
   limit: number
   leaseSeconds: number
 }
@@ -83,6 +84,7 @@ export async function claimDeploymentOutbox(
   input: ClaimOutboxInput,
 ): Promise<ClaimedDeploymentOutboxMessage[]> {
   const workerId = requiredText(input.workerId, 'workerId', 128)
+  const ownerId = input.ownerId === undefined ? null : requiredText(input.ownerId, 'ownerId', 128)
   if (!Number.isInteger(input.limit) || input.limit < 1 || input.limit > 50) {
     throw new TypeError('Outbox claim limit must be an integer between 1 and 50')
   }
@@ -112,6 +114,7 @@ export async function claimDeploymentOutbox(
          AND available_at <= now()
          AND attempt_count < max_attempts
          AND (locked_until IS NULL OR locked_until <= now())
+         AND ($4::text IS NULL OR owner_id = $4)
        ORDER BY available_at, created_at, id
        LIMIT $1
        FOR UPDATE SKIP LOCKED
@@ -134,7 +137,7 @@ export async function claimDeploymentOutbox(
        lease_token, locked_until
      FROM claimed
      ORDER BY created_at, id`,
-    [input.limit, workerId, input.leaseSeconds],
+    [input.limit, workerId, input.leaseSeconds, ownerId],
   )
 
   return queryRows<ClaimedRow>(result).map((row) => {
