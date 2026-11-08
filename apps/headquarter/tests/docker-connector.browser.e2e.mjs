@@ -53,6 +53,12 @@ test('operator registers a real Docker Engine and reads persisted inventory thro
 
     // The PostgreSQL service started by this workflow is itself a real container
     // visible to the runner Docker daemon, so the UI must show real inventory.
+    const monitorButtons = page.getByRole('button', { name: 'Monitor', exact: true })
+    await monitorButtons.first().waitFor({ timeout: 30_000 })
+    await monitorButtons.first().click()
+    await page.getByRole('heading', { name: 'Runtime telemetry' }).waitFor({ timeout: 30_000 })
+    await page.getByText(/Observed by Docker Engine:/).waitFor({ timeout: 30_000 })
+
     const logButtons = page.getByRole('button', { name: 'Logs', exact: true })
     await logButtons.first().waitFor({ timeout: 30_000 })
     await logButtons.first().click()
