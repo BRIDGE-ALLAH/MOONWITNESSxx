@@ -122,3 +122,17 @@ This revalidation used GitHub repository metadata, mainline files, PR/issue stat
 A local full clone could not be obtained in this execution environment because outbound DNS/network access to GitHub was unavailable. Therefore local `pnpm install`, lint, test, typecheck, build, Docker execution and manual browser/accessibility checks were **NOT RUN here**. The successful GitHub Actions jobs above are the available CI evidence; they are not represented as local test execution.
 
 No production credentials were inspected, no production infrastructure was changed, and no production deployment, stable release, tag mutation or database mutation was performed.
+
+
+## Shared login-throttle integration gate — 2026-11-09
+
+A source and workflow audit found a verification gap in the shared login-throttle implementation:
+
+- Main contains the owner-scoped PostgreSQL limiter (apps/arsy/src/auth/login-attempts.ts), migration 006_shared_login_attempts.sql, the authenticated Headquarter shared-limit client, and production fail-closed behavior.
+- The integration test apps/arsy/tests/login-throttle-postgres.integration.test.mjs is substantive: it exercises two independent ARSY instances, the six-attempt rejection, persistence after an instance restart, parallel attempts, database-time window expiry, success reset, owner isolation, and bounded stale-bucket pruning.
+- Before this follow-up, Repository CI had no PostgreSQL service and did not set TEST_DATABASE_URL. The integration test's explicit skip condition therefore allowed it to be skipped in the existing broad ARSY test run. The previous green Repository CI must not be interpreted as proof that this PostgreSQL integration scenario ran.
+- Follow-up PR #246 adds a dedicated ephemeral PostgreSQL 16 service job and invokes this exact integration test with TEST_DATABASE_URL. Exact-head CI is still required before treating the new gate as passed.
+
+Issue #123 remains open for external deployment acceptance. A production-equivalent ingress must strip client-supplied signed-IP headers, derive the client address from the accepted socket peer, sign the canonical value with the configured HMAC secret, and block direct public access to Headquarter. Until that ingress contract is tested, production must fail closed when trusted identity evidence or the shared limiter is unavailable.
+
+No production database migration or deployment was performed.
