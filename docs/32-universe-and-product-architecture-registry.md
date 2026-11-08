@@ -100,7 +100,7 @@ Applications are user-facing products. Platforms and services provide reusable c
 
 The current GitHub work records ATLAS as a proposed standalone control-plane application in [Issue #155](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/155), and AEGIS as a proposed infrastructure execution foundation in [Issue #151](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/151).
 
-Important unresolved stack conflict: Issue #155 proposes MariaDB for ATLAS operational storage and ClickHouse for log analytics. The previously selected MOONWITNESS direction uses PostgreSQL as the primary transactional database, Redis for cache/transient coordination, VictoriaMetrics for metrics, and VictoriaLogs for logs; ClickHouse and DuckDB were rejected in that architecture discussion. **Do not silently treat MariaDB or ClickHouse as adopted.** Resolve the ATLAS storage/observability proposal through an explicit architecture decision before implementing or provisioning those dependencies.
+Resolved stack decision: ATLAS uses PostgreSQL for control-plane metadata and a separate PostgreSQL database/role for FreeRADIUS SQL persistence. Redis remains cache/transient coordination, VictoriaMetrics remains metrics storage, and VictoriaLogs remains log storage/search. MariaDB/MySQL, ClickHouse, and DuckDB are not part of the adopted ATLAS stack. The decision and operational boundaries are recorded in [ADR 0001 — ATLAS PostgreSQL Storage](adr/0001-atlas-postgresql-storage.md). The implementation is tracked in [PR #156](https://github.com/BRIDGE-ALLAH/MOONWITNESS/pull/156) and is not production-ready until its PostgreSQL integration, FreeRADIUS driver, Compose smoke tests, and repository CI are verified.
 
 ARSY remains the identity, authorization, policy, approval, orchestration, and canonical audit authority. ATLAS controls domain infrastructure configuration. AEGIS executes narrowly scoped infrastructure actions. DNS, RADIUS, VPN, firewall, metrics, and log engines retain their own runtime boundaries.
 
@@ -226,7 +226,7 @@ Public web entry points may expose only deliberately designed frontends and API 
 1. **Repository foundation:** keep the existing mainline reproducible and secure; follow the current execution order in docs/23 and dated revalidation in docs/28.
 2. **HEADQUARTER + ARSY:** finish the existing vertical slice and remove prototype/data-truth gaps before adding unrelated applications.
 3. **Persistence and Base Platform:** reconcile old ORM PR material against current main; implement only after real PostgreSQL/SQLite adapter contracts, authorization, and recovery tests are proven.
-4. **ATLAS / AEGIS:** resolve the MariaDB/ClickHouse versus PostgreSQL/VictoriaMetrics/VictoriaLogs conflict before implementation; preserve ARSY authority and bounded execution.
+4. **ATLAS / AEGIS:** complete the PostgreSQL-based ATLAS implementation under ADR 0001; verify separate database roles, FreeRADIUS PostgreSQL integration, live API-to-RADIUS authentication, and bounded ARSY/AEGIS execution contracts.
 5. **Knowledge and Observatory:** define source, provenance, licensing, retrieval, and review contracts before creating a separate frontend.
 6. **GATE / DOCK / ID / MOONSKY / HARBOR / E-ISP / COCKPIT:** establish independent product requirements, identity, API contracts, and deployment boundaries before adding workspace apps.
 7. **ROCKSOUL.ID:** plan brand/domain activation only after domain purchase and owner verification.
