@@ -113,8 +113,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return HealthResponse(status="ok")
 
     @app.get("/health/ready", response_model=ReadinessResponse, tags=["health"])
-    async def ready() -> ReadinessResponse:
+    async def ready(response: Response) -> ReadinessResponse:
         snapshot = await coordinator.readiness()
+        response.status_code = (
+            status.HTTP_200_OK if snapshot["ready"] else status.HTTP_503_SERVICE_UNAVAILABLE
+        )
         return ReadinessResponse(
             ready=snapshot["ready"],
             queue_depth=snapshot["queue_depth"],
