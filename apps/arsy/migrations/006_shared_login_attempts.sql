@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS arsy_login_attempt_buckets (
   owner_id text NOT NULL,
   bucket_key text NOT NULL,
   window_started_at timestamptz NOT NULL,
-  failure_count integer NOT NULL CHECK (failure_count >= 0),
+  attempt_count integer NOT NULL CHECK (attempt_count BETWEEN 0 AND 5),
   blocked_until timestamptz,
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (owner_id, bucket_key),
