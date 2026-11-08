@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS arsy_listings (
 ALTER TABLE arsy_financial_events DROP CONSTRAINT IF EXISTS arsy_financial_events_owner_id_listing_id_fkey;
 ALTER TABLE arsy_payouts DROP CONSTRAINT IF EXISTS arsy_payouts_channel_id_fkey;
 
-DO $
+DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'arsy_financial_events_owner_listing_fk' AND conrelid = 'arsy_financial_events'::regclass) THEN
     ALTER TABLE arsy_financial_events ADD CONSTRAINT arsy_financial_events_owner_listing_fk
@@ -113,7 +113,7 @@ BEGIN
       FOREIGN KEY (channel_id) REFERENCES arsy_channels (id);
   END IF;
 END
-$;
+$$;
 
 CREATE INDEX IF NOT EXISTS arsy_listings_owner_status_idx
   ON arsy_listings (owner_id, status, updated_at DESC);
