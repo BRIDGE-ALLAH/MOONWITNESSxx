@@ -14,7 +14,8 @@ test('authenticated ARSY evidence API persists, scopes and verifies append-only 
 }, async () => {
   const migrationPool = new Pool({ connectionString: databaseUrl, max: 1 })
   const migration = await readFile(new URL('../migrations/001_arsy_evidence_events.sql', import.meta.url), 'utf8')
-  await applyTestMigrations(migrationPool, [migration, migration])
+  const appendOnlyMigration = await readFile(new URL('../migrations/007_arsy_evidence_events_append_only.sql', import.meta.url), 'utf8')
+  await applyTestMigrations(migrationPool, [migration, appendOnlyMigration, migration, appendOnlyMigration])
   await migrationPool.end()
 
   const ownerId = `evidence-owner-${randomUUID()}`
@@ -98,6 +99,15 @@ test('authenticated ARSY evidence API persists, scopes and verifies append-only 
     assert.equal(persisted.rowCount, 1)
     assert.equal(persisted.rows[0].actor_id, ownerId)
     assert.notEqual(persisted.rows[0].aggregate_id, aggregateId)
+    await assert.rejects(
+      pool.query('UPDATE arsy_evidence_events SET actor_id = $1 WHERE event_hash = $2', ['tampered', event.hash]),
+      /append-only/,
+    )
+    await assert.rejects(
+      pool.query('DELETE FROM arsy_evidence_events WHERE event_hash = $1', [event.hash]),
+      /append-only/,
+    )
+    await assert.rejects(pool.query('TRUNCATE TABLE arsy_evidence_events'), /append-only/)
 
     const otherOwnerRead = await otherApp.inject({ method: 'GET', url: eventsUrl, headers: otherHeaders })
     assert.equal(otherOwnerRead.statusCode, 200)
