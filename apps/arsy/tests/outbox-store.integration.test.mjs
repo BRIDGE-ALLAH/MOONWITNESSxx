@@ -49,7 +49,7 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
       idempotencyKey: `outbox-integration-${suffix}-${randomUUID()}`,
     })
 
-    const [first, second] = await Promise.all([
+    await Promise.all([
       createOperation('concurrent-a'),
       createOperation('concurrent-b'),
     ])
