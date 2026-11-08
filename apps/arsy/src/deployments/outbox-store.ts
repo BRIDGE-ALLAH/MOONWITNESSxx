@@ -55,7 +55,7 @@ function requiredWorkerId(value: string): string {
   return value
 }
 
-function boundedInteger(value: number, fallback: number, min: number, max: number, field: string): number {
+function boundedInteger(value: number | undefined, fallback: number, min: number, max: number, field: string): number {
   const candidate = value ?? fallback
   if (!Number.isInteger(candidate) || candidate < min || candidate > max) {
     throw new TypeError(`${field} must be an integer between ${min} and ${max}`)
