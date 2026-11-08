@@ -24,6 +24,9 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
             migration_path = Path(__file__).parents[1] / "migrations" / "001_oracle_jobs.sql"
             migration = migration_path.read_text()
             await admin.execute(migration)
+            await admin.execute(
+                "DELETE FROM oracle.jobs WHERE idempotency_key = 'oracle-role-positive'"
+            )
             owner = await admin.fetchval(
                 "SELECT tableowner FROM pg_tables "
                 "WHERE schemaname = 'oracle' AND tablename = 'jobs'"
@@ -98,7 +101,11 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
             with pytest.raises(asyncpg.InsufficientPrivilegeError):
                 await app.execute("CREATE SCHEMA oracle_app_must_not_create")
             with pytest.raises(asyncpg.InsufficientPrivilegeError):
+                await app.execute("CREATE TABLE oracle.app_must_not_create (id integer)")
+            with pytest.raises(asyncpg.InsufficientPrivilegeError):
                 await app.execute("ALTER TABLE oracle.jobs ADD COLUMN forbidden text")
+            with pytest.raises(asyncpg.InsufficientPrivilegeError):
+                await app.execute("DROP TABLE oracle.jobs")
         finally:
             await app.close()
 
