@@ -82,15 +82,17 @@ async def prepare_database() -> str:
 
     admin = await asyncpg.connect(TEST_DATABASE_URL)
     try:
-        await admin.execute(
-            "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA oracle TO oracle_app_test"
-        )
         await admin.execute("DELETE FROM oracle.jobs")
         migration_history_writable = await admin.fetchval(
             "SELECT has_table_privilege($1, 'oracle.schema_migrations', 'UPDATE')",
             APP_ROLE,
         )
         assert migration_history_writable is False
+        job_table_writable = await admin.fetchval(
+            "SELECT has_table_privilege($1, 'oracle.jobs', 'INSERT')",
+            APP_ROLE,
+        )
+        assert job_table_writable is True
         is_superuser = await admin.fetchval(
             "SELECT rolsuper FROM pg_roles WHERE rolname = $1",
             APP_ROLE,
