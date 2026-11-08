@@ -32,6 +32,19 @@ class FakePool {
   }
 }
 
+test('dispatcher reports bounded expired-lease dead letters', async () => {
+  const pool = new FakePool()
+  pool.reapRows = [{ id: 'expired-message' }]
+  pool.claimRows = []
+  const result = await dispatchDeploymentOutboxBatch(pool, {
+    workerId: 'worker-a',
+    limit: 1,
+    leaseSeconds: 30,
+    handlers: {},
+  })
+  assert.deepEqual(result, { claimed: 0, delivered: 0, retryScheduled: 0, deadLettered: 1, leaseLost: 0 })
+})
+
 test('dispatcher calls a registered handler and acknowledges its exact lease', async () => {
   const pool = new FakePool()
   let received
