@@ -1,0 +1,14 @@
+{
+  "name": "@riotworks/notifications",
+  "version": "0.0.0",
+  "private": true,
+  "description": "RIOTWORKS Notification System — Toasts, emails, portfolio alerts",
+  "main": "src/index.ts",
+  "scripts": {
+    "send:toast": "tsx src/index.ts --toast",
+    "send:email": "tsx src/index.ts --email"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}
