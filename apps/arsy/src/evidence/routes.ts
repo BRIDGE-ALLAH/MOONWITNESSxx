@@ -6,25 +6,32 @@ import { getArsyOperatorPrincipal } from '../auth/operator-token.ts'
 import { PostgresEvidenceStore } from './postgres-store.ts'
 
 const aggregateParams = z.object({
-  aggregateId: z.string().trim().min(1).max(128).regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/),
+  aggregateId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(128)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/),
 })
 
-const appendBody = z.object({
-  id: z.string().trim().min(1).max(128),
-  kind: z.enum([
-    'observation.recorded',
-    'claim.proposed',
-    'claim.supported',
-    'claim.contested',
-    'claim.superseded',
-    'decision.recorded',
-    'action.recorded',
-    'outcome.recorded',
-  ]),
-  occurredAt: z.string().datetime({ offset: true }),
-  payload: z.record(z.unknown()),
-  evidenceIds: z.array(z.string().trim().min(1).max(512)).max(100).optional(),
-}).strict()
+const appendBody = z
+  .object({
+    id: z.string().trim().min(1).max(128),
+    kind: z.enum([
+      'observation.recorded',
+      'claim.proposed',
+      'claim.supported',
+      'claim.contested',
+      'claim.superseded',
+      'decision.recorded',
+      'action.recorded',
+      'outcome.recorded',
+    ]),
+    occurredAt: z.string().datetime({ offset: true }),
+    payload: z.record(z.string(), z.unknown()),
+    evidenceIds: z.array(z.string().trim().min(1).max(512)).max(100).optional(),
+  })
+  .strict()
 
 function operatorScope(request: Parameters<typeof getArsyOperatorPrincipal>[0]): string | null {
   const principal = getArsyOperatorPrincipal(request)
@@ -45,7 +52,9 @@ export function registerEvidenceRoutes(app: FastifyInstance, pool: Pool): void {
     const aggregateId = parseAggregateId(request.params)
     const parsed = appendBody.safeParse(request.body)
     if (!aggregateId || !parsed.success) {
-      return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Evidence event input is invalid.' } })
+      return reply
+        .code(400)
+        .send({ error: { code: 'VALIDATION_ERROR', message: 'Evidence event input is invalid.' } })
     }
 
     const store = new PostgresEvidenceStore(pool, ownerId)
@@ -67,7 +76,9 @@ export function registerEvidenceRoutes(app: FastifyInstance, pool: Pool): void {
         return reply.code(409).send({ error: { code: 'EVIDENCE_EVENT_ID_CONFLICT' } })
       }
       if (message.includes('stream head changed')) {
-        return reply.code(409).send({ error: { code: 'EVIDENCE_STREAM_CONFLICT', retryable: true } })
+        return reply
+          .code(409)
+          .send({ error: { code: 'EVIDENCE_STREAM_CONFLICT', retryable: true } })
       }
       app.log.error({ err: error }, 'Evidence event append failed')
       return reply.code(503).send({ error: { code: 'EVIDENCE_STORE_UNAVAILABLE' } })
@@ -80,7 +91,9 @@ export function registerEvidenceRoutes(app: FastifyInstance, pool: Pool): void {
 
     const aggregateId = parseAggregateId(request.params)
     if (!aggregateId) {
-      return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Aggregate ID is invalid.' } })
+      return reply
+        .code(400)
+        .send({ error: { code: 'VALIDATION_ERROR', message: 'Aggregate ID is invalid.' } })
     }
 
     try {
@@ -98,7 +111,9 @@ export function registerEvidenceRoutes(app: FastifyInstance, pool: Pool): void {
 
     const aggregateId = parseAggregateId(request.params)
     if (!aggregateId) {
-      return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Aggregate ID is invalid.' } })
+      return reply
+        .code(400)
+        .send({ error: { code: 'VALIDATION_ERROR', message: 'Aggregate ID is invalid.' } })
     }
 
     try {

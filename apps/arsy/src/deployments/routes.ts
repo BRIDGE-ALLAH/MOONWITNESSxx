@@ -130,7 +130,7 @@ const createDeploymentSchema = z
   .object({
     dockerServerId: UUID,
     name: z.string().trim().min(1).max(80),
-    desiredConfig: z.record(z.unknown()).optional(),
+    desiredConfig: z.record(z.string(), z.unknown()).optional(),
   })
   .strict()
 

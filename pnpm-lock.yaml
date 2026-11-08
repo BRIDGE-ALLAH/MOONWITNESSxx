@@ -189,6 +189,9 @@ importers:
       '@riotworks/arsy-core':
         specifier: workspace:*
         version: link:../../packages/arsy-core
+      '@riotworks/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
       fastify:
         specifier: ^5.0.0
         version: 5.12.8
@@ -324,6 +327,9 @@ importers:
       '@riotworks/assets':
         specifier: workspace:*
         version: link:../../packages/assets
+      '@riotworks/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
       '@riotworks/ui':
         specifier: workspace:*
         version: link:../../packages/ui

@@ -15,6 +15,7 @@
   "dependencies": {
     "@fastify/rate-limit": "11.2.1",
     "@riotworks/arsy-core": "workspace:*",
+    "@riotworks/contract": "workspace:*",
     "fastify": "^5.0.0",
     "fastify-type-provider-zod": "^1.1.0",
     "zod": "^4.6.7",
