@@ -17,7 +17,7 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 - Workspace audit rejects unsafe glob patterns that could traverse outside the repository.
 
 ### Security
-- Keep ORACLE production mode blocked; durable job payload retention requires managed database access, storage encryption, backup/restore and operational controls.
+- Isolate the ORACLE runtime behind a dedicated non-owner PostgreSQL role; retain the production-mode gate until managed credentials, storage encryption, backup/restore and operational controls are verified.
 
 ## [1.0.0] - 2026-11-07
 
