@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { Pool } from 'pg'
 import { randomUUID } from 'node:crypto'
+import { applyTestMigrations } from './helpers/apply-migrations.mjs'
 import {
   createDeployment,
   createDeploymentOperation,
@@ -28,11 +29,13 @@ test('deployment journal migrations are repeatable and persist owner-bound opera
     const dockerMigration = await readFile(new URL('../migrations/002_docker_connector.sql', import.meta.url), 'utf8')
     const deploymentMigration = await readFile(new URL('../migrations/003_arsy_deployment_operations.sql', import.meta.url), 'utf8')
     const outboxMigration = await readFile(new URL('../migrations/005_arsy_deployment_outbox_leases.sql', import.meta.url), 'utf8')
-    await pool.query(dockerMigration)
-    await pool.query(deploymentMigration)
-    await pool.query(deploymentMigration)
-    await pool.query(outboxMigration)
-    await pool.query(outboxMigration)
+    await applyTestMigrations(pool, [
+      dockerMigration,
+      deploymentMigration,
+      deploymentMigration,
+      outboxMigration,
+      outboxMigration,
+    ])
 
     await pool.query(
       'INSERT INTO docker_connector_servers (id, owner_id, name, kind, endpoint_url, encrypted_credentials) VALUES ($1, $2, $3, $4, NULL, NULL)',

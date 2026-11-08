@@ -5,12 +5,89 @@ import { execFileSync } from 'node:child_process'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { getDockerInfo, getDockerContainerLogs, listDockerContainers } from '../src/docker/engine.ts'
+import { getDockerInfo, getDockerContainerLogs, getDockerContainerStats, listDockerContainers } from '../src/docker/engine.ts'
 import { decryptDockerCredentials, encryptDockerCredentials, resolveRemoteDockerEndpoint, validateRemoteDockerEndpoint, validateTlsCredentials } from '../src/docker/security.ts'
 import { createApp } from '../src/app.ts'
 
 const key = Buffer.alloc(32, 7).toString('base64')
 const env = { DOCKER_CREDENTIALS_ENCRYPTION_KEY: key, DOCKER_REMOTE_ALLOWED_HOSTS: 'docker.example.com' }
+
+test('Docker container telemetry parses a single sample and computes cgroup-aware metrics', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'mw-docker-stats-'))
+  const socketPath = path.join(directory, 'docker.sock')
+  const responseBody = {
+    read: '2026-11-08T07:00:00.000Z',
+    cpu_stats: { cpu_usage: { total_usage: 500, percpu_usage: [250, 250] }, system_cpu_usage: 1000, online_cpus: 0 },
+    precpu_stats: { cpu_usage: { total_usage: 400, percpu_usage: [200, 200] }, system_cpu_usage: 800, online_cpus: 0 },
+    memory_stats: { usage: 200, limit: 1000, stats: { inactive_file: 40 } },
+    pids_stats: { current: 3 },
+    networks: { eth0: { rx_bytes: 10, tx_bytes: 20 }, eth1: { rx_bytes: 3, tx_bytes: 4 } },
+    blkio_stats: { io_service_bytes_recursive: [
+      { op: 'Read', value: 100 },
+      { op: 'Write', value: 20 },
+      { op: 'Sync', value: 5 },
+    ] },
+  }
+  const server = createServer((request, response) => {
+    assert.equal(request.method, 'GET')
+    assert.equal(request.url, '/containers/abcdef012345/stats?stream=false&one-shot=true')
+    response.setHeader('content-type', 'application/json')
+    response.end(JSON.stringify(responseBody))
+  })
+  try {
+    await new Promise((resolve, reject) => { server.once('error', reject); server.listen(socketPath, resolve) })
+    const stats = await getDockerContainerStats({ kind: 'local', socketPath }, 'abcdef012345')
+    assert.equal(stats.observedAt, '2026-11-08T07:00:00.000Z')
+    assert.equal(stats.cpuPercent, 100)
+    assert.equal(stats.memoryUsageBytes, 160)
+    assert.equal(stats.memoryLimitBytes, 1000)
+    assert.equal(stats.memoryPercent, 16)
+    assert.equal(stats.pids, 3)
+    assert.equal(stats.networkRxBytes, 13)
+    assert.equal(stats.networkTxBytes, 24)
+    assert.equal(stats.blockReadBytes, 100)
+    assert.equal(stats.blockWriteBytes, 20)
+    await assert.rejects(getDockerContainerStats({ kind: 'local', socketPath }, 'not-a-container'), /Invalid Docker container identifier/)
+  } finally {
+    await new Promise((resolve) => server.close(resolve))
+    await rm(directory, { recursive: true, force: true })
+  }
+})
+
+test('Docker runtime stats API validates resource ownership before contacting an Engine', async () => {
+  const operatorId = 'telemetry-test-operator'
+  const token = 'telemetry-test-token-with-at-least-32-characters'
+  const serverId = 'a3e48f3c-98bb-4e19-8bb2-1d92f1d99f20'
+  const queries = []
+  const pool = {
+    query: async (statement, values = []) => {
+      queries.push({ statement, values })
+      return { rows: [] }
+    },
+    end: async () => undefined,
+  }
+  const app = createApp({
+    databasePool: pool,
+    logger: false,
+    env: { ARSY_OPERATOR_ID: operatorId, ARSY_OPERATOR_TOKEN: token },
+  })
+  try {
+    const invalid = await app.inject({
+      url: `/api/v1/infrastructure/docker/servers/${serverId}/containers/not-a-container/stats`,
+      headers: { 'x-arsy-operator-token': token },
+    })
+    assert.equal(invalid.statusCode, 400)
+    assert.equal(queries.length, 0)
+
+    const missing = await app.inject({
+      url: `/api/v1/infrastructure/docker/servers/${serverId}/containers/abcdef012345/stats`,
+      headers: { 'x-arsy-operator-token': token },
+    })
+    assert.equal(missing.statusCode, 404)
+    assert.match(queries[0].statement, /WHERE id = \$1 AND owner_id = \$2/)
+    assert.deepEqual(queries[0].values, [serverId, operatorId])
+  } finally { await app.close() }
+})
 
 test('remote endpoint validation requires HTTPS and an explicit exact host allowlist', () => {
   assert.equal(validateRemoteDockerEndpoint('https://docker.example.com:2376', env).hostname, 'docker.example.com')

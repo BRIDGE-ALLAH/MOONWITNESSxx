@@ -103,7 +103,7 @@ test('operator login rate-limits repeated invalid credentials', async () => {
       headers: { origin, 'content-type': 'application/json' },
       body: JSON.stringify({ password: 'incorrect-password' }),
     }))
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 5; index += 1) {
       assert.equal((await attempt()).status, 401)
     }
     const limited = await attempt()
