@@ -68,9 +68,11 @@ trap cleanup EXIT
 
 asset_digest() {
   local repo_path="$1" tag="$2" asset="$3" metadata digest
-  local headers=()
-  if [[ -n "${GITHUB_TOKEN:-}" ]]; then headers=(-H "Authorization: Bearer $GITHUB_TOKEN"); fi
-  metadata="$(curl -fsSL "${headers[@]}" -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$repo_path/releases/tags/$tag")"
+  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    metadata="$(curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$repo_path/releases/tags/$tag")"
+  else
+    metadata="$(curl -fsSL -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$repo_path/releases/tags/$tag")"
+  fi
   digest="$(jq -r --arg name "$asset" '.assets[] | select(.name == $name) | .digest // empty' <<<"$metadata")"
   [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "GitHub did not publish a verifiable SHA-256 digest for $asset"
   printf '%s' "${digest#sha256:}"
