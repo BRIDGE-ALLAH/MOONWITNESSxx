@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS arsy_deployment_authorization_decisions (
   recorded_at timestamptz NOT NULL DEFAULT now(),
   FOREIGN KEY (operation_id, owner_id)
     REFERENCES arsy_deployment_operations (id, owner_id) ON DELETE RESTRICT,
+  FOREIGN KEY (target_host_id, owner_id)
+    REFERENCES docker_connector_servers (id, owner_id) ON DELETE RESTRICT,
   CHECK (policy_version IS NULL OR length(policy_version) BETWEEN 1 AND 120),
   CHECK (approval_reference IS NULL OR length(approval_reference) BETWEEN 1 AND 200)
 );
