@@ -28,17 +28,17 @@ These are product, organizational, and narrative relationships—not claims of s
 
 The wider product catalog is organized as **seven core application experiences plus two additional operational/industry experiences**. These are product identities and target experiences, not nine implemented workspace applications.
 
-| # | Product experience | Primary responsibility | Classification | Repository status |
-|---:|---|---|---|---|
-| 1 | **GATE** | Public entrance, orientation, discovery, and navigation across the universe | Core application | Target; no `apps/gate` in current workspace |
-| 2 | **DOCK** | Community, participation, member activity, and shared spaces | Core application | Target; no `apps/dock` in current workspace |
-| 3 | **HEADQUARTER** | Strategic command, governance, portfolio, approvals, and executive oversight | Core application | Implemented as a Next.js prototype at `apps/headquarter`; not production-complete |
-| 4 | **MOONWITNESS ID** | Human/service identity experience, account and session management, access visibility | Core application | Product target; identity authority remains server-side in ARSY; no standalone ID app in this workspace |
-| 5 | **WORLD OBSERVATORY** | Research, observations, evidence, source context, and knowledge discovery; JIZZ is a related perspective/analysis domain | Core application | Target experience; not a standalone app in this workspace |
-| 6 | **MOONSKY** | Communication experience: channels, conversations, routing, and delivery | Core application | Target; no standalone app in this workspace |
-| 7 | **HARBOR** | Authenticated E-ISP subscriber portal: account, service, usage, billing, and support | Core application | Target; no standalone app in this workspace |
-| 8 | **COCKPIT** | Real-time NOC and infrastructure operations, dispatch, telemetry, and operator actions | Additional operational application | Target; do not merge its live operational workflow into strategic HEADQUARTER |
-| 9 | **E-ISP** | Public ISP storefront: plans, coverage, service information, registration, and acquisition | Additional industry application | Target; separate from authenticated HARBOR subscriber experience |
+|   # | Product experience    | Primary responsibility                                                                                                   | Classification                     | Repository status                                                                                      |
+| --: | --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
+|   1 | **GATE**              | Public entrance, orientation, discovery, and navigation across the universe                                              | Core application                   | Target; no `apps/gate` in current workspace                                                            |
+|   2 | **DOCK**              | Community, participation, member activity, and shared spaces                                                             | Core application                   | Target; no `apps/dock` in current workspace                                                            |
+|   3 | **HEADQUARTER**       | Strategic command, governance, portfolio, approvals, and executive oversight                                             | Core application                   | Implemented as a Next.js prototype at `apps/headquarter`; not production-complete                      |
+|   4 | **MOONWITNESS ID**    | Human/service identity experience, account and session management, access visibility                                     | Core application                   | Product target; identity authority remains server-side in ARSY; no standalone ID app in this workspace |
+|   5 | **WORLD OBSERVATORY** | Research, observations, evidence, source context, and knowledge discovery; JIZZ is a related perspective/analysis domain | Core application                   | Target experience; not a standalone app in this workspace                                              |
+|   6 | **MOONSKY**           | Communication experience: channels, conversations, routing, and delivery                                                 | Core application                   | Target; no standalone app in this workspace                                                            |
+|   7 | **HARBOR**            | Authenticated E-ISP subscriber portal: account, service, usage, billing, and support                                     | Core application                   | Target; no standalone app in this workspace                                                            |
+|   8 | **COCKPIT**           | Real-time NOC and infrastructure operations, dispatch, telemetry, and operator actions                                   | Additional operational application | Target; do not merge its live operational workflow into strategic HEADQUARTER                          |
+|   9 | **E-ISP**             | Public ISP storefront: plans, coverage, service information, registration, and acquisition                               | Additional industry application    | Target; separate from authenticated HARBOR subscriber experience                                       |
 
 ### 2.1 Seven core experiences
 
@@ -59,25 +59,25 @@ The catalog can grow, but a name is not automatically an application. Promote a 
 
 The following are modules/workspaces inside HEADQUARTER, not separate top-level applications:
 
-| Module | Responsibility |
-|---|---|
-| ARSY DECK | Workspace pulse, priorities, approvals, and operator overview |
-| SIGNAL ROOM | Source-backed research and market/evidence capture |
-| RIOT RADAR | Opportunity evaluation, scoring, and decision records |
-| THE FORGE | Product briefs, production coordination, and version lifecycle |
-| ZILL WATCH | Rights, integrity, quality, and policy inspection |
-| LAUNCH BAY | Channel readiness, listing preparation, and authorized distribution |
-| SIDRA ARCHIVE | Assets, source files, provenance, and version continuity |
-| AFTERSHOCK | Performance, portfolio learning, and retirement decisions |
-| MIZAN LEDGER | Financial events, fees, payouts, reconciliation, and accountability |
-| RIOT ENGINE | Agent/workflow runs, schedules, budgets, and execution records |
-| Policy Center | Policy configuration and review surfaces |
-| Marketplace Accounts | Channel/account eligibility and connection status |
-| AI Providers | Provider/model configuration and capability visibility |
-| Addon Manager | Restricted technical addon lifecycle interface |
-| ORM / Database Health | Restricted technical diagnostics |
-| Workspace Settings | Workspace-level preferences and configuration |
-| Security and Audit | Security events, access reviews, and audit inspection |
+| Module                | Responsibility                                                      |
+| --------------------- | ------------------------------------------------------------------- |
+| ARSY DECK             | Workspace pulse, priorities, approvals, and operator overview       |
+| SIGNAL ROOM           | Source-backed research and market/evidence capture                  |
+| RIOT RADAR            | Opportunity evaluation, scoring, and decision records               |
+| THE FORGE             | Product briefs, production coordination, and version lifecycle      |
+| ZILL WATCH            | Rights, integrity, quality, and policy inspection                   |
+| LAUNCH BAY            | Channel readiness, listing preparation, and authorized distribution |
+| SIDRA ARCHIVE         | Assets, source files, provenance, and version continuity            |
+| AFTERSHOCK            | Performance, portfolio learning, and retirement decisions           |
+| MIZAN LEDGER          | Financial events, fees, payouts, reconciliation, and accountability |
+| RIOT ENGINE           | Agent/workflow runs, schedules, budgets, and execution records      |
+| Policy Center         | Policy configuration and review surfaces                            |
+| Marketplace Accounts  | Channel/account eligibility and connection status                   |
+| AI Providers          | Provider/model configuration and capability visibility              |
+| Addon Manager         | Restricted technical addon lifecycle interface                      |
+| ORM / Database Health | Restricted technical diagnostics                                    |
+| Workspace Settings    | Workspace-level preferences and configuration                       |
+| Security and Audit    | Security events, access reviews, and audit inspection               |
 
 The current Headquarter route and feature registers remain authoritative for what is actually rendered. A route or menu item does not prove that its backend workflow is complete. The current app is explicitly a prototype/demo surface with a persistent disclosure; static/demo values must not be described as live business data.
 
@@ -85,16 +85,16 @@ The current Headquarter route and feature registers remain authoritative for wha
 
 Applications are user-facing products. Platforms and services provide reusable capabilities. Engines execute specialized technical work. Keep these layers separate.
 
-| Name | Layer | Owns | Must not become |
-|---|---|---|---|
-| **ARSY** | Central application/backend authority | API composition, identity authority, authorization, policy integration, orchestration, application contracts, canonical audit boundaries | A second UI app, DNS server, or duplicate infrastructure execution engine |
-| **ATLAS** | Infrastructure control plane | Infrastructure inventory, desired state, DNS/observability engine configuration, reconciliation and operator control surfaces | DNS protocol server, metrics database, log storage engine, or replacement ARSY |
-| **AEGIS** | Infrastructure execution/runtime | Narrowly scoped infrastructure provisioning and execution behind authenticated internal contracts | Identity authority or a second general-purpose orchestrator |
-| **ZILL** | Governance/policy capability | Integrity, rights, quality, protection, policy checks and inspection decisions | Authentication, account identity, or a generic application |
-| **MIZAN** | Financial/accountability domain | Financial event classification, reconciliation, and ledger evidence | Generic telemetry or a replacement for a regulated accounting/tax professional |
-| **ORACLE** | Intelligence coordination concept | Coordination of reasoning/research capabilities when implemented behind explicit contracts | A second database or unbounded autonomous authority |
-| **DIVINE** | Research/domain package | Framework-neutral ontology, attributed research, evaluation and knowledge-method primitives | Spiritual authority or an automatic source of truth |
-| **WITNESS FABRIC** | Evidence/trust capability | Evidence lineage, provenance, execution traces, integrity and replay-related primitives | A claim that hashes alone provide signatures or trusted timestamps |
+| Name               | Layer                                 | Owns                                                                                                                                     | Must not become                                                                |
+| ------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **ARSY**           | Central application/backend authority | API composition, identity authority, authorization, policy integration, orchestration, application contracts, canonical audit boundaries | A second UI app, DNS server, or duplicate infrastructure execution engine      |
+| **ATLAS**          | Infrastructure control plane          | Infrastructure inventory, desired state, DNS/observability engine configuration, reconciliation and operator control surfaces            | DNS protocol server, metrics database, log storage engine, or replacement ARSY |
+| **AEGIS**          | Infrastructure execution/runtime      | Narrowly scoped infrastructure provisioning and execution behind authenticated internal contracts                                        | Identity authority or a second general-purpose orchestrator                    |
+| **ZILL**           | Governance/policy capability          | Integrity, rights, quality, protection, policy checks and inspection decisions                                                           | Authentication, account identity, or a generic application                     |
+| **MIZAN**          | Financial/accountability domain       | Financial event classification, reconciliation, and ledger evidence                                                                      | Generic telemetry or a replacement for a regulated accounting/tax professional |
+| **ORACLE**         | Intelligence coordination concept     | Coordination of reasoning/research capabilities when implemented behind explicit contracts                                               | A second database or unbounded autonomous authority                            |
+| **DIVINE**         | Research/domain package               | Framework-neutral ontology, attributed research, evaluation and knowledge-method primitives                                              | Spiritual authority or an automatic source of truth                            |
+| **WITNESS FABRIC** | Evidence/trust capability             | Evidence lineage, provenance, execution traces, integrity and replay-related primitives                                                  | A claim that hashes alone provide signatures or trusted timestamps             |
 
 ### 4.1 Current ATLAS / AEGIS integration decision
 
@@ -106,7 +106,7 @@ ARSY remains the identity, authorization, policy, approval, orchestration, and c
 
 ### 4.2 Application deployment and Docker workload boundary
 
-The current ARSY Docker Connector is an authenticated, owner-scoped **read-only** inspection capability. It is not the application deployment manager. Docker workload mutations, image builds, deployment history, rollback, ingress/TLS, and durable deployment recovery remain unimplemented on main. The proposed ownership and execution boundary is recorded in [ADR 0002](./adr/0002-docker-workload-deployment-ownership.md); the current capability, source/API inventory, existing issue/PR map and dependency sequence are in [docs/33](./33-platform-capability-ownership-and-dependency-map.md). Until ADR 0002 is accepted, do not add mutating routes to the read-only connector, grant Docker workload privileges to ATLAS/AEGIS, or create a second deployment orchestrator.
+The public ARSY Docker Connector remains an authenticated, owner-scoped **read-only** inspection API. Separately, main now contains an internal allowlisted Docker Workload Adapter, owner-scoped deployment/operation journal, deny-by-default authorization evidence, and a callable fenced outbox dispatcher. These are foundations, not a completed application deployment manager: `apps/arsy/src/app.ts` does not register a deployment API or worker, the adapter is not wired to the outbox handler, and there is no end-to-end source build, deployment state machine, application readiness reconciliation, audited rollback workflow, Headquarter deployment UI, or ingress/TLS lifecycle. The root cause and sole ownership boundary are recorded in accepted [ADR 0002](./adr/0002-docker-workload-deployment-ownership.md); the current capability, source/API inventory, issue/PR map and dependency sequence are in [docs/33](./33-platform-capability-ownership-and-dependency-map.md). The one-shot runtime telemetry candidate is tracked separately in [PR #220](https://github.com/BRIDGE-ALLAH/MOONWITNESS/pull/220); it does not provide historical metrics, alerts or deployment health reconciliation. Do not add mutation routes to the read-only connector, grant Docker workload privileges to ATLAS/AEGIS, or create a second deployment orchestrator.
 
 ## 5. Knowledge, research, and narrative domains
 
@@ -150,6 +150,7 @@ A shared capability does not imply shared database tables without ownership, sha
 ### 7.1 Verified current repository foundations
 
 The current repository includes:
+
 - `apps/headquarter`: Next.js human-facing prototype.
 - `apps/arsy`: Fastify API/runtime with app-owned lifecycle and health/readiness behavior.
 - `packages/*`: shared UI, contracts/types/policy/notifications/feature flags, assets, Divine, evidence and developer tooling as recorded in the current tree.
@@ -179,6 +180,7 @@ Do not create a second ORM, duplicate backend, duplicate schema authority, or a 
 ### 7.3 Implementation truth
 
 At the current repository baseline:
+
 - HEADQUARTER and ARSY are the only canonical application workspaces.
 - The Docker connector is read-only; it does not start/stop/exec/deploy containers or manage Compose, domains, TLS ingress, metrics, or rollback.
 - The custom ORM, provider adapters, and Base Platform addon suite remain target architecture and are not present as complete mainline implementations.
@@ -191,16 +193,17 @@ Use [docs/28](./28-current-state-revalidation-2026-11-08.md) and [docs/31](./31-
 
 All entries below are **proposed naming and routing**, not proof of domain ownership, DNS records, TLS certificates, deployments, or live services.
 
-| Domain | Intended role | Proposed public entry points |
-|---|---|---|
-| `A-L-L-A-H.COM` | Unified public home for the wider universe | `www`, `gate`, `dock`, `learn`, `community`, `docs` |
-| `MOONWITNESS.BIZ.ID` | MOONWITNESS technology/product home | `www`, `hq`, `cockpit`, `id`, `observatory`, `sky`, `api`, `status`, `docs` |
-| `E-ISP.ID` | ISP storefront and customer services | `www`, `portal` (HARBOR), `support`, `status` |
-| `ROCKSOUL.ID` | Future ROCKSOUL public identity and narrative/runtime home | Reserved for future planning; no subdomain is active or committed |
+| Domain               | Intended role                                              | Proposed public entry points                                                |
+| -------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `A-L-L-A-H.COM`      | Unified public home for the wider universe                 | `www`, `gate`, `dock`, `learn`, `community`, `docs`                         |
+| `MOONWITNESS.BIZ.ID` | MOONWITNESS technology/product home                        | `www`, `hq`, `cockpit`, `id`, `observatory`, `sky`, `api`, `status`, `docs` |
+| `E-ISP.ID`           | ISP storefront and customer services                       | `www`, `portal` (HARBOR), `support`, `status`                               |
+| `ROCKSOUL.ID`        | Future ROCKSOUL public identity and narrative/runtime home | Reserved for future planning; no subdomain is active or committed           |
 
 ### 8.1 ROCKSOUL.ID future domain
 
 ROCKSOUL.ID is a future domain the owner intends to purchase. Until the purchase is completed and ownership is verified:
+
 - Treat it as an unregistered/unconfirmed future domain.
 - Do not publish DNS records, issue certificates, configure ingress, create production links, or claim it is live.
 - Keep ROCKSOUL Runtime and ROCKSOUL creative/narrative identity distinct in product architecture.
@@ -250,8 +253,6 @@ Public web entry points may expose only deliberately designed frontends and API 
 - This registry: wider universe, product application catalog, brand/domain relationships, and cross-platform ownership map.
 
 When a source document conflicts with this registry, update the owning source document and this registry in the same reviewed change. Do not copy full technical specifications into this page; link to the canonical owner.
-
-
 
 ### ADR 0003 — Isolated OCI Build Engine
 
