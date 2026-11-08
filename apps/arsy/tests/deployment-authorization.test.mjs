@@ -55,7 +55,7 @@ test('deployment authorization denies cross-owner principals before policy evalu
   assert.equal(result.allowed, false)
   assert.equal(result.reasonCode, 'OWNER_SCOPE_DENIED')
   assert.equal(evaluations, 0)
-  assert.equal(pool.records[0][6], 'deny')
+  assert.equal(pool.records[0][7], 'deny')
 })
 
 test('deployment authorization denies when the policy provider is unavailable', async () => {
@@ -63,7 +63,7 @@ test('deployment authorization denies when the policy provider is unavailable', 
   const result = await authorizeAndRecordDeploymentAction(pool, base)
   assert.equal(result.allowed, false)
   assert.equal(result.reasonCode, 'POLICY_UNAVAILABLE')
-  assert.equal(pool.records[0][6], 'deny')
+  assert.equal(pool.records[0][7], 'deny')
 })
 
 test('deployment authorization allows only an explicit policy allow without unmet approval', async () => {
@@ -72,7 +72,7 @@ test('deployment authorization allows only an explicit policy allow without unme
   assert.equal(result.allowed, true)
   assert.equal(result.reasonCode, 'DEPLOYMENT_SCOPE_APPROVED')
   assert.equal(result.policyVersion, 'zill-deployment-v1')
-  assert.equal(pool.records[0][6], 'allow')
+  assert.equal(pool.records[0][7], 'allow')
   assert.equal(pool.records[0][9], 'zill-deployment-v1')
 })
 
@@ -86,7 +86,7 @@ test('deployment authorization blocks high-risk actions without an approved refe
   }))
   assert.equal(result.allowed, false)
   assert.equal(result.reasonCode, 'APPROVAL_REQUIRED')
-  assert.equal(pool.records[0][6], 'deny')
+  assert.equal(pool.records[0][7], 'deny')
 })
 
 test('deployment authorization accepts high-risk action only with approved reference', async () => {
@@ -99,7 +99,7 @@ test('deployment authorization accepts high-risk action only with approved refer
   }))
   assert.equal(result.allowed, true)
   assert.equal(result.approvalReference, 'approval-2026-001')
-  assert.equal(pool.records[0][9], 'approval-2026-001')
+  assert.equal(pool.records[0][10], 'approval-2026-001')
 })
 
 test('deployment authorization times out policy evaluation and records a denial', async () => {
@@ -114,7 +114,7 @@ test('deployment authorization times out policy evaluation and records a denial'
   assert.equal(result.allowed, false)
   assert.equal(result.reasonCode, 'POLICY_TIMEOUT')
   assert.equal(aborted, true)
-  assert.equal(pool.records[0][6], 'deny')
+  assert.equal(pool.records[0][7], 'deny')
 })
 
 test('deployment authorization fails closed on policy exceptions and malformed decisions', async () => {
