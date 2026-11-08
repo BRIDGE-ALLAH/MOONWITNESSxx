@@ -1,151 +1,134 @@
 # ADR 0003 — Isolated OCI Build Engine
 
-**Status:** Proposed for maintainer review; BuildKit is the recommended v1 choice  
+**Status:** Proposed — maintainer decision and adversarial proof required  
 **Date:** 2026-11-08  
-**Decision scope:** Source checkout, Dockerfile execution, OCI image creation/publishing, build isolation, cache and provenance  
-**Related:** [ADR 0002 — Docker Workload and Deployment Ownership](0002-docker-workload-deployment-ownership.md), [PaaS implementation issue #182](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/182), [Build Engine implementation issue #183](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/183)
+**Decision owner:** ARSY architecture / Build Engine boundary  
+**Related:** [ADR 0002 — Docker Workload and Deployment Ownership](./0002-docker-workload-deployment-ownership.md), [Issue #182](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/182), [Issue #183](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/183), [Issue #184](https://github.com/BRIDGE-ALLAH/MOONWITNESS/issues/184)
 
-## 1. Context
+> This is a decision proposal, not an accepted production architecture. No builder is enabled by this ADR. The proof and maintainer review in #182 are mandatory before #183 implementation.
 
-ADR 0002 separates source/image construction from Docker workload deployment. ARSY remains the application deployment control plane. The Build Engine produces an immutable OCI image and verifiable receipt; it does not choose a deployment target, authorize production rollout, own deployment history or control running application containers.
+## 1. Decision context
 
-The repository currently has no accepted application Build Engine, no isolated build worker, no OCI registry lifecycle for user builds, and no provenance receipt. The first release must build an explicitly authorized immutable Git commit from a Dockerfile without exposing ARSY credentials, the production Docker socket, sibling build data or infrastructure control-plane networks to untrusted build instructions.
+ARSY is the only application deployment control plane. It authenticates the operator, authorizes the repository/target/action, records durable operations and dispatches work. The Docker Workload Adapter applies an already-built immutable OCI image to an authorized target. Image construction is a separate trust domain because a Dockerfile can execute arbitrary commands and must be treated as untrusted code.
+
+The first supported build contract is deliberately narrow:
+
+- One Git repository from an explicit allowlist.
+- One immutable full commit SHA; branch names are discovery input only and are resolved before the build.
+- One Dockerfile path inside the checked-out repository.
+- One target platform per build initially; multi-platform manifests are deferred.
+- One configured OCI registry/repository namespace with short-lived, repository-scoped push credentials.
+- Output is an immutable `sha256:` OCI digest plus a signed or independently verifiable provenance receipt.
+- No Compose build, buildpacks, arbitrary build plugins, privileged build flags, host mounts, Docker socket, or interactive shell.
+
+A successful build does not authorize deployment. ARSY separately authorizes the deployment operation and target.
 
 ## 2. Options evaluated
 
-The options are compared for the actual initial MOONWITNESS requirement: single-job isolated Dockerfile builds, OCI registry output, immutable digest/receipt, bounded resource use and no access to a production Docker daemon.
-
-| Criterion | BuildKit rootless | Buildah rootless | Kaniko upstream / maintained forks |
+| Criterion | Rootless BuildKit on shared host | Rootless Buildah on shared host | Ephemeral microVM with BuildKit |
 |---|---|---|---|
-| Execution model | Build daemon with OCI worker; rootless mode supported | Daemonless CLI/build process; rootless isolation supported | Executor image/process; no Docker daemon dependency |
-| Dockerfile compatibility | Native BuildKit Dockerfile frontend; supports the familiar Dockerfile workflow | Builds Containerfiles and Dockerfiles; supports Dockerfile build context | Dockerfile-focused executor |
-| Orchestration/caching | Strong build graph/session API and content-addressed cache; daemon state must be isolated by trust domain | Straightforward per-invocation execution; storage/cache behavior is managed by the calling worker | Layer snapshot/cache model; operational behavior depends on the selected fork and image publisher |
-| Isolation caveat | Rootless mode still documents network.host for build steps; isolate the daemon network namespace with RootlessKit and enforce egress outside the build process. Never use the no-process-sandbox shortcut | Rootless isolation is supported; explicitly choose a private/pasta network mode and validate host reachability in the selected runtime | No daemon required, but no-daemon alone is not a complete hostile-code sandbox |
-| OCI output | Supports registry/image exporters and immutable digest workflows | OCI image/registry workflow is supported | Pushes images to registries |
-| Operational fit | Recommended for a controlled, disposable worker with a narrow BuildKit API boundary | Credible alternative where a per-job CLI process is simpler and BuildKit daemon lifecycle is not justified | Upstream project is archived; maintained forks are separate supply-chain choices requiring independent review |
-| v1 decision | **Preferred, subject to the proof gates below** | Retain as fallback if the BuildKit isolation proof cannot be met on the actual host/VM platform | Do not use archived upstream; do not silently substitute a fork |
+| Docker daemon/socket required | No | No | No |
+| Rootless execution available | Yes | Yes | Builder runs unprivileged inside guest |
+| Host-kernel attack boundary | Shared host kernel | Shared host kernel | VM boundary plus guest kernel |
+| Network isolation | Requires explicit network namespace/egress controls; BuildKit rootless docs describe network mode as host in its daemon namespace | Rootless isolation reuses host network/UTS namespaces in documented mode | Guest network is routed through a deny-by-default egress gateway |
+| Resource limits | Host cgroups and process controls; daemon/job separation required | Host cgroups and process controls | VM vCPU/RAM/disk plus guest limits |
+| Per-build filesystem isolation | Requires carefully separated worker state and cleanup | Requires isolated storage roots and cleanup | Disposable VM and scratch disk destroyed after each build |
+| Operational cost | Lowest | Low | Highest; requires KVM-capable hosts and VM lifecycle |
+| Fit for untrusted multi-project Dockerfiles | Insufficient as the sole isolation boundary | Insufficient as the sole isolation boundary | Preferred boundary, subject to tested host capability |
 
-### Evidence and current project state
+### Evidence and limitations
 
-- BuildKit documents rootless daemon operation, the network.host limitation, RootlessKit network isolation guidance, and why --oci-worker-no-process-sandbox is discouraged. See the [official BuildKit rootless guide](https://github.com/moby/buildkit/blob/master/docs/rootless.md).
-- The BuildKit project published v0.34.1 on 2026-10-20. Pin a reviewed release by immutable image/binary digest; do not follow a mutable latest tag. See [BuildKit releases](https://github.com/moby/buildkit/releases).
-- Buildah's official build documentation describes Dockerfile/Containerfile builds, rootless isolation and network options including private/pasta. It remains a credible fallback. See [Buildah build documentation](https://github.com/podman-container-tools/buildah/blob/main/docs/buildah-build.1.md).
-- Buildah's project site announced v1.46.0 on 2026-10-21. See [Buildah releases](https://buildah.io/).
-- The original GoogleContainerTools/kaniko repository was archived on 2025-06-03. A maintained fork exists, but choosing it would require separately accepting that fork's source, build-image publisher and release-signing supply chain. See [archived upstream](https://github.com/GoogleContainerTools/kaniko) and [osscontainertools/kaniko](https://github.com/osscontainertools/kaniko).
+- BuildKit supports rootless execution, but its rootless documentation notes network mode is always `network.host`; it recommends isolating the daemon network namespace with RootlessKit and slirp4netns. Rootless alone is therefore not an egress policy or a hostile-tenant boundary. See [BuildKit rootless mode](https://github.com/moby/buildkit/blob/master/docs/rootless.md).
+- Buildah documents rootless isolation, but the rootless mode reuses the host network and UTS namespaces while creating private IPC, PID, mount and user namespaces. See [Buildah build isolation](https://github.com/containers/buildah/blob/main/docs/buildah-build.1.md).
+- BuildKit is a mature Dockerfile/OCI build engine and can run without a Docker daemon; the isolation boundary must be supplied by the execution environment, not inferred from the builder's rootless flag. See [GitLab's BuildKit build guidance](https://docs.gitlab.com/ci/docker/using_buildkit/) and [Docker BuildKit configuration](https://docs.docker.com/build/buildkit/toml-configuration/).
 
-This is a dated technology comparison, not proof that any builder is already installed, configured or safe on MOONWITNESS infrastructure.
+## 3. Proposed decision
 
-## 3. Recommended decision
+Use **one disposable Firecracker microVM per build, running rootless BuildKit inside the guest**. Do not run untrusted Dockerfile instructions in the ARSY process, on the shared host namespace, in the deployment worker, or through the host Docker socket.
 
-Use **BuildKit rootless as the v1 builder**, but run a separate, disposable worker environment for each build job. The daemon is not shared between tenants, repositories or unrelated trust domains.
+This choice is conditional on a reproducible proof that the actual supported runner has KVM and that the VM lifecycle can be operated safely. If the target host cannot provide the required isolation, building is unavailable; do not silently fall back to shared-host BuildKit or Buildah. A separately reviewed alternative isolation provider would require a new decision.
 
-The recommended boundary is:
+### Trust boundaries
 
-1. ARSY authorizes the exact repository, immutable commit, build recipe, worker profile and output registry scope.
-2. A trusted source-resolution step fetches the authorized commit and produces an immutable, bounded build-context bundle. The Git provider credential is not forwarded to build instructions.
-3. A fresh build worker is provisioned for exactly one job. It runs a pinned BuildKit release as an unprivileged OS user with user-namespace mappings and its own disposable workspace and daemon state.
-4. BuildKit uses the OCI worker. RootlessKit isolates the daemon network namespace (prefer the documented gVisor TAP/vsock network driver where compatible; otherwise validate and explicitly select a supported isolated driver).
-5. The worker is attached to a dedicated egress boundary. Build steps cannot reach ARSY, Headquarter, Docker Engine APIs, ATLAS, AEGIS, PostgreSQL, Redis, private management ranges, link-local addresses or cloud metadata endpoints. Any required package/repository access is routed through an enforceable policy boundary.
-6. BuildKit publishes only to an explicitly authorized OCI repository using a short-lived, repository-scoped push credential. The credential is available to the export/publish path only, never mounted into arbitrary Dockerfile RUN steps or copied into the build context.
-7. ARSY verifies and persists the resulting image digest, source commit, builder release/digest, recipe/context digest, build timestamps, bounded log reference, SBOM/provenance evidence and terminal status.
-8. The worker, writable cache, temporary credentials and transient context are destroyed after receipt persistence or bounded failure cleanup.
+1. **ARSY control plane:** validates authenticated principal, repository allowlist, commit, Dockerfile path, target registry, resource profile and policy. It creates a durable build operation and scoped credential references. ARSY does not execute build commands.
+2. **Build coordinator:** accepts only an authorized build request and launches one disposable VM. It receives an operation-scoped opaque reference, not ARSY's database credentials, operator token, Docker credentials or deployment target secrets.
+3. **Guest builder:** receives only the checked-out source snapshot, declared build inputs and narrowly scoped registry push credential. It has no host filesystem mount, Docker socket, ARSY network route, sibling-job access or general cloud metadata access.
+4. **Egress gateway:** permits only the required source and registry endpoints plus explicitly declared package/base-image mirrors. Default deny; no arbitrary inbound connectivity. DNS is policy-controlled and rebinding-resistant.
+5. **Artifact registry:** accepts push only to the assigned repository namespace using an expiring token. It returns an immutable digest.
+6. **ARSY:** verifies the receipt and digest, stores bounded build provenance against the operation, then independently authorizes any deployment.
 
-A dedicated disposable VM is the preferred first trust boundary. If the selected infrastructure cannot provision a per-job VM, a separate ADR amendment and adversarial proof are required before replacing it with another isolation primitive. Do not infer that a rootless container alone makes untrusted build instructions safe.
+## 4. Isolation and execution requirements
 
-## 4. Mandatory security and isolation constraints
+These are acceptance requirements, not claims that the prototype already enforces them.
 
-### 4.1 Worker isolation
+- Create a fresh VM and scratch disk for every build. Never reuse a guest across projects or tenants.
+- Require KVM hardware virtualization; pin and verify the guest kernel, Firecracker version, guest image and BuildKit version.
+- No host Docker socket, container runtime socket, host PID/network/IPC namespace, host path mount, device passthrough, or privileged guest workload.
+- Disable guest metadata endpoints and host-loopback access. The guest has no route to ARSY, PostgreSQL, Redis, Docker Engine, control-plane admin endpoints or the host management network.
+- Apply VM-level CPU, memory, disk I/O, disk capacity and wall-clock limits; apply guest PID, process, log and build-step limits. Initial proposed ceiling: 2 vCPU, 4 GiB RAM, 20 GiB scratch disk, 256 PIDs, 20-minute wall clock and 10 MiB retained logs. These defaults must be validated against real builds before acceptance and remain configurable only within hard global maxima.
+- Bound concurrent builds globally and per owner. Queue saturation returns a truthful retryable response; it does not spawn an unbounded VM.
+- Egress is default-deny. Allow HTTPS to the exact Git source host and registry plus approved package/base-image mirrors. Do not permit arbitrary RFC1918, link-local, loopback, metadata, host or control-plane destinations. Apply DNS/IP validation at connection time, not only at request validation.
+- Source checkout uses a short-lived read-only credential, if needed, scoped to the one repository. Registry push uses a different short-lived token scoped to one repository namespace. Credentials are injected as BuildKit secrets or short-lived files outside the build context and must not be copied into layers, logs, cache exports, provenance or operation payloads.
+- No user-provided build arguments may contain secret values. Reject secret-like keys and values in persisted metadata. Build logs are bounded and scrubbed, but scrubbing is defense in depth—not permission to pass secrets to arbitrary build steps.
+- Disable insecure BuildKit entitlements, host networking, device access and privileged execution. Do not export shared mutable caches in the first release.
+- Cancellation and timeout terminate the VM, revoke credentials, remove scratch disks and release concurrency reservations. A janitor reconciles abandoned VM/disk resources after coordinator crashes.
+- Never retry an ambiguous registry push by creating a mutable tag as the source of truth. Resolve the registry digest and verify it against the expected immutable artifact identity before recording success.
 
-- One untrusted build per disposable worker VM; do not co-schedule unrelated tenants inside one buildkitd process.
-- BuildKit runs as a non-root user with user namespaces; the host/hypervisor remains the outer trust boundary.
-- No Docker or containerd socket from the application runtime or production host is mounted or forwarded into the worker.
-- No privileged mode, security.insecure, device entitlement, host PID/IPC, host network, host bind mount or BuildKit insecure entitlement.
-- Do not use --oci-worker-no-process-sandbox. The upstream documentation warns that this weakens process isolation and allows a build exec to signal processes in the daemon container.
-- No cross-tenant writable cache. V1 starts with per-job ephemeral cache. Any later remote cache must be partitioned by repository/trust domain, content-addressed, integrity-checked and protected against poisoning.
+## 5. Build receipt and provenance
 
-### 4.2 Network
+A successful build returns a bounded receipt containing:
 
-- Rootless BuildKit's documented worker network mode must not be mistaken for per-instruction network isolation. The complete worker network namespace is isolated from the host and protected by an external firewall/egress proxy.
-- Default-deny traffic to RFC1918, loopback outside the worker, link-local, multicast, IPv6 local/private ranges, cloud metadata, host management networks and MOONWITNESS control-plane services.
-- No untrusted build step may choose arbitrary proxy settings, route tables, DNS servers, host mappings or host-gateway access.
-- V1 starts with an explicit package/repository egress policy and logs the policy version. No “temporarily allow all egress” fallback is acceptable.
-- Enforce DNS resolution and destination checks at the egress boundary; protect against DNS rebinding and redirects that resolve to prohibited address space.
+- build operation ID and builder identity/version;
+- repository canonical URL, immutable commit SHA and Dockerfile path;
+- digest of the build recipe and normalized non-secret build parameters;
+- base-image digests actually resolved;
+- OCI registry/repository and immutable image digest;
+- start/end timestamps and terminal result;
+- guest image/kernel and Firecracker version;
+- provenance statement digest and signature/key identifier.
 
-### 4.3 Source and secrets
+The receipt must be independently verifiable against the registry artifact. A hash alone is an integrity fingerprint, not a trusted signature or trusted timestamp. Signing key custody belongs to a dedicated signing boundary; the build guest must not receive the signing private key.
 
-- Source checkout uses an immutable commit SHA and trusted provider resolution. No branch-only build identity.
-- Source credentials are used outside the untrusted build execution and removed before the Dockerfile runs.
-- Registry credentials are short-lived and restricted to one repository and push/pull actions required for the job.
-- No long-lived ARSY operator token, Docker TLS private key, database password, service token or host credential is injected into the worker.
-- V1 does not expose arbitrary user-defined build secrets. A later secret-mount feature requires a separate threat model because any process in a Dockerfile step that receives a secret can exfiltrate it.
-- Credentials must not appear in command-line arguments, build logs, image layers, build cache, provenance, persisted operation payloads or support bundles.
+## 6. Failure, recovery and cleanup
 
-### 4.4 Resource, output and recovery limits
+- A build is not successful until the registry digest and receipt have been verified and persisted by ARSY.
+- Coordinator restart must discover and terminate/reconcile orphaned VMs by operation ID; it must not adopt an unknown VM.
+- Lost guest/worker lease invalidates the old coordinator's ability to publish a terminal result.
+- Registry timeout after push is an ambiguous outcome: query by immutable digest/manifest identity before retry; never assume failure means no artifact was pushed.
+- Cleanup is idempotent and scoped to resources carrying the exact operation ID. Never delete unrelated images, volumes, networks or VMs.
+- Failed cleanup raises an operational alert and leaves the build unavailable until the orphan is reconciled.
 
-Every job must have explicit enforced limits for wall-clock time, CPU, memory, disk, process count, context bytes, output bytes, log bytes and concurrent jobs. The dispatcher must cancel and destroy workers that exceed a limit or lose their lease.
+## 7. Proof required before acceptance
 
-The build receipt records:
-- repository identity and immutable commit;
-- context and Dockerfile/recipe digests;
-- builder name, version and image/binary digest;
-- output registry/repository and immutable OCI digest;
-- creation time, completion time and terminal outcome;
-- provenance and SBOM reference/digest when produced;
-- policy version, bounded result/error code and log reference.
+Issue #182 remains open until a reproducible, disposable CI experiment proves all of the following on the actual selected runner class:
 
-A worker restart must never be interpreted as build success. If an outcome is ambiguous, ARSY reconciles the registry digest/receipt before any retry. Image digest and provenance are durable evidence; a tag is only a mutable locator.
+1. A malicious Dockerfile cannot read a sentinel ARSY secret, host environment, host filesystem file, sibling-job file, Docker socket or VM host control socket.
+2. A malicious Dockerfile cannot reach loopback, private infrastructure, link-local metadata, ARSY, PostgreSQL, Redis or an undeclared external destination.
+3. CPU, memory, disk, PID, log and wall-clock ceilings are enforced and terminate the guest.
+4. Cancellation, coordinator termination and forced VM exit all clean up guest resources and revoke temporary credentials.
+5. A successful build produces an OCI digest and independently verifiable provenance receipt.
+6. A failed or interrupted build cannot leave an untracked VM/disk or publish a false successful operation.
+7. The proof is rerunnable from a documented command and pinned runner/guest/builder versions.
 
-## 5. Initial v1 feature boundary
+The experiment must use synthetic credentials and disposable registry/repository resources. It must not use production credentials or deploy an application.
 
-Allowed:
-- Git source by authorized provider reference, resolved to an immutable commit before build;
-- one documented Dockerfile build mode;
-- OCI image output to an explicitly selected registry repository;
-- ephemeral per-job worker/BuildKit state;
-- bounded logs, cancellation, cleanup, immutable digest and provenance/receipt persistence.
+## 8. Consequences
 
-Deferred:
-- Docker Compose builds and deployments;
-- buildpacks, Nixpacks, Paketo and arbitrary build plugins;
-- privileged/insecure Dockerfile entitlements and device builds;
-- caller-supplied secrets and build-time secret mounts;
-- shared multi-tenant buildkitd and shared writable cache;
-- public internet egress without an enforceable policy;
-- multi-architecture matrix builds, remote cache federation, build farms and billing/quotas beyond conservative global safety limits.
+### Positive
 
-## 6. Required proof before implementation is enabled
+- Arbitrary Dockerfile commands are separated from ARSY and the host control plane by a VM boundary.
+- Build and deployment remain independent authorities and failure domains.
+- Immutable artifact identity and provenance become explicit inputs to deployment authorization.
+- Unsupported host capabilities fail closed rather than weakening isolation silently.
 
-The implementation issue must demonstrate the following on the actual selected worker platform. Documentation or a passing unit test alone does not satisfy this gate.
+### Costs and limitations
 
-1. **No control-plane access:** a hostile Dockerfile cannot read ARSY/Headquarter environment, filesystem, credentials, PostgreSQL, Redis or service tokens.
-2. **No Docker access:** attempts to locate or connect to host/production Docker/containerd sockets fail; the image builder cannot mutate unrelated host containers or images.
-3. **No sibling-job access:** a build cannot inspect, signal, ptrace, mount, read or write another job's process, filesystem, cache or credentials.
-4. **Network boundary:** SSRF probes to loopback/host gateway, RFC1918, link-local, IPv6-local, cloud metadata, Docker networks and control-plane endpoints are blocked, including redirects and DNS rebinding.
-5. **Process sandbox:** background processes cannot survive their build step or signal BuildKit daemon/worker supervisor processes.
-6. **Resource enforcement:** CPU, memory, disk, PID, wall-clock, context and log limits terminate abusive builds and trigger deterministic cleanup.
-7. **Credential handling:** registry push succeeds with a short-lived scoped token, while the token is absent from build output, image layers, cache and stored receipts.
-8. **Recovery:** forced worker termination during build/push is reconciled and cleaned up without falsely recording success or duplicating deployment side effects.
-9. **Artifact integrity:** published OCI digest and provenance can be independently verified and match the exact source commit/context and pinned builder identity.
-10. **Repeatability:** disposable CI reproduces the same security tests and cleans all temporary resources.
+- Firecracker requires compatible Linux/KVM hosts and adds VM lifecycle, guest image, patching, observability and capacity operations.
+- The first release supports Dockerfile builds only and a bounded platform matrix.
+- Network egress proxying and artifact-signing custody are required supporting services, not optional documentation.
+- The proposal does not select a registry vendor or assert that a registry account/credential exists.
+- The proposal does not authorize production execution, public build APIs, Compose builds or marketplace-style multi-tenant use.
 
-Any failed proof blocks enabling user-triggered builds. Re-evaluate Buildah as an alternative if BuildKit rootless cannot meet the process/network isolation proof without weakening the host boundary.
+## 9. Acceptance state
 
-## 7. Consequences
-
-Positive:
-- Keeps build execution separate from the ARSY deployment control plane and Docker workload adapter.
-- Avoids exposing the production Docker socket to untrusted source builds.
-- Gives the initial PaaS one immutable image/digest and verifiable build receipt.
-- Starts without a shared multi-tenant builder or shared writable cache.
-
-Costs:
-- Requires a provisioner for disposable per-job VM workers, a controlled egress boundary, registry credentials and worker cleanup/monitoring.
-- Ephemeral workers are more resource-intensive than a shared daemon.
-- Cache performance is intentionally limited until a safe trust-domain cache design exists.
-- Rootless BuildKit still needs kernel/user-namespace prerequisites and must be tested on the actual deployment kernel.
-
-## 8. Status and implementation authorization
-
-This ADR records the recommended BuildKit architecture but remains **Proposed** until maintainers review the decision and the required isolation proof plan. Issue #183 must not enable a production builder until this ADR is accepted and the adversarial tests in §6 pass.
-
-ADR 0002 remains the parent ownership decision. Any change that introduces a shared privileged daemon, Docker socket access, weaker host/network isolation or a different public build contract requires a superseding ADR.
+**Proposed / NOT ACCEPTED.** The option analysis and trust boundary are documented. The adversarial proof, exact-runner capability check, maintainer review and explicit acceptance are still outstanding. Issue #183 must not start implementation until those gates are satisfied.
