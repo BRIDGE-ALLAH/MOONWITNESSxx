@@ -6,6 +6,7 @@ import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
 import { registerDockerRoutes } from './docker/routes.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
+import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { createOracleClient, type OracleClient } from './oracle/client.ts'
 import { registerOracleRoutes } from './oracle/routes.ts'
 
@@ -24,7 +25,6 @@ export function createApp(options: CreateAppOptions = {}) {
   registerOperatorApiAuth(app, env)
 
   app.register(async (instance) => {
-    // Register the onRoute hook before declaring routes in this encapsulated scope.
     await instance.register(rateLimit, { global: true, max: 120, timeWindow: '1 minute' })
     instance.setValidatorCompiler(validatorCompiler)
     instance.setSerializerCompiler(serializerCompiler)
@@ -67,6 +67,7 @@ export function createApp(options: CreateAppOptions = {}) {
     setupDatabase(instance, databasePool)
     registerDockerRoutes(instance, databasePool, env)
     registerOracleRoutes(instance, oracleClient)
+    registerLoginAttemptRoutes(instance, databasePool, env)
   })
 
   return app
