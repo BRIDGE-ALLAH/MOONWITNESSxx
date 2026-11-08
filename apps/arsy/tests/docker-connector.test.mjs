@@ -17,8 +17,8 @@ test('Docker container telemetry parses a single sample and computes cgroup-awar
   const socketPath = path.join(directory, 'docker.sock')
   const responseBody = {
     read: '2026-11-08T07:00:00.000Z',
-    cpu_stats: { cpu_usage: { total_usage: 500, percpu_usage: [250, 250] }, system_cpu_usage: 1000, online_cpus: 2 },
-    precpu_stats: { cpu_usage: { total_usage: 400, percpu_usage: [200, 200] }, system_cpu_usage: 800, online_cpus: 2 },
+    cpu_stats: { cpu_usage: { total_usage: 500, percpu_usage: [250, 250] }, system_cpu_usage: 1000, online_cpus: 0 },
+    precpu_stats: { cpu_usage: { total_usage: 400, percpu_usage: [200, 200] }, system_cpu_usage: 800, online_cpus: 0 },
     memory_stats: { usage: 200, limit: 1000, stats: { inactive_file: 40 } },
     pids_stats: { current: 3 },
     networks: { eth0: { rx_bytes: 10, tx_bytes: 20 }, eth1: { rx_bytes: 3, tx_bytes: 4 } },
