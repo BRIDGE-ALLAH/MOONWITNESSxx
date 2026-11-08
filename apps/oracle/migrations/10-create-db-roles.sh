@@ -4,11 +4,9 @@ set -eu
 : "${ORACLE_APP_DB_PASSWORD:?ORACLE_APP_DB_PASSWORD must be set}"
 : "${ORACLE_MIGRATOR_DB_PASSWORD:?ORACLE_MIGRATOR_DB_PASSWORD must be set}"
 : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}"
-export PGPASSWORD="$POSTGRES_PASSWORD"
-
 # During postgres image initialization PGHOST is unset and psql must use the
 # temporary Unix socket. The Compose bootstrap service sets PGHOST=postgres.
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
+PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
   --set=oracle_app_password="$ORACLE_APP_DB_PASSWORD" \
   --set=oracle_migrator_password="$ORACLE_MIGRATOR_DB_PASSWORD" <<'SQL'
 SELECT format('CREATE ROLE oracle_migrator LOGIN PASSWORD %L', :'oracle_migrator_password')
