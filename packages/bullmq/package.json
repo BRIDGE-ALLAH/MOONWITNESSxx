@@ -11,7 +11,7 @@
     "generate:workers": "echo 'Generate worker types from definitions'"
   },
   "dependencies": {
-    "bullmq": "^5.0.0",
+    "bullmq": "^6.7.0",
     "ioredis": "^6.0.0"
   },
   "devDependencies": {
