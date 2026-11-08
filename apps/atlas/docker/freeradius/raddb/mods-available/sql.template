@@ -18,6 +18,9 @@ sql {
     usergroup_table = "radusergroup"
     postauth_table = "radpostauth"
 
+    # Required by queries.conf for group membership lookups.
+    group_attribute = "SQL-Group"
+
     pool {
         start = 2
         min = 1
