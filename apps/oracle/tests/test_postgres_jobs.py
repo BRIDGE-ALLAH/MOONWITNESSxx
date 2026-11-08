@@ -61,9 +61,7 @@ async def prepare_database() -> str:
         await admin.execute(
             f"GRANT CONNECT ON DATABASE {database_name} TO oracle_migrator_test, oracle_app_test"
         )
-        await admin.execute(
-            "CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION oracle_migrator_test"
-        )
+        await admin.execute("CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION oracle_migrator_test")
         await admin.execute("ALTER SCHEMA oracle OWNER TO oracle_migrator_test")
         await admin.execute("GRANT USAGE ON SCHEMA oracle TO oracle_app_test")
         await admin.execute(
@@ -469,7 +467,9 @@ def test_missing_migration_keeps_durable_mode_unready_and_returns_503() -> None:
         try:
             await admin.execute("DROP DATABASE IF EXISTS oracle_unmigrated_test WITH (FORCE)")
             await admin.execute("CREATE DATABASE oracle_unmigrated_test")
-            await admin.execute("GRANT CONNECT ON DATABASE oracle_unmigrated_test TO oracle_app_test")
+            await admin.execute(
+                "GRANT CONNECT ON DATABASE oracle_unmigrated_test TO oracle_app_test"
+            )
         finally:
             await admin.close()
         parts = urlsplit(app_dsn)
