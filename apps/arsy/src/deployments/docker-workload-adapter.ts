@@ -333,7 +333,7 @@ function normalizeEnvironment(input: Record<string, string> | undefined): string
     if (!/^PUBLIC_[A-Z0-9_]{1,60}$/.test(key)) {
       throw new TypeError('Only explicitly public PUBLIC_* environment variables are allowed')
     }
-    if (typeof value !== 'string' || value.length > 4096 || /[\\0\\r\\n]/.test(value)) {
+    if (typeof value !== 'string' || value.length > 4096 || value.includes(String.fromCharCode(0)) || value.includes(String.fromCharCode(10)) || value.includes(String.fromCharCode(13))) {
       throw new TypeError(`Public environment value ${key} is invalid or exceeds 4 KiB`)
     }
     bytes += Buffer.byteLength(key, 'utf8') + Buffer.byteLength(value, 'utf8')
