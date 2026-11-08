@@ -1,4 +1,5 @@
-INSERT INTO engine_instances (
+-- Seed local Compose-managed engines once without overwriting operator-managed edits on replay.
+INSERT IGNORE INTO engine_instances (
     id, name, engine_type, role, endpoint, enabled, labels, config, secret_env_key
 ) VALUES
 (
@@ -34,8 +35,3 @@ INSERT INTO engine_instances (
     NULL,
     NULL
 )
-ON DUPLICATE KEY UPDATE
-    endpoint = VALUES(endpoint),
-    enabled = VALUES(enabled),
-    secret_env_key = VALUES(secret_env_key),
-    updated_at = CURRENT_TIMESTAMP(6);
