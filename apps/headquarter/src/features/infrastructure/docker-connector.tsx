@@ -101,7 +101,7 @@ export function DockerConnector() {
 
     let active = true
     let pending = false
-    let timer: ReturnType<typeof window.setTimeout> | undefined
+    let timer: number | undefined
     const poll = async () => {
       if (!active || pending) return
       pending = true
