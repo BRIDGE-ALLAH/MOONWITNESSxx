@@ -221,14 +221,15 @@ async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[tokio::test]
     async fn radius_probe_secret_is_private_at_creation_and_removed_after_cleanup() {
-        let secret = write_probe_secret("test-radius-shared-secret").await.unwrap();
+        let secret = write_probe_secret("test-radius-shared-secret")
+            .await
+            .unwrap();
         let path = secret.path().to_path_buf();
         let metadata = tokio::fs::metadata(&path).await.unwrap();
         assert_eq!(metadata.permissions().mode() & 0o777, 0o600);
