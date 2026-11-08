@@ -20,13 +20,12 @@ async fn mariadb_migrations_seed_and_engine_crud_are_persistent() {
         .await
         .expect("apply ATLAS migrations");
 
-    let seeded_endpoint: String = sqlx::query_scalar(
-        "SELECT endpoint FROM engine_instances WHERE id = ?",
-    )
-    .bind(SEEDED_RADIUS_ID)
-    .fetch_one(pool)
-    .await
-    .expect("find seeded FreeRADIUS engine");
+    let seeded_endpoint: String =
+        sqlx::query_scalar("SELECT endpoint FROM engine_instances WHERE id = ?")
+            .bind(SEEDED_RADIUS_ID)
+            .fetch_one(pool)
+            .await
+            .expect("find seeded FreeRADIUS engine");
     assert_eq!(seeded_endpoint, "radius://freeradius:18121");
 
     sqlx::query("UPDATE engine_instances SET endpoint = ? WHERE id = ?")
@@ -43,13 +42,12 @@ async fn mariadb_migrations_seed_and_engine_crud_are_persistent() {
     .await
     .expect("replay idempotent engine seed");
 
-    let preserved_endpoint: String = sqlx::query_scalar(
-        "SELECT endpoint FROM engine_instances WHERE id = ?",
-    )
-    .bind(SEEDED_RADIUS_ID)
-    .fetch_one(pool)
-    .await
-    .expect("read operator-managed endpoint");
+    let preserved_endpoint: String =
+        sqlx::query_scalar("SELECT endpoint FROM engine_instances WHERE id = ?")
+            .bind(SEEDED_RADIUS_ID)
+            .fetch_one(pool)
+            .await
+            .expect("read operator-managed endpoint");
     assert_eq!(preserved_endpoint, "radius://radius-operator-change:18121");
 
     let input = EngineWriteRequest {
@@ -86,7 +84,12 @@ async fn mariadb_migrations_seed_and_engine_crud_are_persistent() {
     assert_eq!(updated.endpoint, "https://powerdns.test:8081");
 
     assert!(engine::delete(&created.id).await.expect("delete engine"));
-    assert!(engine::get(&created.id).await.expect("read deleted engine").is_none());
+    assert!(
+        engine::get(&created.id)
+            .await
+            .expect("read deleted engine")
+            .is_none()
+    );
 
     let row = sqlx::query("SELECT COUNT(*) AS total FROM engine_instances WHERE id = ?")
         .bind(&created.id)
