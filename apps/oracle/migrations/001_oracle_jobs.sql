@@ -52,3 +52,20 @@ COMMENT ON COLUMN oracle.jobs.lease_owner IS
   'Unique worker fencing token. Only the current lease owner may persist a terminal result.';
 COMMENT ON COLUMN oracle.jobs.idempotency_key IS
   'Optional global service idempotency key, retained only as long as its associated terminal job.';
+
+
+-- Keep the application login separate from the migration/owner identity.
+-- The role is provisioned before this migration by the reviewed bootstrap step.
+REVOKE ALL ON SCHEMA oracle FROM PUBLIC;
+DO $oracle_grants$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app') THEN
+    EXECUTE 'GRANT USAGE ON SCHEMA oracle TO oracle_app';
+    EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE oracle.jobs TO oracle_app';
+    EXECUTE format(
+      'ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA oracle GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO oracle_app',
+      current_user
+    );
+  END IF;
+END
+$oracle_grants$;
