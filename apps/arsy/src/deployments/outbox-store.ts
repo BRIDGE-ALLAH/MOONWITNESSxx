@@ -104,6 +104,7 @@ export async function claimDeploymentOutbox(
          AND dead_lettered_at IS NULL
          AND attempt_count >= max_attempts
          AND (locked_until IS NULL OR locked_until <= now())
+         AND ($4::text IS NULL OR owner_id = $4)
        RETURNING id
      ),
      candidates AS (
