@@ -236,12 +236,10 @@ export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
     }
 
     let options: http.RequestOptions | https.RequestOptions
-    let requestFn: typeof http.request | typeof https.request
     if (connection.kind === 'local') {
       if (connection.socketPath !== '/var/run/docker.sock' && connection.socketPath !== '/run/docker.sock') {
         throw new DockerWorkloadTransportError('Local Docker socket path is not an approved host socket')
       }
-      requestFn = http.request
       options = { socketPath: connection.socketPath, path: request.path, method: request.method }
     } else {
       let endpoint: URL
@@ -276,7 +274,6 @@ export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
           callback(null, candidates[0].address, candidates[0].family)
         }
       }) as NonNullable<https.RequestOptions['lookup']>
-      requestFn = https.request
       options = {
         hostname: endpoint.hostname,
         port: endpoint.port || 2376,
@@ -313,7 +310,9 @@ export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
           { outcomeUnknown: request.method !== 'GET' },
         )))
       }
-      const outgoing = requestFn(options as never, onResponse)
+      const outgoing = connection.kind === 'remote'
+        ? https.request(options as https.RequestOptions, onResponse)
+        : http.request(options as http.RequestOptions, onResponse)
       outgoing.setTimeout(this.timeoutMs, () => outgoing.destroy(new Error('Docker Engine request timed out')))
       outgoing.on('error', (error) => reject(new DockerWorkloadTransportError(
         error.message,
