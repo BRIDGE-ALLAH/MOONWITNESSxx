@@ -79,8 +79,8 @@ async def prepare_database() -> str:
         "oracle_migrator_test",
         "oracle-migrator-integration-only",
     )
-    await apply_migrations(migrator_dsn)
-    await apply_migrations(migrator_dsn)
+    await apply_migrations(migrator_dsn, runtime_role=APP_ROLE)
+    await apply_migrations(migrator_dsn, runtime_role=APP_ROLE)
 
     admin = await asyncpg.connect(TEST_DATABASE_URL)
     try:
@@ -88,6 +88,11 @@ async def prepare_database() -> str:
             "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA oracle TO oracle_app_test"
         )
         await admin.execute("DELETE FROM oracle.jobs")
+        migration_history_writable = await admin.fetchval(
+            "SELECT has_table_privilege($1, 'oracle.schema_migrations', 'UPDATE')",
+            APP_ROLE,
+        )
+        assert migration_history_writable is False
         is_superuser = await admin.fetchval(
             "SELECT rolsuper FROM pg_roles WHERE rolname = $1",
             APP_ROLE,
