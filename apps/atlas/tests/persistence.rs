@@ -219,7 +219,11 @@ async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
     let sessions = radius::active_sessions()
         .await
         .expect("list active RADIUS sessions");
-    assert!(sessions.iter().any(|session| session.acctsessionid == accounting_id));
+    assert!(
+        sessions
+            .iter()
+            .any(|session| session.acctsessionid == accounting_id)
+    );
 
     let summary = radius::accounting_summary()
         .await
