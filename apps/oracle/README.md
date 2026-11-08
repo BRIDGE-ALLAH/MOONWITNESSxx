@@ -26,7 +26,7 @@ All inputs have explicit size limits. Only aggregate outputs are returned for te
 The service exposes:
 
 - \`GET /health/live\` — process liveness.
-- \`GET /health/ready\` — worker/readiness and queue capacity; explicitly reports that jobs are not durable.
+- \`GET /health/ready\` — worker/readiness, queue capacity and configured durability; returns HTTP 503 while configured storage or its explicit migration is unavailable.
 - \`GET /v1/capabilities\` — available task types and limits.
 - \`POST /v1/jobs\` — submit a job; responds \`202 Accepted\` and a job ID.
 - \`GET /v1/jobs/{job_id}\` — retrieve job status/result/provenance.
@@ -60,6 +60,7 @@ The request body is versioned at \`/v1\`; Pydantic rejects unknown fields. Reusi
 - Grant the service a dedicated PostgreSQL login with only the privileges it needs on the `oracle` schema and `oracle.jobs` table (USAGE on schema; SELECT/INSERT/UPDATE/DELETE on table). The root Compose credentials are development-only and must not be reused as production credentials.
 - Bounded submitted input is stored in PostgreSQL so work can resume after a process restart. Treat database access and backups as sensitive; the 24-hour default retention is not a substitute for the deployment's required storage encryption, access control, and backup-retention policy.
 - ORACLE stores computation job lifecycle only. ARSY remains caller identity, policy, authorization and orchestration authority; WITNESS FABRIC remains evidence/provenance authority. The ORACLE schema is not canonical audit or source-evidence storage.
+
 ## Local development
 
 Requires Python 3.12 or newer.
