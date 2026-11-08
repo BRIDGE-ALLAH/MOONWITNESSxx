@@ -11,6 +11,8 @@ import { registerEvidenceRoutes } from './evidence/routes.ts'
 import { registerGovernanceRoutes } from './governance/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { registerOpportunityRoutes } from './opportunities/routes.ts'
+import { registerAssetRoutes } from './assets/routes.ts'
+import type { AssetStorage } from './assets/storage.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { createOracleClient, type OracleClient } from './oracle/client.ts'
 import { registerOracleRoutes } from './oracle/routes.ts'
@@ -20,6 +22,7 @@ export interface CreateAppOptions {
   logger?: boolean
   env?: NodeJS.ProcessEnv
   oracleClient?: OracleClient
+  assetStorage?: AssetStorage
   /** Optional trusted policy/capability adapters; omitted configuration fails closed. */
   deploymentAuthorization?: Omit<AuthorizeDeploymentDependencies, 'store'>
 }
@@ -71,6 +74,7 @@ export function createApp(options: CreateAppOptions = {}) {
     registerGovernanceRoutes(instance, databasePool as unknown as Pool)
     registerLoginAttemptRoutes(instance, databasePool)
     registerOpportunityRoutes(instance, databasePool, env)
+    registerAssetRoutes(instance, databasePool, env, options.assetStorage)
     registerOracleRoutes(instance, oracleClient)
   })
 
