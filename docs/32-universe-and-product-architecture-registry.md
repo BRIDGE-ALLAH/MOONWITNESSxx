@@ -37,7 +37,7 @@ The wider product catalog is organized as **seven core application experiences p
 |   5 | **WORLD OBSERVATORY** | Research, observations, evidence, source context, and knowledge discovery; JIZZ is a related perspective/analysis domain | Core application                   | Target experience; not a standalone app in this workspace                                              |
 |   6 | **MOONSKY**           | Communication experience: channels, conversations, routing, and delivery                                                 | Core application                   | Target; no standalone app in this workspace                                                            |
 |   7 | **HARBOR**            | Authenticated E-ISP subscriber portal: account, service, usage, billing, and support                                     | Core application                   | Target; no standalone app in this workspace                                                            |
-|   8 | **COCKPIT**           | Real-time NOC and infrastructure operations, dispatch, telemetry, and operator actions                                   | Additional operational application | Target; do not merge its live operational workflow into strategic HEADQUARTER                          |
+|   8 | **COCKPIT**           | Real-time NOC and infrastructure operations, dispatch, telemetry, operator actions, and local software release workspace | Additional operational application | Workspace at `apps/cockpit` with Tauri 2/Rust runtime and Next.js static UI; not production-complete |
 |   9 | **E-ISP**             | Public ISP storefront: plans, coverage, service information, registration, and acquisition                               | Additional industry application    | Target; separate from authenticated HARBOR subscriber experience                                       |
 
 ### 2.1 Seven core experiences
@@ -235,7 +235,7 @@ Public web entry points may expose only deliberately designed frontends and API 
 3. **Persistence and Base Platform:** reconcile old ORM PR material against current main; implement only after real PostgreSQL/SQLite adapter contracts, authorization, and recovery tests are proven.
 4. **ATLAS / AEGIS:** complete the PostgreSQL-based ATLAS implementation under ADR 0001; verify separate database roles, FreeRADIUS PostgreSQL integration, live API-to-RADIUS authentication, and bounded ARSY/AEGIS execution contracts.
 5. **Knowledge and Observatory:** define source, provenance, licensing, retrieval, and review contracts before creating a separate frontend.
-6. **GATE / DOCK / ID / MOONSKY / HARBOR / E-ISP / COCKPIT:** establish independent product requirements, identity, API contracts, and deployment boundaries before adding workspace apps.
+6. **Existing GATE / ID / COCKPIT workspaces:** reconcile each implementation against its product contract, offline/online boundary, security model, and actual maturity. DOCK / MOONSKY / HARBOR / E-ISP remain targets until their independent requirements and deployment boundaries justify implementation.
 7. **ROCKSOUL.ID:** plan brand/domain activation only after domain purchase and owner verification.
 8. **Production readiness:** separate deployment, security, backup/restore, monitoring, rollback, accessibility, and live smoke-test evidence from code-level completion.
 
