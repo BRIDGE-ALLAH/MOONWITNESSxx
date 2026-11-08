@@ -4,18 +4,20 @@ import { randomUUID } from 'node:crypto'
 import {
   acknowledgeDeploymentOutbox,
   claimDeploymentOutbox,
+  reapExpiredDeploymentOutbox,
   retryDeploymentOutbox,
 } from '../src/deployments/outbox-store.ts'
 import { dispatchDeploymentOutboxBatch } from '../src/deployments/outbox-dispatcher.ts'
 
 class FakePool {
   messages = []
+  statements = []
 
-  add({ id, attemptCount = 0, maxAttempts = 8, eventType = 'deployment.operation.queued', payload = { operationId: 'op-1' } } = {}) {
+  add({ ownerId = 'operator-1', id, attemptCount = 0, maxAttempts = 8, eventType = 'deployment.operation.queued', payload = { operationId: 'op-1' } } = {}) {
     this.messages.push({
       id: id ?? `outbox-${this.messages.length + 1}`,
       operation_id: 'op-1',
-      owner_id: 'operator-1',
+      owner_id: ownerId,
       event_type: eventType,
       payload,
       attempt_count: attemptCount,
@@ -32,28 +34,33 @@ class FakePool {
   }
 
   async query(statement, values = []) {
-    if (statement.includes('SET dead_lettered_at = now()') &&
-        statement.includes('attempts_exhausted')) {
-      for (const row of this.messages) {
-        if (!row.delivered_at && !row.dead_lettered_at &&
-            row.attempt_count >= row.max_attempts &&
-            (!row.locked_until || row.locked_until.getTime() <= Date.now())) {
-          row.dead_lettered_at = new Date()
-          row.locked_by = null
-          row.locked_until = null
-          row.lease_token = null
-          row.last_error_code = 'attempts_exhausted'
-        }
+    this.statements.push({ statement, values })
+    if (statement.includes('WITH expired AS')) {
+      const [limit, ownerId] = values
+      const candidates = this.messages
+        .filter(row => !row.delivered_at && !row.dead_lettered_at &&
+          row.attempt_count >= row.max_attempts &&
+          (!row.locked_until || row.locked_until.getTime() <= Date.now()) &&
+          (!ownerId || row.owner_id === ownerId))
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        .slice(0, limit)
+      for (const row of candidates) {
+        row.dead_lettered_at = new Date()
+        row.locked_by = null
+        row.locked_until = null
+        row.lease_token = null
+        row.last_error_code ??= 'attempts_exhausted'
       }
-      return { rows: [] }
+      return { rows: candidates.map(row => ({ id: row.id })) }
     }
     if (statement.includes('WITH candidates AS')) {
-      const [workerId, limit, leaseSeconds] = values
+      const [workerId, limit, leaseSeconds, ownerId] = values
       const candidates = this.messages
         .filter(row => !row.delivered_at && !row.dead_lettered_at &&
           row.available_at <= Date.now() &&
           (!row.locked_until || row.locked_until.getTime() <= Date.now()) &&
-          row.attempt_count < row.max_attempts)
+          row.attempt_count < row.max_attempts &&
+          (!ownerId || row.owner_id === ownerId))
         .sort((a, b) => a.available_at - b.available_at)
         .slice(0, limit)
       for (const row of candidates) {
@@ -89,7 +96,7 @@ class FakePool {
       return { rows: [{ id }] }
     }
     if (statement.includes('SET locked_by = NULL') && statement.includes('available_at = CASE')) {
-      const [id, workerId, token, errorCode, retryAt] = values
+      const [id, workerId, token, errorCode] = values
       const row = this.messages.find(item => item.id === id)
       if (!row || row.locked_by !== workerId || row.lease_token !== token ||
           !row.locked_until || row.locked_until.getTime() <= Date.now() ||
@@ -101,7 +108,8 @@ class FakePool {
       if (row.attempt_count >= row.max_attempts) {
         row.dead_lettered_at = new Date()
       } else {
-        row.available_at = retryAt.getTime()
+        const delaySeconds = Math.min(3600, 5 * (2 ** Math.max(0, row.attempt_count - 1)))
+        row.available_at = Date.now() + delaySeconds * 1000
       }
       return { rows: [{ dead_lettered_at: row.dead_lettered_at }] }
     }
