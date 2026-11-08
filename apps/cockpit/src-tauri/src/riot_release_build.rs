@@ -139,7 +139,11 @@ fn detect_profiles(root: &Path) -> Vec<ReleaseBuildProfile> {
             .into_iter()
             .flatten()
             .filter_map(Result::ok)
-            .any(|entry| entry.path().extension().is_some_and(|extension| extension == "sln" || extension == "csproj"))
+            .any(|entry| {
+                entry.path().extension()
+                    .and_then(|extension| extension.to_str())
+                    .is_some_and(|extension| matches!(extension, "sln" | "csproj"))
+            })
     {
         profiles.push(ReleaseBuildProfile {
             id: "dotnet-publish".into(),
@@ -230,7 +234,10 @@ fn is_intermediate_artifact(path: &Path) -> bool {
     matches!(
         extension.as_str(),
         "d" | "rmeta" | "pdb" | "ilk" | "obj" | "o" | "exp"
-    ) || path.file_name().is_some_and(|name| name == ".ds_store")
+    ) || path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.eq_ignore_ascii_case(".ds_store"))
 }
 
 fn safe_file_name(path: &Path) -> String {
@@ -588,6 +595,14 @@ mod tests {
         fs::write(root.join("package.json"), r#"{"scripts":{"test":"node test.js"}}"#).unwrap();
         assert!(detect_profiles(&root).is_empty());
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn filters_compiler_intermediates_from_artifact_candidates() {
+        assert!(is_intermediate_artifact(Path::new("demo.rmeta")));
+        assert!(is_intermediate_artifact(Path::new("demo.pdb")));
+        assert!(!is_intermediate_artifact(Path::new("demo.exe")));
+        assert!(!is_intermediate_artifact(Path::new("index.html")));
     }
 
     #[test]
