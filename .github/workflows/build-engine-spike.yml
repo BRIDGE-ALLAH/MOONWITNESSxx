@@ -28,12 +28,15 @@ jobs:
       - name: Install rootless worker prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y uidmap slirp4netns jq curl python3
+          sudo apt-get install -y uidmap slirp4netns jq curl python3 shellcheck
           if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
             # This is a disposable GitHub-hosted VM. Production must use a
             # dedicated builder VM/profile, not a privileged container.
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
+
+      - name: Shell-check the proof script
+        run: shellcheck scripts/build-engine-spike/verify.sh
 
       - name: Run isolated BuildKit proof
         env:
