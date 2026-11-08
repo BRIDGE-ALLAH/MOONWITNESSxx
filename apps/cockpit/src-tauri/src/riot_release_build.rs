@@ -6,7 +6,7 @@ use std::{
     io::Read,
     path::{Path, PathBuf},
     process::Stdio,
-    sync::{atomic::{AtomicU64, Ordering}, Mutex},
+    sync::{atomic::{AtomicBool, AtomicU64, Ordering}, Mutex},
     time::Duration,
 };
 use tauri::Manager;
@@ -18,10 +18,18 @@ use tokio::{
 
 const BUILD_TIMEOUT_SECS: u64 = 15 * 60;
 const MAX_BUILD_LOG_BYTES: usize = 48 * 1024;
+const MAX_BUILD_HISTORY_RECORDS: usize = 200;
 const MAX_ARTIFACT_FILES: usize = 250;
 const MAX_ARTIFACT_DEPTH: usize = 5;
 const MAX_ARTIFACT_BYTES: u64 = 2 * 1024 * 1024 * 1024;
 static BUILD_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+static BUILD_RUNNING: AtomicBool = AtomicBool::new(false);
+struct BuildRunGuard;
+impl Drop for BuildRunGuard {
+    fn drop(&mut self) {
+        BUILD_RUNNING.store(false, Ordering::Release);
+    }
+}
 static BUILD_STORE_LOCK: Mutex<()> = Mutex::new(());
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -347,6 +355,13 @@ pub async fn riot_release_run_build(
         .into_iter()
         .find(|profile| profile.id == profile_id)
         .ok_or_else(|| "The requested build profile is not available for this repository.".to_string())?;
+    if BUILD_RUNNING
+        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        .is_err()
+    {
+        return Err("Another RIOT RELEASE build is already running in COCKPIT.".into());
+    }
+    let _build_guard = BuildRunGuard;
 
     let started = std::time::Instant::now();
     let id = format!("build-{}-{}", now_ms(), BUILD_SEQUENCE.fetch_add(1, Ordering::Relaxed));
@@ -429,6 +444,10 @@ pub async fn riot_release_run_build(
     let file = store_file(&app, "builds.json")?;
     let mut history: Vec<ReleaseBuildRecord> = read_store(&file)?;
     history.push(record.clone());
+    if history.len() > MAX_BUILD_HISTORY_RECORDS {
+        let excess = history.len() - MAX_BUILD_HISTORY_RECORDS;
+        history.drain(0..excess);
+    }
     write_store(&file, &history)?;
     Ok(record)
 }
