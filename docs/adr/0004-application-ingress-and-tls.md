@@ -50,15 +50,15 @@ Pin an explicitly tested Caddy image digest/version in the later implementation;
 
 ### 2.2 One source of truth and strict component ownership
 
-| Concern                                                                                     | Sole owner                                        | Data or authority                                                                                  |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Domain claim, ownership proof, approved hostname and route intent                           | ARSY                                              | Durable canonical records, actor, approval, status and audit                                       |
-| Deployment identity and allowed upstream                                                    | ARSY                                              | Existing deployment/operation records and authorized target receipt                                |
-| DNS record configuration                                                                    | ATLAS                                             | DNS-specific desired/observed records and provider receipt, only after ARSY authorizes the request |
-| Provider config translation and application                                                 | Ingress Adapter                                   | Typed route contract, provider generation ID and applied-config fingerprint                        |
-| TLS termination, ACME account/client operation, certificate/private-key storage and renewal | Caddy                                             | Provider-owned persistent certificate storage                                                      |
-| Docker network membership and workload endpoints                                            | ARSY through the existing Docker Workload Adapter | Explicit deployment-scoped network and workload receipts                                           |
-| Operator presentation                                                                       | HEADQUARTER                                       | Same-origin authenticated BFF calls to ARSY                                                        |
+| Concern | Sole owner | Data or authority |
+|---|---|---|
+| Domain claim, ownership proof, approved hostname and route intent | ARSY | Durable canonical records, actor, approval, status and audit |
+| Deployment identity and allowed upstream | ARSY | Existing deployment/operation records and authorized target receipt |
+| DNS record configuration | ATLAS | DNS-specific desired/observed records and provider receipt, only after ARSY authorizes the request |
+| Provider config translation and application | Ingress Adapter | Typed route contract, provider generation ID and applied-config fingerprint |
+| TLS termination, ACME account/client operation, certificate/private-key storage and renewal | Caddy | Provider-owned persistent certificate storage |
+| Docker network membership and workload endpoints | ARSY through the existing Docker Workload Adapter | Explicit deployment-scoped network and workload receipts |
+| Operator presentation | HEADQUARTER | Same-origin authenticated BFF calls to ARSY |
 
 ARSY is authoritative for desired domain/route state. Caddy configuration, certificates and runtime observations are provider state, not a second business database. The ingress adapter must report a typed application receipt and provider generation/fingerprint to ARSY. It must not make authorization or policy decisions.
 
@@ -197,12 +197,12 @@ Not included: high availability/multi-node Caddy, wildcard tenant certificates, 
 
 ## 4. Alternatives considered
 
-| Option                               | Benefits                                                                                                                                              | Costs / risks                                                                                                                                                        | Decision                                                         |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| **Caddy 2**                          | Automatic HTTPS; explicit config API; permissioned Unix admin socket; graceful full-config reload with rollback; relatively small operational surface | Requires a tightly controlled adapter and an explicit network-attachment design; shared gateway is a trust boundary                                                  | **Proposed for first release**                                   |
-| **Traefik 3 — File provider only**   | Dynamic routers/services/middlewares from YAML/TOML; built-in ACME; no Docker provider required                                                       | File-provider reload depends on filesystem notifications and mounted-volume behavior; ACME JSON must be mode 0600 and cannot be shared by multiple Traefik instances | Credible alternative; not selected for this first release        |
-| **Nginx/OpenResty plus ACME client** | Mature reverse proxy, extensive routing controls and broad operational familiarity                                                                    | Certificate issuer/renewal, config generator, validation, reload orchestration and rollback are separate components to own and test                                  | Rejected for the first release due to extra lifecycle components |
-| **Envoy with xDS/SDS control plane** | Rich dynamic routing, traffic policy, observability and certificate-distribution contracts                                                            | Requires a substantial xDS/SDS management plane and greater operational complexity than this single-host first release needs                                         | Deferred until measured scale/traffic policy justifies it        |
+| Option | Benefits | Costs / risks | Decision |
+|---|---|---|---|
+| **Caddy 2** | Automatic HTTPS; explicit config API; permissioned Unix admin socket; graceful full-config reload with rollback; relatively small operational surface | Requires a tightly controlled adapter and an explicit network-attachment design; shared gateway is a trust boundary | **Proposed for first release** |
+| **Traefik 3 — File provider only** | Dynamic routers/services/middlewares from YAML/TOML; built-in ACME; no Docker provider required | File-provider reload depends on filesystem notifications and mounted-volume behavior; ACME JSON must be mode 0600 and cannot be shared by multiple Traefik instances | Credible alternative; not selected for this first release |
+| **Nginx/OpenResty plus ACME client** | Mature reverse proxy, extensive routing controls and broad operational familiarity | Certificate issuer/renewal, config generator, validation, reload orchestration and rollback are separate components to own and test | Rejected for the first release due to extra lifecycle components |
+| **Envoy with xDS/SDS control plane** | Rich dynamic routing, traffic policy, observability and certificate-distribution contracts | Requires a substantial xDS/SDS management plane and greater operational complexity than this single-host first release needs | Deferred until measured scale/traffic policy justifies it |
 
 Traefik's File provider supports dynamic routing from structured files, but its documentation notes filesystem-notification caveats for mounted/bound directories. Traefik's Docker provider requires Docker API access and explicitly warns about the host impact if that access is unrestricted. Its ACME storage file requires mode 0600 and cannot be shared across multiple instances for concurrency reasons: [File provider](https://doc.traefik.io/traefik/reference/routing-configuration/dynamic-configuration-methods/), [Docker provider security](https://doc.traefik.io/traefik/v3.8/reference/install-configuration/providers/docker/), [ACME storage](https://doc.traefik.io/traefik/v3.8/reference/install-configuration/tls/certificate-resolvers/acme/).
 
@@ -210,18 +210,18 @@ Docker's network documentation also warns that a shared user-defined bridge perm
 
 ## 5. Risks and unresolved proof requirements
 
-| Risk                                                     | Required mitigation / evidence                                                                                                                                                    |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Risk | Required mitigation / evidence |
+|---|---|
 | Shared Caddy compromise reaches every connected upstream | Single trusted host only for v1; isolate untrusted tenants into separate gateway trust zones before hosting them together; no Docker socket; minimize modules and OS capabilities |
-| Domain takeover or arbitrary certificate issuance        | TXT ownership proof before route configuration; no on-demand TLS or wildcards; issuance rate limits and audit                                                                     |
-| Bad generated config causes outage                       | Deterministic full config, schema validation, staged candidate and Caddy rollback; fault-injection test                                                                           |
-| DNS/IPv6 mismatch                                        | Verify A and AAAA against approved addresses; test both address families and ACME reachability                                                                                    |
-| Caddy state diverges from ARSY                           | ARSY is source of truth; persisted desired state, generation IDs, startup reconciliation and drift alerts                                                                         |
-| ACME outage or rate limit                                | Staging validation, honor retry hints, preserve existing valid cert, monitor renewal windows; no plaintext fallback                                                               |
-| Certificate store loss or disclosure                     | Persistent restricted storage, encrypted backups, restore test, least privilege and separate key custody                                                                          |
-| Gateway-network attachment is overbroad                  | Exact deployment-scoped Docker Workload Adapter operation, ownership labels and integration tests proving no unrelated network attachment                                         |
-| Admin socket becomes remotely reachable                  | Unix socket only, dedicated group/mode, no TCP admin listener, filesystem permission test                                                                                         |
-| Proxy-to-upstream SSRF or host-service access            | Upstream references only from authenticated deployment receipts; never accept arbitrary upstream URLs/addresses                                                                   |
+| Domain takeover or arbitrary certificate issuance | TXT ownership proof before route configuration; no on-demand TLS or wildcards; issuance rate limits and audit |
+| Bad generated config causes outage | Deterministic full config, schema validation, staged candidate and Caddy rollback; fault-injection test |
+| DNS/IPv6 mismatch | Verify A and AAAA against approved addresses; test both address families and ACME reachability |
+| Caddy state diverges from ARSY | ARSY is source of truth; persisted desired state, generation IDs, startup reconciliation and drift alerts |
+| ACME outage or rate limit | Staging validation, honor retry hints, preserve existing valid cert, monitor renewal windows; no plaintext fallback |
+| Certificate store loss or disclosure | Persistent restricted storage, encrypted backups, restore test, least privilege and separate key custody |
+| Gateway-network attachment is overbroad | Exact deployment-scoped Docker Workload Adapter operation, ownership labels and integration tests proving no unrelated network attachment |
+| Admin socket becomes remotely reachable | Unix socket only, dedicated group/mode, no TCP admin listener, filesystem permission test |
+| Proxy-to-upstream SSRF or host-service access | Upstream references only from authenticated deployment receipts; never accept arbitrary upstream URLs/addresses |
 
 Before enabling public traffic, an isolated CI/staging proof must demonstrate:
 
