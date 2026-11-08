@@ -39,15 +39,18 @@ Do not use Signal as the default for dense operational data, finance, security, 
 
 ## 4. Current implementation selectors
 
-The current stylesheet supports:
+The current stylesheet and UI source support:
 
-- root Archive fallback;
-- `.dark` / `.theme-observatory` dark token set;
-- `.theme-archive` warm editorial token set.
+- root Archive fallback for consumers that have not mounted `SkinRoot`;
+- `.dark` / `.theme-observatory` compatibility selectors;
+- `.theme-archive` compatibility selector;
+- `[data-mw-skin="observatory"][data-mw-mode="dark"]`;
+- `[data-mw-skin="archive"][data-mw-mode="light"]`;
+- `[data-mw-skin="signal"][data-mw-mode="dark"]`.
 
-The root Archive fallback is a compatibility default, not a universal application-skin decision. The package does **not yet** provide a complete typed skin registry/provider, route-level skin selector, or Signal runtime skin. Treat these as blueprint targets, not shipped capabilities.
+A static typed registry, deterministic resolver, and server-compatible `SkinRoot` are implemented on the Skin Engine feature branch. The root Archive fallback remains for compatibility; it is not a universal application-skin decision. No global picker, preference persistence, React context, or automatic route mapping is implemented yet.
 
-During migration, preserve current selectors until all consumers are updated and verified.
+During migration, preserve legacy selectors until all consumers are updated and verified.
 
 ## 5. Semantic token rules
 
@@ -93,11 +96,11 @@ Allowed skin keys: `observatory`, `archive`, `signal`.
 Allowed modes: `dark`, `light`, only where the pairing is designed and tested.  
 Allowed densities: `comfortable`, `compact`.
 
-These attributes are a future integration contract, not current runtime behavior.
+These attributes are applied by the current `SkinRoot` component. Consumers still choose the skin explicitly; automatic route mapping and preference persistence are not part of this initial foundation.
 
 ## 8. Verification status
 
-Source-level token contract tests exist for the current theme selectors. They do not prove browser visual correctness or WCAG conformance.
+Source-level token and skin contract tests cover the registry, fallback contract, root attributes, and semantic token presence. They do not prove browser visual correctness or WCAG conformance.
 
 Release gates still include:
 
