@@ -174,3 +174,38 @@ test('channel optimistic updates reject stale revisions', async () => {
     assert.equal(response.statusCode, 409)
   } finally { await app.close() }
 })
+
+
+test('channel registry rejects non-HTTP(S) and credential-bearing policy URLs', async () => {
+  const pool = createPool()
+  const app = await createApp({ databasePool: pool, logger: false, env })
+  try {
+    const unsafePolicy = await app.inject({
+      method: 'POST',
+      url: '/api/v1/channels',
+      headers: { 'x-arsy-operator-token': token },
+      payload: { ...body, officialPolicyUrl: 'javascript:alert(1)' },
+    })
+    const unsafeEvidence = await app.inject({
+      method: 'POST',
+      url: '/api/v1/channels',
+      headers: { 'x-arsy-operator-token': token },
+      payload: {
+        ...body,
+        evidence: [...body.evidence, evidence('other', 'Unsafe source', 'data:text/html,unsafe')],
+      },
+    })
+    const credentialUrl = await app.inject({
+      method: 'POST',
+      url: '/api/v1/channels',
+      headers: { 'x-arsy-operator-token': token },
+      payload: { ...body, officialPolicyUrl: 'https://user:pass@example.com/policy' },
+    })
+    assert.equal(unsafePolicy.statusCode, 400)
+    assert.equal(unsafeEvidence.statusCode, 400)
+    assert.equal(credentialUrl.statusCode, 400)
+    assert.equal(pool.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
