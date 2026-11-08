@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
 import {
   acknowledgeDeploymentOutbox,
   claimDeploymentOutbox,
@@ -47,7 +48,7 @@ class FakePool {
       return { rows: [] }
     }
     if (statement.includes('WITH candidates AS')) {
-      const [workerId, limit, leaseSeconds, token] = values
+      const [workerId, limit, leaseSeconds] = values
       const candidates = this.messages
         .filter(row => !row.delivered_at && !row.dead_lettered_at &&
           row.available_at <= Date.now() &&
@@ -58,7 +59,7 @@ class FakePool {
       for (const row of candidates) {
         row.locked_by = workerId
         row.locked_until = new Date(Date.now() + leaseSeconds * 1000)
-        row.lease_token = token
+        row.lease_token = randomUUID()
         row.attempt_count += 1
       }
       return { rows: candidates.map(row => ({
