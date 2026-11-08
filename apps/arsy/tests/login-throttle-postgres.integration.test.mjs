@@ -58,6 +58,13 @@ test('PostgreSQL login throttle is shared across two ARSY instances and clears o
     const success = await send(appB, 'success')
     assert.equal(success.json().data.allowed, true)
     assert.equal((await send(appA, 'check')).json().data.allowed, true)
+
+    const concurrentFailures = await Promise.all(
+      Array.from({ length: 10 }, (_, index) => send(index % 2 === 0 ? appA : appB, 'failure')),
+    )
+    assert.equal(concurrentFailures.length, 10)
+    assert.ok(concurrentFailures.every((response) => response.statusCode === 200))
+    assert.equal((await send(appA, 'check')).json().data.allowed, false)
   } finally {
     await poolA.query('DELETE FROM arsy_login_attempt_buckets WHERE owner_id = $1', [ownerId]).catch(() => undefined)
     await appA.close()
