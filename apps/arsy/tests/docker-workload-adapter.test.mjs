@@ -74,6 +74,11 @@ test('create validates immutable image digests, public env, resource bounds and 
   }), /PUBLIC_\*/)
   await assert.rejects(adapter.create(connection, {
     ownerId, deploymentId, operationId, name: 'web', image,
+    publicEnvironment: { PUBLIC_MODE: `line${String.fromCharCode(10)}break` },
+    resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
+  }), /invalid or exceeds 4 KiB/)
+  await assert.rejects(adapter.create(connection, {
+    ownerId, deploymentId, operationId, name: 'web', image,
     resources: { memoryBytes: 32 * 1024 * 1024, nanoCpus: 500_000_000 },
   }), /128 MiB/)
   await assert.rejects(adapter.create(connection, {
