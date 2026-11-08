@@ -13,7 +13,14 @@ class FakePool {
   messages = []
   statements = []
 
-  add({ ownerId = 'operator-1', id, attemptCount = 0, maxAttempts = 8, eventType = 'deployment.operation.queued', payload = { operationId: 'op-1' } } = {}) {
+  add({
+    ownerId = 'operator-1',
+    id,
+    attemptCount = 0,
+    maxAttempts = 8,
+    eventType = 'deployment.operation.queued',
+    payload = { operationId: 'op-1' },
+  } = {}) {
     this.messages.push({
       id: id ?? `outbox-${this.messages.length + 1}`,
       operation_id: 'op-1',
@@ -38,10 +45,14 @@ class FakePool {
     if (statement.includes('WITH expired AS')) {
       const [limit, ownerId] = values
       const candidates = this.messages
-        .filter(row => !row.delivered_at && !row.dead_lettered_at &&
-          row.attempt_count >= row.max_attempts &&
-          (!row.locked_until || row.locked_until.getTime() <= Date.now()) &&
-          (!ownerId || row.owner_id === ownerId))
+        .filter(
+          (row) =>
+            !row.delivered_at &&
+            !row.dead_lettered_at &&
+            row.attempt_count >= row.max_attempts &&
+            (!row.locked_until || row.locked_until.getTime() <= Date.now()) &&
+            (!ownerId || row.owner_id === ownerId)
+        )
         .sort((a, b) => a.created_at.localeCompare(b.created_at))
         .slice(0, limit)
       for (const row of candidates) {
@@ -51,16 +62,20 @@ class FakePool {
         row.lease_token = null
         row.last_error_code ??= 'attempts_exhausted'
       }
-      return { rows: candidates.map(row => ({ id: row.id })) }
+      return { rows: candidates.map((row) => ({ id: row.id })) }
     }
     if (statement.includes('WITH candidates AS')) {
       const [workerId, limit, leaseSeconds, ownerId] = values
       const candidates = this.messages
-        .filter(row => !row.delivered_at && !row.dead_lettered_at &&
-          row.available_at <= Date.now() &&
-          (!row.locked_until || row.locked_until.getTime() <= Date.now()) &&
-          row.attempt_count < row.max_attempts &&
-          (!ownerId || row.owner_id === ownerId))
+        .filter(
+          (row) =>
+            !row.delivered_at &&
+            !row.dead_lettered_at &&
+            row.available_at <= Date.now() &&
+            (!row.locked_until || row.locked_until.getTime() <= Date.now()) &&
+            row.attempt_count < row.max_attempts &&
+            (!ownerId || row.owner_id === ownerId)
+        )
         .sort((a, b) => a.available_at - b.available_at)
         .slice(0, limit)
       for (const row of candidates) {
@@ -69,25 +84,34 @@ class FakePool {
         row.lease_token = randomUUID()
         row.attempt_count += 1
       }
-      return { rows: candidates.map(row => ({
-        id: row.id,
-        operation_id: row.operation_id,
-        owner_id: row.owner_id,
-        event_type: row.event_type,
-        payload: row.payload,
-        attempt_count: row.attempt_count,
-        max_attempts: row.max_attempts,
-        created_at: row.created_at,
-        locked_until: row.locked_until,
-        lease_token: row.lease_token,
-      })) }
+      return {
+        rows: candidates.map((row) => ({
+          id: row.id,
+          operation_id: row.operation_id,
+          owner_id: row.owner_id,
+          event_type: row.event_type,
+          payload: row.payload,
+          attempt_count: row.attempt_count,
+          max_attempts: row.max_attempts,
+          created_at: row.created_at,
+          locked_until: row.locked_until,
+          lease_token: row.lease_token,
+        })),
+      }
     }
     if (statement.includes('SET delivered_at = now()')) {
       const [id, workerId, token] = values
-      const row = this.messages.find(item => item.id === id)
-      if (!row || row.locked_by !== workerId || row.lease_token !== token ||
-          !row.locked_until || row.locked_until.getTime() <= Date.now() ||
-          row.delivered_at || row.dead_lettered_at) return { rows: [] }
+      const row = this.messages.find((item) => item.id === id)
+      if (
+        !row ||
+        row.locked_by !== workerId ||
+        row.lease_token !== token ||
+        !row.locked_until ||
+        row.locked_until.getTime() <= Date.now() ||
+        row.delivered_at ||
+        row.dead_lettered_at
+      )
+        return { rows: [] }
       row.delivered_at = new Date()
       row.locked_by = null
       row.locked_until = null
@@ -97,10 +121,17 @@ class FakePool {
     }
     if (statement.includes('SET locked_by = NULL') && statement.includes('available_at = CASE')) {
       const [id, workerId, token, errorCode] = values
-      const row = this.messages.find(item => item.id === id)
-      if (!row || row.locked_by !== workerId || row.lease_token !== token ||
-          !row.locked_until || row.locked_until.getTime() <= Date.now() ||
-          row.delivered_at || row.dead_lettered_at) return { rows: [] }
+      const row = this.messages.find((item) => item.id === id)
+      if (
+        !row ||
+        row.locked_by !== workerId ||
+        row.lease_token !== token ||
+        !row.locked_until ||
+        row.locked_until.getTime() <= Date.now() ||
+        row.delivered_at ||
+        row.dead_lettered_at
+      )
+        return { rows: [] }
       row.locked_by = null
       row.locked_until = null
       row.lease_token = null
@@ -108,7 +139,7 @@ class FakePool {
       if (row.attempt_count >= row.max_attempts) {
         row.dead_lettered_at = new Date()
       } else {
-        const delaySeconds = Math.min(3600, 5 * (2 ** Math.max(0, row.attempt_count - 1)))
+        const delaySeconds = Math.min(3600, 5 * 2 ** Math.max(0, row.attempt_count - 1))
         row.available_at = Date.now() + delaySeconds * 1000
       }
       return { rows: [{ dead_lettered_at: row.dead_lettered_at }] }
@@ -131,8 +162,15 @@ test('claim can be scoped to one owner without changing the global default', asy
   const pool = new FakePool()
   pool.add({ id: 'owner-a-message', ownerId: 'owner-a' })
   pool.add({ id: 'owner-b-message', ownerId: 'owner-b' })
-  const claimed = await claimDeploymentOutbox(pool, { workerId: 'worker-a', ownerId: 'owner-a', limit: 10 })
-  assert.deepEqual(claimed.map(message => message.id), ['owner-a-message'])
+  const claimed = await claimDeploymentOutbox(pool, {
+    workerId: 'worker-a',
+    ownerId: 'owner-a',
+    limit: 10,
+  })
+  assert.deepEqual(
+    claimed.map((message) => message.id),
+    ['owner-a-message']
+  )
   assert.equal(pool.messages[1].locked_by, null)
   assert.equal(pool.statements[0].values[3], 'owner-a')
 })
@@ -156,7 +194,10 @@ test('retry uses a safe error code and the final failed attempt is dead-lettered
   const pool = new FakePool()
   pool.add({ maxAttempts: 2 })
   const first = (await claimDeploymentOutbox(pool, { workerId: 'worker-a' }))[0]
-  assert.equal(await retryDeploymentOutbox(pool, first, 'HANDLER ERROR WITH SECRETS'), 'retry_scheduled')
+  assert.equal(
+    await retryDeploymentOutbox(pool, first, 'HANDLER ERROR WITH SECRETS'),
+    'retry_scheduled'
+  )
   const retryStatement = pool.statements.at(-1)
   assert.match(retryStatement.statement, /now\(\) \+ make_interval/)
   assert.equal(retryStatement.values.length, 4)
@@ -234,7 +275,7 @@ test('dispatcher acknowledges success, retries handler failures and never treats
   const result = await dispatchDeploymentOutboxBatch(pool, {
     workerId: 'dispatcher-1',
     handlers: {
-      'deployment.operation.queued': async message => {
+      'deployment.operation.queued': async (message) => {
         if (message.id === 'outbox-fail') {
           const error = new Error('Sensitive error text must not be persisted')
           error.code = 'provider_unavailable'
@@ -250,8 +291,14 @@ test('dispatcher acknowledges success, retries handler failures and never treats
     deadLettered: 0,
     leaseLost: 0,
   })
-  assert.ok(pool.messages.find(row => row.id === 'outbox-ok').delivered_at)
-  assert.equal(pool.messages.find(row => row.id === 'outbox-fail').last_error_code, 'provider_unavailable')
-  assert.equal(pool.messages.find(row => row.id === 'outbox-missing').last_error_code, 'handler_not_registered')
-  assert.equal(pool.messages.find(row => row.id === 'outbox-fail').delivered_at, null)
+  assert.ok(pool.messages.find((row) => row.id === 'outbox-ok').delivered_at)
+  assert.equal(
+    pool.messages.find((row) => row.id === 'outbox-fail').last_error_code,
+    'provider_unavailable'
+  )
+  assert.equal(
+    pool.messages.find((row) => row.id === 'outbox-missing').last_error_code,
+    'handler_not_registered'
+  )
+  assert.equal(pool.messages.find((row) => row.id === 'outbox-fail').delivered_at, null)
 })

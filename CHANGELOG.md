@@ -19,6 +19,9 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 - Docker images include required workspace build configuration.
 - Workspace audit rejects unsafe glob patterns that could traverse outside the repository.
 
+### Security
+- Bind delegated ARSY capability-grant signatures to their exact parent grant; preserve legacy root-grant signatures.
+
 ## [1.0.0] - 2026-11-07
 
 ### Added

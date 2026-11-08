@@ -34,17 +34,11 @@ export function createTrustedClientIpSignature(address: string, secret: string):
   if (!ip || Buffer.byteLength(secret, 'utf8') < 32) {
     throw new TypeError('A valid IP address and 32-byte trusted-proxy secret are required')
   }
-  return createHmac('sha256', secret)
-    .update(TRUSTED_IP_SIGNATURE_DOMAIN)
-    .update(ip)
-    .digest('hex')
+  return createHmac('sha256', secret).update(TRUSTED_IP_SIGNATURE_DOMAIN).update(ip).digest('hex')
 }
 
 function networkHash(address: string, secret: string): string {
-  return createHmac('sha256', secret)
-    .update(NETWORK_HASH_DOMAIN)
-    .update(address)
-    .digest('hex')
+  return createHmac('sha256', secret).update(NETWORK_HASH_DOMAIN).update(address).digest('hex')
 }
 
 /**
@@ -54,7 +48,7 @@ function networkHash(address: string, secret: string): string {
  */
 export function resolveLoginNetworkHash(
   request: Request,
-  env: NodeJS.ProcessEnv = process.env,
+  env: NodeJS.ProcessEnv = process.env
 ): string | null {
   const sessionSecret = env.HEADQUARTER_SESSION_SECRET?.trim()
   if (!sessionSecret || Buffer.byteLength(sessionSecret, 'utf8') < 32) return null
@@ -73,8 +67,10 @@ export function resolveLoginNetworkHash(
 
   const expectedSignature = Buffer.from(createTrustedClientIpSignature(ip, proxySecret), 'hex')
   const actualSignature = Buffer.from(suppliedSignature, 'hex')
-  if (actualSignature.length !== expectedSignature.length ||
-      !timingSafeEqual(actualSignature, expectedSignature)) {
+  if (
+    actualSignature.length !== expectedSignature.length ||
+    !timingSafeEqual(actualSignature, expectedSignature)
+  ) {
     return null
   }
 
@@ -86,9 +82,16 @@ function resolveArsyBaseUrl(env: NodeJS.ProcessEnv): string | null {
   if (!raw) return null
   try {
     const url = new URL(raw)
-    if (!['http:', 'https:'].includes(url.protocol) || !url.hostname ||
-        url.username || url.password || url.search || url.hash ||
-        (url.pathname !== '/' && url.pathname !== '')) return null
+    if (
+      !['http:', 'https:'].includes(url.protocol) ||
+      !url.hostname ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash ||
+      (url.pathname !== '/' && url.pathname !== '')
+    )
+      return null
     return url.origin
   } catch {
     return null
@@ -97,12 +100,12 @@ function resolveArsyBaseUrl(env: NodeJS.ProcessEnv): string | null {
 
 export function isSharedLoginLimitConfigured(
   request: Request,
-  env: NodeJS.ProcessEnv = process.env,
+  env: NodeJS.ProcessEnv = process.env
 ): boolean {
   return Boolean(
     resolveLoginNetworkHash(request, env) &&
     resolveArsyBaseUrl(env) &&
-    (env.ARSY_OPERATOR_TOKEN?.trim().length ?? 0) >= 32,
+    (env.ARSY_OPERATOR_TOKEN?.trim().length ?? 0) >= 32
   )
 }
 
@@ -110,7 +113,7 @@ export async function requestSharedLoginLimit(
   request: Request,
   action: LoginLimitAction,
   env: NodeJS.ProcessEnv = process.env,
-  fetchImpl: typeof fetch = fetch,
+  fetchImpl: typeof fetch = fetch
 ): Promise<LoginLimitResult> {
   const networkHash = resolveLoginNetworkHash(request, env)
   const baseUrl = resolveArsyBaseUrl(env)
@@ -148,14 +151,18 @@ export async function requestSharedLoginLimit(
     throw new Error('SHARED_LOGIN_LIMIT_INVALID_RESPONSE')
   }
 
-  const data = payload && typeof payload === 'object' && 'data' in payload
-    ? (payload as { data?: Partial<LoginLimitResult> }).data
-    : undefined
-  if (!data || typeof data.allowed !== 'boolean' ||
-      typeof data.retryAfterSeconds !== 'number' ||
-      !Number.isSafeInteger(data.retryAfterSeconds) ||
-      data.retryAfterSeconds < 0 ||
-      data.retryAfterSeconds > 900) {
+  const data =
+    payload && typeof payload === 'object' && 'data' in payload
+      ? (payload as { data?: Partial<LoginLimitResult> }).data
+      : undefined
+  if (
+    !data ||
+    typeof data.allowed !== 'boolean' ||
+    typeof data.retryAfterSeconds !== 'number' ||
+    !Number.isSafeInteger(data.retryAfterSeconds) ||
+    data.retryAfterSeconds < 0 ||
+    data.retryAfterSeconds > 900
+  ) {
     throw new Error('SHARED_LOGIN_LIMIT_INVALID_RESPONSE')
   }
 

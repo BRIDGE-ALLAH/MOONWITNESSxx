@@ -30,7 +30,10 @@ export interface DockerWorkloadResponse {
 }
 
 export interface DockerWorkloadTransport {
-  request(connection: DockerConnection, request: DockerWorkloadRequest): Promise<DockerWorkloadResponse>
+  request(
+    connection: DockerConnection,
+    request: DockerWorkloadRequest
+  ): Promise<DockerWorkloadResponse>
 }
 
 export class DockerWorkloadTransportError extends Error {
@@ -46,8 +49,12 @@ export class DockerWorkloadTransportError extends Error {
 }
 
 function assertEnginePath(method: DockerWorkloadRequest['method'], path: string): void {
-  if (path.length > 2048 || path.includes(String.fromCharCode(92)) ||
-      path.includes(String.fromCharCode(10)) || path.includes(String.fromCharCode(13))) {
+  if (
+    path.length > 2048 ||
+    path.includes(String.fromCharCode(92)) ||
+    path.includes(String.fromCharCode(10)) ||
+    path.includes(String.fromCharCode(13))
+  ) {
     throw new TypeError('Docker workload adapter rejected an unsupported Engine API path')
   }
   const queryIndex = path.indexOf('?')
@@ -56,30 +63,45 @@ function assertEnginePath(method: DockerWorkloadRequest['method'], path: string)
   const segments = route.split('/').filter(Boolean)
   const containerId = segments[1] ?? ''
   const isId = /^[a-f0-9]{12,64}$/i.test(containerId)
-  const allowed = (
-    method === 'POST' && segments.length === 2 &&
-    segments[0] === 'containers' && segments[1] === 'create' &&
-    /^name=[a-z0-9_.-]{1,128}$/.test(query)
-  ) || (
-    method === 'GET' && segments.length === 3 &&
-    segments[0] === 'containers' && isId && segments[2] === 'json' && query === ''
-  ) || (
-    method === 'POST' && segments.length === 3 &&
-    segments[0] === 'containers' && isId && segments[2] === 'start' && query === ''
-  ) || (
-    method === 'POST' && segments.length === 3 &&
-    segments[0] === 'containers' && isId && segments[2] === 'stop' &&
-    /^t=(?:[1-9]|[12][0-9]|30)$/.test(query)
-  ) || (
-    method === 'DELETE' && segments.length === 2 &&
-    segments[0] === 'containers' && isId && query === 'v=0&force=0'
-  ) || (
-    method === 'POST' && segments.length === 2 &&
-    segments[0] === 'volumes' && segments[1] === 'create' && query === ''
-  ) || (
-    method === 'GET' && segments.length === 2 &&
-    segments[0] === 'volumes' && /^[a-z0-9][a-z0-9_.-]{0,180}$/.test(segments[1]) && query === ''
-  )
+  const allowed =
+    (method === 'POST' &&
+      segments.length === 2 &&
+      segments[0] === 'containers' &&
+      segments[1] === 'create' &&
+      /^name=[a-z0-9_.-]{1,128}$/.test(query)) ||
+    (method === 'GET' &&
+      segments.length === 3 &&
+      segments[0] === 'containers' &&
+      isId &&
+      segments[2] === 'json' &&
+      query === '') ||
+    (method === 'POST' &&
+      segments.length === 3 &&
+      segments[0] === 'containers' &&
+      isId &&
+      segments[2] === 'start' &&
+      query === '') ||
+    (method === 'POST' &&
+      segments.length === 3 &&
+      segments[0] === 'containers' &&
+      isId &&
+      segments[2] === 'stop' &&
+      /^t=(?:[1-9]|[12][0-9]|30)$/.test(query)) ||
+    (method === 'DELETE' &&
+      segments.length === 2 &&
+      segments[0] === 'containers' &&
+      isId &&
+      query === 'v=0&force=0') ||
+    (method === 'POST' &&
+      segments.length === 2 &&
+      segments[0] === 'volumes' &&
+      segments[1] === 'create' &&
+      query === '') ||
+    (method === 'GET' &&
+      segments.length === 2 &&
+      segments[0] === 'volumes' &&
+      /^[a-z0-9][a-z0-9_.-]{0,180}$/.test(segments[1]) &&
+      query === '')
   if (!allowed) {
     throw new TypeError('Docker workload adapter rejected an unsupported Engine API path or method')
   }
@@ -87,20 +109,26 @@ function assertEnginePath(method: DockerWorkloadRequest['method'], path: string)
 function parseResponseBody(buffer: Buffer): unknown {
   if (buffer.length === 0) return null
   const text = buffer.toString('utf8')
-  try { return JSON.parse(text) as unknown } catch { return text }
+  try {
+    return JSON.parse(text) as unknown
+  } catch {
+    return text
+  }
 }
 
 /** Internal transport with the Docker connector's pinned TLS/DNS boundary. */
 export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
   async request(
     connection: DockerConnection,
-    input: DockerWorkloadRequest,
+    input: DockerWorkloadRequest
   ): Promise<DockerWorkloadResponse> {
     assertEnginePath(input.method, input.path)
     const bodyText = input.body === undefined ? undefined : JSON.stringify(input.body)
     const body = bodyText === undefined ? undefined : Buffer.from(bodyText, 'utf8')
     if (body && body.length > MAX_BODY_BYTES) {
-      throw new DockerWorkloadTransportError('Docker workload request exceeds 128 KiB', { outcomeUnknown: false })
+      throw new DockerWorkloadTransportError('Docker workload request exceeds 128 KiB', {
+        outcomeUnknown: false,
+      })
     }
 
     const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS
@@ -109,26 +137,51 @@ export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
     }
 
     const remoteUrl = connection.kind === 'remote' ? new URL(connection.endpointUrl) : null
-    if (connection.kind === 'local' && connection.socketPath !== '/var/run/docker.sock' && connection.socketPath !== '/run/docker.sock') {
-      throw new DockerWorkloadTransportError('Local Docker socket path is not allowed', { outcomeUnknown: false })
+    if (
+      connection.kind === 'local' &&
+      connection.socketPath !== '/var/run/docker.sock' &&
+      connection.socketPath !== '/run/docker.sock'
+    ) {
+      throw new DockerWorkloadTransportError('Local Docker socket path is not allowed', {
+        outcomeUnknown: false,
+      })
     }
     let pinnedLookup: https.RequestOptions['lookup']
     if (connection.kind === 'remote') {
-      if (remoteUrl?.protocol !== 'https:' || remoteUrl.username || remoteUrl.password ||
-          (remoteUrl.pathname !== '/' && remoteUrl.pathname !== '') || remoteUrl.search || remoteUrl.hash ||
-          (remoteUrl.port && remoteUrl.port !== '2376') || connection.addresses.length === 0 ||
-          connection.addresses.some((address) => isIP(address.address) !== address.family)) {
-        throw new DockerWorkloadTransportError('Remote Docker connection is not a validated HTTPS origin', { outcomeUnknown: false })
+      if (
+        remoteUrl?.protocol !== 'https:' ||
+        remoteUrl.username ||
+        remoteUrl.password ||
+        (remoteUrl.pathname !== '/' && remoteUrl.pathname !== '') ||
+        remoteUrl.search ||
+        remoteUrl.hash ||
+        (remoteUrl.port && remoteUrl.port !== '2376') ||
+        connection.addresses.length === 0 ||
+        connection.addresses.some((address) => isIP(address.address) !== address.family)
+      ) {
+        throw new DockerWorkloadTransportError(
+          'Remote Docker connection is not a validated HTTPS origin',
+          { outcomeUnknown: false }
+        )
       }
       pinnedLookup = ((_hostname, options, callback) => {
         const lookupOptions = typeof options === 'object' && options ? options : {}
         const family = lookupOptions.family ?? 0
-        const candidates = connection.addresses.filter((address) => !family || address.family === family)
+        const candidates = connection.addresses.filter(
+          (address) => !family || address.family === family
+        )
         if (candidates.length === 0) {
           const error = new Error('Docker endpoint has no validated pinned address')
           return lookupOptions.all ? callback(error, []) : callback(error, '', 0)
         }
-        if (lookupOptions.all) callback(null, candidates.map(({ address, family: addressFamily }) => ({ address, family: addressFamily })))
+        if (lookupOptions.all)
+          callback(
+            null,
+            candidates.map(({ address, family: addressFamily }) => ({
+              address,
+              family: addressFamily,
+            }))
+          )
         else callback(null, candidates[0].address, candidates[0].family)
       }) as NonNullable<https.RequestOptions['lookup']>
     }
@@ -138,26 +191,27 @@ export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
       headers['Content-Type'] = 'application/json'
       headers['Content-Length'] = body.length
     }
-    const options: http.RequestOptions & https.RequestOptions = connection.kind === 'local'
-      ? {
-          socketPath: connection.socketPath,
-          path: input.path,
-          method: input.method,
-          headers,
-        }
-      : {
-          hostname: remoteUrl!.hostname,
-          port: remoteUrl!.port || 2376,
-          path: input.path,
-          method: input.method,
-          headers,
-          ca: connection.tls.ca,
-          cert: connection.tls.cert,
-          key: connection.tls.key,
-          rejectUnauthorized: true,
-          servername: remoteUrl!.hostname,
-          lookup: pinnedLookup,
-        }
+    const options: http.RequestOptions & https.RequestOptions =
+      connection.kind === 'local'
+        ? {
+            socketPath: connection.socketPath,
+            path: input.path,
+            method: input.method,
+            headers,
+          }
+        : {
+            hostname: remoteUrl!.hostname,
+            port: remoteUrl!.port || 2376,
+            path: input.path,
+            method: input.method,
+            headers,
+            ca: connection.tls.ca,
+            cert: connection.tls.cert,
+            key: connection.tls.key,
+            rejectUnauthorized: true,
+            servername: remoteUrl!.hostname,
+            lookup: pinnedLookup,
+          }
 
     return new Promise((resolve, reject) => {
       let submitted = false
@@ -173,24 +227,32 @@ export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
           }
           chunks.push(chunk)
         })
-        response.on('end', () => resolve({
-          statusCode,
-          body: parseResponseBody(Buffer.concat(chunks)),
-        }))
-        response.on('error', (error) => reject(new DockerWorkloadTransportError(
-          error.message,
-          { outcomeUnknown: submitted, statusCode },
-        )))
+        response.on('end', () =>
+          resolve({
+            statusCode,
+            body: parseResponseBody(Buffer.concat(chunks)),
+          })
+        )
+        response.on('error', (error) =>
+          reject(
+            new DockerWorkloadTransportError(error.message, {
+              outcomeUnknown: submitted,
+              statusCode,
+            })
+          )
+        )
       }
 
-      const request = connection.kind === 'remote'
-        ? https.request(options as https.RequestOptions, onResponse)
-        : http.request(options as http.RequestOptions, onResponse)
-      request.setTimeout(timeoutMs, () => request.destroy(new Error('Docker workload Engine request timed out')))
-      request.on('error', (error) => reject(new DockerWorkloadTransportError(
-        error.message,
-        { outcomeUnknown: submitted },
-      )))
+      const request =
+        connection.kind === 'remote'
+          ? https.request(options as https.RequestOptions, onResponse)
+          : http.request(options as http.RequestOptions, onResponse)
+      request.setTimeout(timeoutMs, () =>
+        request.destroy(new Error('Docker workload Engine request timed out'))
+      )
+      request.on('error', (error) =>
+        reject(new DockerWorkloadTransportError(error.message, { outcomeUnknown: submitted }))
+      )
       submitted = true
       request.end(body)
     })
@@ -241,16 +303,38 @@ export interface DockerWorkloadInspection {
 }
 
 export interface DockerWorkloadPort {
-  create(connection: DockerConnection, input: CreateDockerWorkloadInput): Promise<DockerWorkloadReceipt>
-  inspect(connection: DockerConnection, scope: DockerWorkloadScope, containerId: string): Promise<DockerWorkloadInspection | null>
-  start(connection: DockerConnection, scope: DockerWorkloadScope, containerId: string): Promise<void>
-  stop(connection: DockerConnection, scope: DockerWorkloadScope, containerId: string, graceSeconds?: number): Promise<void>
-  remove(connection: DockerConnection, scope: DockerWorkloadScope, containerId: string): Promise<boolean>
+  create(
+    connection: DockerConnection,
+    input: CreateDockerWorkloadInput
+  ): Promise<DockerWorkloadReceipt>
+  inspect(
+    connection: DockerConnection,
+    scope: DockerWorkloadScope,
+    containerId: string
+  ): Promise<DockerWorkloadInspection | null>
+  start(
+    connection: DockerConnection,
+    scope: DockerWorkloadScope,
+    containerId: string
+  ): Promise<void>
+  stop(
+    connection: DockerConnection,
+    scope: DockerWorkloadScope,
+    containerId: string,
+    graceSeconds?: number
+  ): Promise<void>
+  remove(
+    connection: DockerConnection,
+    scope: DockerWorkloadScope,
+    containerId: string
+  ): Promise<boolean>
 }
 
 export class DockerWorkloadDisabledError extends Error {
   constructor() {
-    super('Docker workload mutations are disabled; set the trusted deployment feature gate before use')
+    super(
+      'Docker workload mutations are disabled; set the trusted deployment feature gate before use'
+    )
     this.name = 'DockerWorkloadDisabledError'
   }
 }
@@ -294,19 +378,29 @@ function assertImageReference(image: string): string {
   const digestOffset = value.lastIndexOf(marker)
   const repository = digestOffset > 0 ? value.slice(0, digestOffset) : ''
   const digest = digestOffset > 0 ? value.slice(digestOffset + marker.length) : ''
-  if (!/^[a-f0-9]{64}$/.test(digest) || !repository || repository.startsWith('/') || repository.endsWith('/')) {
-    throw new TypeError('Docker workload image must be a repository pinned to an immutable sha256 digest')
+  if (
+    !/^[a-f0-9]{64}$/.test(digest) ||
+    !repository ||
+    repository.startsWith('/') ||
+    repository.endsWith('/')
+  ) {
+    throw new TypeError(
+      'Docker workload image must be a repository pinned to an immutable sha256 digest'
+    )
   }
   const parts = repository.split('/')
   const first = parts[0]
-  const hasRegistry = parts.length > 1 && (first.includes('.') || first.includes(':') || first === 'localhost')
+  const hasRegistry =
+    parts.length > 1 && (first.includes('.') || first.includes(':') || first === 'localhost')
   if (hasRegistry) {
     parts.shift()
     const hostParts = first.split(':')
     const hostname = hostParts[0]
     const port = hostParts[1]
-    if (!/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(hostname) ||
-        (port !== undefined && (!/^[1-9][0-9]{0,4}$/.test(port) || Number(port) > 65535))) {
+    if (
+      !/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(hostname) ||
+      (port !== undefined && (!/^[1-9][0-9]{0,4}$/.test(port) || Number(port) > 65535))
+    ) {
       throw new TypeError('Docker workload image registry reference is invalid')
     }
   }
@@ -327,13 +421,20 @@ function containerName(input: CreateDockerWorkloadInput): string {
 function normalizeEnvironment(input: Record<string, string> | undefined): string[] {
   if (!input) return []
   const entries = Object.entries(input)
-  if (entries.length > 32) throw new TypeError('At most 32 public environment values may be declared')
+  if (entries.length > 32)
+    throw new TypeError('At most 32 public environment values may be declared')
   let bytes = 0
   const result = entries.map(([key, value]) => {
     if (!/^PUBLIC_[A-Z0-9_]{1,60}$/.test(key)) {
       throw new TypeError('Only explicitly public PUBLIC_* environment variables are allowed')
     }
-    if (typeof value !== 'string' || value.length > 4096 || value.includes(String.fromCharCode(0)) || value.includes(String.fromCharCode(10)) || value.includes(String.fromCharCode(13))) {
+    if (
+      typeof value !== 'string' ||
+      value.length > 4096 ||
+      value.includes(String.fromCharCode(0)) ||
+      value.includes(String.fromCharCode(10)) ||
+      value.includes(String.fromCharCode(13))
+    ) {
       throw new TypeError(`Public environment value ${key} is invalid or exceeds 4 KiB`)
     }
     bytes += Buffer.byteLength(key, 'utf8') + Buffer.byteLength(value, 'utf8')
@@ -360,12 +461,18 @@ function normalizePorts(ports: number[] | undefined): Record<string, Record<stri
 }
 
 function normalizeResources(value: DockerWorkloadResources): DockerWorkloadResources {
-  if (!Number.isSafeInteger(value.memoryBytes) || value.memoryBytes < 128 * 1024 * 1024 ||
-      value.memoryBytes > 16 * 1024 * 1024 * 1024) {
+  if (
+    !Number.isSafeInteger(value.memoryBytes) ||
+    value.memoryBytes < 128 * 1024 * 1024 ||
+    value.memoryBytes > 16 * 1024 * 1024 * 1024
+  ) {
     throw new TypeError('Container memory must be between 128 MiB and 16 GiB')
   }
-  if (!Number.isSafeInteger(value.nanoCpus) || value.nanoCpus < 100_000_000 ||
-      value.nanoCpus > 8_000_000_000) {
+  if (
+    !Number.isSafeInteger(value.nanoCpus) ||
+    value.nanoCpus < 100_000_000 ||
+    value.nanoCpus > 8_000_000_000
+  ) {
     throw new TypeError('Container CPU must be between 0.1 and 8 CPUs')
   }
   return value
@@ -375,7 +482,10 @@ function volumeName(scope: DockerWorkloadScope, key: string): string {
   return `mw-${ownerHash(scope.ownerId)}-${scope.deploymentId.slice(0, 8)}-${key}`
 }
 
-function normalizeVolumes(scope: DockerWorkloadScope, volumes: DockerWorkloadVolume[] | undefined): Array<{
+function normalizeVolumes(
+  scope: DockerWorkloadScope,
+  volumes: DockerWorkloadVolume[] | undefined
+): Array<{
   key: string
   name: string
   target: string
@@ -383,7 +493,8 @@ function normalizeVolumes(scope: DockerWorkloadScope, volumes: DockerWorkloadVol
   labels: Record<string, string>
 }> {
   if (!volumes) return []
-  if (volumes.length > 4) throw new TypeError('At most four named persistent volumes may be mounted')
+  if (volumes.length > 4)
+    throw new TypeError('At most four named persistent volumes may be mounted')
   const seenKeys = new Set<string>()
   const seenTargets = new Set<string>()
   return volumes.map((volume) => {
@@ -393,11 +504,15 @@ function normalizeVolumes(scope: DockerWorkloadScope, volumes: DockerWorkloadVol
     if (seenKeys.has(volume.key)) throw new TypeError('Volume keys must be unique')
     seenKeys.add(volume.key)
     const parts = volume.target.split('/')
-    if (!volume.target.startsWith('/data/') ||
-        parts.some((part) => part === '.' || part === '..' || part.includes(String.fromCharCode(92))) ||
-        parts.slice(2).length === 0 ||
-        parts.slice(2).some((part) => !/^[a-zA-Z0-9._-]+$/.test(part)) ||
-        volume.target.length > 128) {
+    if (
+      !volume.target.startsWith('/data/') ||
+      parts.some(
+        (part) => part === '.' || part === '..' || part.includes(String.fromCharCode(92))
+      ) ||
+      parts.slice(2).length === 0 ||
+      parts.slice(2).some((part) => !/^[a-zA-Z0-9._-]+$/.test(part)) ||
+      volume.target.length > 128
+    ) {
       throw new TypeError('Named volume targets must be paths below /data')
     }
     if (seenTargets.has(volume.target)) throw new TypeError('Volume targets must be unique')
@@ -425,14 +540,21 @@ function asRecord(value: unknown, field: string): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 
-function responseRecord(response: DockerWorkloadResponse, expected: number[], action: string): Record<string, unknown> {
+function responseRecord(
+  response: DockerWorkloadResponse,
+  expected: number[],
+  action: string
+): Record<string, unknown> {
   if (!expected.includes(response.statusCode)) {
-    const engineMessage = typeof (response.body as Record<string, unknown> | null)?.message === 'string'
-      ? String((response.body as Record<string, unknown>).message).slice(0, 300)
-      : ''
+    const engineMessage =
+      typeof (response.body as Record<string, unknown> | null)?.message === 'string'
+        ? String((response.body as Record<string, unknown>).message).slice(0, 300)
+        : ''
     throw new DockerWorkloadTransportError(
-      engineMessage ? `Docker Engine rejected ${action}: ${engineMessage}` : `Docker Engine rejected ${action} (HTTP ${response.statusCode})`,
-      { outcomeUnknown: false, statusCode: response.statusCode },
+      engineMessage
+        ? `Docker Engine rejected ${action}: ${engineMessage}`
+        : `Docker Engine rejected ${action} (HTTP ${response.statusCode})`,
+      { outcomeUnknown: false, statusCode: response.statusCode }
     )
   }
   if (!response.body || typeof response.body !== 'object' || Array.isArray(response.body)) {
@@ -465,7 +587,7 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
 
   private async ensureVolume(
     connection: DockerConnection,
-    volume: ReturnType<typeof normalizeVolumes>[number],
+    volume: ReturnType<typeof normalizeVolumes>[number]
   ): Promise<void> {
     const encoded = encodeURIComponent(volume.name)
     const existing = await this.transport.request(connection, {
@@ -483,7 +605,7 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     if (existing.statusCode !== 404) {
       throw new DockerWorkloadTransportError(
         `Docker Engine volume inspection failed (HTTP ${existing.statusCode})`,
-        { outcomeUnknown: false, statusCode: existing.statusCode },
+        { outcomeUnknown: false, statusCode: existing.statusCode }
       )
     }
 
@@ -497,11 +619,14 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
       return
     }
     if (created.statusCode === 409) {
-      const raced = await this.transport.request(connection, { method: 'GET', path: `/volumes/${encoded}` })
+      const raced = await this.transport.request(connection, {
+        method: 'GET',
+        path: `/volumes/${encoded}`,
+      })
       if (raced.statusCode !== 200) {
         throw new DockerWorkloadTransportError(
           'Docker volume creation conflicted and the resulting volume could not be inspected',
-          { outcomeUnknown: true, statusCode: raced.statusCode },
+          { outcomeUnknown: true, statusCode: raced.statusCode }
         )
       }
       const data = asRecord(raced.body, 'volume inspection')
@@ -512,7 +637,10 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     }
   }
 
-  async create(connection: DockerConnection, input: CreateDockerWorkloadInput): Promise<DockerWorkloadReceipt> {
+  async create(
+    connection: DockerConnection,
+    input: CreateDockerWorkloadInput
+  ): Promise<DockerWorkloadReceipt> {
     this.assertEnabled()
     assertScope(input)
     const image = assertImageReference(input.image)
@@ -567,7 +695,7 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     if (!CONTAINER_ID.test(containerId)) {
       throw new DockerWorkloadTransportError(
         'Docker Engine returned an invalid container identifier after create',
-        { outcomeUnknown: true, statusCode: response.statusCode },
+        { outcomeUnknown: true, statusCode: response.statusCode }
       )
     }
     return {
@@ -582,7 +710,7 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
   async inspect(
     connection: DockerConnection,
     scope: DockerWorkloadScope,
-    containerId: string,
+    containerId: string
   ): Promise<DockerWorkloadInspection | null> {
     this.assertEnabled()
     assertScope(scope)
@@ -595,9 +723,10 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     const result = responseRecord(response, [200], 'inspect managed container')
     const config = asRecord(result.Config, 'container config')
     const rawLabels = config.Labels
-    const labels = rawLabels && typeof rawLabels === 'object' && !Array.isArray(rawLabels)
-      ? rawLabels as Record<string, string>
-      : {}
+    const labels =
+      rawLabels && typeof rawLabels === 'object' && !Array.isArray(rawLabels)
+        ? (rawLabels as Record<string, string>)
+        : {}
     this.assertOwned(labels, scope)
     const state = asRecord(result.State, 'container state')
     const rawMounts = Array.isArray(result.Mounts) ? result.Mounts : []
@@ -618,14 +747,20 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
 
   private assertOwned(labels: Record<string, string>, scope: DockerWorkloadScope): void {
     const expected = labelsFor(scope)
-    if (labels[MANAGED_LABEL] !== MANAGED_BY ||
-        labels[OWNER_LABEL] !== expected[OWNER_LABEL] ||
-        labels[DEPLOYMENT_LABEL] !== scope.deploymentId) {
+    if (
+      labels[MANAGED_LABEL] !== MANAGED_BY ||
+      labels[OWNER_LABEL] !== expected[OWNER_LABEL] ||
+      labels[DEPLOYMENT_LABEL] !== scope.deploymentId
+    ) {
       throw new DockerWorkloadOwnershipError()
     }
   }
 
-  async start(connection: DockerConnection, scope: DockerWorkloadScope, containerId: string): Promise<void> {
+  async start(
+    connection: DockerConnection,
+    scope: DockerWorkloadScope,
+    containerId: string
+  ): Promise<void> {
     this.assertEnabled()
     const inspected = await this.inspect(connection, scope, containerId)
     if (!inspected) throw new Error('Managed deployment container was not found')
@@ -641,7 +776,7 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     connection: DockerConnection,
     scope: DockerWorkloadScope,
     containerId: string,
-    graceSeconds = 10,
+    graceSeconds = 10
   ): Promise<void> {
     this.assertEnabled()
     if (!Number.isInteger(graceSeconds) || graceSeconds < 1 || graceSeconds > 30) {
@@ -658,7 +793,11 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     responseRecord(response, [204, 304], 'stop managed container')
   }
 
-  async remove(connection: DockerConnection, scope: DockerWorkloadScope, containerId: string): Promise<boolean> {
+  async remove(
+    connection: DockerConnection,
+    scope: DockerWorkloadScope,
+    containerId: string
+  ): Promise<boolean> {
     this.assertEnabled()
     const inspected = await this.inspect(connection, scope, containerId)
     if (!inspected) return false

@@ -9,7 +9,7 @@ const parent = {
   issuedAt: '2026-11-01T00:00:00Z', expiresAt: '2026-12-01T00:00:00Z', signature: 'valid',
 }
 const child = {
-  ...parent, id: 'child', issuerId: 'service-a', subjectId: 'agent-1',
+  ...parent, id: 'child', parentGrantId: 'root', issuerId: 'service-a', subjectId: 'agent-1',
   actions: ['invoice:read'], resources: ['invoice/123'], argumentHashes: ['sha256:invoice-123-read'],
   expiresAt: '2026-11-20T00:00:00Z',
 }
@@ -20,6 +20,26 @@ test('allows only attenuated delegated capabilities', async () => {
     resource: 'invoice/123', purpose: 'invoice-review', sessionId: 'session-1', argumentHash: 'sha256:invoice-123-read', now: '2026-11-08T00:00:00Z',
   }, [parent, child], verifier)
   assert.equal(result.allowed, true)
+})
+
+test('rejects a delegated chain whose signed parent reference does not match the supplied parent', async () => {
+  const mismatched = { ...child, parentGrantId: 'different-root' }
+  const result = await authorizeCapability({
+    actorId: 'agent-1', tenantId: 'tenant-a', action: 'invoice:read',
+    resource: 'invoice/123', purpose: 'invoice-review', sessionId: 'session-1',
+    argumentHash: 'sha256:invoice-123-read', now: '2026-11-08T00:00:00Z',
+  }, [parent, mismatched], verifier)
+  assert.equal(result.allowed, false)
+  assert.equal(result.reasonCodes[0], 'delegation_parent_mismatch')
+
+  const invalidRoot = { ...parent, parentGrantId: 'unexpected-parent' }
+  const rootResult = await authorizeCapability({
+    actorId: 'agent-1', tenantId: 'tenant-a', action: 'invoice:read',
+    resource: 'invoice/123', purpose: 'invoice-review', sessionId: 'session-1',
+    argumentHash: 'sha256:invoice-123-read', now: '2026-11-08T00:00:00Z',
+  }, [invalidRoot, child], verifier)
+  assert.equal(rootResult.allowed, false)
+  assert.equal(rootResult.reasonCodes[0], 'capability_root_parent_mismatch')
 })
 
 test('rejects delegated privilege escalation and forged signatures', async () => {

@@ -24,7 +24,7 @@ function keyPair() {
   return generateKeyPairSync('ed25519')
 }
 
-function makeGrant(privateKey) {
+function makeGrant(privateKey, overrides = {}) {
   const grant = {
     id: 'grant-operation-1',
     issuerId: 'deployment-root',
@@ -37,6 +37,7 @@ function makeGrant(privateKey) {
     argumentHashes: [argumentHash],
     issuedAt: '2026-11-08T05:00:00.000Z',
     expiresAt: '2026-11-08T07:00:00.000Z',
+    ...overrides,
     signature: '',
   }
   grant.signature = sign(null, Buffer.from(capabilityGrantSigningPayload(grant)), privateKey).toString('base64url')
@@ -101,7 +102,7 @@ class FakePool {
 
 function grantRow(grant) {
   return {
-    id: grant.id, parent_grant_id: null, issuer_id: grant.issuerId,
+    id: grant.id, parent_grant_id: grant.parentGrantId ?? null, issuer_id: grant.issuerId,
     subject_id: grant.subjectId, tenant_id: grant.tenantId,
     purpose: grant.purpose, session_id: grant.sessionId,
     actions: grant.actions, resources: grant.resources,
@@ -329,6 +330,83 @@ test('actor mismatch and audit-store failure never return an authorization allow
   )
   assert.equal(auditUnavailable.allowed, false)
   assert.equal(auditUnavailable.reasonCodes[0], 'authorization_audit_unavailable')
+})
+
+test('legacy root grant signatures remain valid with an absent or null parent reference', async () => {
+  const issuer = keyPair()
+  const grant = makeGrant(issuer.privateKey)
+  const legacyPayload = JSON.stringify({
+    actions: grant.actions,
+    argumentHashes: grant.argumentHashes,
+    expiresAt: grant.expiresAt,
+    id: grant.id,
+    issuedAt: grant.issuedAt,
+    issuerId: grant.issuerId,
+    purpose: grant.purpose,
+    resources: grant.resources,
+    sessionId: grant.sessionId,
+    subjectId: grant.subjectId,
+    tenantId: grant.tenantId,
+  })
+  grant.signature = sign(null, Buffer.from(legacyPayload), issuer.privateKey).toString('base64url')
+  const verifier = createEd25519CapabilityVerifier(createTrustedPublicKeyring(JSON.stringify({
+    'deployment-root': issuer.publicKey.export({ type: 'spki', format: 'pem' }),
+  })))
+
+  assert.equal(capabilityGrantSigningPayload({ ...grant, parentGrantId: null }), legacyPayload)
+  assert.equal(await verifier.verify({ ...grant, parentGrantId: null }), true)
+})
+
+test('delegated grant signatures bind the exact persisted parent grant', async () => {
+  const pool = new FakePool()
+  const rootIssuer = keyPair()
+  const delegator = keyPair()
+  const parent = makeGrant(rootIssuer.privateKey, {
+    id: 'root-grant-for-delegation',
+    subjectId: 'delegator',
+  })
+  const alternateParent = makeGrant(rootIssuer.privateKey, {
+    id: 'alternate-root-grant',
+    subjectId: 'delegator',
+  })
+  const child = makeGrant(delegator.privateKey, {
+    id: 'delegated-leaf-grant',
+    issuerId: 'delegator',
+    subjectId: actorId,
+    parentGrantId: parent.id,
+  })
+  pool.grantRows = [grantRow(parent), grantRow(alternateParent), grantRow(child)]
+
+  const keyring = createTrustedPublicKeyring(JSON.stringify({
+    'deployment-root': rootIssuer.publicKey.export({ type: 'spki', format: 'pem' }),
+    delegator: delegator.publicKey.export({ type: 'spki', format: 'pem' }),
+  }))
+  const policy = {
+    evaluate: async () => ({
+      allowed: true,
+      policyVersion: 'deploy-policy-v1',
+      reasonCode: 'within-policy',
+      requiresApproval: false,
+    }),
+  }
+  const deps = dependencies(pool, { policyProvider: policy, grantKeys: keyring })
+
+  const accepted = await authorizeDeploymentOperation(
+    { operationId, ownerId, authenticatedActorId: actorId, now },
+    deps,
+  )
+  assert.equal(accepted.allowed, true)
+  assert.equal(accepted.capabilityGrantId, child.id)
+
+  // A database-side parent-reference substitution must invalidate the child's signature.
+  pool.grantRows.find((row) => row.id === child.id).parent_grant_id = alternateParent.id
+  const tampered = await authorizeDeploymentOperation(
+    { operationId, ownerId, authenticatedActorId: actorId, now },
+    deps,
+  )
+  assert.equal(tampered.allowed, false)
+  assert.deepEqual(tampered.reasonCodes, ['capability_signature_invalid'])
+  assert.equal(pool.decisions.at(-1).allowed, false)
 })
 
 test('trusted keyring accepts only configured public Ed25519 keys', () => {

@@ -6,8 +6,12 @@ const operatorId = 'login-limit-unit-operator'
 const token = 'login-limit-unit-token-with-at-least-32-characters'
 
 const oracleClient = {
-  submitJob: async () => { throw new Error('ORACLE is not used by login limiter tests') },
-  getJob: async () => { throw new Error('ORACLE is not used by login limiter tests') },
+  submitJob: async () => {
+    throw new Error('ORACLE is not used by login limiter tests')
+  },
+  getJob: async () => {
+    throw new Error('ORACLE is not used by login limiter tests')
+  },
 }
 
 function createPool(handler) {
@@ -114,7 +118,9 @@ test('malformed login limit input is rejected before database access', async () 
 })
 
 test('database failures do not leak query details to the login API', async () => {
-  const pool = createPool(async () => { throw new Error('secret database host and password') })
+  const pool = createPool(async () => {
+    throw new Error('secret database host and password')
+  })
   const app = createTestApp(pool)
   try {
     const response = await send(app, { action: 'attempt', networkHash: 'd'.repeat(64) })

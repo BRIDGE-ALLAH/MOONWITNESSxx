@@ -50,7 +50,9 @@ function setEnvironment(values) {
 function withFetch(mock) {
   const previous = globalThis.fetch
   globalThis.fetch = mock
-  return () => { globalThis.fetch = previous }
+  return () => {
+    globalThis.fetch = previous
+  }
 }
 
 function request(headers = signedIpHeaders(), bodyPassword = password) {
@@ -75,10 +77,13 @@ test('development login network bucket ignores all client-supplied forwarding he
     headers: { 'x-forwarded-for': '203.0.113.250', 'x-moonwitness-client-ip': '192.0.2.5' },
   })
   assert.equal(resolveLoginNetworkHash(first, env), resolveLoginNetworkHash(second, env))
-  assert.equal(resolveLoginNetworkHash(first, env), resolveLoginNetworkHash(first, {
-    ...env,
-    HEADQUARTER_TRUSTED_PROXY_HOPS: '0',
-  }))
+  assert.equal(
+    resolveLoginNetworkHash(first, env),
+    resolveLoginNetworkHash(first, {
+      ...env,
+      HEADQUARTER_TRUSTED_PROXY_HOPS: '0',
+    })
+  )
 })
 
 test('production network identity requires a configured single proxy and valid signed client IP', () => {
@@ -108,10 +113,13 @@ test('production network identity requires a configured single proxy and valid s
   })
   assert.notEqual(resolveLoginNetworkHash(trusted, env), resolveLoginNetworkHash(differentIp, env))
 
-  assert.equal(resolveLoginNetworkHash(trusted, {
-    ...env,
-    HEADQUARTER_TRUSTED_PROXY_HOPS: '0',
-  }), null)
+  assert.equal(
+    resolveLoginNetworkHash(trusted, {
+      ...env,
+      HEADQUARTER_TRUSTED_PROXY_HOPS: '0',
+    }),
+    null
+  )
 })
 
 test('trusted client IP signature rejects invalid addresses and weak secrets', () => {
@@ -164,7 +172,9 @@ test('production login returns 429 before password verification when shared limi
 
 test('production login fails closed when the shared limiter or trusted ingress is unavailable', async () => {
   const restoreEnv = setEnvironment(productionEnv())
-  const restoreFetch = withFetch(async () => { throw new Error('internal connection details') })
+  const restoreFetch = withFetch(async () => {
+    throw new Error('internal connection details')
+  })
   try {
     const response = await POST(request())
     assert.equal(response.status, 503)
@@ -180,14 +190,18 @@ test('production login fails closed on unsigned client-supplied forwarding heade
   let fetchCalled = false
   const restoreFetch = withFetch(async () => {
     fetchCalled = true
-    return new Response(JSON.stringify({ data: { allowed: true, retryAfterSeconds: 0 } }), { status: 200 })
+    return new Response(JSON.stringify({ data: { allowed: true, retryAfterSeconds: 0 } }), {
+      status: 200,
+    })
   })
   try {
-    const response = await POST(request({
-      origin,
-      'content-type': 'application/json',
-      'x-forwarded-for': '203.0.113.10',
-    }))
+    const response = await POST(
+      request({
+        origin,
+        'content-type': 'application/json',
+        'x-forwarded-for': '203.0.113.10',
+      })
+    )
     assert.equal(response.status, 503)
     assert.equal(fetchCalled, false)
   } finally {

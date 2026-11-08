@@ -57,14 +57,19 @@ function rateLimited(retryAfterSeconds: number) {
   const retryAfter = Math.max(1, Math.min(900, Math.ceil(retryAfterSeconds)))
   return NextResponse.json(
     { error: { code: 'LOGIN_RATE_LIMITED', message: 'Too many login attempts. Try again later.' } },
-    { status: 429, headers: { 'retry-after': String(retryAfter) } },
+    { status: 429, headers: { 'retry-after': String(retryAfter) } }
   )
 }
 
 function sharedLimitUnavailable() {
   return NextResponse.json(
-    { error: { code: 'LOGIN_RATE_LIMIT_UNAVAILABLE', message: 'Shared login protection is unavailable. Try again later.' } },
-    { status: 503 },
+    {
+      error: {
+        code: 'LOGIN_RATE_LIMIT_UNAVAILABLE',
+        message: 'Shared login protection is unavailable. Try again later.',
+      },
+    },
+    { status: 503 }
   )
 }
 
@@ -77,7 +82,9 @@ export async function GET(request: Request) {
   if (!session || session.operatorId !== config.operatorId) {
     return NextResponse.json({ data: { authenticated: false } }, { status: 401 })
   }
-  return NextResponse.json({ data: { authenticated: true, operatorId: session.operatorId, expiresAt: session.expiresAt } })
+  return NextResponse.json({
+    data: { authenticated: true, operatorId: session.operatorId, expiresAt: session.expiresAt },
+  })
 }
 
 export async function POST(request: Request) {
@@ -89,8 +96,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: { code: 'ORIGIN_REJECTED' } }, { status: 403 })
   }
 
-  const useSharedLimit = process.env.NODE_ENV === 'production' ||
-    isSharedLoginLimitConfigured(request)
+  const useSharedLimit =
+    process.env.NODE_ENV === 'production' || isSharedLoginLimitConfigured(request)
 
   if (!useSharedLimit) {
     const retryAfter = loginRetryAfter()
@@ -103,9 +110,10 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: { code: 'INVALID_REQUEST' } }, { status: 400 })
   }
-  const password = body && typeof body === 'object' && 'password' in body && typeof body.password === 'string'
-    ? body.password
-    : ''
+  const password =
+    body && typeof body === 'object' && 'password' in body && typeof body.password === 'string'
+      ? body.password
+      : ''
 
   if (useSharedLimit) {
     let limit
@@ -139,14 +147,20 @@ export async function POST(request: Request) {
     clearLoginFailures()
   }
 
-  const response = NextResponse.json({ data: { authenticated: true, operatorId: config.operatorId } })
-  response.cookies.set(OPERATOR_SESSION_COOKIE, createOperatorSession(config.operatorId, config.secret), {
-    httpOnly: true,
-    secure: new URL(config.publicOrigin).protocol === 'https:',
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 8 * 60 * 60,
+  const response = NextResponse.json({
+    data: { authenticated: true, operatorId: config.operatorId },
   })
+  response.cookies.set(
+    OPERATOR_SESSION_COOKIE,
+    createOperatorSession(config.operatorId, config.secret),
+    {
+      httpOnly: true,
+      secure: new URL(config.publicOrigin).protocol === 'https:',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 8 * 60 * 60,
+    }
+  )
   return response
 }
 

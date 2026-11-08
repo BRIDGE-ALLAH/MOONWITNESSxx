@@ -43,7 +43,6 @@ Apply `apps/arsy/migrations/002_docker_connector.sql` to the target PostgreSQL d
 
 The shared login limiter additionally requires `apps/arsy/migrations/006_shared_login_attempts.sql`, applied after existing migrations 003–005 in numeric order. It is idempotent and creates only owner-scoped rate-limit buckets. Application startup does not auto-apply it.
 
-
 ### Rollback
 
 Back up PostgreSQL before applying the migration. Rollback is destructive to connector registrations and audit history; only run it after explicit operator approval and after confirming no dependent records remain:

@@ -72,20 +72,20 @@ Use the committed lockfile and repository scripts. If frozen install fails becau
 
 ## Documentation map
 
-| Document | Purpose |
-|---|---|
-| [01 — Ecosystem Narrative](./docs/01-ecosystem-narrative.md) | Master brand, story, values, and narrative boundaries |
-| [02 — Product Charter](./docs/02-product-charter.md) | Initial product purpose, users, scope, and principles |
-| [09 — Headquarter IA](./docs/09-information-architecture.md) | Current application and module ownership |
-| [10 — Design DNA](./docs/10-design-dna.md) | MOONWITNESS visual identity and design principles |
-| [15 — Roadmap](./docs/15-roadmap-and-acceptance.md) | Delivery phases and acceptance gates |
-| [18–22 — Architecture](./docs/18-monorepo-and-orm-addon-architecture.md) | Backend, ORM, addons, schema, and database target contracts |
-| [23 — Repository Audit](./docs/23-repository-audit-and-current-execution-plan.md) | Historical implementation audit and execution order |
-| [24 — Repository Governance](./docs/24-repository-and-automation-governance.md) | Workspace, automation, CI, and ownership rules |
-| [28 — Current-State Revalidation](./docs/28-current-state-revalidation-2026-11-08.md) | Dated mainline and production-readiness evidence |
-| [29 — Docker Connector](./docs/29-docker-connector.md) | Read-only Docker integration and security boundaries |
-| [30 — ARSY Hardening](./docs/30-arsy-phases-18-20-hardening.md) | Runtime trust-boundary hardening |
-| [31 — Product Integrity](./docs/31-product-integrity-phases-36-38.md) | Data-truth and release preflight |
+| Document                                                                                    | Purpose                                                                          |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [01 — Ecosystem Narrative](./docs/01-ecosystem-narrative.md)                                | Master brand, story, values, and narrative boundaries                            |
+| [02 — Product Charter](./docs/02-product-charter.md)                                        | Initial product purpose, users, scope, and principles                            |
+| [09 — Headquarter IA](./docs/09-information-architecture.md)                                | Current application and module ownership                                         |
+| [10 — Design DNA](./docs/10-design-dna.md)                                                  | MOONWITNESS visual identity and design principles                                |
+| [15 — Roadmap](./docs/15-roadmap-and-acceptance.md)                                         | Delivery phases and acceptance gates                                             |
+| [18–22 — Architecture](./docs/18-monorepo-and-orm-addon-architecture.md)                    | Backend, ORM, addons, schema, and database target contracts                      |
+| [23 — Repository Audit](./docs/23-repository-audit-and-current-execution-plan.md)           | Historical implementation audit and execution order                              |
+| [24 — Repository Governance](./docs/24-repository-and-automation-governance.md)             | Workspace, automation, CI, and ownership rules                                   |
+| [28 — Current-State Revalidation](./docs/28-current-state-revalidation-2026-11-08.md)       | Dated mainline and production-readiness evidence                                 |
+| [29 — Docker Connector](./docs/29-docker-connector.md)                                      | Read-only Docker integration and security boundaries                             |
+| [30 — ARSY Hardening](./docs/30-arsy-phases-18-20-hardening.md)                             | Runtime trust-boundary hardening                                                 |
+| [31 — Product Integrity](./docs/31-product-integrity-phases-36-38.md)                       | Data-truth and release preflight                                                 |
 | [32 — Universe & Product Registry](./docs/32-universe-and-product-architecture-registry.md) | Wider product universe, nine target experiences, domains, and platform ownership |
 
-For contribution rules and verified commands, start with [CONTRIBUTING.md](./CONTRIBUTING.md), [AGENTS.md](./AGENTS.md), and [docs/24](./docs/24-repository-and-automation-governance.md).
+For contribution rules and verified commands, start with [CONTRIBUTING.md](./CONTRIBUTING.md) and [docs/24](./docs/24-repository-and-automation-governance.md).

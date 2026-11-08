@@ -1,5 +1,7 @@
 export interface CapabilityGrant {
   id: string
+  /** Signed parent reference for delegated grants; omitted on root grants. */
+  parentGrantId?: string | null
   issuerId: string
   subjectId: string
   tenantId: string
@@ -89,8 +91,12 @@ export async function authorizeCapability(
     if (!Number.isFinite(issuedAt) || !Number.isFinite(expiresAt) || issuedAt > now || expiresAt <= now || expiresAt <= issuedAt) {
       return deny('capability_expired_or_not_yet_valid')
     }
+    if (index === 0 && grant.parentGrantId !== undefined && grant.parentGrantId !== null) {
+      return deny('capability_root_parent_mismatch')
+    }
     if (index > 0) {
       const parent = chain[index - 1]
+      if (grant.parentGrantId !== parent.id) return deny('delegation_parent_mismatch')
       if (grant.issuerId !== parent.subjectId) return deny('delegation_issuer_mismatch')
       if (grant.tenantId !== parent.tenantId || grant.purpose !== parent.purpose || grant.sessionId !== parent.sessionId) return deny('delegation_context_escalation')
       if (Date.parse(grant.issuedAt) < Date.parse(parent.issuedAt)) return deny('delegation_issued_before_parent')
