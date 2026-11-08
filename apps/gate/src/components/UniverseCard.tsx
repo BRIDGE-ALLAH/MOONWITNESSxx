@@ -53,16 +53,19 @@ export function UniverseCard({ experience }: UniverseCardProps) {
       </CardContent>
 
       <CardFooter className="pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono text-slate-500">
-        <span>Public Gateway</span>
+        <span className="text-[11px] text-slate-400">Public Gateway</span>
         {experience.href ? (
           <a
             href={experience.href}
-            className="text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
+            className="text-emerald-400 hover:text-emerald-300 font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-400 rounded px-1.5 py-0.5 transition-colors flex items-center gap-1.5"
+            aria-label={`Enter ${experience.name} application`}
           >
             Enter Portal &rarr;
           </a>
         ) : (
-          <span className="text-slate-500 cursor-not-allowed">Target Spec &rarr;</span>
+          <span className="text-slate-500 cursor-not-allowed select-none">
+            Target Spec &bull; Planned
+          </span>
         )}
       </CardFooter>
     </Card>
