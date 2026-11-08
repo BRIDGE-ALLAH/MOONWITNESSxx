@@ -37,7 +37,7 @@ export function resolveSkinConfig(input: SkinConfigInput = {}): ResolvedSkinConf
   if (input.mode !== undefined && input.mode !== '') {
     if (!isAppearanceMode(input.mode)) {
       fallbackReasons.push('unknown-mode')
-    } else if (!definition.supportedModes.includes(input.mode)) {
+    } else if (!(definition.supportedModes as readonly string[]).includes(input.mode)) {
       fallbackReasons.push('unsupported-mode')
     } else {
       mode = input.mode
