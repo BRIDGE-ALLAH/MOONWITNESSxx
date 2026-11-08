@@ -46,7 +46,6 @@ CREATE INDEX oracle_jobs_retention_idx
   ON oracle.jobs (completed_at, job_id)
   WHERE status IN ('succeeded', 'failed');
 
--- Grant the runtime principal access to this table only; migration history and future
--- tables remain private to the schema owner unless a reviewed migration grants them.
-GRANT USAGE ON SCHEMA oracle TO oracle_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE oracle.jobs TO oracle_app;
+-- Runtime permissions are reconciled by the migration runner after all SQL
+-- migrations, using its validated runtime-role parameter. This schema migration
+-- deliberately contains no environment-specific role names.
