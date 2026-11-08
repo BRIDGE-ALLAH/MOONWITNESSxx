@@ -27,30 +27,67 @@ APP_ROLE = "oracle_app_test"
 APP_PASSWORD = "oracle-app-integration-only"
 
 
+def database_url_for_role(role: str, password: str) -> str:
+    assert TEST_DATABASE_URL
+    parts = urlsplit(TEST_DATABASE_URL)
+    user_info = f"{quote(role, safe='')}:{quote(password, safe='')}"
+    netloc = user_info + "@" + parts.hostname
+    if parts.port:
+        netloc += f":{parts.port}"
+    return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))
+
+
 async def prepare_database() -> str:
     assert TEST_DATABASE_URL
-    await apply_migrations(TEST_DATABASE_URL)
-    await apply_migrations(TEST_DATABASE_URL)
+    admin = await asyncpg.connect(TEST_DATABASE_URL)
+    try:
+        await admin.execute(
+            """
+            DO $$
+            BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_migrator_test') THEN
+                CREATE ROLE oracle_migrator_test LOGIN PASSWORD 'oracle-migrator-integration-only';
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app_test') THEN
+                CREATE ROLE oracle_app_test LOGIN PASSWORD 'oracle-app-integration-only';
+              END IF;
+            END
+            $$
+            """
+        )
+        await admin.execute(
+            "ALTER ROLE oracle_migrator_test PASSWORD 'oracle-migrator-integration-only'"
+        )
+        await admin.execute("ALTER ROLE oracle_app_test PASSWORD 'oracle-app-integration-only'")
+        database_name = await admin.fetchval("SELECT current_database()")
+        await admin.execute(
+            f"GRANT CONNECT ON DATABASE {database_name} TO oracle_migrator_test, oracle_app_test"
+        )
+        await admin.execute(
+            "CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION oracle_migrator_test"
+        )
+        await admin.execute("ALTER SCHEMA oracle OWNER TO oracle_migrator_test")
+        await admin.execute("GRANT USAGE ON SCHEMA oracle TO oracle_app_test")
+        await admin.execute(
+            """
+            ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator_test IN SCHEMA oracle
+            GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO oracle_app_test
+            """
+        )
+    finally:
+        await admin.close()
+
+    migrator_dsn = database_url_for_role(
+        "oracle_migrator_test",
+        "oracle-migrator-integration-only",
+    )
+    await apply_migrations(migrator_dsn)
+    await apply_migrations(migrator_dsn)
 
     admin = await asyncpg.connect(TEST_DATABASE_URL)
     try:
         await admin.execute(
-            f"""
-            DO $$
-            BEGIN
-              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '{APP_ROLE}') THEN
-                CREATE ROLE {APP_ROLE} LOGIN PASSWORD '{APP_PASSWORD}';
-              END IF;
-            END
-            $$;
-            """
-        )
-        await admin.execute(f"ALTER ROLE {APP_ROLE} WITH LOGIN PASSWORD '{APP_PASSWORD}'")
-        database_name = await admin.fetchval("SELECT current_database()")
-        await admin.execute(f"GRANT CONNECT ON DATABASE {database_name} TO {APP_ROLE}")
-        await admin.execute(f"GRANT USAGE ON SCHEMA oracle TO {APP_ROLE}")
-        await admin.execute(
-            f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA oracle TO {APP_ROLE}"
+            "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA oracle TO oracle_app_test"
         )
         await admin.execute("DELETE FROM oracle.jobs")
         is_superuser = await admin.fetchval(
@@ -61,12 +98,7 @@ async def prepare_database() -> str:
     finally:
         await admin.close()
 
-    parts = urlsplit(TEST_DATABASE_URL)
-    user_info = f"{APP_ROLE}:{quote(APP_PASSWORD, safe='')}"
-    netloc = user_info + "@" + parts.hostname
-    if parts.port:
-        netloc += f":{parts.port}"
-    return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))
+    return database_url_for_role(APP_ROLE, APP_PASSWORD)
 
 
 def make_settings(database_url: str, **overrides: object) -> Settings:
@@ -434,6 +466,7 @@ def test_missing_migration_keeps_durable_mode_unready_and_returns_503() -> None:
         try:
             await admin.execute("DROP DATABASE IF EXISTS oracle_unmigrated_test WITH (FORCE)")
             await admin.execute("CREATE DATABASE oracle_unmigrated_test")
+        await admin.execute("GRANT CONNECT ON DATABASE oracle_unmigrated_test TO oracle_app_test")
         finally:
             await admin.close()
         parts = urlsplit(app_dsn)
