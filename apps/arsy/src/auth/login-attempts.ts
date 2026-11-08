@@ -100,7 +100,7 @@ export function registerLoginAttemptRoutes(
           updated_at = now()
         RETURNING blocked_until
       )
-      SELECT COALESCE(MAX(CEIL(EXTRACT(EPOCH FROM (blocked_until - now()))), 0), 0)::int AS retry_after_seconds
+      SELECT COALESCE(MAX(CEIL(EXTRACT(EPOCH FROM (blocked_until - now())))), 0)::int AS retry_after_seconds
       FROM upserted
       WHERE blocked_until > now()`,
       [ownerId, bucketKeys],
