@@ -259,3 +259,159 @@ def test_durable_mode_fails_closed_without_database_or_migration() -> None:
         assert submitted.json()["detail"] == (
             "ORACLE durable job persistence is unavailable or not migrated"
         )
+
+
+
+def test_queue_and_retained_job_ceilings_are_enforced_in_postgresql() -> None:
+    async def run() -> None:
+        app_dsn = await prepare_database()
+        queue_limited = PostgresJobCoordinator(
+            make_settings(app_dsn, max_queue_size=1, max_retained_jobs=10)
+        )
+        await queue_limited._connect(start_workers=False)
+        try:
+            await queue_limited.submit(
+                task_type="statistics.describe",
+                input_payload={"values": [1, 2]},
+                evidence=[],
+                idempotency_key="queue-capacity-1",
+            )
+            with pytest.raises(Exception) as saturated:
+                await queue_limited.submit(
+                    task_type="statistics.describe",
+                    input_payload={"values": [2, 3]},
+                    evidence=[],
+                    idempotency_key="queue-capacity-2",
+                )
+            assert saturated.type.__name__ == "QueueSaturatedError"
+        finally:
+            await queue_limited.stop()
+
+        await prepare_database()
+        retained_limited = PostgresJobCoordinator(
+            make_settings(app_dsn, max_queue_size=10, max_retained_jobs=2)
+        )
+        await retained_limited._connect(start_workers=False)
+        try:
+            await retained_limited.submit(
+                task_type="statistics.describe",
+                input_payload={"values": [1, 2]},
+                evidence=[],
+                idempotency_key="retained-capacity-1",
+            )
+            await retained_limited.submit(
+                task_type="statistics.describe",
+                input_payload={"values": [2, 3]},
+                evidence=[],
+                idempotency_key="retained-capacity-2",
+            )
+            with pytest.raises(Exception) as retained:
+                await retained_limited.submit(
+                    task_type="statistics.describe",
+                    input_payload={"values": [3, 4]},
+                    evidence=[],
+                    idempotency_key="retained-capacity-3",
+                )
+            assert retained.type.__name__ == "QueueSaturatedError"
+        finally:
+            await retained_limited.stop()
+
+    asyncio.run(run())
+
+
+def test_expired_leases_retry_then_fail_after_bounded_attempts() -> None:
+    async def run() -> None:
+        app_dsn = await prepare_database()
+        coordinator = PostgresJobCoordinator(
+            make_settings(app_dsn, max_attempts=2, lease_seconds=15)
+        )
+        await coordinator._connect(start_workers=False)
+        admin = await asyncpg.connect(TEST_DATABASE_URL)
+        try:
+            submitted, _ = await coordinator.submit(
+                task_type="statistics.describe",
+                input_payload={"values": [7, 8, 9]},
+                evidence=[],
+                idempotency_key="lease-retry-limit",
+            )
+            first = await coordinator._claim_one(uuid4())
+            assert first is not None
+            _, first_token = first
+            await admin.execute(
+                "UPDATE oracle.jobs SET lease_expires_at = now() - interval '1 second' WHERE job_id = $1",
+                submitted.job_id,
+            )
+
+            second = await coordinator._claim_one(uuid4())
+            assert second is not None
+            _, second_token = second
+            assert second_token != first_token
+            await admin.execute(
+                "UPDATE oracle.jobs SET lease_expires_at = now() - interval '1 second' WHERE job_id = $1",
+                submitted.job_id,
+            )
+            assert await coordinator._claim_one(uuid4()) is None
+            failed = await coordinator.get(submitted.job_id)
+            assert failed is not None
+            assert failed.status == JobStatus.FAILED
+            assert failed.error is not None
+            assert failed.error.code == "worker_lease_expired"
+            assert await coordinator._complete(
+                submitted.job_id,
+                second_token,
+                {"count": 3},
+                Provenance(
+                    method_id="test.method",
+                    method_version="1",
+                    engine="ORACLE",
+                    engine_version="test",
+                    input_digest="a" * 64,
+                    output_digest="b" * 64,
+                    evidence=[],
+                    completed_at=datetime.now(UTC),
+                ),
+            ) is False
+        finally:
+            await admin.close()
+            await coordinator.stop()
+
+    asyncio.run(run())
+
+
+def test_missing_migration_keeps_durable_mode_unready_and_returns_503() -> None:
+    async def run() -> tuple[str, str]:
+        app_dsn = await prepare_database()
+        admin = await asyncpg.connect(TEST_DATABASE_URL)
+        try:
+            await admin.execute("DROP DATABASE IF EXISTS oracle_unmigrated_test WITH (FORCE)")
+            await admin.execute("CREATE DATABASE oracle_unmigrated_test")
+        finally:
+            await admin.close()
+        parts = urlsplit(app_dsn)
+        missing_dsn = urlunsplit(
+            (parts.scheme, parts.netloc, "/oracle_unmigrated_test", parts.query, parts.fragment)
+        )
+        return missing_dsn, TEST_DATABASE_URL or ""
+
+    missing_dsn, admin_dsn = asyncio.run(run())
+    settings = make_settings(missing_dsn)
+    try:
+        with TestClient(create_app(settings)) as client:
+            ready = client.get("/health/ready").json()
+            assert ready["ready"] is False
+            assert ready["database_available"] is False
+            assert ready["durable_jobs"] is True
+            rejected = client.post(
+                "/v1/jobs",
+                json={"task_type": "statistics.describe", "input": {"values": [1, 2]}},
+            )
+            assert rejected.status_code == 503
+    finally:
+        async def drop_database() -> None:
+            admin = await asyncpg.connect(admin_dsn)
+            try:
+                await admin.execute("DROP DATABASE IF EXISTS oracle_unmigrated_test WITH (FORCE)")
+            finally:
+                await admin.close()
+
+        asyncio.run(drop_database())
