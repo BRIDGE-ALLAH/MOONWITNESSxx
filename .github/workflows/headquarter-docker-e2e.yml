@@ -47,6 +47,7 @@ jobs:
       HEADQUARTER_SESSION_SECRET: docker-browser-e2e-only-session-secret-at-least-32-bytes
       HEADQUARTER_PUBLIC_ORIGIN: http://127.0.0.1:3000
       HEADQUARTER_E2E_URL: http://127.0.0.1:3000
+      HEADQUARTER_TRUSTED_PROXY_HOPS: "0"
       NEXT_PUBLIC_ARSY_URL: http://127.0.0.1:3001
       HOST: 127.0.0.1
       PORT: 3001
@@ -83,8 +84,10 @@ jobs:
 
           const pool = new Pool({ connectionString: process.env.DATABASE_URL })
           try {
-            const migration = await readFile('migrations/002_docker_connector.sql', 'utf8')
-            await pool.query(migration)
+            const dockerMigration = await readFile('migrations/002_docker_connector.sql', 'utf8')
+            const loginThrottleMigration = await readFile('migrations/006_shared_login_attempts.sql', 'utf8')
+            await pool.query(dockerMigration)
+            await pool.query(loginThrottleMigration)
           } finally {
             await pool.end()
           }
