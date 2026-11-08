@@ -17,6 +17,7 @@ import { GateDaemonBridgePanel } from '../components/GateDaemonBridgePanel'
 import { PlaybookPipelineRunner } from '../components/PlaybookPipelineRunner'
 import { WindowsMaintenanceSuite } from '../components/WindowsMaintenanceSuite'
 import { WindowsAdvancedSuite } from '../components/WindowsAdvancedSuite'
+import { WindowsMegaToolkit } from '../components/WindowsMegaToolkit'
 import type { CockpitSnapshot, SuggestedAction } from '../lib/agiCopilot'
 import {
   fetchCockpitTelemetry,
@@ -466,6 +467,8 @@ export default function CockpitDashboard() {
         <WindowsMaintenanceSuite />
 
         <WindowsAdvancedSuite />
+
+        <WindowsMegaToolkit />
 
         <div>
           <div className="mb-3 flex items-center justify-between">
