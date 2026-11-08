@@ -14,7 +14,7 @@ const createSchema = z.object({
   source: z.string().trim().min(2).max(200),
   providerReference: z.string().trim().max(300).optional(),
   idempotencyKey: z.string().trim().min(8).max(200),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 const reconcileSchema = z.object({
   state: z.enum(['verified', 'disputed', 'reversed']),
