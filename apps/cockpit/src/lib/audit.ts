@@ -75,21 +75,27 @@ export async function appendAudit(event: AuditEvent): Promise<void> {
     try {
       await invoke('audit_append', { event })
       return
-    } catch {}
+    } catch {
+      // IPC audit append is best-effort; the local fallback below remains available.
+    }
   }
   try {
     const raw = localStorage.getItem(KEY)
     const arr: AuditEvent[] = raw ? JSON.parse(raw) : []
     arr.push(event)
     localStorage.setItem(KEY, JSON.stringify(arr.slice(-1000)))
-  } catch {}
+  } catch {
+    // Browser storage can be unavailable in restricted desktop/web contexts.
+  }
 }
 
 export async function readAudit(limit = 500): Promise<AuditEvent[]> {
   if (isTauri()) {
     try {
       return await invoke<AuditEvent[]>('audit_read', { limit })
-    } catch {}
+    } catch {
+      // Fall back to the local browser copy when the desktop command is unavailable.
+    }
   }
   try {
     const raw = localStorage.getItem(KEY)
