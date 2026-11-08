@@ -48,7 +48,7 @@ async fn postgres_migrations_engine_and_radius_crud_are_persistent() {
     .expect("replay idempotent engine seed");
 
     let preserved_endpoint: String =
-        sqlx::query_scalar("SELECT endpoint FROM engine_instances WHERE id = ?")
+        sqlx::query_scalar("SELECT endpoint FROM engine_instances WHERE id = $1")
             .bind(SEEDED_RADIUS_ID)
             .fetch_one(pool)
             .await
@@ -96,7 +96,7 @@ async fn postgres_migrations_engine_and_radius_crud_are_persistent() {
             .is_none()
     );
 
-    let row = sqlx::query("SELECT COUNT(*) AS total FROM engine_instances WHERE id = ?")
+    let row = sqlx::query("SELECT COUNT(*) AS total FROM engine_instances WHERE id = $1")
         .bind(&created.id)
         .fetch_one(pool)
         .await
