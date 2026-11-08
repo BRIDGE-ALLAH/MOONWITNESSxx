@@ -10,7 +10,7 @@
     "start": "node --experimental-strip-types src/index.ts",
     "lint": "eslint src --max-warnings 0",
     "type-check": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.mjs"
+    "test": "node --experimental-transform-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "@fastify/rate-limit": "11.2.1",
