@@ -67,4 +67,4 @@ The local host port is bound to loopback only. The container joins the existing 
 4. Future mutating operations must be authenticated service-to-service, authorized by ARSY, narrowly allowlisted, auditable, idempotent where possible, and support a dry-run/plan stage.
 5. Runtime privileges must be introduced only with a documented capability requirement; do not run the container as privileged or mount the host network namespace by default.
 
-See [the AEGIS product and architecture blueprint](../../docs/29-aegis-network-infrastructure-blueprint.md).
+See [the AEGIS product and architecture blueprint](../../docs/34-aegis-network-infrastructure-blueprint.md).
