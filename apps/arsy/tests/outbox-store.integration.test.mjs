@@ -54,8 +54,8 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
       createOperation('concurrent-b'),
     ])
     const [claimA, claimB] = await Promise.all([
-      claimDeploymentOutbox(pool, { workerId: 'worker-a', limit: 1, leaseSeconds: 30 }),
-      claimDeploymentOutbox(pool, { workerId: 'worker-b', limit: 1, leaseSeconds: 30 }),
+      claimDeploymentOutbox(pool, { workerId: 'worker-a', ownerId, limit: 1, leaseSeconds: 30 }),
+      claimDeploymentOutbox(pool, { workerId: 'worker-b', ownerId, limit: 1, leaseSeconds: 30 }),
     ])
     assert.equal(claimA.length, 1)
     assert.equal(claimB.length, 1)
@@ -67,6 +67,7 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
     const expiring = await createOperation('lease-expiry')
     const oldLease = (await claimDeploymentOutbox(pool, {
       workerId: 'worker-old',
+      ownerId,
       limit: 1,
       leaseSeconds: 5,
     }))[0]
@@ -75,6 +76,7 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
     await new Promise((resolve) => setTimeout(resolve, 5_200))
     const newLease = (await claimDeploymentOutbox(pool, {
       workerId: 'worker-new',
+      ownerId,
       limit: 1,
       leaseSeconds: 30,
     }))[0]
@@ -89,6 +91,7 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
     await pool.query('UPDATE arsy_deployment_outbox SET max_attempts = 2 WHERE operation_id = $1', [retrying.operation.id])
     const firstAttempt = (await claimDeploymentOutbox(pool, {
       workerId: 'worker-retry-a',
+      ownerId,
       limit: 1,
       leaseSeconds: 30,
     }))[0]
@@ -103,6 +106,7 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
     await pool.query('UPDATE arsy_deployment_outbox SET available_at = now() WHERE id = $1', [firstAttempt.id])
     const secondAttempt = (await claimDeploymentOutbox(pool, {
       workerId: 'worker-retry-b',
+      ownerId,
       limit: 1,
       leaseSeconds: 30,
     }))[0]
@@ -114,6 +118,7 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
     await pool.query('UPDATE arsy_deployment_outbox SET max_attempts = 1 WHERE operation_id = $1', [exhausted.operation.id])
     const finalLease = (await claimDeploymentOutbox(pool, {
       workerId: 'worker-crashed',
+      ownerId,
       limit: 1,
       leaseSeconds: 5,
     }))[0]
@@ -121,6 +126,7 @@ test('deployment outbox claims are concurrent, fenced, retry-bounded and dead-le
     await new Promise((resolve) => setTimeout(resolve, 5_200))
     const noClaim = await claimDeploymentOutbox(pool, {
       workerId: 'reaper',
+      ownerId,
       limit: 1,
       leaseSeconds: 30,
     })
