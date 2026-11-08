@@ -55,9 +55,9 @@ jobs:
       - name: Start PostgreSQL for explicit schema migration
         run: |
           docker compose --env-file .env.docker -f docker-compose.yml \
-            up --detach --wait --wait-timeout 120 postgres
+            up --detach --wait --wait-timeout 120 postgres oracle-db-bootstrap
 
-      - name: Apply ORACLE job migration explicitly
+      - name: Apply ORACLE job migration explicitly as the database migration owner
         run: |
           docker compose --env-file .env.docker -f docker-compose.yml \
             exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
@@ -88,7 +88,7 @@ jobs:
         if: failure()
         run: |
           docker compose --env-file .env.docker -f docker-compose.yml \
-            logs --no-color --tail=200 postgres redis oracle arsy
+            logs --no-color --tail=200 postgres oracle-db-bootstrap redis oracle arsy
 
       - name: Tear down isolated stack and test data
         if: always()
