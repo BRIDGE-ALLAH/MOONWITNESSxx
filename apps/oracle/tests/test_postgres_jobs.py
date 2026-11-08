@@ -276,14 +276,13 @@ def test_queue_and_retained_job_ceilings_are_enforced_in_postgresql() -> None:
                 evidence=[],
                 idempotency_key="queue-capacity-1",
             )
-            with pytest.raises(Exception) as saturated:
+            with pytest.raises(QueueSaturatedError):
                 await queue_limited.submit(
                     task_type="statistics.describe",
                     input_payload={"values": [2, 3]},
                     evidence=[],
                     idempotency_key="queue-capacity-2",
                 )
-            assert saturated.type.__name__ == "QueueSaturatedError"
         finally:
             await queue_limited.stop()
 
@@ -305,14 +304,13 @@ def test_queue_and_retained_job_ceilings_are_enforced_in_postgresql() -> None:
                 evidence=[],
                 idempotency_key="retained-capacity-2",
             )
-            with pytest.raises(Exception) as retained:
+            with pytest.raises(QueueSaturatedError):
                 await retained_limited.submit(
                     task_type="statistics.describe",
                     input_payload={"values": [3, 4]},
                     evidence=[],
                     idempotency_key="retained-capacity-3",
                 )
-            assert retained.type.__name__ == "QueueSaturatedError"
         finally:
             await retained_limited.stop()
 
