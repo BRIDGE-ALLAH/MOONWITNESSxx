@@ -332,4 +332,31 @@ mod tests {
     fn changelog_empty_state_is_explicit() {
         assert!(changelog(&[]).contains("No commits were found"));
     }
+
+    #[test]
+    fn inspects_a_real_local_git_worktree_without_network() {
+        let root = std::env::temp_dir().join(format!(
+            "riot-release-git-test-{}-{}",
+            std::process::id(),
+            now_ms()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        git(&root, &["init", "--quiet"]).unwrap();
+        git(&root, &["config", "user.name", "COCKPIT Test"]).unwrap();
+        git(&root, &["config", "user.email", "cockpit-test@example.invalid"]).unwrap();
+        git(&root, &["config", "commit.gpgsign", "false"]).unwrap();
+        fs::write(root.join("README.md"), "local release test\n").unwrap();
+        git(&root, &["add", "README.md"]).unwrap();
+        git(&root, &["commit", "--quiet", "-m", "feat: seed local repository"]).unwrap();
+
+        let first = preview(&root).unwrap();
+        assert!(first.status.clean);
+        assert_eq!(first.commits.len(), 1);
+        assert_eq!(first.commits[0].category, "Features");
+        assert!(first.suggested_changelog.contains("feat: seed local repository"));
+
+        fs::write(root.join("README.md"), "dirty working tree\n").unwrap();
+        assert!(!status(&root).unwrap().clean);
+        fs::remove_dir_all(&root).unwrap();
+    }
 }
