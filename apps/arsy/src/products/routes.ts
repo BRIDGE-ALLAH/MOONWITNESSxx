@@ -10,7 +10,7 @@ const createSchema = z.object({
 })
 const versionSchema = z.object({
   expectedVersion: z.number().int().positive(),
-  brief: z.record(z.unknown()),
+  brief: z.record(z.string(), z.unknown()),
   acceptanceCriteria: z.array(z.string().trim().min(3).max(500)).min(1).max(30),
 })
 const idSchema = z.string().uuid()
