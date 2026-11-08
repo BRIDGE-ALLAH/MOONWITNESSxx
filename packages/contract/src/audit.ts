@@ -10,7 +10,7 @@ export const AuditEventSchema = z.object({
   result: z.string().nullable().optional(),
   environment: z.string().nullable().optional(),
   correlationId: z.string().nullable().optional(),
-  metadata: z.record(z.any()).nullable().optional(),
+  metadata: z.record(z.string(), z.any()).nullable().optional(),
 })
 
 export type AuditEvent = z.infer<typeof AuditEventSchema>

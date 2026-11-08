@@ -1,8 +1,8 @@
 # ORACLE — Python Intelligence Service
 
-**Stage:** Stage 1 foundation · **Status:** development-only, not production-ready
+**Stage:** Stage 1 computation + Stage 2 durable-job candidate · **Status:** implementation candidate; final Compose E2E/quality gates pending; production remains blocked
 
-ORACLE is the MOONWITNESS Python service for bounded computation and research-oriented analysis. In this first stage it provides a versioned internal API, a bounded in-process job queue, deterministic statistical/text profiling tasks, and digest-based derivation metadata.
+ORACLE is the MOONWITNESS Python service for bounded computation and research-oriented analysis. It provides a versioned internal API, deterministic statistical/text profiling tasks, and digest-based derivation metadata. With `ORACLE_DATABASE_URL` configured, Stage 2 stores the job lifecycle and idempotency state in PostgreSQL and uses database leases for worker recovery. Without that URL, loopback development/test mode retains the bounded in-memory coordinator.
 
 ## Ownership boundaries
 
@@ -26,7 +26,7 @@ All inputs have explicit size limits. Only aggregate outputs are returned for te
 The service exposes:
 
 - \`GET /health/live\` — process liveness.
-- \`GET /health/ready\` — worker/readiness and queue capacity; explicitly reports that jobs are not durable.
+- \`GET /health/ready\` — worker/readiness, queue capacity, database availability, and whether the active job backend is durable.
 - \`GET /v1/capabilities\` — available task types and limits.
 - \`POST /v1/jobs\` — submit a job; responds \`202 Accepted\` and a job ID.
 - \`GET /v1/jobs/{job_id}\` — retrieve job status/result/provenance.
@@ -87,7 +87,7 @@ The container binds to \`0.0.0.0\` and therefore requires a service token. Do no
 
 ## ARSY integration
 
-The Docker Compose development stack runs ORACLE as a private service at `http://oracle:8010` on the existing `moonwitness` bridge network. ORACLE has no published host port. Its readiness endpoint is used by Compose before ARSY starts.
+The Docker Compose development stack runs ORACLE as a private service at `http://oracle:8010` on the existing `moonwitness` bridge network. ORACLE has no published host port. PostgreSQL provisions separate `oracle_app` and `oracle_migrator` roles, and a one-shot `oracle-migrate` service applies checksum-verified SQL migrations before ORACLE starts. Both roles are non-superuser, non-database-creating and non-role-creating; only the migrator can create objects in the dedicated `oracle` schema. The runtime role has no access to the public schema or migration history and receives DML only on `oracle.jobs`. The migration runner reapplies this exact permission set on every start, including after role bootstrap on an existing volume. Compose readiness waits for the durable store and worker pool.
 
 ARSY exposes the caller-facing integration routes:
 
@@ -98,16 +98,21 @@ Both routes are protected by ARSY's existing operator authentication boundary. A
 
 The Compose example uses `ORACLE_BASE_URL=http://oracle:8010`, `ORACLE_SERVICE_TOKEN`, and `ORACLE_REQUEST_TIMEOUT_MS`. The sample token in `.env.docker` is for local development only; replace it before any shared or non-local environment. Do not expose ORACLE through public ingress or a host-published port.
 
-The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, ORACLE, and ARSY as real containers, submits both supported analysis tasks through ARSY, checks their computed results and provenance, and verifies idempotency replay. It uses an ephemeral CI operator token and removes the isolated Compose volumes after the run. This verifies service-to-service execution; it does not make Stage 1 jobs durable or prove production readiness.
+The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, the explicit ORACLE migration step, ORACLE, and ARSY as real containers. It submits both supported analysis tasks through ARSY, checks computed results and provenance, restarts ORACLE, then verifies the existing result and idempotency replay survive that restart. It uses ephemeral CI credentials and removes isolated Compose volumes after the run.
 
-## Stage 1 safety and operational limitations
+## Design and research rationale
 
-- Jobs and idempotency keys live in process memory only. Restarting the service loses queued/running jobs, results, and idempotency history.
-- The queue, worker count, numeric input size, text size, and retained-job count are bounded. Queue saturation returns \`503\` with \`Retry-After\`.
-- The service is intentionally not a durable queue consumer and does not connect to PostgreSQL, Redis/BullMQ, NATS, an AI provider, a GPU, an RDF store, or a vector database.
-- \`ORACLE_ENV=production\` is rejected at startup until durable job storage/queue, production observability, secrets, network controls, and deployment validation exist.
-- Caller authentication and authorization belong to ARSY. A configured ORACLE bearer token is only a service-to-service boundary, not a replacement for user authorization.
-- No source text or numeric input values are written to application logs. Result payloads remain accessible to the trusted internal caller through the job API.
-- A SHA-256 digest is a reproducible fingerprint only. Evidence authenticity, signatures, trusted timestamps, retention, and canonical audit storage remain outside ORACLE.
+- PostgreSQL 16 documents `FOR UPDATE SKIP LOCKED` as suitable for queue-like tables with multiple consumers, while explicitly warning that skipped rows make the view inconsistent for general-purpose queries. ORACLE uses it narrowly to atomically claim one queued or expired lease row inside a transaction; normal job reads do not use it. ([PostgreSQL 16 SELECT](https://www.postgresql.org/docs/16/sql-select.html))
+- PostgreSQL role membership is more than the `NOINHERIT` flag: membership can still enable `SET ROLE`. The bootstrap therefore sets non-privileged attributes and revokes existing role memberships from the ORACLE login roles. ([PostgreSQL 16 CREATE ROLE](https://www.postgresql.org/docs/16/sql-createrole.html), [Role membership](https://www.postgresql.org/docs/current/role-membership.html))
+- `asyncpg` is designed for PostgreSQL with Python `asyncio`; its official guidance recommends connection pooling for server applications that frequently borrow short-lived database connections. ORACLE keeps the pool bounded and the persistence layer behind its coordinator boundary. ([asyncpg usage](https://magicstack.github.io/asyncpg/current/usage.html), [asyncpg pool API](https://magicstack.github.io/asyncpg/current/api/index.html#connection-pools))
 
+## Stage 2 durable job behavior and operational limitations
+
+- `ORACLE_DATABASE_URL` selects the PostgreSQL coordinator. In Compose, the application connects only as the least-privilege `oracle_app` role; the one-shot migration service connects as `oracle_migrator`. Neither role is a superuser or can create databases/roles. Direct privileges on `public` objects are revoked, the runtime search path is restricted to `oracle`, and the application role receives no access to ARSY-owned public tables. The migrator can create objects only in the dedicated `oracle` schema; the runtime role can read/write only `oracle.jobs`.
+- `python -m oracle.migrate` applies ordered SQL migrations and records SHA-256 checksums. It must run as the migration role; application startup never mutates schema. Reapplying unchanged migrations is a no-op, while changing an applied checksum fails closed. Each invocation reapplies runtime permissions so repeatable bootstrap on existing volumes leaves access limited to the jobs table.
+- PostgreSQL submission uses a transaction-scoped advisory lock, a unique partial idempotency index and a retained-job/queue ceiling. Same-key/same-payload replay returns the original job; same-key/different-payload returns `409`.
+- Workers claim queued or expired-running jobs with `FOR UPDATE SKIP LOCKED`, a finite lease and a per-claim UUID fencing token. Heartbeats renew leases; completion/failure requires the current unexpired token, so a stale worker cannot overwrite a reclaimed job. Expired work is retried up to `ORACLE_JOB_MAX_ATTEMPTS`.
+- Compose defaults: two workers, 100 queued jobs, 1,000 retained jobs, 60-second leases, three attempts and seven-day terminal retention. Only terminal rows past retention are pruned; queued/running work is never pruned. Idempotency replay lasts only while the associated job row is retained.
+- If durable storage or its migration is unavailable, readiness returns `503` and job submission/status reads return `503`. A configured durable backend never falls back to in-memory state. The bounded in-memory coordinator remains available only for isolated loopback development/test when `ORACLE_DATABASE_URL` is absent.
+- `ORACLE_ENV=production` remains intentionally rejected. Durable persistence is necessary but not sufficient for production: production monitoring/alerting, managed secrets/rotation, network policy, backup/restore drills, retention review, deployment ownership and rollback validation remain separate release gates.
 This project is a first implementation foundation, not a production-ready intelligence platform.

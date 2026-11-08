@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 
 export interface ServiceNode {
   id: string
@@ -56,7 +56,6 @@ export function ServiceNodeGrid({
   }
 
   const selected = nodes.find((n) => n.id === selectedNodeId) ?? null
-  const triggerRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!selected) return

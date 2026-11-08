@@ -1,12 +1,14 @@
 import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
-import Zod from 'zod'
+import type { Pool } from 'pg'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod'
+import { validatorCompiler } from 'fastify-type-provider-zod'
 import { createDatabasePool, setupDatabase, type DatabasePool } from './db.ts'
 import { registerDockerRoutes } from './docker/routes.ts'
 import { registerDeploymentRoutes } from './deployments/routes.ts'
 import type { AuthorizeDeploymentDependencies } from './deployments/authorization.ts'
+import { registerEvidenceRoutes } from './evidence/routes.ts'
+import { registerGovernanceRoutes } from './governance/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { registerOperatorApiAuth } from './auth/operator-token.ts'
 import { createOracleClient, type OracleClient } from './oracle/client.ts'
@@ -32,27 +34,16 @@ export function createApp(options: CreateAppOptions = {}) {
     // Register the onRoute hook before declaring routes in this encapsulated scope.
     await instance.register(rateLimit, { global: true, max: 120, timeWindow: '1 minute' })
     instance.setValidatorCompiler(validatorCompiler)
-    instance.setSerializerCompiler(serializerCompiler)
 
     const typedApp = instance.withTypeProvider<ZodTypeProvider>()
 
-    typedApp.get(
-      '/',
-      {
-        schema: {
-          response: {
-            200: Zod.object({
-              status: Zod.string(),
-              message: Zod.string(),
-            }),
-          },
-        },
-      },
-      async () => ({
-        status: 'ok',
-        message: 'ARSY Command Center is running',
-      })
-    )
+    // fastify-type-provider-zod@1 serializes response schemas with zod-to-json-schema@3,
+    // which cannot read Zod v4 schemas. Routes return plain objects and use Fastify's
+    // default JSON serialization; request validation above still uses Zod v4.
+    typedApp.get('/', async () => ({
+      status: 'ok',
+      message: 'ARSY Command Center is running',
+    }))
 
     typedApp.get('/health/live', async () => ({ status: 'alive' }))
 
@@ -75,6 +66,8 @@ export function createApp(options: CreateAppOptions = {}) {
       authorization: options.deploymentAuthorization,
       env,
     })
+    registerEvidenceRoutes(instance, databasePool as unknown as Pool)
+    registerGovernanceRoutes(instance, databasePool as unknown as Pool)
     registerLoginAttemptRoutes(instance, databasePool)
     registerOracleRoutes(instance, oracleClient)
   })

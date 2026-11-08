@@ -83,7 +83,6 @@ function toCopilotSnapshot(
   logs: string[]
 ): CockpitSnapshot {
   if (telemetry) {
-    const arsy = telemetry.nodes.find((n) => n.id === 'arsy') ?? telemetry.nodes[0]
     return {
       timestamp: telemetry.timestamp,
       environment: selectedEnv,
@@ -344,6 +343,13 @@ export default function CockpitDashboard() {
 
         <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
           <EnvironmentSelector currentEnv={selectedEnv} onSelect={setSelectedEnv} />
+
+          <a
+            href="/release"
+            className="min-h-[44px] rounded border border-amber-600/50 bg-amber-950/30 px-3 py-2 text-xs font-mono font-bold text-amber-200 transition hover:bg-amber-900/40 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            RIOT RELEASE
+          </a>
 
           <button
             type="button"

@@ -12,6 +12,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from . import __version__
+from .durable_jobs import PersistenceUnavailableError, PostgresJobCoordinator
 from .jobs import (
     IdempotencyConflictError,
     JobCoordinator,
@@ -47,7 +48,7 @@ def _to_job_view(record: JobRecord) -> JobView:
 def create_app(settings: Settings | None = None) -> FastAPI:
     config = settings or Settings.from_env()
     config.validate()
-    coordinator = JobCoordinator(config)
+    coordinator = PostgresJobCoordinator(config) if config.durable_jobs else JobCoordinator(config)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -60,8 +61,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title="MOONWITNESS ORACLE API",
         summary="Internal, bounded intelligence and computation service",
         description=(
-            "ORACLE performs deterministic stage-1 analysis jobs. ARSY remains the "
-            "identity, authorization, caller-facing API, and orchestration authority."
+            "ORACLE performs deterministic analysis jobs. ARSY remains the identity, "
+            "authorization, caller-facing API, and orchestration authority. Job durability "
+            "is reported explicitly and never inferred from process-local acceptance."
         ),
         version=__version__,
         lifespan=lifespan,
@@ -94,7 +96,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def validation_error_handler(
         request: Request, exc: RequestValidationError
     ) -> JSONResponse:
-        # Exclude raw invalid values: they may be non-JSON numbers or sensitive input.
         safe_errors = [
             {
                 "loc": list(error.get("loc", ())),
@@ -110,12 +111,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return HealthResponse(status="ok")
 
     @app.get("/health/ready", response_model=ReadinessResponse, tags=["health"])
-    async def ready() -> ReadinessResponse:
+    async def ready(response: Response) -> ReadinessResponse:
+        snapshot = await coordinator.readiness()
+        response.status_code = (
+            status.HTTP_200_OK if snapshot["ready"] else status.HTTP_503_SERVICE_UNAVAILABLE
+        )
         return ReadinessResponse(
-            ready=coordinator.accepting,
-            queue_depth=coordinator.queue_depth,
+            ready=snapshot["ready"],
+            queue_depth=snapshot["queue_depth"],
             queue_capacity=config.max_queue_size,
-            workers=config.worker_count,
+            workers=snapshot["workers"],
+            durable_jobs=config.durable_jobs,
+            database_available=snapshot["database_available"],
         )
 
     @app.get(
@@ -129,6 +136,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             tasks=["statistics.describe", "text.profile"],
             max_numeric_values=config.max_numeric_values,
             max_text_chars=config.max_text_chars,
+            durable_jobs=config.durable_jobs,
         )
 
     @app.post(
@@ -171,6 +179,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 detail=str(exc),
                 headers={"Retry-After": "5"},
             ) from exc
+        except PersistenceUnavailableError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="ORACLE durable job persistence is unavailable or not migrated",
+                headers={"Retry-After": "5"},
+            ) from exc
 
         response.headers["Location"] = f"/v1/jobs/{record.job_id}"
         response.headers["Idempotency-Replayed"] = str(replayed).lower()
@@ -183,7 +197,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         tags=["jobs"],
     )
     async def get_job(job_id: UUID) -> JobView:
-        record = await coordinator.get(job_id)
+        try:
+            record = await coordinator.get(job_id)
+        except PersistenceUnavailableError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="ORACLE durable job persistence is unavailable or not migrated",
+                headers={"Retry-After": "5"},
+            ) from exc
         if record is None:
             raise HTTPException(status_code=404, detail="Job not found")
         return _to_job_view(record)

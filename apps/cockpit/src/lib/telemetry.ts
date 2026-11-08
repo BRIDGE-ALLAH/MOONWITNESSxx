@@ -70,10 +70,10 @@ export async function fetchCockpitTelemetry(environment: string): Promise<Cockpi
   for (const n of defs) {
     if (n.kind === 'http') {
       const start = performance.now()
-      let status: NodeStatus = 'OFFLINE'
+      let status: NodeStatus
       let ok = false
       let error: string | undefined
-      let latency = 0
+      let latency: number
       try {
         const res = await fetch(n.target, { signal: AbortSignal.timeout(n.timeoutMs) })
         latency = Math.round(performance.now() - start)

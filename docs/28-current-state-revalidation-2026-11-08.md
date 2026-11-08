@@ -211,3 +211,64 @@ After merge, `main` at `d7150c4d30377b0f5f2d9c7bfa2b924e5f3d2a56` passed:
 - A green container build and successful disposable Compose E2E are not evidence of a production deployment.
 
 **Next engineering priorities:** (1) decide and implement durable ORACLE job/idem state and worker recovery with an explicit persistence/ownership ADR; (2) continue the real commerce/product vertical slice through the existing draft Money Maker work, first resolving its dependency graph and unmergeable state; (3) continue ORM/Business Database work only with database-backed CRUD, migrations, access-policy and real persistence tests—not by treating declaration/registry scaffolding as complete.
+
+
+## Deployment control-plane revalidation — 2026-11-08 (mainline `cbec238492053b3ee9126b3f29aa3a936e8f9fb1`)
+
+This addendum supersedes earlier deployment-capability statements in this document where they conflict with the merged mainline work listed below.
+
+### Verified mainline foundation
+
+The following deployment foundations are present on the verified main branch:
+
+- PR #188 / Issue #179: PostgreSQL deployment aggregate, operation journal, append-only events and transactional outbox; owner-scoped idempotency and request-hash conflict behavior.
+- PR #189 / Issue #180: deny-by-default deployment authorization and approval evidence, using the existing capability-policy primitives.
+- PR #195 / Issue #181: a separate, narrowly allowlisted Docker Workload Adapter. The existing Docker Connector inspection API remains read-only.
+- PR #198 / Issue #197: generic PostgreSQL outbox delivery with `FOR UPDATE SKIP LOCKED`, bounded leases, fencing tokens, retries and dead-letter handling. The dispatcher is callable and at-least-once; it is not automatically started by the ARSY HTTP process and has no deployment-specific handler on main.
+- PR #203: bounded dead-letter reaping and database-clock retry/lease handling.
+- PR #205: binds deployment authorization to an authenticated ARSY principal only after operator-token verification and bounds policy evaluation with a fail-closed timeout.
+
+The implementation is distributed across `apps/arsy/src/deployments/` and migrations `003_arsy_deployment_operations.sql`, `004_arsy_deployment_authorization.sql`, and `005_arsy_deployment_outbox_leases.sql`. These are real persistence, authorization, adapter and transport foundations; they are not a complete application PaaS.
+
+### What is still missing
+
+At this mainline snapshot, no end-to-end deployment request can yet be submitted and carried through by the product. In particular, the repository does not yet contain:
+
+- the deployment-specific versioned intent/read API and atomic request-to-operation wiring;
+- a deployment-specific outbox handler and bounded worker lifecycle/recovery loop;
+- a Build Engine runtime that checks out an immutable authorized source commit, builds an image and publishes a verifiable OCI digest;
+- application-level deployment health reconciliation, safe audited rollback, and a Headquarter operator workflow backed by those APIs;
+- an accepted ingress/domain/TLS lifecycle and a verified production deployment target.
+
+The generic outbox dispatcher must not be represented as a deployment worker. The Docker Workload Adapter must not be represented as a source-to-image builder. A passed image build or disposable Compose integration test must not be represented as a production deployment.
+
+### Build Engine and dependent execution order
+
+ADR 0003 is still **proposed for maintainer review**, not accepted. It recommends BuildKit rootless only subject to mandatory isolation proof gates, with a disposable per-job VM as the preferred trust boundary. Issue #182 owns the decision and adversarial proof; Issue #183 owns implementation only after that decision is accepted. Do not run untrusted repository build instructions inside ARSY or with access to the production Docker socket or control-plane credentials.
+
+Issue #184 should implement only deployment-specific orchestration on top of the already-merged journal, authorization, adapter and generic outbox foundations. It must not recreate those components. Its prerequisites are #179, #180, #181 and #197; its Build Engine dependency is #183, which is itself blocked on acceptance of #182. Issues #185 (health/reconciliation/rollback) and #186 (Headquarter BFF/operator workflow) remain downstream of the deployment API/orchestration.
+
+### Exact-head GitHub Actions evidence
+
+For main commit `cbec238492053b3ee9126b3f29aa3a936e8f9fb1`, the following GitHub Actions runs were retrieved as completed successfully:
+
+- Repository CI: [42455420748](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42455420748)
+- Container build verification: [42455420783](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42455420783)
+- CodeQL: [42455420787](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42455420787)
+- ORACLE Compose E2E: [42455420765](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42455420765)
+
+These runs are exact-main-head CI evidence only. They do not establish a completed deployment API/worker, a production runtime, a production URL, or a live production smoke test.
+
+### Product truth and release status
+
+- HEADQUARTER remains a prototype/demo experience; static feature datasets and financial/dashboard values must not be described as live customer or business records.
+- ORACLE Stage 1 still retains job/idempotency state in process memory; restart-safe durable job recovery is not established.
+- The current root package version remains `1.0.11`; the only stable tag/release remains `v1.0.0`; the numbered changelog still only documents `1.0.0`. Do not fabricate intervening releases or backfill versions without a verified release decision.
+- This audit did not perform a local clone, local install/test run, manual browser/accessibility review, local Docker deployment, production credential inspection, production deployment, or production smoke test. Those remain NOT RUN / NOT AVAILABLE in this session.
+
+**Release readiness remains NO-GO.** The exact-head CI runs above are green, but no configured production target, managed secret injection, TLS/ingress, backup/restore drill, production monitoring/alerting, rollback procedure, live URL, or production smoke evidence was available. No version bump, tag, GitHub Release or production deployment was attempted.
+
+
+### Persisted status contract
+
+The current operation model and database constraint permit `queued`, `running`, `verifying`, `succeeded`, `failed`, `cancelled`, and `blocked`. Do not write proposed labels such as `building` or `deploying` into `arsy_deployment_operations.status` without a reviewed migration and matching transition/API tests. Represent build, image-pull, container-create/start and health sub-stages as typed append-only operation events/details while keeping the persisted operation and deployment aggregate status values compatible with migrations 003–005.

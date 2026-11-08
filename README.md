@@ -48,6 +48,9 @@ Requirements: Node.js 22+ (CI uses Node.js 24) and pnpm 12.16.1 as pinned in the
 ```bash
 pnpm install
 pnpm dev:headquarter
+pnpm dev:gate
+pnpm dev:cockpit
+pnpm dev:cockpit:desktop
 pnpm dev:arsy
 ```
 

@@ -73,6 +73,14 @@ class JobCoordinator:
     def queue_depth(self) -> int:
         return self._queue.qsize()
 
+    async def readiness(self) -> dict[str, Any]:
+        return {
+            "ready": self.accepting,
+            "queue_depth": self.queue_depth,
+            "database_available": False,
+            "workers": len(self._workers),
+        }
+
     async def start(self) -> None:
         if self._workers:
             return

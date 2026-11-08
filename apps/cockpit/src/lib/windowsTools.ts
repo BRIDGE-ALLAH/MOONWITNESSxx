@@ -196,8 +196,6 @@ export async function optimizeWindowsMemory(): Promise<MemoryOptimizationResult>
 }
 
 // 4. Zombie / Orphan Dev Process Hunter
-const MONITORED_DEV_PORTS = [3000, 3001, 3002, 4000, 4001, 5432, 8000]
-
 export async function scanZombieDevProcesses(): Promise<ZombieProcessInfo[]> {
   if (isTauri()) {
     try {

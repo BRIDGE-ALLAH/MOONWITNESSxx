@@ -32,7 +32,7 @@ export const CockpitSnapshotSchema = z.object({
   targetHost: z.string().min(1),
   probe: ProbeTelemetrySchema,
   nodes: z.array(NodeTelemetrySchema),
-  recentLogs: z.array(z.record(z.any())).optional().default([]),
+  recentLogs: z.array(z.record(z.string(), z.any())).optional().default([]),
   source: z.string().min(1),
 })
 

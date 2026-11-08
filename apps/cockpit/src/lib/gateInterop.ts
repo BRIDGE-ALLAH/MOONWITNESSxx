@@ -43,7 +43,7 @@ export async function probeGateDaemon(port = DEFAULT_GATE_PORT): Promise<GateDae
         latencyMs: Math.round(performance.now() - start),
         mode: 'tauri-ipc',
       }
-    } catch (err) {
+    } catch {
       // IPC failed, fall through to fetch probe
     }
   }
