@@ -84,7 +84,7 @@ test('Docker runtime stats API validates resource ownership before contacting an
       headers: { 'x-arsy-operator-token': token },
     })
     assert.equal(missing.statusCode, 404)
-    assert.match(queries[0].statement, /WHERE id = \\$1 AND owner_id = \\$2/)
+    assert.match(queries[0].statement, /WHERE id = \$1 AND owner_id = \$2/)
     assert.deepEqual(queries[0].values, [serverId, operatorId])
   } finally { await app.close() }
 })
