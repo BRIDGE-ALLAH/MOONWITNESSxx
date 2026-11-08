@@ -175,6 +175,27 @@ test('production login fails closed when the shared limiter or trusted ingress i
   }
 })
 
+test('production login fails closed on unsigned client-supplied forwarding headers', async () => {
+  const restoreEnv = setEnvironment(productionEnv())
+  let fetchCalled = false
+  const restoreFetch = withFetch(async () => {
+    fetchCalled = true
+    return new Response(JSON.stringify({ data: { allowed: true, retryAfterSeconds: 0 } }), { status: 200 })
+  })
+  try {
+    const response = await POST(request({
+      origin,
+      'content-type': 'application/json',
+      'x-forwarded-for': '203.0.113.10',
+    }))
+    assert.equal(response.status, 503)
+    assert.equal(fetchCalled, false)
+  } finally {
+    restoreFetch()
+    restoreEnv()
+  }
+})
+
 test('production login counts an invalid password exactly once in the shared limiter', async () => {
   const restoreEnv = setEnvironment(productionEnv())
   const actions = []
