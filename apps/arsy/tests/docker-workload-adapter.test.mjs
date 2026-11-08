@@ -89,7 +89,10 @@ test('create uses a pinned image, private network defaults, no host binds and ow
   const transport = new FakeTransport()
   transport.queue.push(
     response(404),
-    response(201, { Name: 'created-volume' }),
+    response(201, {
+      Name: `mw-${scopedLabels()['io.moonwitness.owner-hash']}-${createHash('sha256').update(`${ownerId}:${deploymentId}:content`).digest('hex').slice(0, 24)}`,
+      Labels: scopedLabels(),
+    }),
     response(201, { Id: containerId, Warnings: [] }),
   )
   const adapter = new DockerWorkloadAdapter({ enabled: true, transport })
