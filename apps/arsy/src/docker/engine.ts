@@ -177,6 +177,11 @@ function metricNumber(value: unknown): number | null {
     : null
 }
 
+function positiveMetricNumber(value: unknown): number | null {
+  const candidate = metricNumber(value)
+  return candidate !== null && candidate > 0 ? candidate : null
+}
+
 function sumMetric(values: Array<number | null>): number | null {
   if (!values.length || values.some((value) => value === null)) return null
   const total = values.reduce<number>((sum, value) => sum + (value ?? 0), 0)
@@ -218,8 +223,8 @@ export async function getDockerContainerStats(
   })()
   const currentPerCpu = Array.isArray(cpuUsage.percpu_usage) ? cpuUsage.percpu_usage.length : 0
   const previousPerCpu = Array.isArray(previousCpuUsage.percpu_usage) ? previousCpuUsage.percpu_usage.length : 0
-  const cpuCount = metricNumber(cpu.online_cpus) ??
-    metricNumber(previousCpu.online_cpus) ??
+  const cpuCount = positiveMetricNumber(cpu.online_cpus) ??
+    positiveMetricNumber(previousCpu.online_cpus) ??
     (currentPerCpu || previousPerCpu || null)
   const cpuPercent = cpuDelta !== null && systemDelta !== null && cpuCount !== null && cpuCount > 0
     ? (cpuDelta / systemDelta) * cpuCount * 100
