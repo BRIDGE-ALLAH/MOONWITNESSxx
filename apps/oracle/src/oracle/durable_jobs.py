@@ -46,11 +46,7 @@ def _to_record(row: asyncpg.Record) -> JobRecord:
         completed_at=row["completed_at"],
         result=_json_value(row["result"]),
         error=JobError.model_validate(_json_value(row["error"])) if row["error"] else None,
-        provenance=(
-            Provenance.model_validate(_json_value(row["provenance"]))
-            if row["provenance"]
-            else None
-        ),
+        provenance=Provenance.model_validate(_json_value(row["provenance"])) if row["provenance"] else None,
     )
 
 
