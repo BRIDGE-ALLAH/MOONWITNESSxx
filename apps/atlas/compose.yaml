@@ -1,21 +1,21 @@
 services:
-  mariadb:
-    image: mariadb:11.4
+  postgres:
+    image: postgres:17-alpine
     networks:
       - atlas_internal
-
     environment:
-      MARIADB_DATABASE: atlas
-      MARIADB_USER: atlas
-      MARIADB_PASSWORD: ${ATLAS_DB_PASSWORD:?Set ATLAS_DB_PASSWORD in the environment}
-      MARIADB_ROOT_PASSWORD: ${ATLAS_DB_ROOT_PASSWORD:?Set ATLAS_DB_ROOT_PASSWORD in the environment}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set POSTGRES_ADMIN_PASSWORD in the environment}
+      POSTGRES_DB: postgres
+      ATLAS_DB_PASSWORD: ${ATLAS_DB_PASSWORD:?Set ATLAS_DB_PASSWORD in the environment}
       RADIUS_DB_PASSWORD: ${RADIUS_DB_PASSWORD:?Set RADIUS_DB_PASSWORD in the environment}
     volumes:
-      - atlas_mariadb_data:/var/lib/mysql
-      - ./docker/mariadb/init/20-radius-db.sh:/docker-entrypoint-initdb.d/20-radius-db.sh:ro
-      - ./docker/freeradius/mysql/schema.sql:/docker-entrypoint-initdb.d/21-radius-schema.sql:ro
+      - atlas_postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init/20-create-databases.sh:/docker-entrypoint-initdb.d/20-create-databases.sh:ro
+      - ./docker/postgres/init/21-install-radius-schema.sh:/docker-entrypoint-initdb.d/21-install-radius-schema.sh:ro
+      - ./docker/freeradius/postgresql/schema.sql:/docker-entrypoint-initdb.d/22-radius-schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", 'mariadb-admin ping -h 127.0.0.1 -u root -p"$${MARIADB_ROOT_PASSWORD}" --silent']
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -77,7 +77,7 @@ services:
       - "${RADIUS_BIND_ADDRESS:-127.0.0.1}:${RADIUS_AUTH_PORT:-1812}:1812/udp"
       - "${RADIUS_BIND_ADDRESS:-127.0.0.1}:${RADIUS_ACCT_PORT:-1813}:1813/udp"
     depends_on:
-      mariadb:
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "printf 'FreeRADIUS-Statistics-Type = 1\\nMessage-Authenticator = 0x00\\n' | radclient -q -S /run/freeradius-status-secret 127.0.0.1:18121 status"]
@@ -96,9 +96,9 @@ services:
     entrypoint: ["/usr/local/bin/atlas-migrate"]
     command: []
     environment:
-      DATABASE_URL: mysql://atlas:${ATLAS_DB_PASSWORD}@mariadb:3306/atlas
+      DATABASE_URL: postgres://atlas:${ATLAS_DB_PASSWORD}@postgres:5432/atlas
     depends_on:
-      mariadb:
+      postgres:
         condition: service_healthy
     networks:
       - atlas_internal
@@ -113,9 +113,9 @@ services:
       PORT: 5150
       BINDING: 0.0.0.0
       ATLAS_PUBLIC_URL: ${ATLAS_PUBLIC_URL:-http://localhost:5150}
-      DATABASE_URL: mysql://atlas:${ATLAS_DB_PASSWORD}@mariadb:3306/atlas
+      DATABASE_URL: postgres://atlas:${ATLAS_DB_PASSWORD}@postgres:5432/atlas
       REDIS_URL: redis://:${ATLAS_REDIS_PASSWORD}@redis:6379/0
-      RADIUS_DATABASE_URL: mysql://radius:${RADIUS_DB_PASSWORD}@mariadb:3306/radius
+      RADIUS_DATABASE_URL: postgres://radius:${RADIUS_DB_PASSWORD}@postgres:5432/radius
       ATLAS_CONTROL_TOKEN: ${ATLAS_CONTROL_TOKEN:?Set ATLAS_CONTROL_TOKEN in the environment}
       ATLAS_ENGINE_SECRET_RADIUS_STATUS: ${RADIUS_STATUS_SECRET:?Set RADIUS_STATUS_SECRET in the environment}
       ATLAS_ENGINE_SECRET_PDNS_PRIMARY: ${POWERDNS_API_KEY:-}
@@ -123,7 +123,7 @@ services:
     ports:
       - "127.0.0.1:${ATLAS_PORT:-5150}:5150"
     depends_on:
-      mariadb:
+      postgres:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
@@ -144,7 +144,7 @@ networks:
         - subnet: ${ATLAS_DOCKER_SUBNET:-172.31.240.0/24}
 
 volumes:
-  atlas_mariadb_data:
+  atlas_postgres_data:
     driver: local
   atlas_redis_data:
     driver: local
