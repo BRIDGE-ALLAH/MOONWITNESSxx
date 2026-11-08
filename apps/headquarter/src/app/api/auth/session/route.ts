@@ -129,7 +129,8 @@ export async function POST(request: Request) {
 
   if (useSharedLimit) {
     try {
-      await requestSharedLoginLimit(request, 'success')
+      const reset = await requestSharedLoginLimit(request, 'success')
+      if (!reset.allowed) return sharedLimitUnavailable()
     } catch {
       // Do not issue a session when the shared security state cannot be updated.
       return sharedLimitUnavailable()
