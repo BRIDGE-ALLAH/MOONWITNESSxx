@@ -29,6 +29,14 @@ def test_oracle_app_role_is_confined_to_oracle_schema() -> None:
                 "WHERE schemaname = 'oracle' AND tablename = 'jobs'"
             )
             assert owner == "oracle_migrator"
+            migrator_database_create = await admin.fetchval(
+                "SELECT has_database_privilege('oracle_migrator', current_database(), 'CREATE')"
+            )
+            migrator_schema_create = await admin.fetchval(
+                "SELECT has_schema_privilege('oracle_migrator', 'oracle', 'CREATE')"
+            )
+            assert migrator_database_create is False
+            assert migrator_schema_create is True
             await admin.execute(
                 """
                 CREATE TABLE IF NOT EXISTS public.arsy_login_attempts_probe (
