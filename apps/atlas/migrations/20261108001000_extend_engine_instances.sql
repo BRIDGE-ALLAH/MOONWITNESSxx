@@ -1,0 +1,3 @@
+ALTER TABLE engine_instances
+    ADD COLUMN IF NOT EXISTS config JSONB NULL,
+    ADD COLUMN IF NOT EXISTS secret_env_key VARCHAR(128) NULL;

@@ -1,0 +1,13 @@
+logger:
+  enable: false
+  pretty_backtrace: true
+  level: warn
+  format: compact
+
+workers:
+  mode: ForegroundBlocking
+
+server:
+  port: 5151
+  binding: 127.0.0.1
+  host: http://localhost

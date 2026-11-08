@@ -1,0 +1,14 @@
+logger:
+  enable: true
+  pretty_backtrace: true
+  level: <%= get_env(name="LOG_LEVEL", default="debug") %>
+  format: compact
+
+workers:
+  # Local development has no persistent queue; best-effort in-process mode is sufficient while no tasks are registered.
+  mode: BackgroundAsync
+
+server:
+  port: <%= get_env(name="PORT", default="5150") %>
+  binding: <%= get_env(name="BINDING", default="127.0.0.1") %>
+  host: http://localhost
