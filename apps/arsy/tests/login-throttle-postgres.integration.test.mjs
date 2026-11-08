@@ -14,8 +14,9 @@ test('PostgreSQL login throttle is shared across two ARSY instances and clears o
   const env = { ARSY_OPERATOR_ID: ownerId, ARSY_OPERATOR_TOKEN: token }
   const poolA = createDatabasePool()
   const poolB = createDatabasePool()
-  const appA = await createApp({ databasePool: poolA, logger: false, env })
-  const appB = await createApp({ databasePool: poolB, logger: false, env })
+  const oracleClient = { submitJob: async () => { throw new Error('not used by this test') }, getJob: async () => { throw new Error('not used by this test') } }
+  const appA = await createApp({ databasePool: poolA, logger: false, env, oracleClient })
+  const appB = await createApp({ databasePool: poolB, logger: false, env, oracleClient })
   const headers = { 'x-arsy-operator-token': token }
   const send = (app, action, hash = networkHash) => app.inject({
     method: 'POST',
