@@ -10,20 +10,30 @@ PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 --username "$POSTGRES_US
   --set=oracle_app_password="$ORACLE_APP_DB_PASSWORD" \
   --set=oracle_migrator_password="$ORACLE_MIGRATOR_DB_PASSWORD" <<'SQL'
 SELECT format(
-  'CREATE ROLE oracle_migrator LOGIN PASSWORD %L NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION',
+  'CREATE ROLE oracle_migrator LOGIN PASSWORD %L NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS',
   :'oracle_migrator_password'
 )
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_migrator') \gexec
 SELECT format(
-  'CREATE ROLE oracle_app LOGIN PASSWORD %L NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION',
+  'CREATE ROLE oracle_app LOGIN PASSWORD %L NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS',
   :'oracle_app_password'
 )
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app') \gexec
 
 ALTER ROLE oracle_migrator WITH LOGIN PASSWORD :'oracle_migrator_password'
-  NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+  NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 ALTER ROLE oracle_app WITH LOGIN PASSWORD :'oracle_app_password'
-  NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+  NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+
+-- Remove any historical group memberships: NOINHERIT alone does not prevent SET ROLE.
+SELECT format('REVOKE %I FROM oracle_migrator', granted.rolname)
+FROM pg_auth_members AS membership
+JOIN pg_roles AS granted ON granted.oid = membership.roleid
+WHERE membership.member = 'oracle_migrator'::regrole \gexec
+SELECT format('REVOKE %I FROM oracle_app', granted.rolname)
+FROM pg_auth_members AS membership
+JOIN pg_roles AS granted ON granted.oid = membership.roleid
+WHERE membership.member = 'oracle_app'::regrole \gexec
 
 SELECT format(
   'GRANT CONNECT ON DATABASE %I TO oracle_migrator, oracle_app',
