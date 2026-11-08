@@ -136,6 +136,7 @@ function validateVolumes(scope: DockerWorkloadScope, volumes: CreateDockerWorklo
   const keys = new Set<string>()
   const targets = new Set<string>()
   return volumes.map((volume) => {
+    if (!isRecord(volume)) throw new TypeError('Volume declarations must be objects')
     const key = requiredText(volume.key, 'volume key', 41)
     const target = requiredText(volume.target, 'volume target', 180)
     if (!/^[a-z0-9][a-z0-9_.-]{0,40}$/.test(key) || keys.has(key) ||
@@ -435,12 +436,15 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
       target: typeof mount.Destination === 'string' ? mount.Destination : '',
       readOnly: mount.RW === false,
     })) : []
+    const safeLabels = Object.fromEntries(
+      Object.entries(labels).filter((entry): entry is [string, string] => typeof entry[1] === 'string').slice(0, 32),
+    )
     return {
       containerId,
       image: typeof config.Image === 'string' ? config.Image : '',
       running: isRecord(data.State) && data.State.Running === true,
       state: isRecord(data.State) && typeof data.State.Status === 'string' ? data.State.Status : 'unknown',
-      labels: { ...labels },
+      labels: safeLabels,
       mounts,
     }
   }
