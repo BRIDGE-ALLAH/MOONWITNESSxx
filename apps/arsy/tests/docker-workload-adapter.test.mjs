@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import {
   DockerWorkloadAdapter,
   DockerWorkloadDisabledError,
