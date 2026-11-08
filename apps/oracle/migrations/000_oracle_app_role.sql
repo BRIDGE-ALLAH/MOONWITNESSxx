@@ -29,4 +29,5 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_migrator')
 ALTER ROLE oracle_migrator WITH NOLOGIN NOCREATEDB NOCREATEROLE NOREPLICATION;
 CREATE SCHEMA IF NOT EXISTS oracle AUTHORIZATION oracle_migrator;
 ALTER SCHEMA oracle OWNER TO oracle_migrator;
+REVOKE CREATE ON DATABASE :"postgres_db" FROM oracle_migrator;
 GRANT USAGE, CREATE ON SCHEMA oracle TO oracle_migrator;
