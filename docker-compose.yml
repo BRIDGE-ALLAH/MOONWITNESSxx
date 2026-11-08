@@ -53,11 +53,18 @@ services:
       ORACLE_DB_PASSWORD: ${ORACLE_DB_PASSWORD:?ORACLE_DB_PASSWORD must be set}
     volumes:
       - ./apps/oracle/migrations/000_oracle_app_role.sql:/bootstrap/000_oracle_app_role.sql:ro
-    entrypoint: ["/bin/sh", "-ec"]
-    command: >-
-      exec psql -v ON_ERROR_STOP=1
-      -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB"
-      -f /bootstrap/000_oracle_app_role.sql
+    entrypoint: ["psql"]
+    command:
+      - "-v"
+      - "ON_ERROR_STOP=1"
+      - "-h"
+      - "postgres"
+      - "-U"
+      - "${POSTGRES_USER:-postgres}"
+      - "-d"
+      - "${POSTGRES_DB:-moonwitness}"
+      - "-f"
+      - "/bootstrap/000_oracle_app_role.sql"
     restart: "no"
     networks:
       - moonwitness
