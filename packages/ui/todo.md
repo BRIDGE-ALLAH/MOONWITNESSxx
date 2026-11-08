@@ -91,6 +91,22 @@
 - [ ] **P2** Add token reference documentation and examples.
 - [ ] **P2** Add automated checks to prevent accidental raw color and spacing drift where practical.
 
+## 2A. MOONWITNESS Skin Engine foundation
+
+- [x] **P0** Define the canonical `SkinName`, appearance mode, and density types.
+- [x] **P0** Add a static registry for Observatory, Archive, and Signal with purpose and usage boundaries.
+- [x] **P0** Add deterministic fallback resolution for unknown skin, unsupported mode, and unknown density.
+- [x] **P0** Add server-compatible `SkinRoot` with `data-mw-skin`, `data-mw-mode`, and `data-mw-density`.
+- [x] **P0** Map the initial Observatory/dark, Archive/light, and Signal/dark token profiles.
+- [x] **P0** Keep semantic status tokens separate from expressive skin accent tokens.
+- [x] **P0** Add source-level tests for registry, mode support, fallback metadata, root attributes, and token presence.
+- [ ] **P0** Run package type-check, lint, and tests in CI on the implementation PR.
+- [ ] **P1** Verify all three skins in a browser at desktop, tablet, mobile, and 200% zoom.
+- [ ] **P1** Complete rendered contrast and keyboard/focus review for every supported skin/mode pair.
+- [ ] **P1** Build a dedicated local skin workbench with representative Observatory, Archive, and Signal compositions.
+- [ ] **P1** Map actual Headquarter routes to an appropriate skin without breaking the existing next-themes preference.
+- [ ] **P2** Add skin preference/persistence only when a real user-facing selection flow is justified.
+
 ## 3. Styling and asset foundations
 
 - [ ] **P0** Verify Tailwind configuration and CSS processing order in package and consuming apps.
