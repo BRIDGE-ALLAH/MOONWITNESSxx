@@ -74,3 +74,27 @@ test('publication receipts require actual-action evidence and explicit confirmat
     assert.equal(pool.calls.length, 0)
   } finally { await app.close() }
 })
+
+
+test('publication receipts reject non-HTTP(S) and credential-bearing evidence URLs', async () => {
+  const pool = createPool()
+  const app = await createApp({ databasePool: pool, logger: false, env })
+  try {
+    for (const url of ['javascript:alert(1)', 'data:text/html,unsafe', 'file:///etc/passwd', 'https://user:pass@example.com/receipt']) {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/v1/listings/${listingId}/receipts`,
+        headers: { 'x-arsy-operator-token': token },
+        payload: {
+          receiptType: 'manual-submission',
+          evidence: [{ label: 'Submission evidence', url }],
+          operatorConfirmation: 'The operator confirms the external submission action.',
+        },
+      })
+      assert.equal(response.statusCode, 400, url)
+    }
+    assert.equal(pool.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
