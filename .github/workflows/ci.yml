@@ -312,3 +312,44 @@ jobs:
 
       - name: Compile COCKPIT Tauri runtime
         run: cargo build --release --manifest-path apps/cockpit/src-tauri/Cargo.toml --locked
+
+  arsy-login-postgres-integration:
+    name: ARSY shared login PostgreSQL integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: moonwitness_test
+          POSTGRES_USER: moonwitness_test
+          POSTGRES_PASSWORD: moonwitness_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U moonwitness_test -d moonwitness_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://moonwitness_test:moonwitness_test_password@127.0.0.1:5432/moonwitness_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run real PostgreSQL login-throttle integration
+        run: pnpm --filter @riotworks/arsy exec node --experimental-strip-types --test tests/login-throttle-postgres.integration.test.mjs
