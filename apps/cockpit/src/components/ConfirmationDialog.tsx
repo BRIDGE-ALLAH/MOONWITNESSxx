@@ -8,6 +8,7 @@ export interface ConfirmationDialogProps {
   environment?: string
   onConfirm: () => void
   onCancel: () => void
+  requireDualKey?: boolean
 }
 
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -18,15 +19,18 @@ export function ConfirmationDialog({
   environment,
   onConfirm,
   onCancel,
+  requireDualKey = false,
 }: ConfirmationDialogProps) {
   const [input, setInput] = useState('')
   const [checked, setChecked] = useState(false)
+  const [secondaryKey, setSecondaryKey] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     setInput('')
     setChecked(false)
+    setSecondaryKey('')
   }, [actionId, source])
 
   useEffect(() => {
@@ -76,7 +80,9 @@ export function ConfirmationDialog({
     : meta.privileged
       ? actionId
       : null
-  const canConfirm = required ? input === required : checked
+  const isDualKeyNeeded = requireDualKey || (environment === 'production' && meta.destructive)
+  const dualKeyValid = !isDualKeyNeeded || secondaryKey.trim().length >= 6
+  const canConfirm = (required ? input === required : checked) && dualKeyValid
   const mismatch = !!required && input.length > 0 && input !== required
 
   return (
@@ -151,6 +157,24 @@ export function ConfirmationDialog({
             </span>
           </label>
         )}
+        {isDualKeyNeeded ? (
+          <div className="mt-3 rounded border border-amber-800/40 bg-amber-950/20 p-2.5">
+            <label htmlFor="secops-token" className="text-xs font-semibold text-amber-300">
+              Dual-Key Approval Required (SecOps Lead Token)
+            </label>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Production destructive operations require authorization by a secondary SecOps officer.
+            </p>
+            <input
+              id="secops-token"
+              type="password"
+              placeholder="Enter 6+ character SecOps key"
+              value={secondaryKey}
+              onChange={(e) => setSecondaryKey(e.target.value)}
+              className="mt-1.5 w-full rounded border border-amber-700/60 bg-slate-950 p-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono"
+            />
+          </div>
+        ) : null}
         <div className="mt-4 flex justify-end gap-2">
           <button
             type="button"
