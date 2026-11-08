@@ -175,25 +175,24 @@ jobs:
           PY
 
           docker compose restart freeradius
-          radius_healthy=false
+
+          echo "ATLAS readiness, engine health, NAS registration, and subscriber persistence checks passed."
+          echo "Verifying actual RADIUS PAP authentication after the FreeRADIUS restart."
+          radius_auth_ok=false
+          auth_status=1
+          auth_result="No RADIUS response received."
           for attempt in $(seq 1 45); do
-            container_id="$(docker compose ps -q freeradius)"
-            health="$(docker inspect --format '{{.State.Health.Status}}' "$container_id" 2>/dev/null || true)"
-            if [ "$health" = healthy ]; then
-              radius_healthy=true
+            auth_status=0
+            auth_result="$(printf 'User-Name = "ci-radius-user"\\nUser-Password = "correct horse battery staple"\\nNAS-IP-Address = 172.31.240.10\\nNAS-Port = 1\\n' | docker compose exec -T atlas radclient -r 1 -t 1 freeradius:1812 auth ci-radius-nas-secret-which-is-over-32 2>&1)" || auth_status=$?
+            if [ "$auth_status" -eq 0 ] && printf '%s\\n' "$auth_result" | grep -q 'Access-Accept'; then
+              radius_auth_ok=true
               break
             fi
             sleep 2
           done
-          test "$radius_healthy" = true
-
-          echo "ATLAS readiness, engine health, NAS registration, and subscriber persistence checks passed."
-          echo "FreeRADIUS restart completed; verifying RADIUS PAP authentication."
-          auth_status=0
-          auth_result="$(docker compose exec -T atlas radtest ci-radius-user 'correct horse battery staple' freeradius 1812 0 ci-radius-nas-secret-which-is-over-32 2>&1)" || auth_status=$?
-          printf '%s\n' "$auth_result"
-          if [ "$auth_status" -ne 0 ] || ! printf '%s\n' "$auth_result" | grep -q 'Access-Accept'; then
-            echo "RADIUS authentication failed (radtest exit status: $auth_status)."
+          printf '%s\\n' "$auth_result"
+          if [ "$radius_auth_ok" != true ]; then
+            echo "RADIUS PAP authentication did not return Access-Accept (radclient exit status: $auth_status)."
             docker compose logs --no-color --tail=200 freeradius atlas || true
             exit 1
           fi
