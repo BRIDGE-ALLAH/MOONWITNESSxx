@@ -39,10 +39,20 @@
     --radius-control: 0.125rem;
     --motion-fast: 120ms;
     --motion-normal: 180ms;
+    --mw-skin-heading-tracking: -0.025em;
+    --mw-skin-heading-transform: none;
+    --mw-skin-panel-radius: var(--radius);
+    --mw-skin-control-radius: var(--radius-control);
+    --mw-skin-border-style: solid;
+    --mw-skin-texture-opacity: 0.02;
+    --mw-skin-graphic-accent: 41 52% 29%;
+    --mw-skin-content-max-width: 72rem;
+    --mw-skin-density-scale: 1;
   }
 
   .dark,
-  .theme-observatory {
+  .theme-observatory,
+  [data-mw-skin="observatory"][data-mw-mode="dark"] {
     color-scheme: dark;
     /* MOONWITNESS Observatory — Void, instrument panels, lunar text, gold signal. */
     --background: 230 25% 5%;
@@ -72,9 +82,19 @@
     --ring: 41 74% 65%;
     --focus: 41 74% 65%;
     --overlay: 230 25% 3%;
-  }
+      --mw-skin-heading-tracking: -0.035em;
+    --mw-skin-heading-transform: none;
+    --mw-skin-panel-radius: 0.5rem;
+    --mw-skin-control-radius: 0.375rem;
+    --mw-skin-border-style: solid;
+    --mw-skin-texture-opacity: 0.025;
+    --mw-skin-graphic-accent: 41 74% 65%;
+    --mw-skin-content-max-width: 90rem;
+    --mw-skin-density-scale: 1;
+}
 
-  .theme-archive {
+  .theme-archive,
+  [data-mw-skin="archive"][data-mw-mode="light"] {
     color-scheme: light;
     /* MOONWITNESS Archive — Moonlight paper, Deep Ink, accessible violet focus. */
     --background: 45 35% 93%;
@@ -104,6 +124,59 @@
     --ring: 255 32% 43%;
     --focus: 255 32% 43%;
     --overlay: 230 25% 5%;
+      --mw-skin-heading-tracking: -0.02em;
+    --mw-skin-heading-transform: none;
+    --mw-skin-panel-radius: 0.25rem;
+    --mw-skin-control-radius: 0.125rem;
+    --mw-skin-border-style: solid;
+    --mw-skin-texture-opacity: 0.025;
+    --mw-skin-graphic-accent: 41 52% 29%;
+    --mw-skin-content-max-width: 68rem;
+    --mw-skin-density-scale: 1;
+}
+
+  .theme-signal,
+  [data-mw-skin="signal"][data-mw-mode="dark"] {
+    color-scheme: dark;
+    /* Signal keeps Observatory's semantic status palette and changes its editorial material. */
+    --background: 0 0% 6%;
+    --foreground: 45 35% 93%;
+    --card: 0 0% 10%;
+    --card-foreground: 45 35% 93%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 45 35% 93%;
+    --primary: 41 74% 65%;
+    --primary-foreground: 230 25% 5%;
+    --secondary: 0 0% 17%;
+    --secondary-foreground: 45 35% 93%;
+    --muted: 0 0% 17%;
+    --muted-foreground: 220 17% 73%;
+    --accent: 0 65% 32%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 50% 57%;
+    --destructive-foreground: 230 25% 5%;
+    --success: 145 55% 48%;
+    --success-foreground: 230 25% 5%;
+    --warning: 38 92% 58%;
+    --warning-foreground: 230 25% 5%;
+    --info: 196 90% 58%;
+    --info-foreground: 230 25% 5%;
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+    --ring: 41 74% 65%;
+    --focus: 41 74% 65%;
+    --overlay: 0 0% 3%;
+    --radius: 0;
+    --radius-control: 0;
+    --mw-skin-heading-tracking: -0.055em;
+    --mw-skin-heading-transform: uppercase;
+    --mw-skin-panel-radius: 0;
+    --mw-skin-control-radius: 0;
+    --mw-skin-border-style: solid;
+    --mw-skin-texture-opacity: 0.075;
+    --mw-skin-graphic-accent: 0 48% 57%;
+    --mw-skin-content-max-width: 80rem;
+    --mw-skin-density-scale: 1;
   }
 
   * {
@@ -120,6 +193,20 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
+  }
+
+  .mw-skin-root {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mw-skin-root :is(h1, h2, h3, h4, h5, h6) {
+    letter-spacing: var(--mw-skin-heading-tracking, inherit);
+    text-transform: var(--mw-skin-heading-transform, none);
+  }
+
+  .mw-skin-root :is(button, input, select, textarea) {
+    border-radius: var(--mw-skin-control-radius, var(--radius-control));
   }
 
   :focus-visible {
