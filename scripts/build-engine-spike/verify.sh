@@ -242,8 +242,19 @@ METADATA_DIGEST="$(jq -r '."containerimage.digest" // empty' "$METADATA")"
 jq -e --arg digest "$METADATA_DIGEST" 'any(.manifests[]; .digest == $digest)' "$INDEX" >/dev/null || fail "metadata digest is not present in OCI index"
 # Buildx metadata may identify an index descriptor; select the runnable image
 # manifest explicitly so config/layer verification never targets an index or attestation.
-IMAGE_DIGEST="$(jq -r '[.manifests[] | select((.annotations["vnd.docker.reference.type"] // "") != "attestation-manifest") | .digest][0] // empty' "$INDEX")"
-[[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "OCI index has no runnable image manifest"
+# Only a platform image manifest is runnable. Attestation descriptors and nested
+# indexes can lack config/layers; do not treat them as the image payload.
+IMAGE_DIGEST="$(jq -r '[.manifests[]
+  | select(.mediaType == "application/vnd.oci.image.manifest.v1+json" or .mediaType == "application/vnd.docker.distribution.manifest.v2+json")
+  | select(.platform.os? != null and .platform.architecture? != null)
+  | select((.annotations["vnd.docker.reference.type"] // "") != "attestation-manifest")
+  | .digest][0] // empty' "$INDEX")"
+[[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "OCI index has no platform image manifest"
+verify_blob "$IMAGE_DIGEST"
+IMAGE_HEX="${IMAGE_DIGEST#sha256:}"
+IMAGE_MANIFEST="$EXTRACT/blobs/sha256/$IMAGE_HEX"
+CONFIG_DIGEST="$(jq -r '.config.digest // empty' "$IMAGE_MANIFEST")"
+[[ "$CONFIG_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fail "selected OCI image manifest has no valid config digest"
 
 verify_blob() {
   local digest="$1" algorithm hex file actual
