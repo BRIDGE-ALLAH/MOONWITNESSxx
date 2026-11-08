@@ -464,7 +464,7 @@ def test_missing_migration_keeps_durable_mode_unready_and_returns_503() -> None:
         try:
             await admin.execute("DROP DATABASE IF EXISTS oracle_unmigrated_test WITH (FORCE)")
             await admin.execute("CREATE DATABASE oracle_unmigrated_test")
-        await admin.execute("GRANT CONNECT ON DATABASE oracle_unmigrated_test TO oracle_app_test")
+            await admin.execute("GRANT CONNECT ON DATABASE oracle_unmigrated_test TO oracle_app_test")
         finally:
             await admin.close()
         parts = urlsplit(app_dsn)
