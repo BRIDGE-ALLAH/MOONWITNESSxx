@@ -108,6 +108,20 @@ export async function claimDeploymentOutbox(
   const leaseSeconds = boundedInteger(input.leaseSeconds, 30, 5, 300, 'leaseSeconds')
   const leaseToken = randomUUID()
 
+  // A worker can die after claiming its final allowed attempt. Once that
+  // lease expires, make the row terminal instead of leaving it unclaimable.
+  await pool.query(
+    `UPDATE arsy_deployment_outbox
+     SET dead_lettered_at = now(),
+         locked_by = NULL,
+         locked_until = NULL,
+         lease_token = NULL,
+         last_error_code = 'attempts_exhausted'
+     WHERE delivered_at IS NULL AND dead_lettered_at IS NULL
+       AND attempt_count >= max_attempts
+       AND (locked_until IS NULL OR locked_until <= now())`,
+  )
+
   const result = await pool.query(
     `WITH candidates AS (
        SELECT id
