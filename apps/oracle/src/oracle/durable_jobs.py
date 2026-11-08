@@ -108,10 +108,11 @@ class PostgresJobCoordinator:
         self._database_available = True
         self._accepting = True
         if start_workers:
-            self._workers = [
-                asyncio.create_task(self._worker_loop(), name=f"oracle-db-worker-{index + 1}")
-                for index in range(self.settings.worker_count)
-            ]
+            if not self._workers or all(worker.done() for worker in self._workers):
+                self._workers = [
+                    asyncio.create_task(self._worker_loop(), name=f"oracle-db-worker-{index + 1}")
+                    for index in range(self.settings.worker_count)
+                ]
             logger.info(
                 "ORACLE durable workers started",
                 extra={
@@ -159,11 +160,14 @@ class PostgresJobCoordinator:
                 extra={"event": "durable_readiness_failed", "error_type": type(exc).__name__},
             )
             self._database_available = False
+            pool, self._pool = self._pool, None
+            if pool is not None:
+                await pool.close()
             return {
                 "ready": False,
                 "queue_depth": 0,
                 "database_available": False,
-                "workers": self.settings.worker_count,
+                "workers": len(self._workers),
             }
         self._database_available = True
         workers_ready = (
@@ -314,8 +318,8 @@ class PostgresJobCoordinator:
                           )
                             AND attempt_count < $1
                           ORDER BY submitted_at, job_id
-                          FOR UPDATE SKIP LOCKED
                           LIMIT 1
+                          FOR UPDATE SKIP LOCKED
                         )
                         UPDATE oracle.jobs AS job
                         SET status = 'running',
