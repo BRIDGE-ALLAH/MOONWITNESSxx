@@ -163,10 +163,54 @@ test('a worker that dies on its final attempt is dead-lettered after lease expir
   pool.add({ maxAttempts: 1 })
   const first = (await claimDeploymentOutbox(pool, { workerId: 'worker-a' }))[0]
   pool.messages[0].locked_until = new Date(Date.now() - 1000)
+  assert.equal(await reapExpiredDeploymentOutbox(pool, { limit: 10 }), 1)
   assert.deepEqual(await claimDeploymentOutbox(pool, { workerId: 'worker-b' }), [])
   assert.ok(pool.messages[0].dead_lettered_at)
   assert.equal(pool.messages[0].last_error_code, 'attempts_exhausted')
   assert.equal(await acknowledgeDeploymentOutbox(pool, first), false)
+})
+
+test('expired final-attempt reaping is bounded and owner-scoped', async () => {
+  const pool = new FakePool()
+  pool.add({ id: 'expired-owner-a', ownerId: 'owner-a', maxAttempts: 1, attemptCount: 1 })
+  pool.add({ id: 'expired-owner-b', ownerId: 'owner-a', maxAttempts: 1, attemptCount: 1 })
+  pool.add({ id: 'expired-owner-c', ownerId: 'owner-b', maxAttempts: 1, attemptCount: 1 })
+  const first = await reapExpiredDeploymentOutbox(pool, { ownerId: 'owner-a', limit: 1 })
+  const second = await reapExpiredDeploymentOutbox(pool, { ownerId: 'owner-a', limit: 1 })
+  assert.equal(first, 1)
+  assert.equal(second, 1)
+  assert.ok(pool.messages[0].dead_lettered_at)
+  assert.ok(pool.messages[1].dead_lettered_at)
+  assert.equal(pool.messages[2].dead_lettered_at, null)
+  assert.match(pool.statements[0].statement, /FOR UPDATE SKIP LOCKED/)
+  assert.equal(pool.statements[0].values[1], 'owner-a')
+})
+
+test('retry scheduling is delegated to PostgreSQL time rather than a worker timestamp', async () => {
+  const pool = new FakePool()
+  pool.add({ maxAttempts: 2 })
+  const message = (await claimDeploymentOutbox(pool, { workerId: 'worker-a' }))[0]
+  await retryDeploymentOutbox(pool, message, 'handler_failed')
+  const retryStatement = pool.statements.at(-1)
+  assert.match(retryStatement.statement, /now\(\) \+ make_interval/)
+  assert.equal(retryStatement.values.length, 4)
+  assert.equal(retryStatement.values[3], 'handler_failed')
+})
+
+test('dispatcher reports expired dead letters in its bounded result', async () => {
+  const pool = new FakePool()
+  pool.add({ id: 'expired-final', maxAttempts: 1 })
+  const lease = (await claimDeploymentOutbox(pool, { workerId: 'worker-a' }))[0]
+  pool.messages[0].locked_until = new Date(Date.now() - 1000)
+  const result = await dispatchDeploymentOutboxBatch(pool, {
+    workerId: 'reaper-worker',
+    limit: 1,
+    handlers: {},
+  })
+  assert.equal(result.deadLettered, 1)
+  assert.equal(result.claimed, 0)
+  assert.equal(pool.messages[0].dead_lettered_at !== null, true)
+  assert.equal(await acknowledgeDeploymentOutbox(pool, lease), false)
 })
 
 test('dispatcher acknowledges success, retries handler failures and never treats missing handlers as delivered', async () => {
