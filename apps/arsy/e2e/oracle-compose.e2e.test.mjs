@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import test from 'node:test'
 
 const baseUrl = (process.env.ARSY_E2E_BASE_URL ?? 'http://127.0.0.1:3001').replace(/\/$/, '')
@@ -75,6 +76,34 @@ test('real ARSY-to-ORACLE statistics job returns computed result and provenance'
   assert.match(job.provenance.input_digest, /^[a-f0-9]{64}$/)
   assert.match(job.provenance.output_digest, /^[a-f0-9]{64}$/)
   assert.deepEqual(job.provenance.evidence, payload.evidence)
+
+  // Prove the job/result/idempotency record is PostgreSQL-backed, not process memory.
+  execFileSync(
+    'docker',
+    ['compose', '--env-file', '.env.docker', '-f', 'docker-compose.yml', 'restart', 'oracle'],
+    { stdio: 'inherit' },
+  )
+  const restartDeadline = Date.now() + 30_000
+  let persistedJob
+  while (Date.now() < restartDeadline) {
+    const response = await fetch(
+      baseUrl + '/api/v1/oracle/jobs/' + encodeURIComponent(job.job_id),
+      {
+        headers: { 'x-arsy-operator-token': operatorToken },
+        signal: AbortSignal.timeout(5_000),
+      },
+    )
+    if (response.ok) {
+      persistedJob = (await response.json()).data
+      if (persistedJob.status === 'succeeded') break
+    }
+    await sleep(250)
+  }
+  assert.ok(persistedJob, 'ARSY must retrieve the job after ORACLE restarts')
+  assert.equal(persistedJob.status, 'succeeded')
+  assert.equal(persistedJob.job_id, job.job_id)
+  assert.deepEqual(persistedJob.result, job.result)
+  assert.equal(persistedJob.provenance.output_digest, job.provenance.output_digest)
 
   const replayResponse = await fetch(baseUrl + '/api/v1/oracle/jobs', {
     method: 'POST',

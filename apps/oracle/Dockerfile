@@ -11,6 +11,7 @@ RUN groupadd --system oracle && useradd --system --gid oracle --home-dir /app or
 
 COPY pyproject.toml README.md ./
 COPY src ./src
+COPY migrations ./migrations
 
 RUN python -m pip install --no-cache-dir . \
     && chown -R oracle:oracle /app
