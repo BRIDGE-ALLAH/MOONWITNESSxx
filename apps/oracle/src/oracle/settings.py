@@ -85,10 +85,10 @@ class Settings:
         if self.environment not in {"development", "test"}:
             if self.environment == "production":
                 raise ValueError(
-                    "ORACLE production mode remains blocked until managed database credentials, "
+                    "ORACLE production mode is blocked until managed database credentials, "
                     "backups and restore, production observability, network policy, and deployment/rollback controls are verified"
                 )
-            raise ValueError("ORACLE_ENV must be development or test in stage 1")
+            raise ValueError("ORACLE_ENV must be development or test until production controls are approved")
 
         try:
             is_loopback = ip_address(self.host).is_loopback
