@@ -13,7 +13,7 @@
     "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^10.14.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-unicorn": "^56.0.0",
+    "eslint-plugin-unicorn": "^79.0.0",
     "globals": "^15.15.0"
   },
   "main": "index.js"
