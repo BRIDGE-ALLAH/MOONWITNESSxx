@@ -606,7 +606,7 @@ export function RiotReleaseWorkspace() {
                             <p className="mt-1 break-all text-xs text-slate-400">{profile.outputDirectories.join(' · ')}</p>
                           </div>
                           <p className="rounded border border-amber-700/50 bg-amber-950/20 p-3 text-xs leading-5 text-amber-100">
-                            TRUST BOUNDARY: {profile.trustNotice} Build scripts may access the network depending on the project and installed tools. RIOT RELEASE does not upload or publish build output.
+                            TRUST BOUNDARY: {profile.trustNotice} Build scripts may access the network depending on the project and installed tools, and they execute with your current user permissions. Review the repository before proceeding. RIOT RELEASE does not upload or publish build output.
                           </p>
                           {!confirmBuild ? (
                             <button type="button" onClick={() => setConfirmBuild(true)} disabled={busy} className="min-h-11 rounded border border-amber-500/60 bg-amber-500/10 px-4 py-2 font-mono text-xs font-bold text-amber-200 hover:bg-amber-500/20 disabled:opacity-40">
