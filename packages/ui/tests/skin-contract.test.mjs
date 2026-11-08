@@ -54,7 +54,8 @@ test('each initial skin only advertises an explicitly supported appearance mode'
     const end = nextName ? registry.indexOf(`  ${nextName}: {`, start) : registry.indexOf('\n} as const')
     const section = registry.slice(start, end)
     assert.match(section, new RegExp(`defaultMode: '${expected[name]}'`))
-    assert.ok(section.includes(`supportedModes: ['${expected[name]}']`))
+    if (name === 'signal') assert.ok(section.includes("supportedModes: ['dark']"))
+    else assert.match(section, /supportedModes: \['(?:dark', 'light'|'light', 'dark')\]/)
   }
 })
 
