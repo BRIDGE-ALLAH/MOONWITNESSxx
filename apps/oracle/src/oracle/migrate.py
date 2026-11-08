@@ -112,9 +112,7 @@ async def apply_migrations(
         await connection.execute(
             f'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA oracle FROM "{runtime_role}"'
         )
-        await connection.execute(
-            f'GRANT USAGE ON SCHEMA oracle TO "{runtime_role}"'
-        )
+        await connection.execute(f'GRANT USAGE ON SCHEMA oracle TO "{runtime_role}"')
         await connection.execute(
             f'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE oracle.jobs TO "{runtime_role}"'
         )
