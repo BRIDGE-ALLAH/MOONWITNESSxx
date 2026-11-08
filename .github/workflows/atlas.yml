@@ -95,3 +95,95 @@ jobs:
           RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
           RADIUS_STATUS_SECRET: ci-radius-status-secret-which-is-long-enough-32
         run: docker run --rm -e RADIUS_DB_PASSWORD -e RADIUS_STATUS_SECRET atlas-freeradius:ci -XC
+
+      - name: Run ATLAS and FreeRADIUS end-to-end smoke test
+        env:
+          ATLAS_DB_PASSWORD: ci-atlas-db-password
+          ATLAS_DB_ROOT_PASSWORD: ci-root-password
+          ATLAS_REDIS_PASSWORD: ci-redis-password
+          RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
+          RADIUS_STATUS_SECRET: ci-radius-status-secret-which-is-long-enough-32
+          ATLAS_CONTROL_TOKEN: ci-atlas-control-token-which-is-long-enough
+          ATLAS_DOCKER_SUBNET: 172.31.240.0/24
+          RADIUS_BIND_ADDRESS: 127.0.0.1
+        run: |
+          set -euo pipefail
+          cleanup() {
+            docker compose down --volumes --remove-orphans
+          }
+          trap cleanup EXIT
+
+          docker compose up -d --build
+
+          ready=false
+          for attempt in $(seq 1 60); do
+            if curl --silent --show-error --fail http://127.0.0.1:5150/api/v1/system/readiness > /tmp/atlas-readiness.json; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          test "$ready" = true
+          python3 - <<'PY'
+          import json
+          with open("/tmp/atlas-readiness.json", encoding="utf-8") as handle:
+              readiness = json.load(handle)
+          assert readiness["ready"] is True, readiness
+          assert readiness["database"] == "available", readiness
+          assert readiness["redis"] == "available", readiness
+          assert readiness["radius_database"] == "available", readiness
+          PY
+
+          curl --silent --show-error --fail \
+            -H "Authorization: Bearer $ATLAS_CONTROL_TOKEN" \
+            http://127.0.0.1:5150/api/v1/engines/01K9Z0J8A1B2C3D4E5F6G7H8J9/health \
+            > /tmp/atlas-radius-health.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/atlas-radius-health.json", encoding="utf-8") as handle:
+              health = json.load(handle)
+          assert health["state"] == "healthy", health
+          PY
+
+          curl --silent --show-error --fail --request POST \
+            -H "Authorization: Bearer $ATLAS_CONTROL_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"nasname":"172.31.240.10","shortname":"ci-atlas","nas_type":"other","ports":16,"secret":"ci-radius-nas-secret-which-is-over-32","description":"Ephemeral end-to-end test NAS"}' \
+            http://127.0.0.1:5150/api/v1/radius/nas > /tmp/atlas-nas.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/atlas-nas.json", encoding="utf-8") as handle:
+              result = json.load(handle)
+          assert result["activation"] == "pending_radius_restart", result
+          assert result["data"]["secret_configured"] is True, result
+          PY
+
+          curl --silent --show-error --fail --request POST \
+            -H "Authorization: Bearer $ATLAS_CONTROL_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"username":"ci-radius-user","password":"correct horse battery staple","credential_mode":"bcrypt"}' \
+            http://127.0.0.1:5150/api/v1/radius/subscribers > /tmp/atlas-subscriber.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/atlas-subscriber.json", encoding="utf-8") as handle:
+              result = json.load(handle)
+          assert result["credential_storage"] == "hashed", result
+          assert result["authentication_effective"] is True, result
+          PY
+
+          docker compose restart freeradius
+          radius_healthy=false
+          for attempt in $(seq 1 45); do
+            container_id="$(docker compose ps -q freeradius)"
+            health="$(docker inspect --format '{{.State.Health.Status}}' "$container_id" 2>/dev/null || true)"
+            if [ "$health" = healthy ]; then
+              radius_healthy=true
+              break
+            fi
+            sleep 2
+          done
+          test "$radius_healthy" = true
+
+          auth_result="$(docker compose exec -T atlas radtest ci-radius-user 'correct horse battery staple' freeradius 1812 0 ci-radius-nas-secret-which-is-over-32 2>&1)"
+          printf '%s\n' "$auth_result"
+          printf '%s\n' "$auth_result" | grep -q 'Access-Accept'
