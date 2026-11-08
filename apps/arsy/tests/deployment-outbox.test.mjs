@@ -147,6 +147,9 @@ test('retry uses a safe error code and the final failed attempt is dead-lettered
   pool.add({ maxAttempts: 2 })
   const first = (await claimDeploymentOutbox(pool, { workerId: 'worker-a' }))[0]
   assert.equal(await retryDeploymentOutbox(pool, first, 'HANDLER ERROR WITH SECRETS'), 'retry_scheduled')
+  const retryStatement = pool.statements.at(-1)
+  assert.match(retryStatement.statement, /now\\(\\) \\+ make_interval/)
+  assert.equal(retryStatement.values.length, 4)
   assert.equal(pool.messages[0].last_error_code, 'handler_failed')
   assert.ok(pool.messages[0].available_at > Date.now())
 
