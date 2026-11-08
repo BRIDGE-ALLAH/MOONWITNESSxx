@@ -323,7 +323,7 @@ The following describes the checked-in baseline at the time of this blueprint; i
 - The stylesheet maps the first supported pairs: Observatory/dark, Archive/light, and Signal/dark. The Archive root fallback and legacy selectors remain for compatibility.
 - Source-level contract tests cover registry declarations, supported mode pairs, resolver fallback metadata, root attributes, and semantic token presence.
 - Browser visual regression, rendered contrast review, screen-reader QA, and complete component-state verification remain open release gates.
-- No global skin picker, persisted preference, React context, automatic Headquarter route mapping, or complete visual workbench is implemented yet.
+- An initial internal Headquarter specimen route exists at `/ui-lab/skin-system`, comparing the three profiles with illustrative content. It is not yet a complete component-state workbench or visual-regression suite. No global skin picker, persisted preference, React context, or automatic Headquarter route mapping is implemented.
 - `apps/headquarter` owns its application shell and page compositions; the package does not yet own a complete shared app shell.
 - The custom MOONWITNESS Signal WOFF2 is not approved for runtime use; use licensed font families and robust system fallbacks.
 
