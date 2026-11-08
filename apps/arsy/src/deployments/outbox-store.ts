@@ -91,7 +91,20 @@ export async function claimDeploymentOutbox(
   }
 
   const result = await pool.query(
-    `WITH candidates AS (
+    `WITH exhausted AS (
+       UPDATE arsy_deployment_outbox
+       SET dead_lettered_at = now(),
+           locked_by = NULL,
+           locked_until = NULL,
+           lease_token = NULL,
+           last_error_code = COALESCE(last_error_code, 'attempts_exhausted')
+       WHERE delivered_at IS NULL
+         AND dead_lettered_at IS NULL
+         AND attempt_count >= max_attempts
+         AND (locked_until IS NULL OR locked_until <= now())
+       RETURNING id
+     ),
+     candidates AS (
        SELECT id
        FROM arsy_deployment_outbox
        WHERE delivered_at IS NULL
@@ -100,8 +113,8 @@ export async function claimDeploymentOutbox(
          AND attempt_count < max_attempts
          AND (locked_until IS NULL OR locked_until <= now())
        ORDER BY available_at, created_at, id
-       FOR UPDATE SKIP LOCKED
        LIMIT $1
+       FOR UPDATE SKIP LOCKED
      ),
      claimed AS (
        UPDATE arsy_deployment_outbox AS outbox
@@ -186,7 +199,7 @@ export async function retryDeploymentOutbox(
      SET last_error_code = $4,
          available_at = CASE
            WHEN attempt_count >= max_attempts THEN available_at
-           ELSE now() + (LEAST(3600, 5 * (1::bigint << LEAST(attempt_count - 1, 10))) * interval '1 second')
+           ELSE now() + make_interval(secs => LEAST(3600, 5 * (1::bigint << LEAST(attempt_count - 1, 10)))::double precision)
          END,
          dead_lettered_at = CASE
            WHEN attempt_count >= max_attempts THEN now()
