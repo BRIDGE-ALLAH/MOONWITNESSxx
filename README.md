@@ -49,9 +49,14 @@ Requirements: Node.js 22+ (CI uses Node.js 24) and pnpm 12.16.1 as pinned in the
 pnpm install
 pnpm dev:headquarter
 pnpm dev:arsy
+```
 
-# AEGIS is a standalone Go module, not a pnpm package:
-cd apps/aegis && go test -race ./... && go run ./cmd/aegis
+AEGIS is a standalone Go module, not a pnpm package:
+
+```bash
+cd apps/aegis
+go test -race ./...
+go run ./cmd/aegis
 ```
 
 Useful validation commands:
@@ -92,5 +97,6 @@ Use the committed lockfile and repository scripts. If frozen install fails becau
 | [30 — ARSY Hardening](./docs/30-arsy-phases-18-20-hardening.md) | Runtime trust-boundary hardening |
 | [31 — Product Integrity](./docs/31-product-integrity-phases-36-38.md) | Data-truth and release preflight |
 | [32 — Universe & Product Registry](./docs/32-universe-and-product-architecture-registry.md) | Wider product universe, nine target experiences, domains, and platform ownership |
+| [34 — AEGIS Network Runtime](./docs/34-aegis-network-infrastructure-blueprint.md) | AEGIS Phase 1 scope, ARSY authority boundary and phased network execution roadmap |
 
 For contribution rules and verified commands, start with [CONTRIBUTING.md](./CONTRIBUTING.md), [AGENTS.md](./AGENTS.md), and [docs/24](./docs/24-repository-and-automation-governance.md).
