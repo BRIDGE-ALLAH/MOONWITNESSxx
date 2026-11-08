@@ -196,7 +196,24 @@ export class PayoutRepository {
     const result = await this.db.query(
       `WITH eligible_channel AS (
         SELECT id FROM arsy_channels
-        WHERE id = $3 AND enabled = true AND capability IN ('C1', 'C2', 'C3', 'C4')
+        WHERE id = $3
+          AND owner_id = $2
+          AND channel_status = 'active'
+          AND capability = 'C1'
+          AND account_eligibility = 'eligible'
+          AND payout_setup_status = 'configured'
+          AND EXISTS (
+            SELECT 1 FROM arsy_channel_evidence evidence
+            WHERE evidence.owner_id = $2 AND evidence.channel_id = arsy_channels.id
+              AND evidence.evidence_type = 'account-eligibility'
+              AND evidence.evidence_class = 'observed-fact'
+          )
+          AND EXISTS (
+            SELECT 1 FROM arsy_channel_evidence evidence
+            WHERE evidence.owner_id = $2 AND evidence.channel_id = arsy_channels.id
+              AND evidence.evidence_type = 'payout-requirements'
+              AND evidence.evidence_class = 'observed-fact'
+          )
       ), created AS (
         INSERT INTO arsy_payouts
           (id, owner_id, channel_id, amount_minor, currency, status, provider_reference,
