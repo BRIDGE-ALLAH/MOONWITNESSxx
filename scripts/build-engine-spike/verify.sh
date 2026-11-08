@@ -8,7 +8,7 @@ UNIT="mw-buildkit-spike-$$"
 HOST_SOCKET="/tmp/build-engine-spike-host.sock"
 HOST_PORT="18765"
 SOURCE_COMMIT="${GITHUB_SHA:-local-spike}"
-TMP_DIR="/tmp/mw-build-engine-spike-$"
+TMP_DIR="$(mktemp -d /tmp/mw-build-engine-spike.XXXXXX)"
 WORK="$TMP_DIR/work"
 BUILDER_HOME="$TMP_DIR/home"
 RUNTIME_DIR="$WORK/runtime"
@@ -19,6 +19,7 @@ CONTEXT="$WORK/context"
 OUTPUT="$WORK/image.oci.tar"
 METADATA="$WORK/metadata.json"
 BUILD_LOG="$WORK/build.log"
+RUN_SCRIPT="$TMP_DIR/run-build.sh"
 EXTRACT="$WORK/extracted"
 BUILDER_UID=""
 HOST_PID=""
@@ -27,7 +28,7 @@ WORK_MOUNTED=0
 fail() { echo "BUILD ENGINE SPIKE FAILED: $*" >&2; exit 1; }
 require() { command -v "$1" >/dev/null 2>&1 || fail "missing prerequisite: $1"; }
 
-for cmd in curl jq sha256sum tar python3 systemd-run systemctl mount umount useradd userdel; do require "$cmd"; done
+for cmd in curl jq sha256sum tar python3 systemd-run systemctl mount umount useradd userdel mktemp; do require "$cmd"; done
 [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || fail "GITHUB_SHA must be a 40-character commit SHA"
 require sudo
 require timeout
@@ -193,7 +194,7 @@ task_limit="$(sudo systemctl show "$UNIT.service" --property=TasksMax --value)"
 [[ "$memory_limit" == "2147483648" ]] || fail "2 GiB cgroup memory limit is not active"
 [[ "$task_limit" == "256" ]] || fail "PID/task cgroup limit is not active"
 
-cat > "$WORK/run-build.sh" <<EOF
+cat > "$RUN_SCRIPT" <<EOF
 #!/usr/bin/env bash
 set -Eeuo pipefail
 ulimit -f 20480
@@ -208,9 +209,8 @@ exec timeout 180s "$BUILDCTL" --addr "$SOCKET" build \
   --progress plain \
   --proxy-network > "$BUILD_LOG" 2>&1
 EOF
-chmod 700 "$WORK/run-build.sh"
-chown "$BUILDER_USER:$BUILDER_USER" "$WORK/run-build.sh"
-sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" XDG_RUNTIME_DIR="$RUNTIME_DIR" "$WORK/run-build.sh" || {
+chmod 644 "$RUN_SCRIPT"
+sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" XDG_RUNTIME_DIR="$RUNTIME_DIR" bash "$RUN_SCRIPT" || {
   sudo -u "$BUILDER_USER" tail -n 160 "$BUILD_LOG" >&2 || true
   fail "rootless BuildKit adversarial build failed"
 }
