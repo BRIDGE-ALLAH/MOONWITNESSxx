@@ -332,6 +332,31 @@ test('actor mismatch and audit-store failure never return an authorization allow
   assert.equal(auditUnavailable.reasonCodes[0], 'authorization_audit_unavailable')
 })
 
+test('legacy root grant signatures remain valid with an absent or null parent reference', async () => {
+  const issuer = keyPair()
+  const grant = makeGrant(issuer.privateKey)
+  const legacyPayload = JSON.stringify({
+    actions: grant.actions,
+    argumentHashes: grant.argumentHashes,
+    expiresAt: grant.expiresAt,
+    id: grant.id,
+    issuerId: grant.issuerId,
+    issuedAt: grant.issuedAt,
+    purpose: grant.purpose,
+    resources: grant.resources,
+    sessionId: grant.sessionId,
+    subjectId: grant.subjectId,
+    tenantId: grant.tenantId,
+  })
+  grant.signature = sign(null, Buffer.from(legacyPayload), issuer.privateKey).toString('base64url')
+  const verifier = createEd25519CapabilityVerifier(createTrustedPublicKeyring(JSON.stringify({
+    'deployment-root': issuer.publicKey.export({ type: 'spki', format: 'pem' }),
+  })))
+
+  assert.equal(capabilityGrantSigningPayload({ ...grant, parentGrantId: null }), legacyPayload)
+  assert.equal(await verifier.verify({ ...grant, parentGrantId: null }), true)
+})
+
 test('delegated grant signatures bind the exact persisted parent grant', async () => {
   const pool = new FakePool()
   const rootIssuer = keyPair()
