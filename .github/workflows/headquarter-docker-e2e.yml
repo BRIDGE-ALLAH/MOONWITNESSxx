@@ -74,7 +74,7 @@ jobs:
           docker info
           docker ps --format '{{.ID}} {{.Names}}'
 
-      - name: Apply the Docker connector migration to isolated PostgreSQL
+      - name: Apply Docker connector and shared-login migrations to isolated PostgreSQL
         working-directory: apps/arsy
         run: |
           node --input-type=module <<'NODE'
@@ -83,8 +83,13 @@ jobs:
 
           const pool = new Pool({ connectionString: process.env.DATABASE_URL })
           try {
-            const migration = await readFile('migrations/002_docker_connector.sql', 'utf8')
-            await pool.query(migration)
+            for (const file of [
+              'migrations/002_docker_connector.sql',
+              'migrations/006_shared_login_attempts.sql',
+            ]) {
+              const migration = await readFile(file, 'utf8')
+              await pool.query(migration)
+            }
           } finally {
             await pool.end()
           }
