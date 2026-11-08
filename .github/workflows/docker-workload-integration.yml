@@ -1,0 +1,39 @@
+name: ARSY Docker workload integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/arsy/**'
+      - '.github/workflows/docker-workload-integration.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-workload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify runner Docker Engine is available
+        run: docker info
+      - name: Pull and pin the disposable workload test image
+        run: |
+          docker pull nginx:alpine
+          image="$(docker image inspect --format '{{index .RepoDigests 0}}' nginx:alpine)"
+          echo "DOCKER_WORKLOAD_TEST_IMAGE=$image" >> "$GITHUB_ENV"
+      - name: Run ARSY workload adapter unit and real Engine integration tests
+        env:
+          DOCKER_WORKLOAD_SMOKE: '1'
+          DOCKER_LOCAL_SOCKET_PATH: /var/run/docker.sock
+        run: pnpm --filter @riotworks/arsy test
