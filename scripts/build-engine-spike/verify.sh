@@ -5,7 +5,7 @@ BUILDKIT_VERSION="0.34.2"
 ROOTLESSKIT_VERSION="3.3.0"
 BUILDER_USER="mw-build-spike-$$"
 UNIT="mw-buildkit-spike-$$"
-HOST_SOCKET="/tmp/build-engine-spike-host-$$.sock"
+HOST_SOCKET="/tmp/build-engine-spike-host.sock"
 HOST_PORT="18765"
 SOURCE_COMMIT="${GITHUB_SHA:-local-spike}"
 TMP_DIR="${RUNNER_TEMP:-/tmp}/mw-build-engine-spike-$$"
@@ -22,6 +22,8 @@ BUILD_LOG="$WORK/build.log"
 EXTRACT="$WORK/extracted"
 BUILDER_UID=""
 HOST_PID=""
+WORK_MOUNTED=0
+[[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || fail "GITHUB_SHA must be a 40-character commit SHA"
 
 fail() { echo "BUILD ENGINE SPIKE FAILED: $*" >&2; exit 1; }
 require() { command -v "$1" >/dev/null 2>&1 || fail "missing prerequisite: $1"; }
@@ -46,6 +48,7 @@ WORK_MOUNTED=1
 cleanup() {
   set +e
   if [[ -n "$HOST_PID" ]]; then kill "$HOST_PID" >/dev/null 2>&1; wait "$HOST_PID" >/dev/null 2>&1; fi
+  rm -f "$HOST_SOCKET"
   if [[ -n "$UNIT" ]]; then
     sudo systemctl stop "$UNIT.service" >/dev/null 2>&1
     sudo systemctl reset-failed "$UNIT.service" >/dev/null 2>&1
@@ -83,6 +86,7 @@ download_verified() {
 }
 
 mkdir -p "$TMP_DIR/buildkit" "$TMP_DIR/rootlesskit" "$BUILDER_HOME"
+chmod 755 "$TMP_DIR"
 download_verified "moby/buildkit" "v$BUILDKIT_VERSION" "buildkit-v$BUILDKIT_VERSION.linux-amd64.tar.gz" "$TMP_DIR/buildkit.tar.gz"
 download_verified "rootless-containers/rootlesskit" "v$ROOTLESSKIT_VERSION" "rootlesskit-x86_64.tar.gz" "$TMP_DIR/rootlesskit.tar.gz"
 tar -xzf "$TMP_DIR/buildkit.tar.gz" -C "$TMP_DIR/buildkit"
@@ -90,6 +94,7 @@ tar -xzf "$TMP_DIR/rootlesskit.tar.gz" -C "$TMP_DIR/rootlesskit"
 BUILDCTL="$(find "$TMP_DIR/buildkit" -type f -name buildctl -print -quit)"
 BUILDKITD="$(find "$TMP_DIR/buildkit" -type f -name buildkitd -print -quit)"
 ROOTLESSKIT="$(find "$TMP_DIR/rootlesskit" -type f -name rootlesskit -print -quit)"
+chmod -R a+rX "$TMP_DIR/buildkit" "$TMP_DIR/rootlesskit"
 [[ -x "$BUILDCTL" && -x "$BUILDKITD" && -x "$ROOTLESSKIT" ]] || fail "pinned BuildKit/RootlessKit binaries not found"
 "$BUILDKITD" --version | grep -F "$BUILDKIT_VERSION" >/dev/null || fail "unexpected BuildKit version"
 "$ROOTLESSKIT" --version | grep -F "$ROOTLESSKIT_VERSION" >/dev/null || fail "unexpected RootlessKit version"
@@ -104,7 +109,7 @@ if [[ -S /var/run/docker.sock ]] && sudo -u "$BUILDER_USER" test -r /var/run/doc
   fail "builder identity can read the host Docker socket"
 fi
 
-mkdir -p "$RUNTIME_DIR" "$STATE_DIR" "$BUILDKIT_ROOT" "$CONTEXT" "$EXTRACT"
+mkdir -p "$RUNTIME_DIR" "$STATE_DIR" "$BUILDKIT_ROOT" "$CONTEXT" "$EXTRACT" "$WORK/tmp"
 chmod 700 "$RUNTIME_DIR" "$STATE_DIR"
 cat > "$CONFIG" <<EOF
 root = "$BUILDKIT_ROOT"
@@ -124,6 +129,7 @@ chown -R "$BUILDER_USER:$BUILDER_USER" "$WORK"
 context_bytes="$(du -sb "$CONTEXT" | awk '{print $1}')"
 (( context_bytes <= 268435456 )) || fail "build context exceeds 256 MiB"
 
+rm -f "$HOST_SOCKET"
 python3 - "$HOST_SOCKET" "$HOST_PORT" <<'PY' &
 import socket, sys, threading
 socket_path, port = sys.argv[1], int(sys.argv[2])
@@ -157,6 +163,7 @@ sudo systemd-run --no-block --collect --unit="$UNIT" \
   --property="WorkingDirectory=$BUILDER_HOME" \
   --property="Environment=HOME=$BUILDER_HOME" \
   --property="Environment=XDG_RUNTIME_DIR=$RUNTIME_DIR" \
+  --property="Environment=TMPDIR=$WORK/tmp" \
   --property="Environment=ARSY_OPERATOR_TOKEN=SPIKE_SENTINEL_NOT_A_REAL_SECRET" \
   --property="MemoryMax=2G" \
   --property="CPUQuota=200%" \
@@ -202,6 +209,15 @@ sudo -u "$BUILDER_USER" env HOME="$BUILDER_HOME" XDG_RUNTIME_DIR="$RUNTIME_DIR" 
   sudo -u "$BUILDER_USER" tail -n 160 "$BUILD_LOG" >&2 || true
   fail "rootless BuildKit adversarial build failed"
 }
+sudo systemctl stop "$UNIT.service"
+for _ in $(seq 1 20); do
+  if ! pgrep -u "$BUILDER_UID" -f 'buildkitd|rootlesskit' >/dev/null 2>&1; then break; fi
+  sleep 0.25
+done
+if pgrep -u "$BUILDER_UID" -f 'buildkitd|rootlesskit' >/dev/null 2>&1; then
+  pgrep -a -u "$BUILDER_UID" -f 'buildkitd|rootlesskit' >&2
+  fail "rootless worker processes survived their build service"
+fi
 log_bytes="$(stat -c '%s' "$BUILD_LOG")"
 (( log_bytes <= 10485760 )) || fail "build log exceeded 10 MiB"
 output_bytes="$(stat -c '%s' "$OUTPUT")"
