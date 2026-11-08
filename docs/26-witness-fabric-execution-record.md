@@ -14,7 +14,7 @@ ARSY separately delivered an `EvidenceLedger`, a PostgreSQL adapter, and migrati
 
 ## Runtime integration addendum — 2026-11-08
 
-**Status:** Implementation committed to a feature branch; exact-head CI and PostgreSQL E2E pending.
+**Status:** Exact-head CI and PostgreSQL E2E verified on `115da8e480f04123d3eb8b58e4e52c2b500c3ab1`; PR #226 remains Draft pending independent security review.
 
 ### Implemented in the candidate branch
 
@@ -26,13 +26,29 @@ ARSY separately delivered an `EvidenceLedger`, a PostgreSQL adapter, and migrati
 - Add a PostgreSQL integration test for authentication, actor spoofing, idempotent replay, conflicting event IDs, operator isolation, stale writer rejection, restart persistence and direct SQL mutation rejection.
 - Keep migration ownership with deployment/System Mode; no startup DDL or production data changes.
 
-### Not yet verified
+### Verified on exact head
 
-- [ ] Exact-head ARSY unit/runtime tests.
-- [ ] PostgreSQL integration against the repository's disposable PostgreSQL workflow.
-- [ ] Full Repository CI, CodeQL, container build and browser E2E.
+- [x] ARSY package/runtime tests.
+- [x] Disposable PostgreSQL integration: 86 tests, 86 passed, 0 failed; includes restart persistence, operator isolation, direct SQL mutation rejection and concurrent idempotent requests across two ARSY instances.
+- [x] Full Repository CI and workspace typecheck/build.
+- [x] CodeQL.
+- [x] ARSY + Headquarter container build.
+- [x] Headquarter Docker browser E2E.
+- [x] ORACLE Compose service-to-service E2E.
+
+Evidence:
+- [Repository CI](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42465792529)
+- [PostgreSQL integration](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42465792538)
+- [CodeQL](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42465792631)
+- [Container build](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42465792533)
+- [Headquarter browser E2E](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42465792511)
+- [ORACLE Compose E2E](https://github.com/BRIDGE-ALLAH/MOONWITNESS/actions/runs/42465792651)
+
+### Still pending
+
 - [ ] Independent security review of operator scoping and database trigger/role boundary.
 - [ ] Bounded pagination/retention and production backup/restore.
+- [ ] Production database migration, production configuration and deployment verification.
 
 ### Explicit non-goals
 
