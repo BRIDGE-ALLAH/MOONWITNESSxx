@@ -28,7 +28,7 @@ The options are compared for the actual initial MOONWITNESS requirement: single-
 ### Evidence and current project state
 
 - BuildKit documents rootless daemon operation, the network.host limitation, RootlessKit network isolation guidance, and why --oci-worker-no-process-sandbox is discouraged. See the [official BuildKit rootless guide](https://github.com/moby/buildkit/blob/master/docs/rootless.md).
-- The BuildKit project published v0.34.1 on 2026-10-20. Pin a reviewed release by immutable image/binary digest; do not follow a mutable latest tag. See [BuildKit releases](https://github.com/moby/buildkit/releases).
+- The BuildKit project published v0.34.2 on 2026-11-03. This is the spike pin; production must verify and pin the exact binary/image digest and release attestations, not follow a mutable latest tag. See [BuildKit releases](https://github.com/moby/buildkit/releases).
 - Buildah's official build documentation describes Dockerfile/Containerfile builds, rootless isolation and network options including private/pasta. It remains a credible fallback. See [Buildah build documentation](https://github.com/podman-container-tools/buildah/blob/main/docs/buildah-build.1.md).
 - Buildah's project site announced v1.46.0 on 2026-10-21. See [Buildah releases](https://buildah.io/).
 - The original GoogleContainerTools/kaniko repository was archived on 2025-06-03. A maintained fork exists, but choosing it would require separately accepting that fork's source, build-image publisher and release-signing supply chain. See [archived upstream](https://github.com/GoogleContainerTools/kaniko) and [osscontainertools/kaniko](https://github.com/osscontainertools/kaniko).
@@ -70,6 +70,12 @@ A dedicated disposable VM is the preferred first trust boundary. If the selected
 - No untrusted build step may choose arbitrary proxy settings, route tables, DNS servers, host mappings or host-gateway access.
 - V1 starts with an explicit package/repository egress policy and logs the policy version. No “temporarily allow all egress” fallback is acceptable.
 - Enforce DNS resolution and destination checks at the egress boundary; protect against DNS rebinding and redirects that resolve to prohibited address space.
+
+#### BuildKit proxy-network limitation
+
+BuildKit v0.34.2 supports `proxyNetwork` for network-enabled Dockerfile exec steps. It routes those requests through a BuildKit-owned proxy and blocks raw-TCP bypass, but it is **not a complete egress allowlist**: it does not cover image-resolver, Git, HTTP-source or other non-exec fetches. The BuildKit proxy also does not currently chain its requests through the daemon's configured upstream `HTTP_PROXY`/`HTTPS_PROXY`; see upstream issue [moby/buildkit#6991](https://github.com/moby/buildkit/issues/6991). Source-policy checks apply to proxy-visible HTTP(S) requests, with conversion currently limited to GET requests.
+
+Therefore production must additionally enforce default-deny egress at the disposable worker VM/network boundary for registry/source fetches and build-step traffic, with an explicit destination allowlist and DNS-rebinding protections. Do not claim `proxyNetwork=true` alone satisfies the allowlist requirement. The CI spike verifies host-loopback isolation and `RUN --network=none`; it does not replace the production VM firewall/NSG acceptance test.
 
 ### 4.3 Source and secrets
 
