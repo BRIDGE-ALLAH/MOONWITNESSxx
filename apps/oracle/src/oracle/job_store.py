@@ -97,6 +97,7 @@ class PostgresJobStore:
                     min_size=1,
                     max_size=max(4, self.settings.worker_count + 2),
                     command_timeout=10,
+                    timeout=1,
                     server_settings={"application_name": "moonwitness-oracle"},
                 )
                 self._next_pool_attempt = 0.0
