@@ -372,16 +372,16 @@ function normalizeVolumes(scope: DockerWorkloadScope, volumes: DockerWorkloadVol
   const seenKeys = new Set<string>()
   const seenTargets = new Set<string>()
   return volumes.map((volume) => {
-    if (!volume.target.startsWith('/data/') ||
-        volume.target.split('/').some((part) => part === '.' || part === '..' || part.includes('\\\\')) ||
-        volume.target.length > 128 ||
-        !volume.target.slice(1).split('/').every((part) => /^[a-zA-Z0-9._-]+$/.test(part))) {
+    if (!/^[a-z0-9](?:[a-z0-9-]{0,30})$/.test(volume.key)) {
       throw new TypeError('Volume keys must use lowercase alphanumeric and hyphen characters')
     }
     if (seenKeys.has(volume.key)) throw new TypeError('Volume keys must be unique')
     seenKeys.add(volume.key)
-    if (!/^\\/data(?:\\/[a-zA-Z0-9._-]+)*$/.test(volume.target) ||
-        volume.target.split('/').some((part) => part === '.' || part === '..') ||
+    const parts = volume.target.split('/')
+    if (!volume.target.startsWith('/data/') ||
+        parts.some((part) => part === '.' || part === '..' || part.includes('\\\\')) ||
+        parts.slice(2).length === 0 ||
+        parts.slice(2).some((part) => !/^[a-zA-Z0-9._-]+$/.test(part)) ||
         volume.target.length > 128) {
       throw new TypeError('Named volume targets must be paths below /data')
     }
