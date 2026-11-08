@@ -316,7 +316,6 @@ class JobCoordinator:
                 # Do not acknowledge success in memory; an expired lease is retried.
                 await asyncio.sleep(1.0)
 
-
     def _prune_completed_jobs(self) -> None:
         if len(self._jobs) < self.settings.max_retained_jobs:
             return
