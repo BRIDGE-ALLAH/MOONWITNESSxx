@@ -87,7 +87,13 @@ function requiredText(value: string, field: string, max: number): string {
 
 function assertSafeEvidence(value: unknown, depth = 0): void {
   if (depth > 8) throw new TypeError('Authorization evidence exceeds the maximum nesting depth')
-  if (value === null || typeof value === 'string' || typeof value === 'boolean') return
+  if (value === null || typeof value === 'boolean') return
+  if (typeof value === 'string') {
+    if (value.length > 512 || /(?:bearer\\s+\\S+|(?:password|token|api[_-]?key|secret)\\s*[:=]\\s*\\S+)/i.test(value)) {
+      throw new TypeError('Authorization evidence contains an unbounded or secret-like string')
+    }
+    return
+  }
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) throw new TypeError('Authorization evidence contains a non-finite number')
     return
@@ -126,6 +132,12 @@ export async function recordDeploymentAuthorizationDecision(
   const reasonCode = requiredText(input.reasonCode, 'reasonCode', 120)
   const policyVersion = input.policyVersion === null ? null : requiredText(input.policyVersion, 'policyVersion', 120)
   const approvalReference = input.approvalReference === null ? null : requiredText(input.approvalReference, 'approvalReference', 200)
+  if (policyVersion && !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,119}$/.test(policyVersion)) {
+    throw new TypeError('policyVersion must be a bounded identifier')
+  }
+  if (approvalReference && !/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$/.test(approvalReference)) {
+    throw new TypeError('approvalReference must be a bounded opaque identifier')
+  }
   const result = await pool.query(
     `INSERT INTO arsy_deployment_authorization_decisions
       (id, operation_id, deployment_id, owner_id, actor_id, target_host_id, action, effect,
@@ -172,7 +184,7 @@ export async function authorizeAndRecordDeploymentAction(
     throw new TypeError('policyTimeoutMs must be an integer between 1 and 10000')
   }
 
-  let actorId = principal?.operatorId?.trim() || null
+  const actorId = principal?.operatorId?.trim() || null
   let reasonCode: DeploymentAuthorizationReason | string = 'POLICY_UNAVAILABLE'
   let policyVersion: string | null = null
   let approvalReference: string | null = input.approvalReference?.trim() || null
