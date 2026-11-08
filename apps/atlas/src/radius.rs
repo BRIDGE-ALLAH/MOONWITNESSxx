@@ -133,7 +133,7 @@ pub fn validate_subscriber(input: &SubscriberWriteRequest) -> Result<(), &'stati
 
 pub async fn list_nas() -> Result<Vec<Nas>, sqlx::Error> {
     sqlx::query_as::<_, Nas>(
-        "SELECT id, nasname, shortname, `type` AS nas_type, ports, description, (secret <> '') AS secret_configured FROM nas ORDER BY nasname",
+        "SELECT id::bigint AS id, nasname, shortname, \"type\" AS nas_type, ports, description, (secret <> '') AS secret_configured FROM nas ORDER BY nasname",
     )
     .fetch_all(radius_db::pool().await?)
     .await
@@ -141,26 +141,24 @@ pub async fn list_nas() -> Result<Vec<Nas>, sqlx::Error> {
 
 pub async fn create_nas(input: &NasWriteRequest) -> Result<Nas, sqlx::Error> {
     let pool = radius_db::pool().await?;
-    let mut tx = pool.begin().await?;
-    sqlx::query("INSERT INTO nas (nasname, shortname, `type`, ports, secret, description) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind(input.nasname.trim())
-        .bind(input.shortname.as_deref())
-        .bind(input.nas_type.trim())
-        .bind(input.ports)
-        .bind(&input.secret)
-        .bind(input.description.as_deref())
-        .execute(&mut *tx)
-        .await?;
-    let id: i64 = sqlx::query_scalar("SELECT CAST(LAST_INSERT_ID() AS SIGNED)")
-        .fetch_one(&mut *tx)
-        .await?;
-    tx.commit().await?;
+    let shortname = input.shortname.as_deref().unwrap_or(input.nasname.trim());
+    let id: i64 = sqlx::query_scalar(
+        "INSERT INTO nas (nasname, shortname, \"type\", ports, secret, description) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id::bigint",
+    )
+    .bind(input.nasname.trim())
+    .bind(shortname)
+    .bind(input.nas_type.trim())
+    .bind(input.ports)
+    .bind(&input.secret)
+    .bind(input.description.as_deref())
+    .fetch_one(pool)
+    .await?;
     get_nas(id).await?.ok_or(sqlx::Error::RowNotFound)
 }
 
 pub async fn get_nas(id: i64) -> Result<Option<Nas>, sqlx::Error> {
     sqlx::query_as::<_, Nas>(
-        "SELECT id, nasname, shortname, `type` AS nas_type, ports, description, (secret <> '') AS secret_configured FROM nas WHERE id = ?",
+        "SELECT id::bigint AS id, nasname, shortname, \"type\" AS nas_type, ports, description, (secret <> '') AS secret_configured FROM nas WHERE id = $1",
     )
     .bind(id)
     .fetch_optional(radius_db::pool().await?)
@@ -171,9 +169,10 @@ pub async fn update_nas(id: i64, input: &NasWriteRequest) -> Result<Option<Nas>,
     if get_nas(id).await?.is_none() {
         return Ok(None);
     }
-    sqlx::query("UPDATE nas SET nasname = ?, shortname = ?, `type` = ?, ports = ?, secret = ?, description = ? WHERE id = ?")
+    let shortname = input.shortname.as_deref().unwrap_or(input.nasname.trim());
+    sqlx::query("UPDATE nas SET nasname = $1, shortname = $2, \"type\" = $3, ports = $4, secret = $5, description = $6 WHERE id = $7")
         .bind(input.nasname.trim())
-        .bind(input.shortname.as_deref())
+        .bind(shortname)
         .bind(input.nas_type.trim())
         .bind(input.ports)
         .bind(&input.secret)
@@ -185,7 +184,7 @@ pub async fn update_nas(id: i64, input: &NasWriteRequest) -> Result<Option<Nas>,
 }
 
 pub async fn delete_nas(id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM nas WHERE id = ?")
+    let result = sqlx::query("DELETE FROM nas WHERE id = $1")
         .bind(id)
         .execute(radius_db::pool().await?)
         .await?;
@@ -233,22 +232,22 @@ pub async fn create_or_update_subscriber(
 
     let pool = radius_db::pool().await?;
     let mut tx = pool.begin().await?;
-    sqlx::query("DELETE FROM radcheck WHERE username = ? AND attribute IN ('Cleartext-Password', 'Crypt-Password', 'NT-Password')")
+    sqlx::query("DELETE FROM radcheck WHERE username = $1 AND attribute IN ('Cleartext-Password', 'Crypt-Password', 'NT-Password')")
         .bind(input.username.trim())
         .execute(&mut *tx)
         .await?;
-    sqlx::query("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, ?, ':=', ?)")
+    sqlx::query("INSERT INTO radcheck (username, attribute, op, value) VALUES ($1, $2, ':=', $3)")
         .bind(input.username.trim())
         .bind(attribute)
         .bind(value)
         .execute(&mut *tx)
         .await?;
-    sqlx::query("DELETE FROM radusergroup WHERE username = ?")
+    sqlx::query("DELETE FROM radusergroup WHERE username = $1")
         .bind(input.username.trim())
         .execute(&mut *tx)
         .await?;
     if let Some(group) = input.groupname.as_deref() {
-        sqlx::query("INSERT INTO radusergroup (username, groupname, priority) VALUES (?, ?, 1)")
+        sqlx::query("INSERT INTO radusergroup (username, groupname, priority) VALUES ($1, $2, 1)")
             .bind(input.username.trim())
             .bind(group.trim())
             .execute(&mut *tx)
@@ -262,7 +261,7 @@ pub async fn delete_subscriber(username: &str) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
     let mut changed = 0;
     for table in ["radcheck", "radreply", "radusergroup"] {
-        let query = format!("DELETE FROM {table} WHERE username = ?");
+        let query = format!("DELETE FROM {table} WHERE username = $1");
         changed += sqlx::query(&query)
             .bind(username)
             .execute(&mut *tx)
@@ -346,13 +345,13 @@ pub async fn list_group_policies() -> Result<Vec<GroupPolicy>, sqlx::Error> {
 pub async fn replace_group_policy(input: &GroupPolicyWriteRequest) -> Result<(), sqlx::Error> {
     let pool = radius_db::pool().await?;
     let mut tx = pool.begin().await?;
-    sqlx::query("DELETE FROM radgroupreply WHERE groupname = ?")
+    sqlx::query("DELETE FROM radgroupreply WHERE groupname = $1")
         .bind(input.groupname.trim())
         .execute(&mut *tx)
         .await?;
     for policy in &input.policies {
         sqlx::query(
-            "INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES (?, ?, ?, ?)",
+            "INSERT INTO radgroupreply (groupname, attribute, op, value) VALUES ($1, $2, $3, $4)",
         )
         .bind(input.groupname.trim())
         .bind(&policy.attribute)
@@ -365,7 +364,7 @@ pub async fn replace_group_policy(input: &GroupPolicyWriteRequest) -> Result<(),
 }
 
 pub async fn delete_group_policy(groupname: &str) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM radgroupreply WHERE groupname = ?")
+    let result = sqlx::query("DELETE FROM radgroupreply WHERE groupname = $1")
         .bind(groupname)
         .execute(radius_db::pool().await?)
         .await?;
@@ -374,7 +373,7 @@ pub async fn delete_group_policy(groupname: &str) -> Result<bool, sqlx::Error> {
 
 pub async fn active_sessions() -> Result<Vec<ActiveSession>, sqlx::Error> {
     sqlx::query_as::<_, ActiveSession>(
-        "SELECT acctsessionid, username, nasipaddress, framedipaddress, CAST(acctstarttime AS CHAR) AS acctstarttime, acctsessiontime, acctinputoctets, acctoutputoctets FROM radacct WHERE acctstoptime IS NULL ORDER BY acctstarttime DESC LIMIT 500",
+        "SELECT acctsessionid, COALESCE(username, '') AS username, nasipaddress::text AS nasipaddress, COALESCE(framedipaddress::text, '') AS framedipaddress, acctstarttime::text AS acctstarttime, acctsessiontime, acctinputoctets, acctoutputoctets FROM radacct WHERE acctstoptime IS NULL ORDER BY acctstarttime DESC LIMIT 500",
     )
     .fetch_all(radius_db::pool().await?)
     .await
@@ -384,7 +383,7 @@ pub async fn accounting_summary() -> Result<AccountingSummary, sqlx::Error> {
     let pool = radius_db::pool().await?;
     let (total_sessions, active_sessions, input_octets, output_octets) =
         sqlx::query_as::<_, (i64, i64, i64, i64)>(
-            "SELECT CAST(COUNT(*) AS SIGNED), CAST(SUM(CASE WHEN acctstoptime IS NULL THEN 1 ELSE 0 END) AS SIGNED), CAST(COALESCE(SUM(COALESCE(acctinputoctets, 0)), 0) AS SIGNED), CAST(COALESCE(SUM(COALESCE(acctoutputoctets, 0)), 0) AS SIGNED) FROM radacct",
+            "SELECT COUNT(*)::bigint, COUNT(*) FILTER (WHERE acctstoptime IS NULL)::bigint, COALESCE(SUM(acctinputoctets), 0)::bigint, COALESCE(SUM(acctoutputoctets), 0)::bigint FROM radacct",
         )
         .fetch_one(pool)
         .await?;
