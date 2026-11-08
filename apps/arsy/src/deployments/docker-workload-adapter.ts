@@ -113,6 +113,7 @@ function validateResources(resources: CreateDockerWorkloadInput['resources']): v
 function validateEnvironment(environment: Record<string, string> | undefined): Array<[string, string]> {
   if (environment === undefined) return []
   if (!environment || typeof environment !== 'object' || Array.isArray(environment) ||
+      (Object.getPrototypeOf(environment) !== Object.prototype && Object.getPrototypeOf(environment) !== null) ||
       Object.keys(environment).length > 64) {
     throw new TypeError('publicEnvironment must be an object with at most 64 entries')
   }
@@ -137,7 +138,8 @@ function validateVolumes(scope: DockerWorkloadScope, volumes: CreateDockerWorklo
   return volumes.map((volume) => {
     const key = requiredText(volume.key, 'volume key', 41)
     const target = requiredText(volume.target, 'volume target', 180)
-    if (!/^[a-z0-9][a-z0-9_.-]{0,40}$/.test(key) || keys.has(key)) {
+    if (!/^[a-z0-9][a-z0-9_.-]{0,40}$/.test(key) || keys.has(key) ||
+        (volume.readOnly !== undefined && typeof volume.readOnly !== 'boolean')) {
       throw new TypeError('Volume keys must be unique bounded identifiers')
     }
     if (!/^\/data(?:\/[A-Za-z0-9._-]+)+$/.test(target) ||
@@ -194,7 +196,7 @@ function isAllowedEngineRequest(request: DockerWorkloadRequest): boolean {
     return request.path === '/volumes/create' ||
       /^\/containers\/create\?name=[a-z0-9][a-z0-9_.-]{0,62}$/i.test(request.path) ||
       new RegExp(`^/containers/${id}/start$`, 'i').test(request.path) ||
-      new RegExp(`^/containers/${id}/stop\\?t=(?:0|[1-9][0-9]?)$`, 'i').test(request.path)
+      new RegExp(`^/containers/${id}/stop\\?t=(?:0|[1-9][0-9]?|1[01][0-9]|120)$`, 'i').test(request.path)
   }
   if (request.method === 'DELETE') {
     return new RegExp(`^/containers/${id}\\?v=0&force=0$`, 'i').test(request.path)
