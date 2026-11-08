@@ -66,7 +66,8 @@ The request body is versioned at \`/v1\`; Pydantic rejects unknown fields. Reusi
 Because Compose enables PostgreSQL-backed jobs by default, apply the ORACLE schema before starting ORACLE/ARSY. The CI workflow uses the same explicit ordering:
 
 ```bash
-docker compose --env-file .env.docker -f docker-compose.yml up -d --wait postgres oracle-db-bootstrap
+docker compose --env-file .env.docker -f docker-compose.yml up -d --wait postgres
+docker compose --env-file .env.docker -f docker-compose.yml run --rm oracle-db-bootstrap
 docker compose --env-file .env.docker -f docker-compose.yml exec -T postgres \
   sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
   < apps/oracle/migrations/001_oracle_jobs.sql
