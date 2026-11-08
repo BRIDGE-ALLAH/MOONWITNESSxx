@@ -556,7 +556,7 @@ mod tests {
         use std::os::unix::fs::symlink;
         let root = temp_dir("symlink-root");
         let outside = temp_dir("symlink-outside");
-        fs::write(root.join("Cargo.toml"), "[package]\\nname='demo'\\nversion='0.1.0'\\n").unwrap();
+        fs::write(root.join("Cargo.toml"), "[package]\nname='demo'\nversion='0.1.0'\n").unwrap();
         fs::create_dir_all(root.join("target")).unwrap();
         fs::write(outside.join("secret.bin"), b"do not index").unwrap();
         symlink(&outside, root.join("target/release")).unwrap();
