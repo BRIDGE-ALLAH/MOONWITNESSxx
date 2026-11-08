@@ -44,7 +44,8 @@ jobs:
         shell: bash
         run: |
           echo "ARSY_OPERATOR_ID=oracle-compose-e2e" >> "$GITHUB_ENV"
-          echo "ARSY_OPERATOR_TOKEN=$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))")" >> "$GITHUB_ENV"
+          token="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("hex"))')"
+          echo "ARSY_OPERATOR_TOKEN=$token" >> "$GITHUB_ENV"
           echo "ARSY_E2E_BASE_URL=http://127.0.0.1:3001" >> "$GITHUB_ENV"
 
       - name: Validate Compose configuration
