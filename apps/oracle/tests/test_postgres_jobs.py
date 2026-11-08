@@ -41,20 +41,18 @@ async def prepare_database() -> str:
     assert TEST_DATABASE_URL
     admin = await asyncpg.connect(TEST_DATABASE_URL)
     try:
-        await admin.execute(
-            """
-            DO $$
-            BEGIN
-              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_migrator_test') THEN
-                CREATE ROLE oracle_migrator_test LOGIN PASSWORD 'oracle-migrator-integration-only';
-              END IF;
-              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app_test') THEN
-                CREATE ROLE oracle_app_test LOGIN PASSWORD 'oracle-app-integration-only';
-              END IF;
-            END;
-            $
-            """
-        )
+        if not await admin.fetchval(
+            "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_migrator_test')"
+        ):
+            await admin.execute(
+                "CREATE ROLE oracle_migrator_test LOGIN PASSWORD 'oracle-migrator-integration-only'"
+            )
+        if not await admin.fetchval(
+            "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'oracle_app_test')"
+        ):
+            await admin.execute(
+                "CREATE ROLE oracle_app_test LOGIN PASSWORD 'oracle-app-integration-only'"
+            )
         await admin.execute(
             "ALTER ROLE oracle_migrator_test PASSWORD 'oracle-migrator-integration-only'"
         )
