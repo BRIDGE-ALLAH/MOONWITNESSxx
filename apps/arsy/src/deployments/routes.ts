@@ -23,7 +23,6 @@ type QueryResult<T> = { rows: T[] }
 
 interface DeploymentRouteOptions {
   authorization?: Omit<AuthorizeDeploymentDependencies, 'store'>
-  now?: () => Date
   env?: NodeJS.ProcessEnv
 }
 
@@ -179,7 +178,6 @@ export function registerDeploymentRoutes(
   options: DeploymentRouteOptions = {},
 ): void {
   const authorizationDependencies = options.authorization ?? {}
-  const clock = options.now ?? (() => new Date())
   const publicKeys = createTrustedPublicKeyring((options.env ?? process.env).ARSY_DEPLOYMENT_TRUSTED_PUBLIC_KEYS)
   const capabilityVerifier = authorizationDependencies.capabilityVerifier ??
     createEd25519CapabilityVerifier(publicKeys)
