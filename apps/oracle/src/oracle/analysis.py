@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import re
 import statistics
-import typing
 
 from .schemas import StatisticsInput, TextProfileInput
 
@@ -26,7 +27,7 @@ METHODS: dict[str, tuple[str, str, list[str]]] = {
 }
 
 
-def run_analysis(task_type: str, payload: dict[str, typing.Any]) -> dict[str, Any]:
+def run_analysis(task_type: str, payload: dict[str, Any]) -> dict[str, Any]:
     if task_type == "statistics.describe":
         return describe_statistics(StatisticsInput.model_validate(payload))
     if task_type == "text.profile":
