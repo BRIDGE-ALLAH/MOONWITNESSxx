@@ -10,18 +10,42 @@ const operatorId = 'operator-test'
 
 function configureEnvironment() {
   const values = {
+    NODE_ENV: 'test',
     ARSY_OPERATOR_ID: operatorId,
+    ARSY_API_BASE_URL: 'http://arsy.test',
+    ARSY_OPERATOR_TOKEN: 'test-arsy-service-token',
     HEADQUARTER_OPERATOR_PASSWORD: password,
     HEADQUARTER_SESSION_SECRET: secret,
     HEADQUARTER_PUBLIC_ORIGIN: origin,
+    HEADQUARTER_TRUSTED_PROXY_HOPS: '0',
   }
   const previous = Object.fromEntries(Object.keys(values).map((key) => [key, process.env[key]]))
+  const previousFetch = globalThis.fetch
+  let failures = 0
+  let blockedUntil = 0
   Object.assign(process.env, values)
+  globalThis.fetch = async (_url, init) => {
+    const { action } = JSON.parse(init.body)
+    if (action === 'check') {
+      const retryAfterSeconds = Math.max(0, Math.ceil((blockedUntil - Date.now()) / 1000))
+      return Response.json({ data: { allowed: retryAfterSeconds === 0, retryAfterSeconds } })
+    }
+    if (action === 'failure') {
+      failures += 1
+      if (failures >= 5) blockedUntil = Date.now() + 15 * 60 * 1000
+      const retryAfterSeconds = Math.max(0, Math.ceil((blockedUntil - Date.now()) / 1000))
+      return Response.json({ data: { allowed: retryAfterSeconds === 0, retryAfterSeconds } })
+    }
+    failures = 0
+    blockedUntil = 0
+    return Response.json({ data: { allowed: true, retryAfterSeconds: 0 } })
+  }
   return () => {
     for (const key of Object.keys(values)) {
       if (previous[key] === undefined) delete process.env[key]
       else process.env[key] = previous[key]
     }
+    globalThis.fetch = previousFetch
   }
 }
 
@@ -95,7 +119,7 @@ test('operator login issues an HttpOnly strict cookie that authenticates and can
   }
 })
 
-test('operator login rate-limits repeated invalid credentials', async () => {
+test('operator login rate-limits repeated invalid credentials through shared service', async () => {
   const restore = configureEnvironment()
   try {
     const attempt = () => POST(new Request(`${origin}/api/auth/session`, {
@@ -103,13 +127,27 @@ test('operator login rate-limits repeated invalid credentials', async () => {
       headers: { origin, 'content-type': 'application/json' },
       body: JSON.stringify({ password: 'incorrect-password' }),
     }))
-    for (let index = 0; index < 4; index += 1) {
-      assert.equal((await attempt()).status, 401)
-    }
+    for (let index = 0; index < 4; index += 1) assert.equal((await attempt()).status, 401)
     const limited = await attempt()
     assert.equal(limited.status, 429)
     assert.ok(Number(limited.headers.get('retry-after')) > 0)
     assert.equal((await attempt()).status, 429)
+  } finally {
+    restore()
+  }
+})
+
+test('operator login fails closed when shared limiter is unavailable', async () => {
+  const restore = configureEnvironment()
+  globalThis.fetch = async () => new Response('unavailable', { status: 503 })
+  try {
+    const response = await POST(new Request(`${origin}/api/auth/session`, {
+      method: 'POST',
+      headers: { origin, 'content-type': 'application/json' },
+      body: JSON.stringify({ password }),
+    }))
+    assert.equal(response.status, 503)
+    assert.equal((await response.json()).error.code, 'LOGIN_RATE_LIMIT_UNAVAILABLE')
   } finally {
     restore()
   }
