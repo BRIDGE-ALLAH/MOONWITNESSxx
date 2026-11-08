@@ -1,0 +1,88 @@
+name: AEGIS Go runtime
+
+on:
+  push:
+    branches: [main, "feat-*", "feat/**"]
+    paths:
+      - "apps/aegis/**"
+      - "docker-compose.yml"
+      - ".env.docker"
+      - ".github/workflows/aegis.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/aegis/**"
+      - "docker-compose.yml"
+      - ".env.docker"
+      - ".github/workflows/aegis.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aegis-runtime-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  aegis:
+    name: Go tests, static checks and Compose container smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: apps/aegis/go.mod
+          cache: true
+          cache-dependency-path: apps/aegis/go.mod
+
+      - name: Check Go formatting
+        working-directory: apps/aegis
+        shell: bash
+        run: |
+          files="$(gofmt -l .)"
+          if [[ -n "$files" ]]; then
+            printf '%s\\n' "$files"
+            exit 1
+          fi
+
+      - name: Vet and race-enabled tests
+        working-directory: apps/aegis
+        run: |
+          go vet ./...
+          go test -race -count=1 -cover ./...
+
+      - name: Build standalone binary
+        working-directory: apps/aegis
+        run: go build -trimpath -ldflags="-s -w" -o /tmp/aegis ./cmd/aegis
+
+      - name: Validate full Compose configuration
+        run: docker compose --env-file .env.docker -f docker-compose.yml config --quiet
+
+      - name: Build and start AEGIS through root Compose
+        run: |
+          docker compose --env-file .env.docker -f docker-compose.yml \\
+            up --detach --build --wait --wait-timeout 120 aegis
+
+      - name: Verify health endpoints and container isolation
+        shell: bash
+        run: |
+          curl --fail --silent --show-error http://127.0.0.1:3102/health/live | grep -q '"status":"alive"'
+          curl --fail --silent --show-error http://127.0.0.1:3102/health/ready | grep -q '"status":"ready"'
+          test "$(docker inspect moonwitness-aegis --format '{{.Config.User}}')" = "nonroot:nonroot"
+          test "$(docker inspect moonwitness-aegis --format '{{.HostConfig.ReadonlyRootfs}}')" = "true"
+          test "$(docker inspect moonwitness-aegis --format '{{index .HostConfig.PortBindings \"3102/tcp\" 0 \"HostIp\"}}')" = "127.0.0.1"
+          docker inspect moonwitness-aegis --format '{{json .HostConfig.CapDrop}}' | grep -q '"ALL"'
+          docker inspect moonwitness-aegis --format '{{json .HostConfig.SecurityOpt}}' | grep -q 'no-new-privileges'
+
+      - name: Collect AEGIS logs on failure
+        if: failure()
+        run: docker compose --env-file .env.docker -f docker-compose.yml logs --no-color --tail=200 aegis
+
+      - name: Stop AEGIS smoke container
+        if: always()
+        run: docker compose --env-file .env.docker -f docker-compose.yml down --remove-orphans
