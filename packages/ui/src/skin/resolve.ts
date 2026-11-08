@@ -23,8 +23,10 @@ export function resolveSkinConfig(input: SkinConfigInput = {}): ResolvedSkinConf
   const fallbackReasons: ResolvedSkinConfig['fallbackReasons'][number][] = []
   let skin = DEFAULT_SKIN
 
-  if (input.skin === undefined || input.skin.trim() === '') {
+  if (input.skin === undefined) {
     fallbackReasons.push('missing-skin')
+  } else if (typeof input.skin !== 'string' || input.skin.trim() === '') {
+    fallbackReasons.push('unknown-skin')
   } else if (isSkinName(input.skin)) {
     skin = input.skin
   } else {
@@ -35,7 +37,7 @@ export function resolveSkinConfig(input: SkinConfigInput = {}): ResolvedSkinConf
   let mode = definition.defaultMode
 
   if (input.mode !== undefined && input.mode !== '') {
-    if (!isAppearanceMode(input.mode)) {
+    if (typeof input.mode !== 'string' || !isAppearanceMode(input.mode)) {
       fallbackReasons.push('unknown-mode')
     } else if (!(definition.supportedModes as readonly string[]).includes(input.mode)) {
       fallbackReasons.push('unsupported-mode')
@@ -46,7 +48,7 @@ export function resolveSkinConfig(input: SkinConfigInput = {}): ResolvedSkinConf
 
   let density = definition.defaultDensity
   if (input.density !== undefined && input.density !== '') {
-    if (isDensityMode(input.density)) {
+    if (typeof input.density === 'string' && isDensityMode(input.density)) {
       density = input.density
     } else {
       fallbackReasons.push('unknown-density')
