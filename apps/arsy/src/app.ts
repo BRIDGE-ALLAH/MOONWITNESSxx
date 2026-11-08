@@ -11,6 +11,11 @@ import { registerEvidenceRoutes } from './evidence/routes.ts'
 import { registerGovernanceRoutes } from './governance/routes.ts'
 import { registerLoginAttemptRoutes } from './auth/login-attempts.ts'
 import { registerOpportunityRoutes } from './opportunities/routes.ts'
+import { registerProductRoutes } from './products/routes.ts'
+import { registerInspectionRoutes } from './inspections/routes.ts'
+import { registerFinancialRoutes } from './finance/routes.ts'
+import { registerPayoutAndFxRoutes } from './finance/payout-routes.ts'
+import { registerPortfolioMetricsRoutes } from './analytics/routes.ts'
 import { registerAssetRoutes } from './assets/routes.ts'
 import type { AssetStorage } from './assets/storage.ts'
 import { registerChannelRoutes } from './channels/routes.ts'
@@ -76,6 +81,11 @@ export function createApp(options: CreateAppOptions = {}) {
     registerGovernanceRoutes(instance, databasePool as unknown as Pool)
     registerLoginAttemptRoutes(instance, databasePool)
     registerOpportunityRoutes(instance, databasePool, env)
+    registerProductRoutes(instance, databasePool, env)
+    registerInspectionRoutes(instance, databasePool, env)
+    registerFinancialRoutes(instance, databasePool, env)
+    registerPayoutAndFxRoutes(instance, databasePool, env)
+    registerPortfolioMetricsRoutes(instance, databasePool, env)
     registerAssetRoutes(instance, databasePool, env, options.assetStorage)
     registerChannelRoutes(instance, databasePool, env)
     registerListingRoutes(instance, databasePool, env)
