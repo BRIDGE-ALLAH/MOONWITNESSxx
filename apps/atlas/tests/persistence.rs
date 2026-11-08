@@ -202,8 +202,36 @@ async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
             .expect("delete RADIUS group policy")
     );
 
+    let accounting_id = format!("ci-acct-{}", ulid::Ulid::new());
+    sqlx::query(
+        "INSERT INTO radacct (acctsessionid, acctuniqueid, username, nasipaddress, acctstarttime, acctinputoctets, acctoutputoctets, acctstoptime) VALUES (?, ?, ?, ?, NOW(), ?, ?, NULL)",
+    )
+    .bind(&accounting_id)
+    .bind(&accounting_id)
+    .bind("ci-accounting-user")
+    .bind("192.0.2.44")
+    .bind(5_000_000_000_i64)
+    .bind(7_000_000_000_i64)
+    .execute(radius_pool)
+    .await
+    .expect("insert isolated RADIUS accounting record");
+
+    let sessions = radius::active_sessions()
+        .await
+        .expect("list active RADIUS sessions");
+    assert!(sessions.iter().any(|session| session.acctsessionid == accounting_id));
+
     let summary = radius::accounting_summary()
         .await
-        .expect("read empty RADIUS accounting summary");
-    assert_eq!(summary.total_sessions, 0);
+        .expect("read RADIUS accounting summary");
+    assert_eq!(summary.total_sessions, 1);
+    assert_eq!(summary.active_sessions, 1);
+    assert_eq!(summary.input_octets, 5_000_000_000);
+    assert_eq!(summary.output_octets, 7_000_000_000);
+
+    sqlx::query("DELETE FROM radacct WHERE acctuniqueid = ?")
+        .bind(&accounting_id)
+        .execute(radius_pool)
+        .await
+        .expect("remove isolated RADIUS accounting record");
 }
