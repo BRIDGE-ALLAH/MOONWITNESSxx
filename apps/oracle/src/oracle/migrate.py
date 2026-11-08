@@ -105,6 +105,19 @@ async def apply_migrations(
                     path.name,
                     checksum,
                 )
+
+        # Reconcile runtime permissions on every migration invocation. Compose
+        # role bootstrap is repeatable and may revoke historical broad grants on
+        # an existing volume; the runtime may access only oracle.jobs.
+        await connection.execute(
+            f'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA oracle FROM "{runtime_role}"'
+        )
+        await connection.execute(
+            f'GRANT USAGE ON SCHEMA oracle TO "{runtime_role}"'
+        )
+        await connection.execute(
+            f'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE oracle.jobs TO "{runtime_role}"'
+        )
     finally:
         await connection.close()
 
