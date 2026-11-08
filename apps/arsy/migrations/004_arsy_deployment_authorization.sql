@@ -1,6 +1,6 @@
 -- Append-only authorization evidence for ARSY deployment operations.
 -- Apply only through the reviewed migration process; never at application startup.
-DO $
+DO $constraints$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'arsy_deployments_id_owner_host_key') THEN
     ALTER TABLE arsy_deployments
@@ -11,7 +11,7 @@ BEGIN
       ADD CONSTRAINT arsy_deployment_operations_id_owner_deployment_key UNIQUE (id, owner_id, deployment_id);
   END IF;
 END;
-$;
+$constraints$;
 CREATE TABLE IF NOT EXISTS arsy_deployment_authorization_decisions (
   id uuid PRIMARY KEY,
   operation_id uuid NOT NULL,
