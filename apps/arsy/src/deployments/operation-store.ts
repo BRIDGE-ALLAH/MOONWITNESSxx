@@ -115,6 +115,7 @@ export async function createDeployment(
 export async function createDeploymentOperation(
   pool: DatabasePool,
   input: CreateOperationInput,
+  options: { enqueueOutbox?: boolean } = {},
 ): Promise<{ disposition: 'created' | 'replayed'; operation: DeploymentOperationRow }> {
   const ownerId = requiredText(input.ownerId, 'ownerId', 128)
   const actorId = requiredText(input.actorId, 'actorId', 128)
@@ -131,7 +132,31 @@ export async function createDeploymentOperation(
     requestPayload,
   })
   const operationId = randomUUID()
-  const outboxId = randomUUID()
+  const enqueueOutbox = options.enqueueOutbox !== false
+  const outboxId = enqueueOutbox ? randomUUID() : null
+  const outboxCte = enqueueOutbox
+    ? `,
+     outbox_inserted AS (
+       INSERT INTO arsy_deployment_outbox
+         (id, operation_id, owner_id, event_type, payload)
+       SELECT $9, id, owner_id, 'deployment.operation.queued',
+         jsonb_build_object('operationId', id, 'deploymentId', deployment_id, 'kind', kind)
+       FROM inserted
+       RETURNING operation_id
+     )`
+    : ''
+
+  const values: unknown[] = [
+    operationId,
+    deploymentId,
+    ownerId,
+    actorId,
+    input.kind,
+    idempotencyKey,
+    requestHash,
+    requestPayloadJson,
+  ]
+  if (outboxId) values.push(outboxId)
 
   const inserted = await pool.query(
     `WITH inserted AS (
@@ -152,30 +177,12 @@ export async function createDeploymentOperation(
          actor_id, jsonb_build_object('kind', kind, 'requestHash', request_hash)
        FROM inserted
        RETURNING operation_id
-     ),
-     outbox_inserted AS (
-       INSERT INTO arsy_deployment_outbox
-         (id, operation_id, owner_id, event_type, payload)
-       SELECT $9, id, owner_id, 'deployment.operation.queued',
-         jsonb_build_object('operationId', id, 'deploymentId', deployment_id, 'kind', kind)
-       FROM inserted
-       RETURNING operation_id
-     )
+     )${outboxCte}
      SELECT id, deployment_id, owner_id, actor_id, kind, status,
        idempotency_key, request_hash, request_payload, attempt_count,
        created_at, updated_at
      FROM inserted`,
-    [
-      operationId,
-      deploymentId,
-      ownerId,
-      actorId,
-      input.kind,
-      idempotencyKey,
-      requestHash,
-      requestPayloadJson,
-      outboxId,
-    ],
+    values,
   )
   const created = queryRows<DeploymentOperationRow>(inserted)[0]
   if (created) return { disposition: 'created', operation: created }
@@ -195,6 +202,28 @@ export async function createDeploymentOperation(
   if (!prior) throw new Error('Conflicting deployment operation could not be read')
   if (prior.request_hash !== requestHash) throw new IdempotencyConflictError()
   return { disposition: 'replayed', operation: prior }
+}
+
+export async function enqueueDeploymentOperation(
+  pool: DatabasePool,
+  input: { operationId: string; ownerId: string },
+): Promise<string> {
+  const operationId = requiredText(input.operationId, 'operationId', 64)
+  const ownerId = requiredText(input.ownerId, 'ownerId', 128)
+  const outboxId = randomUUID()
+  const result = await pool.query(
+    `INSERT INTO arsy_deployment_outbox
+       (id, operation_id, owner_id, event_type, payload)
+     SELECT $1, id, owner_id, 'deployment.operation.queued',
+       jsonb_build_object('operationId', id, 'deploymentId', deployment_id, 'kind', kind)
+     FROM arsy_deployment_operations
+     WHERE id = $2 AND owner_id = $3 AND status = 'queued'
+     RETURNING id`,
+    [outboxId, operationId, ownerId],
+  )
+  const row = queryRows<{ id: string }>(result)[0]
+  if (!row) throw new OperationStateConflictError()
+  return row.id
 }
 
 export async function transitionDeploymentOperation(
