@@ -10,6 +10,16 @@ import {
   listReleaseRepositories,
   removeReleaseRepository,
   saveReleaseDraft,
+  listReleaseBuildProfiles,
+  runReleaseBuild,
+  listReleaseBuildHistory,
+  listArtifactCandidates,
+  importReleaseArtifact,
+  listReleaseVault,
+  type ReleaseBuildProfile,
+  type ReleaseBuildRecord,
+  type ArtifactCandidate,
+  type VaultArtifact,
   type ReleaseDraft,
   type ReleaseHistory,
   type ReleasePreview,
@@ -55,6 +65,12 @@ export function RiotReleaseWorkspace() {
   const [preview, setPreview] = useState<ReleasePreview | null>(null)
   const [drafts, setDrafts] = useState<ReleaseDraft[]>([])
   const [history, setHistory] = useState<ReleaseHistory[]>([])
+  const [buildProfiles, setBuildProfiles] = useState<ReleaseBuildProfile[]>([])
+  const [selectedBuildProfile, setSelectedBuildProfile] = useState('')
+  const [buildHistory, setBuildHistory] = useState<ReleaseBuildRecord[]>([])
+  const [artifactCandidates, setArtifactCandidates] = useState<ArtifactCandidate[]>([])
+  const [vaultArtifacts, setVaultArtifacts] = useState<VaultArtifact[]>([])
+  const [confirmBuild, setConfirmBuild] = useState(false)
   const [version, setVersion] = useState('0.1.0')
   const [notes, setNotes] = useState('')
   const [busy, setBusy] = useState(false)
@@ -84,6 +100,12 @@ export function RiotReleaseWorkspace() {
       setPreview(null)
       setDrafts([])
       setHistory([])
+      setBuildProfiles([])
+      setSelectedBuildProfile('')
+      setBuildHistory([])
+      setArtifactCandidates([])
+      setVaultArtifacts([])
+      setConfirmBuild(false)
       return
     }
     let active = true
@@ -92,12 +114,19 @@ export function RiotReleaseWorkspace() {
       getReleasePreview(selectedPath),
       listReleaseDrafts(selectedPath),
       listReleaseHistory(selectedPath),
+      listReleaseBuildProfiles(selectedPath),
+      listReleaseBuildHistory(selectedPath),
+      listReleaseVault(selectedPath),
     ])
-      .then(([nextPreview, nextDrafts, nextHistory]) => {
+      .then(([nextPreview, nextDrafts, nextHistory, nextBuildProfiles, nextBuildHistory, nextVaultArtifacts]) => {
         if (!active) return
         setPreview(nextPreview)
         setDrafts(nextDrafts)
         setHistory(nextHistory)
+        setBuildProfiles(nextBuildProfiles)
+        setSelectedBuildProfile((current) => nextBuildProfiles.some((profile) => profile.id === current) ? current : nextBuildProfiles[0]?.id ?? '')
+        setBuildHistory(nextBuildHistory)
+        setVaultArtifacts(nextVaultArtifacts)
         setVersion(nextPatchVersion(nextPreview.status.latestTag))
         setNotes(nextPreview.suggestedChangelog)
         setConfirmTag(false)
@@ -115,14 +144,21 @@ export function RiotReleaseWorkspace() {
 
   async function refreshSelectedRepository(): Promise<void> {
     if (!selectedPath) return
-    const [nextPreview, nextDrafts, nextHistory] = await Promise.all([
+    const [nextPreview, nextDrafts, nextHistory, nextBuildProfiles, nextBuildHistory, nextVaultArtifacts] = await Promise.all([
       getReleasePreview(selectedPath),
       listReleaseDrafts(selectedPath),
       listReleaseHistory(selectedPath),
+      listReleaseBuildProfiles(selectedPath),
+      listReleaseBuildHistory(selectedPath),
+      listReleaseVault(selectedPath),
     ])
     setPreview(nextPreview)
     setDrafts(nextDrafts)
     setHistory(nextHistory)
+    setBuildProfiles(nextBuildProfiles)
+    setBuildHistory(nextBuildHistory)
+    setSelectedBuildProfile((current) => nextBuildProfiles.some((profile) => profile.id === current) ? current : nextBuildProfiles[0]?.id ?? '')
+    setVaultArtifacts(nextVaultArtifacts)
   }
 
   async function handleAddRepository(event: FormEvent<HTMLFormElement>): Promise<void> {
