@@ -70,20 +70,20 @@ pub struct ReleaseHistory {
     pub publication: String,
 }
 
-fn now_ms() -> u128 {
+pub(super) fn now_ms() -> u128 {
     SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis()
 }
-fn store_file(app: &tauri::AppHandle, name: &str) -> Result<PathBuf, String> {
+pub(super) fn store_file(app: &tauri::AppHandle, name: &str) -> Result<PathBuf, String> {
     let dir = app.path().app_data_dir().map_err(|e| e.to_string())?.join("riot-release");
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     Ok(dir.join(name))
 }
-fn read_store<T: DeserializeOwned + Default>(path: &Path) -> Result<T, String> {
+pub(super) fn read_store<T: DeserializeOwned + Default>(path: &Path) -> Result<T, String> {
     if !path.exists() { return Ok(T::default()); }
     let raw = fs::read_to_string(path).map_err(|e| e.to_string())?;
     serde_json::from_str(&raw).map_err(|e| format!("Invalid local release data: {e}"))
 }
-fn write_store<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
+pub(super) fn write_store<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
     let raw = serde_json::to_string_pretty(value).map_err(|e| e.to_string())?;
     fs::write(path, format!("{raw}\n")).map_err(|e| e.to_string())
 }
@@ -101,7 +101,7 @@ fn git_args(root: &Path, args: &[String]) -> Result<String, String> {
 fn git(root: &Path, args: &[&str]) -> Result<String, String> {
     git_args(root, &args.iter().map(|s| (*s).to_string()).collect::<Vec<_>>())
 }
-fn resolve_root(input: &str) -> Result<PathBuf, String> {
+pub(super) fn resolve_root(input: &str) -> Result<PathBuf, String> {
     if input.trim().is_empty() { return Err("Select a repository folder.".into()); }
     let path = PathBuf::from(input.trim()).canonicalize().map_err(|e| e.to_string())?;
     if !path.is_dir() { return Err("Selected path is not a directory.".into()); }
@@ -109,7 +109,7 @@ fn resolve_root(input: &str) -> Result<PathBuf, String> {
         .map_err(|_| "Selected folder is not a Git working tree.".to_string())?;
     PathBuf::from(root).canonicalize().map_err(|e| e.to_string())
 }
-fn repo_name(root: &Path) -> String {
+pub(super) fn repo_name(root: &Path) -> String {
     root.file_name().map(|v| v.to_string_lossy().to_string()).unwrap_or_else(|| "repository".into())
 }
 fn remote(root: &Path) -> Option<String> {
