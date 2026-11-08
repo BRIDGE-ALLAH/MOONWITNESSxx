@@ -34,14 +34,14 @@ test('network hashes are keyed and distinct for different trusted addresses', ()
 
 test('shared limiter fails closed on missing configuration or unavailable service', async () => {
   await assert.rejects(
-    requestSharedLoginLimit(new Request('http://localhost'), 'check', { HEADQUARTER_SESSION_SECRET: secret }),
+    requestSharedLoginLimit(new Request('http://localhost'), 'attempt, { HEADQUARTER_SESSION_SECRET: secret }),
     /SHARED_LOGIN_LIMIT_NOT_CONFIGURED/,
   )
   const originalFetch = globalThis.fetch
   globalThis.fetch = async () => new Response('unavailable', { status: 503 })
   try {
     await assert.rejects(
-      requestSharedLoginLimit(new Request('http://localhost'), 'check', {
+      requestSharedLoginLimit(new Request('http://localhost'), 'attempt, {
         NODE_ENV: 'development',
         HEADQUARTER_SESSION_SECRET: secret,
         ARSY_API_BASE_URL: 'http://arsy.internal',
