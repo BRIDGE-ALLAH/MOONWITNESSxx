@@ -9,11 +9,13 @@ const appRoot = path.resolve(directory, '..')
 
 test('RIOT RELEASE remains an offline-first COCKPIT workspace', async (t) => {
   const rustPath = path.join(appRoot, 'src-tauri/src/riot_release.rs')
+  const buildRustPath = path.join(appRoot, 'src-tauri/src/riot_release_build.rs')
   const mainPath = path.join(appRoot, 'src-tauri/src/main.rs')
   const clientPath = path.join(appRoot, 'src/lib/riotRelease.ts')
   const uiPath = path.join(appRoot, 'src/components/RiotReleaseWorkspace.tsx')
   const routePath = path.join(appRoot, 'src/app/release/page.tsx')
   const rust = fs.readFileSync(rustPath, 'utf-8')
+  const buildRust = fs.readFileSync(buildRustPath, 'utf-8')
   const main = fs.readFileSync(mainPath, 'utf-8')
   const client = fs.readFileSync(clientPath, 'utf-8')
   const ui = fs.readFileSync(uiPath, 'utf-8')
@@ -61,5 +63,44 @@ test('RIOT RELEASE remains an offline-first COCKPIT workspace', async (t) => {
     assert.match(ui, /does not push, publish/)
     assert.match(ui, /Desktop runtime required/)
     assert.match(client, /requireDesktop/)
+  })
+
+  await t.test('Build Deck uses detected allowlisted profiles and explicit confirmation', () => {
+    assert.match(main, /mod riot_release_build/)
+    for (const command of [
+      'riot_release_list_build_profiles',
+      'riot_release_run_build',
+      'riot_release_list_build_history',
+      'riot_release_list_artifact_candidates',
+      'riot_release_import_artifact',
+      'riot_release_list_vault',
+    ]) {
+      assert.match(main, new RegExp('riot_release_build::' + command))
+      assert.match(buildRust, new RegExp('fn ' + command))
+    }
+    assert.match(buildRust, /if !confirmed/)
+    assert.match(buildRust, /detect_profiles/)
+    assert.match(buildRust, /BUILD_TIMEOUT_SECS/)
+    assert.match(buildRust, /kill_on_drop\(true\)/)
+    assert.match(buildRust, /MAX_BUILD_LOG_BYTES/)
+    assert.match(buildRust, /Command as TokioCommand/)
+    assert.doesNotMatch(buildRust, /sh\s+-c|powershell\s+-command|cmd\.exe\s+\/c/i)
+    assert.match(client, /runReleaseBuild/)
+    assert.match(ui, /CONFIRM & RUN BUILD/)
+    assert.match(ui, /repository-controlled code/)
+  })
+
+  await t.test('Artifact Vault restricts paths and records SHA-256 before import', () => {
+    assert.match(buildRust, /symlink_metadata/)
+    assert.match(buildRust, /is_allowed_artifact/)
+    assert.match(buildRust, /sha256_file/)
+    assert.match(buildRust, /Sha256::new/)
+    assert.match(buildRust, /MAX_ARTIFACT_FILES/)
+    assert.match(buildRust, /MAX_ARTIFACT_DEPTH/)
+    assert.match(buildRust, /MAX_ARTIFACT_BYTES/)
+    assert.match(buildRust, /copied_sha256 != sha256/)
+    assert.match(client, /importReleaseArtifact/)
+    assert.match(ui, /IMPORT TO LOCAL VAULT/)
+    assert.match(ui, /SHA-256/)
   })
 })
