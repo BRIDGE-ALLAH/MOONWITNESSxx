@@ -129,6 +129,22 @@ The experiment must use synthetic credentials and disposable registry/repository
 - The proposal does not select a registry vendor or assert that a registry account/credential exists.
 - The proposal does not authorize production execution, public build APIs, Compose builds or marketplace-style multi-tenant use.
 
+
+## 8. Runner capability observation — 2026-11-08
+
+A disposable GitHub Actions runner preflight was added in this PR and executed on the repository's `ubuntu-24.04` hosted runner:
+
+- Host OS/architecture: Linux x86_64 — available.
+- cgroup v2 CPU/memory/PID controllers — available.
+- Kernel seccomp action list — available.
+- TUN device — available.
+- `/dev/kvm` — **NOT AVAILABLE** (missing, not a character device, or not readable/writable).
+- ARSY/ORACLE database, Redis and Docker endpoint credential variables checked by the preflight — not present.
+
+The workflow is intentionally informational: it exits successfully so ordinary repository CI remains usable, while its summary records the KVM result as **NO-GO**. The result is not a Firecracker proof. It establishes that the standard hosted runner used by this PR cannot be the v1 Firecracker execution host. The actual builder/proof therefore requires an explicitly provisioned, access-controlled self-hosted KVM runner class; no such runner is currently verified or registered in this repository's execution environment.
+
+The `--require-kvm` preflight mode must be used as a hard gate by any future KVM integration workflow. The `--full` mode additionally verifies the pinned Firecracker v1.17.0 and jailer binary digests, guest kernel/rootfs digests, non-root jailer identity and root-owned non-writable chroot base. These checks still do not replace adversarial guest/network/resource/cleanup tests.
+
 ## 9. Acceptance state
 
-**Proposed / NOT ACCEPTED.** The option analysis and trust boundary are documented. The adversarial proof, exact-runner capability check, maintainer review and explicit acceptance are still outstanding. Issue #183 must not start implementation until those gates are satisfied.
+**Proposed / NOT ACCEPTED.** The option analysis, trust boundary and hosted-runner KVM NO-GO are documented. No eligible self-hosted KVM runner is yet evidenced, and no adversarial VM/network/resource/cleanup proof has run. Maintainer review and explicit acceptance are outstanding. Issue #183 must not start implementation until those gates are satisfied.
