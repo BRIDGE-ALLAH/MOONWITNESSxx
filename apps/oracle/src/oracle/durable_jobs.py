@@ -458,18 +458,34 @@ class PostgresJobCoordinator:
                     completed_at=completed_at,
                     limitations=limitations,
                 )
-                await self._complete(record.job_id, lease_token, result, provenance)
-                logger.info(
-                    "ORACLE durable job completed",
-                    extra={
-                        "event": "job_succeeded",
-                        "job_id": record.job_id,
-                        "task_type": record.task_type,
-                    },
-                )
+                completed = await self._complete(record.job_id, lease_token, result, provenance)
+                if completed:
+                    logger.info(
+                        "ORACLE durable job completed",
+                        extra={
+                            "event": "job_succeeded",
+                            "job_id": record.job_id,
+                            "task_type": record.task_type,
+                        },
+                    )
+                else:
+                    logger.warning(
+                        "ORACLE discarded a result after lease fencing",
+                        extra={"event": "job_result_fenced", "job_id": record.job_id},
+                    )
             except asyncio.CancelledError:
                 # The lease remains in PostgreSQL and is reclaimed after expiry.
                 raise
+            except PersistenceUnavailableError as exc:
+                lost_lease.set()
+                logger.error(
+                    "ORACLE could not persist a durable job outcome",
+                    extra={
+                        "event": "job_outcome_persistence_failed",
+                        "job_id": record.job_id,
+                        "error_type": type(exc).__name__,
+                    },
+                )
             except Exception as exc:
                 logger.error(
                     "ORACLE durable job failed",
