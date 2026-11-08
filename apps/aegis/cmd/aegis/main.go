@@ -16,6 +16,17 @@ import (
 	aegishttp "github.com/BRIDGE-ALLAH/MOONWITNESS/apps/aegis/internal/httpserver"
 )
 
+func shutdownHTTPServer(server *http.Server, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		_ = server.Close()
+		return err
+	}
+	return nil
+}
+
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	cfg, err := config.Load()
@@ -65,14 +76,9 @@ func main() {
 			os.Exit(1)
 		}
 	case <-signals.Done():
-		ctx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
-		defer cancel()
 		logger.Info("AEGIS graceful shutdown started")
-		if err := server.Shutdown(ctx); err != nil {
+		if err := shutdownHTTPServer(server, cfg.ShutdownTimeout); err != nil {
 			logger.Error("graceful shutdown failed", "error", err)
-			if closeErr := server.Close(); closeErr != nil {
-				logger.Error("forced server close failed", "error", closeErr)
-			}
 			os.Exit(1)
 		}
 		if err := <-serverErrors; err != nil && !errors.Is(err, http.ErrServerClosed) {
