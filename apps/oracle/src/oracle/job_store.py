@@ -7,7 +7,7 @@ import json
 import logging
 import time
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import asyncpg
 
@@ -150,9 +150,7 @@ class PostgresJobStore:
         from .provenance import sha256_digest
 
         request_digest = sha256_digest(request_body)
-        job_id = UUID(bytes=__import__("secrets").token_bytes(16))
-        # Set RFC 4122 variant/version bits while keeping identifier generation local.
-        job_id = UUID(bytes=job_id.bytes[:6] + bytes([(job_id.bytes[6] & 0x0F) | 0x40]) + bytes([(job_id.bytes[7] & 0x3F) | 0x80]) + job_id.bytes[8:])
+        job_id = uuid4()
         try:
             async with self._require_pool().acquire() as connection:
                 async with connection.transaction():
