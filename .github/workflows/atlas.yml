@@ -183,7 +183,7 @@ jobs:
           auth_result="No RADIUS response received."
           for attempt in $(seq 1 45); do
             auth_status=0
-            auth_result="$(printf 'User-Name = "ci-radius-user"\\nUser-Password = "correct horse battery staple"\\nNAS-IP-Address = 172.31.240.10\\nNAS-Port = 1\\n' | docker compose exec -T atlas radclient -r 1 -t 1 freeradius:1812 auth ci-radius-nas-secret-which-is-over-32 2>&1)" || auth_status=$?
+            auth_result="$(printf '%s\\n' 'User-Name = "ci-radius-user"' 'User-Password = "correct horse battery staple"' 'NAS-IP-Address = 172.31.240.10' 'NAS-Port = 1' | docker compose exec -T atlas radclient -r 1 -t 1 freeradius:1812 auth ci-radius-nas-secret-which-is-over-32 2>&1)" || auth_status=$?
             if [ "$auth_status" -eq 0 ] && printf '%s\\n' "$auth_result" | grep -q 'Access-Accept'; then
               radius_auth_ok=true
               break
