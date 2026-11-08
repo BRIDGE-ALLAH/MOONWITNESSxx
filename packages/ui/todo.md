@@ -1,6 +1,6 @@
 # UI Package TODO
 
-> Scope: packages/ui — shared MOONWITNESS React UI foundation. RIOTWORKS is a separately governed studio identity.
+> Scope: packages/ui — shared MOONWITNESS React UI foundation. RIOTWORKS is the product and operating division within MOONWITNESS; `@riotworks/*` is an internal technical namespace.
 > Status: Backlog created. Tasks remain unchecked until implemented and verified.
 
 ## Principles
@@ -8,7 +8,7 @@
 - Keep this package focused on reusable presentation and interaction infrastructure.
 - Keep domain rules, authorization, persistence, and workflow decisions in application/backend layers.
 - Prefer composable React + TypeScript APIs over a custom JSON/schema-driven UI framework.
-- Preserve the MOONWITNESS product identity and support Observatory + Archive. Keep legacy RIOTWORKS aliases only for existing prototype consumers.
+- Preserve one MOONWITNESS master identity across Observatory, Archive, and Signal. Keep skin separate from appearance mode, density, and accessibility preferences. Keep legacy RIOTWORKS aliases only for existing prototype consumers.
 - Do not mark a task complete until its acceptance criteria are verified.
 
 ## Priority legend
@@ -67,7 +67,7 @@
 
 ## 2. Design tokens and themes
 
-- [ ] **P0** Audit existing CSS variables against docs/10-design-dna.md and docs/11-design-system.md.
+- [ ] **P0** Audit existing CSS variables against docs/10-design-dna.md, docs/11-design-system.md, and docs/13-skin-system-blueprint.md.
 - [ ] **P0** Establish token layers: primitive palette, semantic tokens, and component tokens only when necessary.
 - [ ] **P0** Complete semantic color tokens.
   - [ ] Text: primary, secondary, muted, inverse.
@@ -75,7 +75,7 @@
   - [ ] Border: default, strong, subtle.
   - [ ] Interaction: focus, hover, pressed, selected, disabled.
   - [ ] Status: success, warning, danger, info, neutral, blocked.
-- [ ] **P0** Implement and verify Observatory and Archive.
+- [ ] **P0** Preserve the existing Observatory and Archive theme foundation and implement skin-aware token mapping for Observatory, Archive, and Signal according to docs/13.
   - [x] Check all 27 required semantic token definitions in both themes with the source-level contract tests (merged PR #131); rendered contrast remains open.
   - [ ] Check contrast for text, borders, controls, and status indicators.
   - [ ] Ensure theme switching does not cause layout or hydration issues in supported consumers.
@@ -83,7 +83,10 @@
 - [ ] **P1** Define typography roles: display, heading, body, label, overline, mono, metric.
 - [ ] **P1** Define shape, border width, shadow/elevation, and layering tokens.
 - [ ] **P1** Define motion duration/easing and reduced-motion behavior.
-- [ ] **P1** Define compact and comfortable density modes for operational screens.
+- [ ] **P1** Define compact and comfortable density modes independently from skin selection.
+- [ ] **P1** Define the supported skin/appearance-mode matrix; do not assume every skin supports both light and dark.
+- [ ] **P1** Define a typed static skin registry and deterministic application/route-level selection contract.
+- [ ] **P1** Define safe fallback behavior for an unknown skin or unsupported mode.
 - [ ] **P1** Define z-index conventions for popovers, dialogs, drawers, toasts, and command palette.
 - [ ] **P2** Add token reference documentation and examples.
 - [ ] **P2** Add automated checks to prevent accidental raw color and spacing drift where practical.
@@ -254,7 +257,7 @@ A component is not complete until all applicable checks pass:
 
 - [ ] Public props and types are documented.
 - [ ] Variants and sizes are demonstrated.
-- [ ] Observatory and Archive are verified.
+- [ ] Every claimed skin and supported appearance-mode pairing is verified (Observatory, Archive, Signal where implemented).
 - [ ] Default, hover, focus, pressed, disabled, and loading states are verified where relevant.
 - [ ] Empty, error, and success states are defined where relevant.
 - [ ] Keyboard behavior is verified.
@@ -267,6 +270,7 @@ A component is not complete until all applicable checks pass:
 ## 11. Documentation
 
 - [x] **P0** Add package README with installation, stylesheet setup, peer requirements, and basic usage.
+- [ ] **P1** Document skin selection separately from appearance-mode switching.
 - [ ] **P1** Document theme setup and theme switching.
 - [ ] **P1** Document token names and semantic usage.
 - [ ] **P1** Document component props, variants, accessibility behavior, and examples.
@@ -279,7 +283,7 @@ A component is not complete until all applicable checks pass:
 ## 12. Suggested implementation order
 
 - [ ] **Milestone 1 — Stabilize package:** audit, exports, build, declarations, typecheck, consumer smoke test.
-- [ ] **Milestone 2 — Lock visual foundation:** semantic tokens, themes, typography, spacing, density, motion, assets.
+- [ ] **Milestone 2 — Lock visual foundation:** semantic tokens, three skin profiles, supported appearance modes, typography, spacing, density, motion, and assets.
 - [ ] **Milestone 3 — Complete core primitives:** actions, inputs, selection, navigation, overlays, feedback.
 - [ ] **Milestone 4 — Operational UI:** FormField, DataTable, FilterBar, EmptyState, ErrorState, ActivityTimeline.
 - [ ] **Milestone 5 — Application shell:** AppShell, Sidebar, Topbar, Workspace, ContextPanel, CommandPalette.
