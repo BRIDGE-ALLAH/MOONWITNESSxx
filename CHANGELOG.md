@@ -4,6 +4,8 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-08
+
 ### Added
 
 - ORACLE PostgreSQL-backed job lifecycle with atomic idempotency, bounded queue/retention, leased workers, fencing, and restart recovery.
