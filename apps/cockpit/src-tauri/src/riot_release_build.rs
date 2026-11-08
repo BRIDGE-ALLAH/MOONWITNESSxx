@@ -9,10 +9,9 @@ use std::{
     sync::{atomic::{AtomicBool, AtomicU64, Ordering}, Mutex},
     time::Duration,
 };
-use tauri::Manager;
 use tokio::{
     io::{AsyncRead, AsyncReadExt},
-    process::{Command as TokioCommand, Stdio},
+    process::Command as TokioCommand,
     time::timeout,
 };
 
