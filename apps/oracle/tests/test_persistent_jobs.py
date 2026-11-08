@@ -155,7 +155,11 @@ def test_postgres_claims_are_exclusive_and_stale_workers_are_fenced(postgres_dat
             assert first.job_id == submitted.job_id
 
             await store._require_pool().execute(
-                "UPDATE oracle.jobs SET lease_until = now() - INTERVAL '1 second' WHERE job_id = $1",
+                """
+                UPDATE oracle.jobs
+                SET lease_until = now() - INTERVAL '1 second'
+                WHERE job_id = $1
+                """,
                 submitted.job_id,
             )
             second = await store.claim("worker-b")
@@ -203,7 +207,11 @@ def test_expired_lease_without_reclaim_cannot_be_completed(postgres_database: st
             claimed = await store.claim("worker-a")
             assert claimed is not None
             await store._require_pool().execute(
-                "UPDATE oracle.jobs SET lease_until = now() - INTERVAL '1 second' WHERE job_id = $1",
+                """
+                UPDATE oracle.jobs
+                SET lease_until = now() - INTERVAL '1 second'
+                WHERE job_id = $1
+                """,
                 submitted.job_id,
             )
             result = {"count": 3}
@@ -223,7 +231,9 @@ def test_expired_lease_without_reclaim_cannot_be_completed(postgres_database: st
     asyncio.run(scenario())
 
 
-def test_expired_leases_exhaust_attempts_without_fabricating_success(postgres_database: str) -> None:
+def test_expired_leases_exhaust_attempts_without_fabricating_success(
+    postgres_database: str,
+) -> None:
     async def scenario() -> None:
         store = PostgresJobStore(make_settings(postgres_database, max_job_attempts=2))
         await store.start()
@@ -235,7 +245,11 @@ def test_expired_leases_exhaust_attempts_without_fabricating_success(postgres_da
             first = await store.claim("worker-a")
             assert first is not None
             await store._require_pool().execute(
-                "UPDATE oracle.jobs SET lease_until = now() - INTERVAL '1 second' WHERE job_id = $1",
+                """
+                UPDATE oracle.jobs
+                SET lease_until = now() - INTERVAL '1 second'
+                WHERE job_id = $1
+                """,
                 submitted.job_id,
             )
 
@@ -243,7 +257,11 @@ def test_expired_leases_exhaust_attempts_without_fabricating_success(postgres_da
             assert second is not None
             assert second.job_id == submitted.job_id
             await store._require_pool().execute(
-                "UPDATE oracle.jobs SET lease_until = now() - INTERVAL '1 second' WHERE job_id = $1",
+                """
+                UPDATE oracle.jobs
+                SET lease_until = now() - INTERVAL '1 second'
+                WHERE job_id = $1
+                """,
                 submitted.job_id,
             )
 
@@ -307,7 +325,9 @@ def test_terminal_job_retention_expires_its_idempotency_record(postgres_database
     asyncio.run(scenario())
 
 
-def test_missing_migration_keeps_store_unready_and_rejects_submissions(postgres_database: str) -> None:
+def test_missing_migration_keeps_store_unready_and_rejects_submissions(
+    postgres_database: str,
+) -> None:
     migration = (Path(__file__).parents[1] / "migrations" / "001_oracle_jobs.sql").read_text()
 
     async def scenario() -> None:
