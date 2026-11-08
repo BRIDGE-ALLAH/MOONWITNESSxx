@@ -14,6 +14,9 @@ The source entry point currently exports:
 - `Separator`.
 - `cn`, the class-name merge helper.
 - `HalftoneSurface` and `HalftoneSurfaceProps`.
+- `SkinRoot` and `SkinRootProps`.
+- `SKIN_REGISTRY`, `DEFAULT_SKIN`, `getSkinDefinition`, and `isSkinName`.
+- `resolveSkinConfig` plus skin, mode, density, and fallback types.
 
 Only APIs exported from `src/index.ts` are public. Items in `todo.md` or historical pull requests are not shipped components unless they are present in the current mainline source.
 
@@ -112,27 +115,41 @@ The UI components receive application data and callbacks. The consuming applicat
 
 ## Themes and Skin System
 
-The current semantic source of truth is `src/styles/globals.css`.
+The semantic source of truth is `src/styles/globals.css`; skin metadata and configuration are in `src/skin`.
 
-Current implementation:
+### Initial runtime foundation
 
-- The default root token set is the light **Archive** fallback.
-- `.theme-archive` explicitly selects Archive, including inside an application-level `.dark` class.
-- `.theme-observatory` or the application-level `.dark` class selects the dark **Observatory** token set.
-- Prefer semantic utilities such as `bg-background`, `text-foreground`, `bg-card`, `border-border`, `bg-success`, and `ring-focus`.
-- Legacy RIOTWORKS palette aliases remain for existing prototype consumers only. Do not introduce them into new MOONWITNESS screens.
+- A static typed registry defines **Observatory**, **Archive**, and **Signal**.
+- `SkinRoot` scopes the selected skin to an application or route boundary using `data-mw-skin`, `data-mw-mode`, and `data-mw-density`.
+- `resolveSkinConfig` validates untrusted configuration and records safe fallback reasons in `data-mw-fallback`.
+- CSS maps the three initially supported pairs: Observatory/dark, Archive/light, and Signal/dark.
+- Semantic status colors remain independent from expressive skin accents.
 
-The planned first-party Skin System has three visual experiences:
+```tsx
+import { SkinRoot } from '@riotworks/ui'
 
-| Skin | Intended use | Status |
+export function EditorialEntry({ children }: { children: React.ReactNode }) {
+  return (
+    <SkinRoot skin="signal" mode="dark" density="comfortable">
+      {children}
+    </SkinRoot>
+  )
+}
+```
+
+### Current support matrix
+
+| Skin | Supported mode | Intended use |
 |---|---|---|
-| Observatory | Operational, monitoring, research, decision workspaces | Existing semantic theme foundation; complete skin profile still in progress |
-| Archive | Reading, records, documentation, knowledge, provenance | Existing semantic theme foundation; editorial composition still in progress |
-| Signal / Moonpunk Editorial | Landing, onboarding, public stories, community, campaigns | Design/blueprint only; not implemented on current mainline |
+| Observatory | Dark | Operational, monitoring, research, decision workspaces |
+| Archive | Light | Reading, records, documentation, knowledge, provenance |
+| Signal | Dark | Landing, onboarding, public stories, community, campaigns |
 
-**Skin is not a dark/light toggle.** A skin defines visual grammar, composition, typography, surface character, texture, and component recipes. Appearance mode (dark/light), density (comfortable/compact), and accessibility preferences remain separate concerns.
+Unsupported mode/skin combinations fall back to the selected skin's documented default and are exposed as fallback metadata. Additional combinations require rendered contrast and component review before being advertised.
 
-The complete decision, intended runtime contract, implementation phases, non-goals, and acceptance criteria are in [docs/13 — Skin System Blueprint](../../docs/13-skin-system-blueprint.md). The current package does not yet provide a complete skin registry/provider, route-level skin API, or Signal runtime profile.
+**Skin is not a dark/light toggle.** A skin defines visual grammar, composition, typography, surface character, texture, and component recipes. Appearance mode, density, and accessibility preferences remain separate concerns.
+
+The current foundation does not yet include a global skin picker, preference persistence, React context, automatic route mapping, or a visual workbench. Applications must explicitly apply `SkinRoot` to the route or application boundary. See [docs/13 — Skin System Blueprint](../../docs/13-skin-system-blueprint.md).
 
 ## Typography and assets
 
@@ -146,7 +163,7 @@ Original brand artwork and static illustrations belong to `@riotworks/assets`. T
 - Keep status meaning available through text or semantics, not color alone.
 - Use semantic HTML and accessible names for interactive elements.
 - Respect `prefers-reduced-motion`.
-- Review rendered contrast and interactive states in both themes; source-level token tests are not a WCAG certification.
+- Review rendered contrast and interactive states in every supported skin/mode pairing; source-level token tests are not a WCAG certification.
 
 ## Commands
 
