@@ -65,6 +65,14 @@ jobs:
       - name: Resolve dependencies and generate lockfile
         run: cargo generate-lockfile
 
+      - name: Export generated Cargo lockfile for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-cargo-lockfile
+          path: apps/atlas/Cargo.lock
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Check formatting
         run: cargo fmt --all -- --check
 
