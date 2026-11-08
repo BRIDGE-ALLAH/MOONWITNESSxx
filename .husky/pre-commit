@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+set -eu
+
+# Fast, local-only guard. No network calls, version bumps, changelog edits, or AI calls.
+pnpm exec node scripts/check-staged.mjs

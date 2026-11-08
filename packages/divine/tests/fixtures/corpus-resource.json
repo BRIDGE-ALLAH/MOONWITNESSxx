@@ -1,0 +1,11 @@
+{
+  "id": "mw:resource:example",
+  "record_type": "resource",
+  "kind": "work",
+  "labels": [
+    { "value": "Example", "language": "en" }
+  ],
+  "extensions": {
+    "fixturePurpose": "Corpus BaseRecord compatibility contract"
+  }
+}

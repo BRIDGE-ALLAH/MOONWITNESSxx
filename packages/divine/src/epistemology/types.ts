@@ -1,0 +1,14 @@
+import type {OntologyScope} from "../ontology/types.ts";
+export type KnowledgeState="known-within-scope"|"unknown"|"not-recorded"|"not-applicable"|"unobservable"|"unverifiable"|"out-of-scope";
+export type EvidenceSufficiency="sufficient"|"insufficient"|"undetermined";
+export type UncertaintyKind="aleatoric"|"epistemic"|"source"|"temporal"|"interpretive";
+export type QuestionClass="empirical"|"historical"|"textual"|"theological-attribution"|"metaphysical"|"normative";
+export type ClaimDisposition="asserted"|"denied"|"contested"|"not-assessed";
+export type AbstentionReason="INSUFFICIENT_EVIDENCE"|"EVIDENCE_UNDETERMINED"|"UNKNOWN"|"NOT_RECORDED"|"NOT_APPLICABLE"|"UNOBSERVABLE"|"UNVERIFIABLE"|"OUT_OF_SCOPE"|"SCOPE_MISMATCH"|"CROSS_TRADITION_NOT_AUTHORIZED"|"METAPHYSICAL_BOUNDARY"|"NORMATIVE_VERDICT_PROHIBITED"|"MISSING_METHOD"|"MISSING_PROVENANCE";
+export interface UncertaintyNote {readonly kind:UncertaintyKind;readonly explanation:string;readonly evidenceRefs?:readonly string[]}
+export interface MethodEvidenceAssessment {readonly methodId:string;readonly outcome:EvidenceSufficiency;readonly evidenceRefs:readonly string[];readonly rationale:string;readonly assessorRef?:string}
+export interface EpistemicQuery {readonly id:string;readonly questionClass:QuestionClass;readonly requestedScope:OntologyScope;readonly allowNarrowing?:boolean;readonly comparisonRule?:{readonly id:string;readonly methodId:string;readonly mappingRefs:readonly string[];readonly traditions:readonly string[]}}
+export interface EpistemicInput {readonly query:EpistemicQuery;readonly knowledgeState:KnowledgeState;readonly claimScope:OntologyScope;readonly disposition:ClaimDisposition;readonly assessment?:MethodEvidenceAssessment;readonly uncertainties?:readonly UncertaintyNote[];readonly knownEvidenceRefs?:readonly string[];readonly missingEvidence?:readonly string[];readonly provenanceRefs?:readonly string[];readonly limitations?:readonly string[]}
+export interface EpistemicPolicy {readonly id:string;readonly version:string;readonly allowNarrowing:boolean;readonly prohibitedQuestionClasses:readonly QuestionClass[];readonly requireProvenance:boolean}
+export interface EpistemicExplanation {readonly knownEvidence:readonly string[];readonly missingEvidence:readonly string[];readonly scope:OntologyScope;readonly requestedScope:OntologyScope;readonly method?:string;readonly limitations:readonly string[];readonly uncertainty:readonly UncertaintyNote[]}
+export type EpistemicDecision={readonly outcome:"answer";readonly knowledgeState:"known-within-scope";readonly disposition:ClaimDisposition;readonly explanation:EpistemicExplanation}|{readonly outcome:"abstain";readonly knowledgeState:KnowledgeState;readonly reason:AbstentionReason;readonly explanation:EpistemicExplanation}

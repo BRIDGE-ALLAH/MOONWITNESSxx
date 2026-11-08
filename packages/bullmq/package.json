@@ -1,0 +1,21 @@
+{
+  "name": "@riotworks/bullmq",
+  "version": "0.0.0",
+  "private": true,
+  "description": "RIOTWORKS BullMQ — Queue system for background jobs (jobs, workers, producers)",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "generate:jobs": "echo 'Generate job types from definitions'",
+    "generate:workers": "echo 'Generate worker types from definitions'"
+  },
+  "dependencies": {
+    "bullmq": "^6.7.0",
+    "ioredis": "^6.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.2"
+  }
+}

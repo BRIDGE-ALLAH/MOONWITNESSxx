@@ -1,0 +1,47 @@
+{
+  "name": "moonwitness",
+  "version": "1.2.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "pnpm --filter @riotworks/headquarter run dev",
+    "dev:headquarter": "pnpm --filter @riotworks/headquarter run dev",
+    "dev:gate": "pnpm --filter @riotworks/gate run dev",
+    "dev:cockpit": "pnpm --filter @riotworks/cockpit run dev",
+    "dev:cockpit:desktop": "pnpm --filter @riotworks/cockpit run desktop",
+    "dev:arsy": "pnpm --filter @riotworks/arsy run dev",
+    "dev:all": "turbo run dev --filter=@riotworks/headquarter --filter=@riotworks/gate --filter=@riotworks/cockpit --filter=@riotworks/arsy --parallel",
+    "lint:all": "pnpm run lint",
+    "lint": "turbo run lint",
+    "typecheck:all": "pnpm run typecheck",
+    "typecheck": "turbo run type-check",
+    "clean": "turbo run clean",
+    "check:repo": "pnpm run lockfile:check && pnpm run validate:repo",
+    "audit:repo": "pnpm run lockfile:check && pnpm run validate:repo",
+    "format:check": "prettier --check .",
+    "validate:repo": "pnpm run lockfile:check && pnpm run type-check && pnpm run lint && pnpm run test",
+    "validate": "pnpm run validate:repo && pnpm run build",
+    "lockfile:check": "node scripts/check-lockfile.mjs",
+    "lockfile:refresh": "node scripts/check-lockfile.mjs --lockfile-only",
+    "type-check": "pnpm run typecheck",
+    "format": "prettier --write .",
+    "test": "node --experimental-strip-types --test scripts/*.test.mjs scripts/devx/*.test.mjs",
+    "devx": "node scripts/devx/cli.mjs",
+    "repo:lab": "node scripts/counterfactual-repo-lab.mjs",
+    "repo:lab:impact": "node scripts/counterfactual-repo-lab.mjs --impact",
+    "repo:lab:cycles": "node scripts/counterfactual-repo-lab.mjs --cycles",
+    "repo:lab:scenario": "node scripts/repo-lab-scenario.mjs",
+    "test:repo-lab": "node --test scripts/tests/counterfactual-repo-lab.test.mjs scripts/tests/repo-lab-intelligence.test.mjs scripts/tests/repo-lab-scenario.test.mjs scripts/tests/repo-lab-workspace.test.mjs"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.6.2",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=12"
+  },
+  "packageManager": "pnpm@12.16.1"
+}

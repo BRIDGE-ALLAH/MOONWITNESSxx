@@ -1,0 +1,30 @@
+import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@riotworks/ui'
+import { assessDecisionGraph } from './engine'
+import { decisionGraphDemo } from './demo-data'
+
+const relationLabel: Record<string, string> = { supports: 'SUPPORTS', contradicts: 'CONTRADICTS', constrained_by: 'CONSTRAINED BY', made_by: 'MADE BY', causes: 'CAUSES', supersedes: 'SUPERSEDES' }
+
+export function DecisionGraphView() {
+  const now = new Date('2026-11-08T00:00:00.000Z')
+  const assessment = assessDecisionGraph(decisionGraphDemo, now)
+  const byId = new Map(decisionGraphDemo.nodes.map((node) => [node.id, node]))
+  const decisions = decisionGraphDemo.nodes.filter((node) => node.kind === 'decision')
+  const stale = decisionGraphDemo.nodes.filter((node) => node.kind === 'evidence' && node.validUntil && Date.parse(node.validUntil) < now.getTime())
+  return <main className="min-h-screen bg-background p-4 text-foreground md:p-8"><div className="mx-auto max-w-7xl space-y-7">
+    <header className="space-y-3 border-b border-border pb-6"><Badge variant="warning">DEMO // SYNTHETIC GRAPH</Badge><p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">MOONWITNESS // GOVERNANCE INTELLIGENCE</p><h1 className="font-display text-4xl uppercase md:text-6xl">Decision Graph</h1><p className="max-w-3xl text-sm text-muted-foreground">Inspect evidence, contradictions, constraints, actors, actions, and outcomes behind a decision.</p><p role="note" className="border border-warning/50 bg-warning/10 p-3 text-sm">Synthetic fixture only. No live ARSY decision/evidence API is connected. AI explanations are not evidence.</p></header>
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Graph integrity summary">
+      <Card><CardHeader className="pb-2"><CardDescription>TRACEABILITY</CardDescription></CardHeader><CardContent><p className="font-display text-3xl">{Math.round(assessment.traceability * 100)}%</p><p className="text-xs text-muted-foreground">{assessment.traceableDecisions} of {decisions.length} decisions linked</p></CardContent></Card>
+      <Card><CardHeader className="pb-2"><CardDescription>DECISION DEBT</CardDescription></CardHeader><CardContent><p className="font-display text-3xl">{assessment.unsubstantiatedDecisions + stale.length}</p><p className="text-xs text-muted-foreground">Unsubstantiated decisions + stale evidence</p></CardContent></Card>
+      <Card><CardHeader className="pb-2"><CardDescription>STALE EVIDENCE</CardDescription></CardHeader><CardContent><p className="font-display text-3xl">{stale.length}</p><p className="text-xs text-muted-foreground">Past validity window</p></CardContent></Card>
+      <Card><CardHeader className="pb-2"><CardDescription>INTEGRITY FLAGS</CardDescription></CardHeader><CardContent><p className="font-display text-3xl">{assessment.integrityIssues.length}</p><p className="text-xs text-muted-foreground">Deterministic assessor findings</p></CardContent></Card>
+    </section>
+    <section className="space-y-3" aria-labelledby="decision-chain"><div><h2 id="decision-chain" className="font-display text-2xl uppercase">Decision chain</h2><p className="text-sm text-muted-foreground">A WHY-chain, not another activity feed.</p></div>
+      {decisions.map((decision) => <Card key={decision.id}><CardHeader><div className="flex flex-wrap items-center justify-between gap-2"><CardTitle>{decision.label}</CardTitle><Badge variant="outline">DECISION // {decision.id}</Badge></div><CardDescription>Snapshot {decisionGraphDemo.id} · v{decisionGraphDemo.version} · {decision.createdAt}</CardDescription></CardHeader><CardContent className="space-y-3">
+        {decisionGraphDemo.edges.filter((edge) => edge.to === decision.id || edge.from === decision.id).map((edge) => { const node = byId.get(edge.to === decision.id ? edge.from : edge.to); if (!node) return null; const expired = node.kind === 'evidence' && node.validUntil && Date.parse(node.validUntil) < now.getTime(); return <div key={edge.id} className="flex flex-col gap-2 border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{node.kind.toUpperCase()}</Badge><span className="font-medium">{node.label}</span>{expired && <Badge variant="warning">STALE</Badge>}<span className="w-full font-mono text-xs text-muted-foreground">{node.provenance?.sourceRef ?? 'No provenance reference'}</span></div><span className="font-mono text-[10px] uppercase text-muted-foreground">{relationLabel[edge.relation]}</span></div> })}
+      </CardContent></Card>)}
+    </section>
+    <section className="grid gap-4 lg:grid-cols-2"><Card><CardHeader><CardTitle className="font-display uppercase">Decision debt register</CardTitle><CardDescription>Stale evidence and unsupported decisions.</CardDescription></CardHeader><CardContent className="space-y-3">{stale.map((node) => <div key={node.id} className="border-l-2 border-warning pl-3"><p className="font-medium">{node.label}</p><p className="text-xs text-muted-foreground">Expired {node.validUntil} · {node.provenance?.sourceRef}</p></div>)}{assessment.unsubstantiatedDecisions > 0 && <p>{assessment.unsubstantiatedDecisions} decision(s) lack linked rationale.</p>}</CardContent></Card>
+    <Card><CardHeader><CardTitle className="font-display uppercase">Integrity findings</CardTitle><CardDescription>Rules-based checks, not generated claims.</CardDescription></CardHeader><CardContent className="space-y-2">{assessment.integrityIssues.length ? assessment.integrityIssues.map((issue, i) => <p key={issue.code + i} className="border border-warning/40 p-2 text-sm">{issue.code}: {issue.message}</p>) : <p className="text-sm text-muted-foreground">No structural issue detected.</p>}</CardContent></Card></section>
+    <footer className="border-t border-border pt-4 text-xs text-muted-foreground">Read-only explorer · ARSY must enforce source authorization before live rollout.</footer>
+  </div></main>
+}

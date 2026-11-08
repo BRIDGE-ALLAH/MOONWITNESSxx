@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10151d">
+  <title>ATLAS — MOONWITNESS</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #10151d; color: #e8edf4; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 85% 0%, #1d2b3b 0, transparent 35%), #10151d; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.4rem clamp(1rem, 4vw, 3rem); border-bottom: 1px solid #283442; }
+    .brand { display: flex; align-items: center; gap: .8rem; letter-spacing: .16em; font-weight: 750; }
+    .mark { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border: 1px solid #7892ad; border-radius: 50%; color: #b8d5f3; }
+    .eyebrow { color: #91a4b8; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; }
+    main { max-width: 1180px; margin: 0 auto; padding: 2.5rem clamp(1rem, 4vw, 3rem); }
+    h1 { margin: .35rem 0; font-size: clamp(2rem, 5vw, 3.4rem); letter-spacing: -.045em; }
+    .intro { color: #9eacbb; max-width: 48rem; line-height: 1.65; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .panel { border: 1px solid #2a3949; background: #151e29dd; border-radius: 14px; padding: 1.2rem; }
+    .panel h2 { margin: 0 0 .8rem; font-size: .95rem; font-weight: 650; }
+    .value { font-size: 1.2rem; font-weight: 700; }
+    .muted { color: #91a0b0; font-size: .85rem; line-height: 1.55; }
+    .status { display: inline-flex; align-items: center; gap: .45rem; border-radius: 99px; padding: .3rem .65rem; background: #273343; color: #c4d2e1; font-size: .75rem; }
+    .dot { width: .45rem; height: .45rem; border-radius: 50%; background: #8795a4; }
+    .list { display: grid; gap: .65rem; margin-top: 1rem; }
+    .engine { display: flex; justify-content: space-between; gap: 1rem; padding: .7rem 0; border-top: 1px solid #273442; font-size: .85rem; }
+    footer { margin-top: 2.5rem; color: #758596; font-size: .75rem; }
+    code { color: #c1d8f0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="mark">A</span><span>ATLAS</span></div>
+    <span class="eyebrow">MOONWITNESS / CONTROL PLANE</span>
+  </header>
+  <main>
+    <div class="eyebrow">DNS · RADIUS · Observability</div>
+    <h1>Operational command layer.</h1>
+    <p class="intro">ATLAS manages DNS, RADIUS, and observability infrastructure. Protocol serving, telemetry ingestion, metrics storage, and log analytics remain in dedicated external engines.</p>
+    <section class="grid" aria-label="System status">
+      <article class="panel">
+        <h2>Application</h2>
+        <div class="value">ATLAS Control Plane</div>
+        <p class="muted">Rust · Loco.rs · Version <span id="version">loading</span></p>
+        <span class="status"><span class="dot"></span><span id="app-status">Checking</span></span>
+      </article>
+      <article class="panel">
+        <h2>Operational database</h2>
+        <div class="value" id="db-status">Checking</div>
+        <p class="muted">PostgreSQL · SQLx · Control-plane metadata only</p>
+      </article>
+      <article class="panel">
+        <h2>Cache and coordination</h2>
+        <div class="value" id="redis-status">Checking</div>
+        <p class="muted">Redis · Required ATLAS dependency</p>
+      </article>
+      <article class="panel">
+        <h2>DNS data plane</h2>
+        <div class="value">External engines</div>
+        <p class="muted">PowerDNS · Unbound · dnsdist</p>
+        <span class="status"><span class="dot"></span>PowerDNS adapter available · Unbound/dnsdist pending</span>
+      </article>
+      <article class="panel">
+        <h2>RADIUS data plane</h2>
+        <div class="value">FreeRADIUS 3.2</div>
+        <p class="muted">Authentication · Authorization · Accounting</p>
+        <div class="value" id="radius-db-status">Checking</div>
+        <p class="muted">PostgreSQL · subscriber and accounting persistence</p>
+        <span class="status"><span class="dot"></span>Container healthcheck verifies the RADIUS Status-Server probe</span>
+      </article>
+      <article class="panel">
+        <h2>Observability data plane</h2>
+        <div class="value">External backends</div>
+        <p class="muted">VictoriaMetrics · VictoriaLogs · Collectors</p>
+        <span class="status"><span class="dot"></span>Health probes available · query/configuration APIs pending</span>
+      </article>
+    </section>
+    <section class="panel" style="margin-top:1rem">
+      <h2>Engine adapter catalog</h2>
+      <p class="muted">Catalog entries describe integration targets, not verified live connectivity.</p>
+      <div class="list" id="engines"><div class="engine">Loading catalog…</div></div>
+    </section>
+    <footer>SEE MORE. KNOW MORE. · ATLAS reports only verified runtime state; unconfigured integrations are never marked healthy.</footer>
+  </main>
+  <script>
+    const text = (id, value) => { document.getElementById(id).textContent = value; };
+    async function refresh() {
+      try {
+        const [health, readiness, version, catalog] = await Promise.all([
+          fetch('/api/v1/system/health').then(r => r.json()),
+          fetch('/api/v1/system/readiness').then(r => r.json()),
+          fetch('/api/v1/system/version').then(r => r.json()),
+          fetch('/api/v1/engines/catalog').then(r => r.json())
+        ]);
+        text('app-status', readiness.ready ? 'Ready' : 'Running · degraded');
+        text('version', version.version);
+        text('db-status', health.database);
+        text('redis-status', health.redis);
+        text('radius-db-status', health.radius_database);
+        document.getElementById('engines').replaceChildren(...catalog.items.map(item => {
+          const row = document.createElement('div');
+          row.className = 'engine';
+          const name = document.createElement('strong');
+          name.textContent = item.engine;
+          const status = document.createElement('span');
+          status.className = 'muted';
+          status.textContent = item.adapter_status.replaceAll('_', ' ');
+          row.append(name, status);
+          return row;
+        }));
+      } catch {
+        text('app-status', 'API unavailable');
+        text('db-status', 'Unknown');
+        text('redis-status', 'Unknown');
+        text('radius-db-status', 'Unknown');
+      }
+    }
+    refresh();
+    setInterval(refresh, 15000);
+  </script>
+</body>
+</html>
