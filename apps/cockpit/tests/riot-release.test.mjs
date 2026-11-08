@@ -58,7 +58,7 @@ test('RIOT RELEASE remains an offline-first COCKPIT workspace', async (t) => {
   await t.test('UI exposes the local-only boundary and desktop-only operation', () => {
     assert.match(route, /RiotReleaseWorkspace/)
     assert.match(ui, /NETWORK REQUIRED: NO/)
-    assert.match(ui, /not pushed or published/)
+    assert.match(ui, /does not push, publish/)
     assert.match(ui, /Desktop runtime required/)
     assert.match(client, /requireDesktop/)
   })
