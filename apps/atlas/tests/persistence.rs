@@ -202,7 +202,7 @@ async fn mariadb_migrations_engine_and_radius_crud_are_persistent() {
             .expect("delete RADIUS group policy")
     );
 
-    let accounting_id = format!("ci-acct-{}", ulid::Ulid::new());
+    let accounting_id = format!("ci{}", ulid::Ulid::new());
     sqlx::query(
         "INSERT INTO radacct (acctsessionid, acctuniqueid, username, nasipaddress, acctstarttime, acctinputoctets, acctoutputoctets, acctstoptime) VALUES (?, ?, ?, ?, NOW(), ?, ?, NULL)",
     )
