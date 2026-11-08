@@ -6,6 +6,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use sysinfo::System;
 use tauri::Manager;
 
+mod riot_release;
+mod riot_release_build;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SystemMetrics {
     pub timestamp_ms: u128,
@@ -815,7 +818,21 @@ fn main() {
             llm_analyze,
             llm_analyze_stream,
             audit_append,
-            audit_read
+            audit_read,
+            riot_release::riot_release_add_repository,
+            riot_release::riot_release_list_repositories,
+            riot_release::riot_release_remove_repository,
+            riot_release::riot_release_get_preview,
+            riot_release::riot_release_save_draft,
+            riot_release::riot_release_list_drafts,
+            riot_release::riot_release_list_history,
+            riot_release::riot_release_create_local_tag,
+            riot_release_build::riot_release_list_build_profiles,
+            riot_release_build::riot_release_run_build,
+            riot_release_build::riot_release_list_build_history,
+            riot_release_build::riot_release_list_artifact_candidates,
+            riot_release_build::riot_release_import_artifact,
+            riot_release_build::riot_release_list_vault
         ])
         .run(tauri::generate_context!())
         .expect("error while running MOONWITNESS COCKPIT application");

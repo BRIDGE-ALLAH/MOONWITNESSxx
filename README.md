@@ -6,13 +6,15 @@ MOONWITNESS is an evidence-first knowledge, intelligence, and operations ecosyst
 
 MOONWITNESS is the master product identity within the wider **GODPROMISE → EMPIRE OF THE LIGHT** narrative universe. **A-L-L-A-H.COM** is the intended unified public home. **ROCKSOUL** is a distinct creative/narrative identity and runtime direction. **E-ISP.ID** is the connectivity business identity. **RIOTWORKS** is the product and operating division within MOONWITNESS, associated with the initial creative-commerce workflow; it is not a competing master brand.
 
-> **Repository truth:** this monorepo contains the HEADQUARTER and ARSY application workspaces plus standalone Go (AEGIS) and Python (ORACLE) runtimes. Their integration and production status are tracked independently; a service foundation is not a claim of complete infrastructure capability. See the [Universe & Product Architecture Registry](./docs/32-universe-and-product-architecture-registry.md).
+> **Repository truth:** this monorepo contains multiple application workspaces at different maturity levels. Workspace presence does not imply production readiness. See the [Universe & Product Architecture Registry](./docs/32-universe-and-product-architecture-registry.md).
 
 ## What this repository contains
 
 - `apps/headquarter` — Next.js human-facing command center and current prototype/demo experience.
-- `apps/arsy` — Fastify API/runtime, application orchestration, identity/policy boundary, health/readiness, and bounded integrations.
-- `apps/aegis` — standalone Go network-infrastructure runtime foundation; currently process health only, with no VPN/router/firewall operations or ARSY command integration.
+- `apps/cockpit` — desktop operations flight deck with a Tauri 2 + Rust runtime and Next.js static-export/React UI; includes the offline-first RIOT RELEASE workspace.
+- `apps/gate` — public entrance and universe discovery workspace.
+- `apps/id` — identity workspace; server-side identity authority remains in ARSY.
+- `apps/arsy` — Fastify API/runtime, application orchestration, health/readiness, and bounded integrations.
 - `apps/oracle` — standalone Python/FastAPI deterministic computation service; intentionally outside the pnpm workspace and reached privately through ARSY.
 - `packages/*` — shared UI, contracts/types, policy, notifications, feature flags, assets, evidence, Divine research, and developer tooling.
 - `services/*` — legacy prototypes intentionally excluded from the pnpm workspace; not a second runtime ownership layer.
@@ -33,7 +35,6 @@ This is a product catalog, not a statement that nine apps exist in the current w
 
 - HEADQUARTER is a Next.js prototype. Demo/sample data must not be mistaken for live production data.
 - ARSY is the canonical Fastify backend application. It owns HTTP lifecycle and the central application/API authority.
-- AEGIS is a standalone Go runtime foundation. Phase 1 exposes process health only; ARSY command authentication and network provisioning adapters are not implemented.
 - ORACLE provides bounded deterministic analysis behind ARSY; Stage 1 job/idempotency state is process-memory only, with no durable queue/job persistence or production readiness claim.
 - The authenticated Docker connector is deliberately read-only and bounded; it does not provide container start/stop/exec/deploy or production deployment management.
 - WITNESS FABRIC, Divine research tooling, repository automation, and developer-experience capabilities have implementation evidence in the repository.
@@ -48,15 +49,10 @@ Requirements: Node.js 22+ (CI uses Node.js 24) and pnpm 12.16.1 as pinned in the
 ```bash
 pnpm install
 pnpm dev:headquarter
+pnpm dev:gate
+pnpm dev:cockpit
+pnpm dev:cockpit:desktop
 pnpm dev:arsy
-```
-
-AEGIS is a standalone Go module, not a pnpm package:
-
-```bash
-cd apps/aegis
-go test -race ./...
-go run ./cmd/aegis
 ```
 
 Useful validation commands:
@@ -97,6 +93,6 @@ Use the committed lockfile and repository scripts. If frozen install fails becau
 | [30 — ARSY Hardening](./docs/30-arsy-phases-18-20-hardening.md)                             | Runtime trust-boundary hardening                                                 |
 | [31 — Product Integrity](./docs/31-product-integrity-phases-36-38.md)                       | Data-truth and release preflight                                                 |
 | [32 — Universe & Product Registry](./docs/32-universe-and-product-architecture-registry.md) | Wider product universe, nine target experiences, domains, and platform ownership |
-| [34 — AEGIS Network Runtime](./docs/34-aegis-network-infrastructure-blueprint.md) | AEGIS Phase 1 scope, ARSY authority boundary and phased network execution roadmap |
+| [34 — COCKPIT RIOT RELEASE](./docs/34-cockpit-riot-release-offline-first.md) | Offline-first local software release workflow and optional provider boundary |
 
 For contribution rules and verified commands, start with [CONTRIBUTING.md](./CONTRIBUTING.md) and [docs/24](./docs/24-repository-and-automation-governance.md).

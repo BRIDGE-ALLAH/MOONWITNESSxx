@@ -41,7 +41,6 @@ export function AgiCopilotPanel({ open, onClose, snapshot, onDraftAction }: AgiC
   const [busy, setBusy] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const tauriMode = isTauri()
-  const canStream = provider === 'remote-llm' && tauriMode
 
   useEffect(() => {
     if (!open) return
