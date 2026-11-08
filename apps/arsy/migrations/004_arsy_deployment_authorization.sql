@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS arsy_deployment_authorization_decisions (
   owner_id text NOT NULL,
   actor_id text NOT NULL,
   target_host_id uuid NOT NULL,
-  action text NOT NULL CHECK (action IN ('deploy', 'stop', 'restart', 'rollback')),
+  action text NOT NULL CHECK (length(action) BETWEEN 1 AND 64),
   effect text NOT NULL CHECK (effect IN ('allow', 'deny')),
   reason_code text NOT NULL CHECK (length(reason_code) BETWEEN 1 AND 120),
   policy_version text,
