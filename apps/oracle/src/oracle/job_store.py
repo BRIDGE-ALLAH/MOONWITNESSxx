@@ -151,6 +151,8 @@ class PostgresJobStore:
         }
         request_digest = sha256_digest(request_body)
         job_id = uuid4()
+        capacity_error: str | None = None
+        submitted_record: JobRecord | None = None
         try:
             async with self._require_pool().acquire() as connection:
                 async with connection.transaction():
@@ -199,35 +201,44 @@ class PostgresJobStore:
                             "SELECT count(*)::integer FROM oracle.jobs"
                         )
                     if retained >= self.settings.max_retained_jobs:
-                        raise QueueSaturatedError("ORACLE retained-job capacity is full")
+                        capacity_error = "ORACLE retained-job capacity is full"
 
                     queued = await connection.fetchval(
                         "SELECT count(*)::integer FROM oracle.jobs WHERE status = 'queued'"
                     )
-                    if queued >= self.settings.max_queue_size:
-                        raise QueueSaturatedError("ORACLE job queue is full")
+                    if capacity_error is None and queued >= self.settings.max_queue_size:
+                        capacity_error = "ORACLE job queue is full"
 
-                    row = await connection.fetchrow(
-                        """
-                        INSERT INTO oracle.jobs (
-                          job_id, task_type, input_payload, evidence,
-                          request_digest, input_digest, idempotency_key
+                    if capacity_error is None:
+                        row = await connection.fetchrow(
+                            """
+                            INSERT INTO oracle.jobs (
+                              job_id, task_type, input_payload, evidence,
+                              request_digest, input_digest, idempotency_key
+                            )
+                            VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $5, $6)
+                            RETURNING *
+                            """,
+                            job_id,
+                            task_type,
+                            _encode_json(input_payload),
+                            _encode_json(request_body["evidence"]),
+                            request_digest,
+                            idempotency_key,
                         )
-                        VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $5, $6)
-                        RETURNING *
-                        """,
-                        job_id,
-                        task_type,
-                        _encode_json(input_payload),
-                        _encode_json(request_body["evidence"]),
-                        request_digest,
-                        idempotency_key,
-                    )
-                    return _map_record(row), False
-        except (IdempotencyConflictError, QueueSaturatedError):
+                        submitted_record = _map_record(row)
+        except IdempotencyConflictError:
             raise
         except Exception as exc:
             raise StorageUnavailableError from exc
+
+        # Capacity failures are raised only after the transaction commits. This keeps
+        # retention/cap cleanup durable even when no new row can be accepted.
+        if capacity_error is not None:
+            raise QueueSaturatedError(capacity_error)
+        if submitted_record is None:
+            raise StorageUnavailableError
+        return submitted_record, False
 
     async def get(self, job_id: UUID) -> JobRecord | None:
         if not await self._ensure_pool():
