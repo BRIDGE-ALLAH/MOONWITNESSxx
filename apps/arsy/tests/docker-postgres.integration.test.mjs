@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { Pool } from 'pg'
 import { createApp } from '../src/app.ts'
 import { randomUUID } from 'node:crypto'
+import { applyTestMigrations } from './helpers/apply-migrations.mjs'
 
 const databaseUrl = process.env.TEST_DATABASE_URL
 
@@ -15,8 +16,7 @@ test('Docker connector migration is repeatable and persists owner-scoped metadat
   const ownerId = `docker-ci-${id}`
   try {
     const migration = await readFile(new URL('../migrations/002_docker_connector.sql', import.meta.url), 'utf8')
-    await pool.query(migration)
-    await pool.query(migration)
+    await applyTestMigrations(pool, [migration, migration])
     await pool.query(
       'INSERT INTO docker_connector_servers (id, owner_id, name, kind, endpoint_url, encrypted_credentials) VALUES ($1,$2,$3,$4,$5,$6)',
       [id, ownerId, 'CI remote', 'remote', 'https://docker.example.com:2376', 'iv.tag.ciphertext'],

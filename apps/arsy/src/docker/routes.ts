@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
 import { decryptDockerCredentials, encryptDockerCredentials, resolveRemoteDockerEndpoint, validateTlsCredentials } from './security.ts'
-import { getDockerInfo, getDockerContainerLogs, listDockerContainers, type DockerConnection } from './engine.ts'
+import { DockerEngineResponseError, getDockerInfo, getDockerContainerLogs, getDockerContainerStats, listDockerContainers, type DockerConnection } from './engine.ts'
 
 type QueryResult<T> = { rows: T[] }
 type ServerRow = {
@@ -134,6 +134,31 @@ export function registerDockerRoutes(app: FastifyInstance, pool: DatabasePool, e
       return { data: { containers, truncated: containers.length === 100 } }
     } catch {
       return reply.code(502).send({ error: { code: 'DOCKER_ENGINE_UNAVAILABLE', message: 'Docker container inventory is unavailable.' } })
+    }
+  })
+
+  app.get('/api/v1/infrastructure/docker/servers/:id/containers/:containerId/stats', async (request, reply) => {
+    const ownerId = env.ARSY_OPERATOR_ID?.trim()
+    if (!ownerId) return reply.code(503).send({ error: { code: 'OPERATOR_ID_NOT_CONFIGURED' } })
+    const { id, containerId } = request.params as { id: string; containerId: string }
+    if (!SERVER_ID.test(id)) return reply.code(400).send({ error: { code: 'INVALID_SERVER_ID' } })
+    if (!/^[a-f0-9]{12,64}$/i.test(containerId)) {
+      return reply.code(400).send({ error: { code: 'INVALID_CONTAINER_ID' } })
+    }
+    const result = await pool.query(
+      'SELECT id, name, kind, endpoint_url, encrypted_credentials, created_at FROM docker_connector_servers WHERE id = $1 AND owner_id = $2',
+      [id, ownerId],
+    ) as QueryResult<ServerRow>
+    const row = result.rows[0]
+    if (!row) return reply.code(404).send({ error: { code: 'DOCKER_SERVER_NOT_FOUND' } })
+    try {
+      const stats = await getDockerContainerStats(await connectionFor(row, env), containerId)
+      return { data: { server: safeServer(row), containerId, stats } }
+    } catch (error) {
+      if (error instanceof DockerEngineResponseError && error.statusCode === 404) {
+        return reply.code(404).send({ error: { code: 'DOCKER_CONTAINER_NOT_FOUND' } })
+      }
+      return reply.code(502).send({ error: { code: 'DOCKER_STATS_UNAVAILABLE', message: 'Container runtime telemetry is unavailable.' } })
     }
   })
 
