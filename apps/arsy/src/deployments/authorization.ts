@@ -136,6 +136,9 @@ function stableJson(value: unknown): string {
 export function capabilityGrantSigningPayload(grant: CapabilityGrant): string {
   return stableJson({
     id: grant.id,
+    ...(grant.parentGrantId === undefined || grant.parentGrantId === null
+      ? {}
+      : { parentGrantId: grant.parentGrantId }),
     issuerId: grant.issuerId,
     subjectId: grant.subjectId,
     tenantId: grant.tenantId,
@@ -285,6 +288,7 @@ function operationAction(kind: OperationContextRow['kind']): string {
 function mapGrant(row: CapabilityGrantRow): CapabilityGrant {
   return {
     id: row.id,
+    parentGrantId: row.parent_grant_id,
     issuerId: row.issuer_id,
     subjectId: row.subject_id,
     tenantId: row.tenant_id,
