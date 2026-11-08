@@ -28,9 +28,9 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: atlas
-          POSTGRES_PASSWORD: ci-atlas-test-password
-          POSTGRES_DB: atlas
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-postgres-admin-password-32chars
+          POSTGRES_DB: postgres
         ports:
           - 5432:5432
         options: >-
@@ -39,8 +39,11 @@ jobs:
           --health-timeout=5s
           --health-retries=10
     env:
-      DATABASE_URL: postgres://atlas:ci-atlas-test-password@127.0.0.1:5432/atlas
-      RADIUS_DATABASE_URL: postgres://atlas:ci-atlas-test-password@127.0.0.1:5432/radius
+      DATABASE_ADMIN_URL: postgres://postgres:ci-postgres-admin-password-32chars@127.0.0.1:5432/postgres
+      DATABASE_URL: postgres://atlas:ci-atlas-db-password-which-is-over-32-chars@127.0.0.1:5432/atlas
+      RADIUS_DATABASE_URL: postgres://radius:ci-radius-db-password-which-is-long-enough-32chars@127.0.0.1:5432/radius
+      ATLAS_DB_PASSWORD: ci-atlas-db-password-which-is-over-32-chars
+      RADIUS_DB_PASSWORD: ci-radius-db-password-which-is-long-enough-32chars
     defaults:
       run:
         working-directory: apps/atlas
