@@ -15,6 +15,7 @@ from oracle.api import create_app
 from oracle.durable_jobs import (
     IdempotencyConflictError,
     PostgresJobCoordinator,
+    QueueSaturatedError,
 )
 from oracle.migrate import apply_migrations
 from oracle.schemas import EvidenceRef, JobStatus, Provenance
@@ -45,7 +46,8 @@ async def prepare_database() -> str:
             """
         )
         await admin.execute(f"ALTER ROLE {APP_ROLE} WITH LOGIN PASSWORD '{APP_PASSWORD}'")
-        await admin.execute(f"GRANT CONNECT ON DATABASE {await admin.fetchval('SELECT current_database()')} TO {APP_ROLE}")
+        database_name = await admin.fetchval("SELECT current_database()")
+        await admin.execute(f"GRANT CONNECT ON DATABASE {database_name} TO {APP_ROLE}")
         await admin.execute(f"GRANT USAGE ON SCHEMA oracle TO {APP_ROLE}")
         await admin.execute(
             f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA oracle TO {APP_ROLE}"
@@ -164,7 +166,7 @@ def test_migrations_atomic_idempotency_capacity_and_lease_fencing() -> None:
                 input_digest="a" * 64,
                 output_digest="b" * 64,
                 evidence=[],
-                completed_at=__import__("datetime").datetime.now(__import__("datetime").UTC),
+                completed_at=datetime.now(UTC),
             )
             assert await second._complete(
                 record.job_id,
