@@ -21,22 +21,28 @@ function configureEnvironment() {
   }
   const previous = Object.fromEntries(Object.keys(values).map((key) => [key, process.env[key]]))
   const previousFetch = globalThis.fetch
-  let failures = 0
+  let attempts = 0
   let blockedUntil = 0
   Object.assign(process.env, values)
   globalThis.fetch = async (_url, init) => {
     const { action } = JSON.parse(init.body)
-    if (action === 'check') {
-      const retryAfterSeconds = Math.max(0, Math.ceil((blockedUntil - Date.now()) / 1000))
-      return Response.json({ data: { allowed: retryAfterSeconds === 0, retryAfterSeconds } })
+    if (action === 'attempt') {
+      if (blockedUntil > Date.now()) {
+        return Response.json({ data: { allowed: false, retryAfterSeconds: Math.ceil((blockedUntil - Date.now()) / 1000) } })
+      }
+      if (attempts >= 5) {
+        blockedUntil = Date.now() + 15 * 60 * 1000
+        return Response.json({ data: { allowed: false, retryAfterSeconds: 900 } })
+      }
+      attempts += 1
+      return Response.json({ data: { allowed: true, retryAfterSeconds: 0 } })
     }
     if (action === 'failure') {
-      failures += 1
-      if (failures >= 5) blockedUntil = Date.now() + 15 * 60 * 1000
+      if (attempts >= 5 && blockedUntil <= Date.now()) blockedUntil = Date.now() + 15 * 60 * 1000
       const retryAfterSeconds = Math.max(0, Math.ceil((blockedUntil - Date.now()) / 1000))
       return Response.json({ data: { allowed: retryAfterSeconds === 0, retryAfterSeconds } })
     }
-    failures = 0
+    attempts = 0
     blockedUntil = 0
     return Response.json({ data: { allowed: true, retryAfterSeconds: 0 } })
   }
