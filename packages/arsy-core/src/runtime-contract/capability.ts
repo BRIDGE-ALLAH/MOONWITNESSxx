@@ -1,5 +1,7 @@
 export interface CapabilityGrant {
   id: string
+  /** Signed parent reference for delegated grants; omitted on root grants. */
+  parentGrantId?: string | null
   issuerId: string
   subjectId: string
   tenantId: string
