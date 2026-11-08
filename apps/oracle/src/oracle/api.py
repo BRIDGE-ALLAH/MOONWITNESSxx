@@ -61,8 +61,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title="MOONWITNESS ORACLE API",
         summary="Internal, bounded intelligence and computation service",
         description=(
-            "ORACLE performs deterministic stage-1 analysis jobs. ARSY remains the "
-            "identity, authorization, caller-facing API, and orchestration authority."
+            "ORACLE performs bounded deterministic analysis jobs. Job lifecycle may use "
+            "a local in-memory backend or an explicitly migrated PostgreSQL store. ARSY "
+            "remains the identity, authorization, caller-facing API, and orchestration authority."
         ),
         version=__version__,
         lifespan=lifespan,
@@ -132,6 +133,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             tasks=["statistics.describe", "text.profile"],
             max_numeric_values=config.max_numeric_values,
             max_text_chars=config.max_text_chars,
+            durable_jobs=coordinator.durable_jobs,
         )
 
     @app.post(
