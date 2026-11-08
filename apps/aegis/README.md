@@ -53,11 +53,11 @@ Health endpoints:
 From the repository root:
 
 ```sh
-docker compose up --build aegis
+docker compose up --build -d aegis
 docker compose logs -f aegis
 ```
 
-The local host port is bound to loopback only. The container joins the existing `moonwitness` network. This is a local-development configuration, not a production deployment.
+The local host port is bound to loopback only. The container joins the existing `moonwitness` network, runs as non-root, drops all Linux capabilities, uses a read-only root filesystem, and enables no-new-privileges. The Compose healthcheck uses the real `/health/ready` endpoint. This is a local-development configuration, not a production deployment.
 
 ## Security invariants
 
