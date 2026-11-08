@@ -67,6 +67,9 @@ test('attempt reserves account and network buckets atomically using the authenti
     assert.match(pool.calls[0].sql, /FOR UPDATE|ON CONFLICT/)
     assert.match(pool.calls[0].sql, /attempt_count/)
     assert.match(pool.calls[0].sql, /interval '15 minutes'/)
+    assert.equal(pool.calls.length, 2)
+    assert.match(pool.calls[1].sql, /LIMIT 100/)
+    assert.match(pool.calls[1].sql, /SKIP LOCKED/)
   } finally {
     await app.close()
   }
