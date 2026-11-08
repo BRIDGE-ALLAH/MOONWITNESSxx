@@ -150,3 +150,64 @@ This update is based on current GitHub main files, PR diffs, issue state and exa
 - Current main package version is `1.0.11`; current main is 450 commits ahead of the tag target.
 - The tag object is unsigned (`verification.verified=false`). This is provenance information, not evidence of maliciousness; follow an explicit signed-tag policy if one is adopted.
 - The latest numbered changelog heading remains `1.0.0`. The three package version bumps after the tagged manifest need a policy decision and accurate changelog treatment before release.
+
+
+
+## Post-ORACLE integration revalidation — 2026-11-08
+
+**This addendum supersedes the earlier main-HEAD snapshot above for the changes recorded here.**  
+**Verified `main` HEAD:** `d7150c4d30377b0f5f2d9c7bfa2b924e5f3d2a56`.
+
+### Merged implementation
+
+- PR #171 merged as `12445d22b3a31d6cd69eed6eeb43c21b43b2c484`: standalone Python ORACLE Stage 1 service under `apps/oracle`.
+- PR #173 merged as `d7150c4d30377b0f5f2d9c7bfa2b924e5f3d2a56`: ARSY-owned authenticated API/client, private Compose service wiring, service-to-service E2E, and integration documentation.
+- PR #169 universe/product architecture registry remains merged at `27703b6a485b70c360da24543773304882a0960f`.
+- Integration issue #172 and ORACLE foundation issue #170 are closed after their merged acceptance scopes.
+
+### Actual execution path verified
+
+`POST /api/v1/oracle/jobs` and `GET /api/v1/oracle/jobs/:jobId` are exposed by ARSY behind its operator-authentication boundary. ARSY validates input and response contracts, supplies a separate ORACLE bearer service token, applies bounded request timeouts, disables redirects, and maps upstream failures safely.
+
+ORACLE is a private Compose service on the existing bridge network. It has no published host port. ARSY depends on ORACLE readiness. The browser does not call ORACLE directly.
+
+The new Compose E2E starts real PostgreSQL, Redis, ORACLE and ARSY containers using isolated CI credentials and ephemeral volumes. It submits:
+- `statistics.describe` for `[10, 12, 15, 19]`, verifies count 4, mean 14, median 13.5, evidence passthrough and SHA-256 provenance;
+- `text.profile`, verifies the deterministic lexical count and method provenance;
+- a repeated statistics submission with the same idempotency key, verifies replay and stable job ID.
+
+Both tests passed (2 passed, 0 failed, 0 skipped). The CI-only operator token is masked in logs, and the Compose stack, network and volumes are removed at teardown.
+
+### Exact-head and post-merge verification
+
+PR head `ef961130bd769d8994869d58ac4464b4c476154a` passed:
+- Repository CI / full workspace typecheck and build: run `42432323774`
+- ORACLE Compose E2E: `42432323815`
+- ORACLE Python 3.12/3.13: `42432323870`
+- CodeQL: `42432323798`
+- ARSY and Headquarter container builds: `42432323867`
+- Docker connector PostgreSQL integration: `42432323817`
+- Headquarter Docker connector browser E2E: `42432323829`
+
+After merge, `main` at `d7150c4d30377b0f5f2d9c7bfa2b924e5f3d2a56` passed:
+- Repository CI / full workspace validation and builds: `42432495390`
+- ORACLE Compose E2E: `42432495389`
+- ORACLE Python 3.12/3.13: `42432495367`
+- CodeQL: `42432495383`
+- ARSY and Headquarter container builds: `42432495368`
+
+### Explicit implementation boundaries
+
+- ORACLE Stage 1 retains jobs and idempotency records in process memory. A service restart loses retained job state; there is no durable queue/job store or restart recovery.
+- This slice does not add database persistence, canonical audit storage, an ORACLE user interface, model-provider/GPU inference, public ingress, production secrets, or deployment.
+- ORACLE remains a deterministic bounded computation service. Its digests and method metadata are derivation information, not a trusted timestamp, signature, source-authenticity proof, or replacement for WITNESS FABRIC.
+- HEADQUARTER remains a clearly disclosed prototype/demo surface. The ORACLE API integration does not make its financial, marketplace, account, or dashboard demo records live user data.
+
+### Release decision — still NO-GO
+
+- Root package version remains `1.0.11`; latest stable GitHub Release/tag remains `v1.0.0`; latest numbered CHANGELOG heading remains `1.0.0`.
+- Do not infer or manufacture releases for the intervening package version bumps.
+- No approved production target, managed secret injection, TLS/ingress, backup/restore proof, monitoring/alerting, rollback path, production deployment workflow, or live production smoke URL/credentials were verified.
+- A green container build and successful disposable Compose E2E are not evidence of a production deployment.
+
+**Next engineering priorities:** (1) decide and implement durable ORACLE job/idem state and worker recovery with an explicit persistence/ownership ADR; (2) continue the real commerce/product vertical slice through the existing draft Money Maker work, first resolving its dependency graph and unmergeable state; (3) continue ORM/Business Database work only with database-backed CRUD, migrations, access-policy and real persistence tests—not by treating declaration/registry scaffolding as complete.
