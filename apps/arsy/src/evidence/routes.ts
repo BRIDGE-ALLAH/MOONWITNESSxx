@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { Pool } from 'pg'
-import { EvidenceLedger } from '@riotworks/arsy-core'
+import { EvidenceLedger } from '@riotworks/arsy-core/evidence'
 import { getArsyOperatorPrincipal } from '../auth/operator-token.ts'
 import { PostgresEvidenceStore } from './postgres-store.ts'
 
