@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import time
+from datetime import UTC, datetime
 from urllib.parse import quote, urlsplit, urlunsplit
 from uuid import uuid4
 
@@ -11,7 +12,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from oracle.api import create_app
-from oracle.durable_jobs import PersistenceUnavailableError, PostgresJobCoordinator
+from oracle.durable_jobs import (
+    IdempotencyConflictError,
+    PostgresJobCoordinator,
+)
 from oracle.migrate import apply_migrations
 from oracle.schemas import EvidenceRef, JobStatus, Provenance
 from oracle.settings import Settings
@@ -106,15 +110,13 @@ def test_migrations_atomic_idempotency_capacity_and_lease_fencing() -> None:
             assert sum(not replayed for _, replayed in submissions) == 1
             assert sum(replayed for _, replayed in submissions) == 11
 
-            with pytest.raises(Exception) as conflict:
+            with pytest.raises(IdempotencyConflictError):
                 await first.submit(
                     task_type="statistics.describe",
                     input_payload={"values": [1, 9]},
                     evidence=[],
                     idempotency_key="concurrent-oracle-submit",
                 )
-            assert conflict.type.__name__ == "IdempotencyConflictError"
-
             # Claim through two independent coordinators: the same queued row is claimed once.
             first_claim, second_claim = await asyncio.gather(
                 first._claim_one(uuid4()),
@@ -124,8 +126,6 @@ def test_migrations_atomic_idempotency_capacity_and_lease_fencing() -> None:
             assert len(claims) == 1
             record, stale_token = claims[0]
             assert record.status == JobStatus.RUNNING
-            assert record.attempt_count if hasattr(record, "attempt_count") else True
-
             admin = await asyncpg.connect(TEST_DATABASE_URL)
             try:
                 await admin.execute(
@@ -152,7 +152,7 @@ def test_migrations_atomic_idempotency_capacity_and_lease_fencing() -> None:
                     input_digest="a" * 64,
                     output_digest="b" * 64,
                     evidence=[],
-                    completed_at=__import__("datetime").datetime.now(__import__("datetime").UTC),
+                    completed_at=datetime.now(UTC),
                 ),
             ) is False
 
