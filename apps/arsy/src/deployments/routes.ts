@@ -360,7 +360,7 @@ export function registerDeploymentRoutes(
         data: { ...created.operation, status: created.disposition === 'created' && decision && !decision.allowed ? 'blocked' : created.operation.status },
         disposition: created.disposition,
         authorization: decision,
-        dispatch: { state: 'queued', workerEnabled: false },
+        dispatch: { outbox: 'queued', worker: 'disabled', providerSideEffects: 'not_started' },
       })
     } catch (error) {
       return reply.code(statusCodeForError(error)).send({ error: { code: safeErrorCode(error) } })
