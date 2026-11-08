@@ -21,6 +21,7 @@ export interface ClaimedDeploymentOutboxMessage extends DeploymentOutboxMessage 
 
 export interface ClaimOutboxInput {
   workerId: string
+  ownerId?: string
   limit?: number
   leaseSeconds?: number
 }
@@ -60,6 +61,19 @@ function boundedInteger(value: number | undefined, fallback: number, min: number
     throw new TypeError(`${field} must be an integer between ${min} and ${max}`)
   }
   return candidate
+}
+
+function requiredOwnerId(value: string): string {
+  if (typeof value !== 'string') throw new TypeError('ownerId must be a string')
+  const normalized = value.trim()
+  if (!normalized || normalized.length > 128 ||
+      [...normalized].some((character) => {
+        const code = character.charCodeAt(0)
+        return code < 32 || code === 127
+      })) {
+    throw new TypeError('ownerId must contain 1-128 printable characters')
+  }
+  return normalized
 }
 
 function jsonObject(value: unknown): Record<string, unknown> {
@@ -103,21 +117,9 @@ export async function claimDeploymentOutbox(
   input: ClaimOutboxInput,
 ): Promise<ClaimedDeploymentOutboxMessage[]> {
   const workerId = requiredWorkerId(input.workerId)
+  const ownerId = input.ownerId === undefined ? null : requiredOwnerId(input.ownerId)
   const limit = boundedInteger(input.limit, 10, 1, 50, 'limit')
   const leaseSeconds = boundedInteger(input.leaseSeconds, 30, 5, 300, 'leaseSeconds')
-  // A worker can die after claiming its final allowed attempt. Once that
-  // lease expires, make the row terminal instead of leaving it unclaimable.
-  await pool.query(
-    `UPDATE arsy_deployment_outbox
-     SET dead_lettered_at = now(),
-         locked_by = NULL,
-         locked_until = NULL,
-         lease_token = NULL,
-         last_error_code = 'attempts_exhausted'
-     WHERE delivered_at IS NULL AND dead_lettered_at IS NULL
-       AND attempt_count >= max_attempts
-       AND (locked_until IS NULL OR locked_until <= now())`,
-  )
 
   const result = await pool.query(
     `WITH candidates AS (
@@ -128,6 +130,7 @@ export async function claimDeploymentOutbox(
          AND available_at <= now()
          AND (locked_until IS NULL OR locked_until <= now())
          AND attempt_count < max_attempts
+         AND ($4::text IS NULL OR owner_id = $4)
        ORDER BY available_at ASC, created_at ASC, id ASC
        FOR UPDATE SKIP LOCKED
        LIMIT $2
@@ -149,9 +152,48 @@ export async function claimDeploymentOutbox(
        attempt_count, max_attempts, created_at, locked_until, lease_token
      FROM claimed
      ORDER BY created_at ASC, id ASC`,
-    [workerId, limit, leaseSeconds],
+    [workerId, limit, leaseSeconds, ownerId],
   )
   return queryRows<OutboxRow>(result).map((row) => mapClaim(row, workerId))
+}
+
+export interface ReapOutboxInput {
+  limit?: number
+  ownerId?: string
+}
+
+/** Reap at most one bounded batch of expired final-attempt leases. */
+export async function reapExpiredDeploymentOutbox(
+  pool: DatabasePool,
+  input: ReapOutboxInput,
+): Promise<number> {
+  const limit = boundedInteger(input.limit, 10, 1, 50, 'reaper limit')
+  const ownerId = input.ownerId === undefined ? null : requiredOwnerId(input.ownerId)
+  const result = await pool.query(
+    `WITH expired AS (
+       SELECT id
+       FROM arsy_deployment_outbox
+       WHERE delivered_at IS NULL
+         AND dead_lettered_at IS NULL
+         AND attempt_count >= max_attempts
+         AND (locked_until IS NULL OR locked_until <= now())
+         AND ($2::text IS NULL OR owner_id = $2)
+       ORDER BY locked_until ASC, created_at ASC, id ASC
+       LIMIT $1
+       FOR UPDATE SKIP LOCKED
+     )
+     UPDATE arsy_deployment_outbox AS outbox
+     SET dead_lettered_at = now(),
+         locked_by = NULL,
+         locked_until = NULL,
+         lease_token = NULL,
+         last_error_code = COALESCE(outbox.last_error_code, 'attempts_exhausted')
+     FROM expired
+     WHERE outbox.id = expired.id
+     RETURNING outbox.id`,
+    [limit, ownerId],
+  )
+  return queryRows<{ id: string }>(result).length
 }
 
 function assertLease(message: ClaimedDeploymentOutboxMessage): void {
@@ -191,22 +233,22 @@ export async function retryDeploymentOutbox(
   const safeCode = typeof errorCode === 'string' && /^[a-z][a-z0-9_]{0,79}$/.test(errorCode)
     ? errorCode
     : 'handler_failed'
-  const delaySeconds = Math.min(3600, 5 * (2 ** Math.max(0, message.attemptCount - 1)))
-  const retryAt = new Date(Date.now() + delaySeconds * 1000)
-
   const result = await pool.query(
     `UPDATE arsy_deployment_outbox
      SET locked_by = NULL,
          locked_until = NULL,
          lease_token = NULL,
          last_error_code = $4,
-         available_at = CASE WHEN attempt_count >= max_attempts THEN available_at ELSE $5 END,
+         available_at = CASE
+           WHEN attempt_count >= max_attempts THEN available_at
+           ELSE now() + make_interval(secs => LEAST(3600, 5 * (1::bigint << LEAST(attempt_count - 1, 10)))::double precision)
+         END,
          dead_lettered_at = CASE WHEN attempt_count >= max_attempts THEN now() ELSE NULL END
      WHERE id = $1 AND locked_by = $2 AND lease_token = $3
        AND locked_until > now()
        AND delivered_at IS NULL AND dead_lettered_at IS NULL
      RETURNING dead_lettered_at`,
-    [message.id, message.workerId, message.leaseToken, safeCode, retryAt],
+    [message.id, message.workerId, message.leaseToken, safeCode],
   )
   const row = queryRows<{ dead_lettered_at: Date | string | null }>(result)[0]
   if (!row) return 'lease_lost'

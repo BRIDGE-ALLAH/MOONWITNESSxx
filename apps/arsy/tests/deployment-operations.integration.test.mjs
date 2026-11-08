@@ -12,6 +12,7 @@ import {
 import {
   acknowledgeDeploymentOutbox,
   claimDeploymentOutbox,
+  reapExpiredDeploymentOutbox,
   retryDeploymentOutbox,
 } from '../src/deployments/outbox-store.ts'
 
@@ -83,8 +84,8 @@ test('deployment journal migrations are repeatable and persist owner-bound opera
     assert.equal(outbox.rowCount, 1)
 
     const [claimedA, claimedB] = await Promise.all([
-      claimDeploymentOutbox(pool, { workerId: `worker-a-${randomUUID()}`, limit: 10 }),
-      claimDeploymentOutbox(pool, { workerId: `worker-b-${randomUUID()}`, limit: 10 }),
+      claimDeploymentOutbox(pool, { workerId: `worker-a-${randomUUID()}`, ownerId, limit: 10 }),
+      claimDeploymentOutbox(pool, { workerId: `worker-b-${randomUUID()}`, ownerId, limit: 10 }),
     ])
     const allClaims = [...claimedA, ...claimedB].filter(message => message.id === outbox.rows[0].id)
     assert.equal(allClaims.length, 1, 'one concurrent worker may own the event lease')
@@ -95,6 +96,7 @@ test('deployment journal migrations are repeatable and persist owner-bound opera
     )
     const secondLease = (await claimDeploymentOutbox(pool, {
       workerId: `worker-reclaim-${randomUUID()}`,
+      ownerId,
       limit: 10,
     })).find(message => message.id === firstLease.id)
     assert.ok(secondLease)
@@ -116,15 +118,22 @@ test('deployment journal migrations are repeatable and persist owner-bound opera
     )
     const firstRetryLease = (await claimDeploymentOutbox(pool, {
       workerId: `worker-retry-a-${randomUUID()}`,
+      ownerId,
     })).find(message => message.id === retryOutbox.rows[0].id)
     assert.ok(firstRetryLease)
     assert.equal(await retryDeploymentOutbox(pool, firstRetryLease, 'handler_failed'), 'retry_scheduled')
+    const retrySchedule = await pool.query(
+      'SELECT available_at > now() AS delayed FROM arsy_deployment_outbox WHERE id = $1',
+      [retryOutbox.rows[0].id],
+    )
+    assert.equal(retrySchedule.rows[0].delayed, true, 'retry delay must use PostgreSQL time')
     await pool.query(
       'UPDATE arsy_deployment_outbox SET available_at = now() - interval \'1 second\' WHERE id = $1',
       [retryOutbox.rows[0].id],
     )
     const finalRetryLease = (await claimDeploymentOutbox(pool, {
       workerId: `worker-retry-b-${randomUUID()}`,
+      ownerId,
     })).find(message => message.id === retryOutbox.rows[0].id)
     assert.ok(finalRetryLease)
     assert.equal(finalRetryLease.attemptCount, 2)
@@ -135,6 +144,38 @@ test('deployment journal migrations are repeatable and persist owner-bound opera
     )
     assert.ok(deadLetter.rows[0].dead_lettered_at)
     assert.equal(deadLetter.rows[0].last_error_code, 'handler_failed')
+
+    const exhaustedOperations = await Promise.all([
+      createDeploymentOperation(pool, { ...request, idempotencyKey: `deploy-exhausted-a-${randomUUID()}` }),
+      createDeploymentOperation(pool, { ...request, idempotencyKey: `deploy-exhausted-b-${randomUUID()}` }),
+      createDeploymentOperation(pool, { ...request, idempotencyKey: `deploy-exhausted-c-${randomUUID()}` }),
+    ])
+    const exhaustedIds = exhaustedOperations.map(item => item.operation.id)
+    await pool.query(
+      'UPDATE arsy_deployment_outbox SET max_attempts = 1 WHERE operation_id = ANY($1::uuid[])',
+      [exhaustedIds],
+    )
+    const finalLeases = await claimDeploymentOutbox(pool, {
+      workerId: `worker-final-attempt-${randomUUID()}`,
+      ownerId,
+      limit: 3,
+    })
+    assert.equal(finalLeases.length, 3)
+    await pool.query(
+      'UPDATE arsy_deployment_outbox SET locked_until = now() - interval \'1 second\' WHERE operation_id = ANY($1::uuid[])',
+      [exhaustedIds],
+    )
+    const [reapedA, reapedB] = await Promise.all([
+      reapExpiredDeploymentOutbox(pool, { ownerId, limit: 1 }),
+      reapExpiredDeploymentOutbox(pool, { ownerId, limit: 1 }),
+    ])
+    assert.equal(reapedA + reapedB, 2, 'concurrent bounded reapers must process separate rows')
+    assert.equal(await reapExpiredDeploymentOutbox(pool, { ownerId, limit: 1 }), 1)
+    const exhaustedRows = await pool.query(
+      'SELECT count(*)::integer AS count FROM arsy_deployment_outbox WHERE operation_id = ANY($1::uuid[]) AND dead_lettered_at IS NOT NULL',
+      [exhaustedIds],
+    )
+    assert.equal(exhaustedRows.rows[0].count, 3)
 
     await assert.rejects(
       pool.query('UPDATE arsy_deployment_operation_events SET event_type = $1 WHERE operation_id = $2', ['tampered', first.operation.id]),
