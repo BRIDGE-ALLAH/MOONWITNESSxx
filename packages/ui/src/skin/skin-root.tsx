@@ -1,14 +1,15 @@
 import type { HTMLAttributes } from 'react'
 import { cn } from '../lib/utils'
 import { resolveSkinConfig } from './resolve'
+import type { AppearanceMode, DensityMode, SkinName } from './types'
 
 export interface SkinRootProps extends HTMLAttributes<HTMLDivElement> {
   /** Experience skin applied to this application or route boundary. */
-  skin: string
+  skin: SkinName
   /** Appearance mode; unsupported values resolve to the skin's default mode. */
-  mode?: string
+  mode?: AppearanceMode
   /** Information density, independent from skin and appearance mode. */
-  density?: string
+  density?: DensityMode
 }
 
 /**
