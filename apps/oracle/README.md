@@ -26,7 +26,7 @@ All inputs have explicit size limits. Only aggregate outputs are returned for te
 The service exposes:
 
 - \`GET /health/live\` — process liveness.
-- \`GET /health/ready\` — worker/readiness and queue capacity; explicitly reports that jobs are not durable.
+- \`GET /health/ready\` — worker/readiness, queue capacity, database availability, and whether the active job backend is durable.
 - \`GET /v1/capabilities\` — available task types and limits.
 - \`POST /v1/jobs\` — submit a job; responds \`202 Accepted\` and a job ID.
 - \`GET /v1/jobs/{job_id}\` — retrieve job status/result/provenance.
@@ -102,7 +102,7 @@ The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, the exp
 
 ## Stage 2 durable job behavior and operational limitations
 
-- `ORACLE_DATABASE_URL` selects the PostgreSQL coordinator. In Compose, the application connects only as the least-privilege `oracle_app` role; the one-shot migration service connects as `oracle_migrator`. Neither role is a superuser or can create databases/roles. Direct privileges on `public` objects are revoked, the runtime search path is restricted to `oracle`, and the application role receives no public-table access. The migrator can create objects only in the dedicated `oracle` schema; the runtime role can read/write only `oracle.jobs`.
+- `ORACLE_DATABASE_URL` selects the PostgreSQL coordinator. In Compose, the application connects only as the least-privilege `oracle_app` role; the one-shot migration service connects as `oracle_migrator`. Neither role is a superuser or can create databases/roles. Direct privileges on `public` objects are revoked, the runtime search path is restricted to `oracle`, and the application role receives no access to ARSY-owned public tables. The migrator can create objects only in the dedicated `oracle` schema; the runtime role can read/write only `oracle.jobs`.
 - `python -m oracle.migrate` applies ordered SQL migrations and records SHA-256 checksums. It must run as the migration role; application startup never mutates schema. Reapplying unchanged migrations is a no-op, while changing an applied checksum fails closed. Each invocation reapplies runtime permissions so repeatable bootstrap on existing volumes leaves access limited to the jobs table.
 - PostgreSQL submission uses a transaction-scoped advisory lock, a unique partial idempotency index and a retained-job/queue ceiling. Same-key/same-payload replay returns the original job; same-key/different-payload returns `409`.
 - Workers claim queued or expired-running jobs with `FOR UPDATE SKIP LOCKED`, a finite lease and a per-claim UUID fencing token. Heartbeats renew leases; completion/failure requires the current unexpired token, so a stale worker cannot overwrite a reclaimed job. Expired work is retried up to `ORACLE_JOB_MAX_ATTEMPTS`.
