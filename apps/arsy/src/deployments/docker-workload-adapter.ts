@@ -364,7 +364,15 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     volume: { key: string; target: string; readOnly: boolean; name: string },
   ): Promise<string> {
     const labels = labelsFor(scope)
-    const existing = await this.transport.request(connection, { method: 'GET', path: `/volumes/${volume.name}` })
+    let existing: DockerWorkloadResponse
+    try {
+      existing = await this.transport.request(connection, { method: 'GET', path: `/volumes/${volume.name}` })
+    } catch (error) {
+      if (error instanceof DockerWorkloadTransportError) throw error
+      throw new DockerWorkloadTransportError(
+        error instanceof Error ? error.message : 'Docker volume inspection failed',
+      )
+    }
     if (existing.statusCode === 200) {
       const data = bodyObject(existing.body)
       const existingLabels = isRecord(data.Labels) ? data.Labels : null
@@ -543,10 +551,19 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     if (current.running || current.state === 'running') {
       throw new Error('Stop a managed container before removing it')
     }
-    const response = await this.transport.request(connection, {
-      method: 'DELETE',
-      path: `/containers/${containerId}?v=0&force=0`,
-    })
+    let response: DockerWorkloadResponse
+    try {
+      response = await this.transport.request(connection, {
+        method: 'DELETE',
+        path: `/containers/${containerId}?v=0&force=0`,
+      })
+    } catch (error) {
+      if (error instanceof DockerWorkloadTransportError) throw error
+      throw new DockerWorkloadTransportError(
+        error instanceof Error ? error.message : 'Docker container removal failed',
+        { outcomeUnknown: true },
+      )
+    }
     if (response.statusCode === 404) return true
     expectStatus(response, [204], 'container removal', true)
     return true
