@@ -27,7 +27,7 @@
     "@types/pg": "^8.23.1",
     "eslint": "^10.14.0",
     "fastify-cli": "^8.0.3",
-    "typescript": "^5.7.2"
+    "typescript": "^7.0.2"
   },
   "type": "module"
 }
