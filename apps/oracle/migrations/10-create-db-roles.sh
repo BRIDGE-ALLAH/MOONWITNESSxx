@@ -51,6 +51,12 @@ REVOKE ALL ON ALL TABLES IN SCHEMA oracle FROM oracle_app;
 ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator IN SCHEMA oracle
   REVOKE ALL ON TABLES FROM oracle_app;
 
-ALTER ROLE oracle_migrator IN DATABASE :"POSTGRES_DB" SET search_path = oracle;
-ALTER ROLE oracle_app IN DATABASE :"POSTGRES_DB" SET search_path = oracle;
+SELECT format(
+  'ALTER ROLE oracle_migrator IN DATABASE %I SET search_path = oracle',
+  current_database()
+) \gexec
+SELECT format(
+  'ALTER ROLE oracle_app IN DATABASE %I SET search_path = oracle',
+  current_database()
+) \gexec
 SQL
