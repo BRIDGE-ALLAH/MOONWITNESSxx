@@ -83,8 +83,15 @@ jobs:
 
           const pool = new Pool({ connectionString: process.env.DATABASE_URL })
           try {
-            const migration = await readFile('migrations/002_docker_connector.sql', 'utf8')
-            await pool.query(migration)
+            // Browser login uses ARSY's PostgreSQL-backed shared limiter.
+            // Prepare both schemas before starting ARSY and Headquarter.
+            for (const file of [
+              'migrations/002_docker_connector.sql',
+              'migrations/006_shared_login_attempts.sql',
+            ]) {
+              const migration = await readFile(file, 'utf8')
+              await pool.query(migration)
+            }
           } finally {
             await pool.end()
           }
