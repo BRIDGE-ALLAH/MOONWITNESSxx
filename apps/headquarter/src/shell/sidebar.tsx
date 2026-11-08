@@ -47,7 +47,7 @@ export function Sidebar({ isOpen, demoLabel, onNavigate }: SidebarProps) {
                         )}
                       >
                         <span>{item.label}</span>
-                        {item.status !== 'planned' ? <span className="text-[9px] text-muted-foreground">{item.status === 'prototype' ? 'DEMO' : item.status === 'partial' ? 'PARTIAL' : 'CONNECTED'}</span> : null}
+                        {item.status !== 'planned' ? <span className="text-[9px] text-muted-foreground">{item.status === 'prototype' ? 'DEMO' : item.status === 'partial' ? 'PARTIAL' : 'INTEGRATED'}</span> : null}
                       </Link>
                     ) : (
                       <div
