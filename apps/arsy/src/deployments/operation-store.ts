@@ -3,7 +3,7 @@ import type { DatabasePool } from '../db.ts'
 import {
   assertImageDigest,
   assertOperationTransition,
-  canonicalJson,
+  canonicalJsonObject,
   hashCanonicalJson,
   type DeploymentOperationKind,
   type DeploymentOperationStatus,
@@ -95,7 +95,7 @@ export async function createDeployment(
   const actorId = requiredText(input.actorId, 'actorId', 128)
   const dockerServerId = requiredText(input.dockerServerId, 'dockerServerId', 64)
   const name = requiredText(input.name, 'name', 80)
-  const desiredConfig = canonicalJson(input.desiredConfig ?? {})
+  const desiredConfig = canonicalJsonObject(input.desiredConfig ?? {})
   const imageDigest = input.desiredImageDigest ?? null
   if (imageDigest !== null) assertImageDigest(imageDigest)
 
@@ -122,7 +122,7 @@ export async function createDeploymentOperation(
   const idempotencyKey = requiredText(input.idempotencyKey, 'idempotencyKey', 200)
   if (idempotencyKey.length < 8) throw new TypeError('idempotencyKey must contain at least 8 characters')
 
-  const requestPayloadJson = canonicalJson(input.requestPayload ?? {})
+  const requestPayloadJson = canonicalJsonObject(input.requestPayload ?? {})
   const requestPayload = JSON.parse(requestPayloadJson) as JsonObject
   const requestHash = hashCanonicalJson({
     actorId,
@@ -215,7 +215,7 @@ export async function transitionDeploymentOperation(
   const ownerId = requiredText(input.ownerId, 'ownerId', 128)
   const actorId = requiredText(input.actorId, 'actorId', 128)
   const eventType = requiredText(input.eventType, 'eventType', 100)
-  const details = canonicalJson(input.details ?? {})
+  const details = canonicalJsonObject(input.details ?? {})
   const errorCode = input.errorCode?.trim() || null
   if (errorCode && errorCode.length > 120) throw new TypeError('errorCode exceeds 120 characters')
 
