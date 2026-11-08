@@ -98,25 +98,16 @@ async def prepare_database() -> str:
 
     admin = await asyncpg.connect(TEST_DATABASE_URL)
     try:
-        # Simulate the idempotent Compose bootstrap reapplying its privilege
-        # revocations to an existing PostgreSQL volume. The migration runner
-        # must restore only the reviewed jobs-table grant on its next run.
+        # Simulate role bootstrap on an existing volume: remove all previous
+        # runtime table grants, then require the migration runner to restore only
+        # the approved oracle.jobs permissions on its next idempotent invocation.
         await admin.execute("REVOKE ALL ON ALL TABLES IN SCHEMA oracle FROM oracle_app_test")
-        await admin.execute(
-            "ALTER DEFAULT PRIVILEGES FOR ROLE oracle_migrator_test IN SCHEMA oracle "
-            "REVOKE ALL ON TABLES FROM oracle_app_test"
-        )
         await admin.execute("DELETE FROM oracle.jobs")
         migration_history_writable = await admin.fetchval(
             "SELECT has_table_privilege($1, 'oracle.schema_migrations', 'UPDATE')",
             APP_ROLE,
         )
         assert migration_history_writable is False
-        job_table_writable = await admin.fetchval(
-            "SELECT has_table_privilege($1, 'oracle.jobs', 'INSERT')",
-            APP_ROLE,
-        )
-        assert job_table_writable is True
         database_create = await admin.fetchval(
             "SELECT has_database_privilege($1, current_database(), 'CREATE')",
             APP_ROLE,
@@ -142,6 +133,21 @@ async def prepare_database() -> str:
         await admin.close()
 
     await apply_migrations(migrator_dsn, runtime_role=APP_ROLE)
+    admin = await asyncpg.connect(TEST_DATABASE_URL)
+    try:
+        job_table_writable = await admin.fetchval(
+            "SELECT has_table_privilege($1, 'oracle.jobs', 'INSERT')",
+            APP_ROLE,
+        )
+        migration_history_writable = await admin.fetchval(
+            "SELECT has_table_privilege($1, 'oracle.schema_migrations', 'UPDATE')",
+            APP_ROLE,
+        )
+        assert job_table_writable is True
+        assert migration_history_writable is False
+    finally:
+        await admin.close()
+
     return database_url_for_role(APP_ROLE, APP_PASSWORD)
 
 
