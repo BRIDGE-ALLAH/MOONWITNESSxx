@@ -163,11 +163,15 @@ function validateExposedPorts(ports: number[] = []): Record<string, Record<strin
   return result
 }
 
-function bodyObject(value: unknown): Record<string, any> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function bodyObject(value: unknown): Record<string, unknown> {
+  if (!isRecord(value)) {
     throw new DockerWorkloadTransportError('Docker Engine returned an invalid object response')
   }
-  return value as Record<string, any>
+  return value
 }
 
 function expectStatus(
@@ -175,7 +179,7 @@ function expectStatus(
   expected: number[],
   action: string,
   mutation = false,
-): Record<string, any> {
+): Record<string, unknown> {
   if (!expected.includes(response.statusCode)) {
     throw new DockerWorkloadTransportError(
       `Docker Engine ${action} returned HTTP ${response.statusCode}`,
@@ -262,7 +266,7 @@ export class NodeDockerWorkloadTransport implements DockerWorkloadTransport {
       if (pinned.some((item) => !currentAddresses.has(`${item.family}:${item.address}`))) {
         throw new DockerWorkloadTransportError('Remote Docker DNS pin is stale; reconnect and revalidate the endpoint')
       }
-      const lookup = ((_hostname: string, lookupOptions: number | { family?: number; all?: boolean }, callback: (...args: any[]) => void) => {
+      const lookup = ((_hostname: string, lookupOptions: number | { family?: number; all?: boolean }, callback: (...args: unknown[]) => void) => {
         const family = typeof lookupOptions === 'number' ? lookupOptions : lookupOptions.family ?? 0
         const candidates = pinned.filter((item) => !family || item.family === family)
         if (candidates.length === 0) return callback(new Error('No validated Docker endpoint address'))
@@ -363,7 +367,7 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     const existing = await this.transport.request(connection, { method: 'GET', path: `/volumes/${volume.name}` })
     if (existing.statusCode === 200) {
       const data = bodyObject(existing.body)
-      const existingLabels = data.Labels
+      const existingLabels = isRecord(data.Labels) ? data.Labels : null
       if (!existingLabels || existingLabels['io.moonwitness.managed-by'] !== MANAGED_BY ||
           existingLabels['io.moonwitness.owner-hash'] !== labels['io.moonwitness.owner-hash'] ||
           existingLabels['io.moonwitness.deployment-id'] !== scope.deploymentId) {
@@ -402,7 +406,8 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
       'container inspection',
     )
     if (data.Id !== containerId) throw new DockerWorkloadOwnershipError()
-    const labels = data.Config?.Labels
+    const config = isRecord(data.Config) ? data.Config : {}
+    const labels = isRecord(config.Labels) ? config.Labels : null
     const expected = labelsFor(scope)
     if (!labels || labels['io.moonwitness.managed-by'] !== MANAGED_BY ||
         labels['io.moonwitness.owner-hash'] !== expected['io.moonwitness.owner-hash'] ||
@@ -410,7 +415,7 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
         labels['io.moonwitness.operation-id'] !== scope.operationId) {
       throw new DockerWorkloadOwnershipError()
     }
-    const mounts = Array.isArray(data.Mounts) ? data.Mounts.slice(0, 32).map((mount: Record<string, unknown>) => ({
+    const mounts = Array.isArray(data.Mounts) ? data.Mounts.filter(isRecord).slice(0, 32).map((mount) => ({
       type: typeof mount.Type === 'string' ? mount.Type : 'unknown',
       name: typeof mount.Name === 'string' ? mount.Name : null,
       target: typeof mount.Destination === 'string' ? mount.Destination : '',
@@ -418,9 +423,9 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
     })) : []
     return {
       containerId,
-      image: typeof data.Config?.Image === 'string' ? data.Config.Image : '',
-      running: data.State?.Running === true,
-      state: typeof data.State?.Status === 'string' ? data.State.Status : 'unknown',
+      image: typeof config.Image === 'string' ? config.Image : '',
+      running: isRecord(data.State) && data.State.Running === true,
+      state: isRecord(data.State) && typeof data.State.Status === 'string' ? data.State.Status : 'unknown',
       labels: { ...labels },
       mounts,
     }
