@@ -109,6 +109,7 @@ docker-compose up --build
 ### View service logs
 
 ```bash
+docker-compose logs -f aegis
 docker-compose logs -f arsy
 docker-compose logs -f headquarter
 docker-compose logs -f postgres
@@ -198,14 +199,15 @@ Do not use `docker compose down -v` or `docker system prune --volumes` as a star
 
 ```
 .
-├── docker-compose.yml          # Service orchestration
+├── docker-compose.yml          # Local service orchestration
 ├── Dockerfile.arsy             # ARSY backend image
 ├── Dockerfile.headquarter      # Headquarter frontend image
-├── apps/aegis/                 # Standalone Go network runtime
-├── .env.docker                 # Docker environment template
+├── .env.docker                 # Local Docker environment template
 ├── apps/
+│   ├── aegis/                  # Standalone Go network runtime
 │   ├── arsy/                   # Backend source
-│   └── headquarter/            # Frontend source
+│   ├── headquarter/            # Frontend source
+│   └── oracle/                 # Standalone Python computation service
 ├── packages/                   # Shared packages
 └── pnpm-workspace.yaml         # pnpm workspace config
 ```
@@ -215,6 +217,7 @@ Do not use `docker compose down -v` or `docker system prune --volumes` as a star
 - [docs/08-technical-architecture.md](../docs/08-technical-architecture.md) — Backend/ORM architecture
 - [docs/24-repository-and-automation-governance.md](../docs/24-repository-and-automation-governance.md) — Git/CI setup
 - [README.md](../README.md) — Project overview
+- [docs/34-aegis-network-infrastructure-blueprint.md](docs/34-aegis-network-infrastructure-blueprint.md) — AEGIS authority boundary and phased network runtime roadmap
 
 ## Docker Connector
 
