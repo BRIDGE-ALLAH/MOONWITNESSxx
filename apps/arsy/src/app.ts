@@ -69,7 +69,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
     setupDatabase(instance, databasePool)
     registerDockerRoutes(instance, databasePool, env)
-    registerEvidenceRoutes(instance, databasePool as Pool)
+    registerEvidenceRoutes(instance, databasePool as unknown as Pool)
     registerLoginAttemptRoutes(instance, databasePool)
     registerOracleRoutes(instance, oracleClient)
   })
