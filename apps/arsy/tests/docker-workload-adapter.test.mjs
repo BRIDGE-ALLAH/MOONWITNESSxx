@@ -40,16 +40,22 @@ class FakeTransport {
   }
 }
 
-function response(statusCode, body = null) { return { statusCode, body } }
+function response(statusCode, body = null) {
+  return { statusCode, body }
+}
 
 test('mutations are disabled by default and require an explicit trusted feature gate', async () => {
   const adapter = new DockerWorkloadAdapter({ enabled: false, transport: new FakeTransport() })
   await assert.rejects(
     adapter.create(connection, {
-      ownerId, deploymentId, operationId, name: 'web',
-      image, resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
+      ownerId,
+      deploymentId,
+      operationId,
+      name: 'web',
+      image,
+      resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
     }),
-    DockerWorkloadDisabledError,
+    DockerWorkloadDisabledError
   )
 })
 
@@ -61,31 +67,65 @@ test('create validates immutable image digests, public env, resource bounds and 
     { image: 'docker.io/library/nginx@sha256:abcd' },
   ]
   for (const value of invalid) {
-    await assert.rejects(adapter.create(connection, {
-      ownerId, deploymentId, operationId, name: 'web',
-      image: value.image,
-      resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
-    }), /immutable sha256 digest/)
+    await assert.rejects(
+      adapter.create(connection, {
+        ownerId,
+        deploymentId,
+        operationId,
+        name: 'web',
+        image: value.image,
+        resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
+      }),
+      /immutable sha256 digest/
+    )
   }
-  await assert.rejects(adapter.create(connection, {
-    ownerId, deploymentId, operationId, name: 'web', image,
-    publicEnvironment: { DATABASE_PASSWORD: 'secret' },
-    resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
-  }), /PUBLIC_\*/)
-  await assert.rejects(adapter.create(connection, {
-    ownerId, deploymentId, operationId, name: 'web', image,
-    publicEnvironment: { PUBLIC_MODE: `line${String.fromCharCode(10)}break` },
-    resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
-  }), /invalid or exceeds 4 KiB/)
-  await assert.rejects(adapter.create(connection, {
-    ownerId, deploymentId, operationId, name: 'web', image,
-    resources: { memoryBytes: 32 * 1024 * 1024, nanoCpus: 500_000_000 },
-  }), /128 MiB/)
-  await assert.rejects(adapter.create(connection, {
-    ownerId, deploymentId, operationId, name: 'web', image,
-    volumes: [{ key: 'data', target: '/etc/nginx' }],
-    resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
-  }), /below \/data/)
+  await assert.rejects(
+    adapter.create(connection, {
+      ownerId,
+      deploymentId,
+      operationId,
+      name: 'web',
+      image,
+      publicEnvironment: { DATABASE_PASSWORD: 'secret' },
+      resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
+    }),
+    /PUBLIC_\*/
+  )
+  await assert.rejects(
+    adapter.create(connection, {
+      ownerId,
+      deploymentId,
+      operationId,
+      name: 'web',
+      image,
+      publicEnvironment: { PUBLIC_MODE: `line${String.fromCharCode(10)}break` },
+      resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
+    }),
+    /invalid or exceeds 4 KiB/
+  )
+  await assert.rejects(
+    adapter.create(connection, {
+      ownerId,
+      deploymentId,
+      operationId,
+      name: 'web',
+      image,
+      resources: { memoryBytes: 32 * 1024 * 1024, nanoCpus: 500_000_000 },
+    }),
+    /128 MiB/
+  )
+  await assert.rejects(
+    adapter.create(connection, {
+      ownerId,
+      deploymentId,
+      operationId,
+      name: 'web',
+      image,
+      volumes: [{ key: 'data', target: '/etc/nginx' }],
+      resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
+    }),
+    /below \/data/
+  )
   assert.equal(transport.calls.length, 0)
 })
 
@@ -94,11 +134,14 @@ test('create uses a pinned image, private network defaults, no host binds and ow
   transport.queue.push(
     response(404),
     response(201, { Name: 'created-volume' }),
-    response(201, { Id: containerId, Warnings: [] }),
+    response(201, { Id: containerId, Warnings: [] })
   )
   const adapter = new DockerWorkloadAdapter({ enabled: true, transport })
   const receipt = await adapter.create(connection, {
-    ownerId, deploymentId, operationId, name: 'web',
+    ownerId,
+    deploymentId,
+    operationId,
+    name: 'web',
     image,
     publicEnvironment: { PUBLIC_MODE: 'production' },
     exposedPorts: [8080],
@@ -130,7 +173,10 @@ test('create uses a pinned image, private network defaults, no host binds and ow
   assert.equal(create.body.HostConfig.Mounts[0].Source, receipt.volumeNames[0])
   assert.equal(create.body.HostConfig.Mounts[0].Target, '/data/content')
   assert.equal(create.body.HostConfig.Mounts[0].ReadOnly, false)
-  assert.equal(create.body.Labels['io.moonwitness.owner-hash'], scopedLabels()['io.moonwitness.owner-hash'])
+  assert.equal(
+    create.body.Labels['io.moonwitness.owner-hash'],
+    scopedLabels()['io.moonwitness.owner-hash']
+  )
 })
 
 test('start and stop require managed deployment labels and use bounded Engine operations', async () => {
@@ -149,7 +195,7 @@ test('start and stop require managed deployment labels and use bounded Engine op
       State: { Status: 'running', Running: true },
       Mounts: [],
     }),
-    response(204),
+    response(204)
   )
   const adapter = new DockerWorkloadAdapter({ enabled: true, transport })
   await adapter.start(connection, { ownerId, deploymentId, operationId }, containerId)
@@ -160,16 +206,18 @@ test('start and stop require managed deployment labels and use bounded Engine op
 
 test('foreign deployment containers cannot be started, stopped or removed', async () => {
   const transport = new FakeTransport()
-  transport.queue.push(response(200, {
-    Id: containerId,
-    Config: { Image: image, Labels: scopedLabels('different-owner') },
-    State: { Status: 'running', Running: true },
-    Mounts: [],
-  }))
+  transport.queue.push(
+    response(200, {
+      Id: containerId,
+      Config: { Image: image, Labels: scopedLabels('different-owner') },
+      State: { Status: 'running', Running: true },
+      Mounts: [],
+    })
+  )
   const adapter = new DockerWorkloadAdapter({ enabled: true, transport })
   await assert.rejects(
     adapter.stop(connection, { ownerId, deploymentId, operationId }, containerId),
-    DockerWorkloadOwnershipError,
+    DockerWorkloadOwnershipError
   )
   assert.equal(transport.calls.length, 1)
 })
@@ -183,41 +231,55 @@ test('remove is restricted to stopped managed containers and explicitly preserve
       State: { Status: 'exited', Running: false },
       Mounts: [{ Type: 'volume', Name: 'mw-volume' }],
     }),
-    response(204),
+    response(204)
   )
   const adapter = new DockerWorkloadAdapter({ enabled: true, transport })
-  assert.equal(await adapter.remove(connection, { ownerId, deploymentId, operationId }, containerId), true)
+  assert.equal(
+    await adapter.remove(connection, { ownerId, deploymentId, operationId }, containerId),
+    true
+  )
   assert.equal(transport.calls[1].method, 'DELETE')
   assert.equal(transport.calls[1].path, `/containers/${containerId}?v=0&force=0`)
-  assert.equal(transport.calls.some((call) => call.path.startsWith('/volumes/') && call.method === 'DELETE'), false)
+  assert.equal(
+    transport.calls.some((call) => call.path.startsWith('/volumes/') && call.method === 'DELETE'),
+    false
+  )
 })
 
 test('remove cannot delete a running container', async () => {
   const transport = new FakeTransport()
-  transport.queue.push(response(200, {
-    Id: containerId,
-    Config: { Image: image, Labels: scopedLabels() },
-    State: { Status: 'running', Running: true },
-    Mounts: [],
-  }))
+  transport.queue.push(
+    response(200, {
+      Id: containerId,
+      Config: { Image: image, Labels: scopedLabels() },
+      State: { Status: 'running', Running: true },
+      Mounts: [],
+    })
+  )
   const adapter = new DockerWorkloadAdapter({ enabled: true, transport })
   await assert.rejects(
     adapter.remove(connection, { ownerId, deploymentId, operationId }, containerId),
-    /Stop a managed container before removing it/,
+    /Stop a managed container before removing it/
   )
   assert.equal(transport.calls.length, 1)
 })
 
 test('unexpected or ambiguous provider outcomes are not silently retried', async () => {
   const transport = new FakeTransport()
-  transport.queue.push(new DockerWorkloadTransportError('timed out after submit', { outcomeUnknown: true }))
+  transport.queue.push(
+    new DockerWorkloadTransportError('timed out after submit', { outcomeUnknown: true })
+  )
   const adapter = new DockerWorkloadAdapter({ enabled: true, transport })
   await assert.rejects(
     adapter.create(connection, {
-      ownerId, deploymentId, operationId, name: 'web', image,
+      ownerId,
+      deploymentId,
+      operationId,
+      name: 'web',
+      image,
       resources: { memoryBytes: 256 * 1024 * 1024, nanoCpus: 500_000_000 },
     }),
-    (error) => error instanceof DockerWorkloadTransportError && error.outcomeUnknown,
+    (error) => error instanceof DockerWorkloadTransportError && error.outcomeUnknown
   )
   assert.equal(transport.calls.length, 1)
 })
@@ -226,6 +288,6 @@ test('transport rejects arbitrary Engine API paths before opening a socket', asy
   const transport = new NodeDockerWorkloadTransport()
   await assert.rejects(
     transport.request(connection, { method: 'POST', path: '/containers/evil/exec?cmd=id' }),
-    /unsupported Engine API path/,
+    /unsupported Engine API path/
   )
 })

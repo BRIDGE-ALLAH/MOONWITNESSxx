@@ -55,7 +55,13 @@ services:
       - moonwitness
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/health/ready', timeout=3)"]
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/health/ready', timeout=3)",
+        ]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -105,7 +111,13 @@ services:
       - moonwitness
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3001/health/ready').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/health/ready').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -129,6 +141,7 @@ services:
       HEADQUARTER_SESSION_SECRET: ${HEADQUARTER_SESSION_SECRET:-}
       HEADQUARTER_PUBLIC_ORIGIN: ${HEADQUARTER_PUBLIC_ORIGIN:-http://localhost:3000}
       HEADQUARTER_TRUSTED_PROXY_HOPS: ${HEADQUARTER_TRUSTED_PROXY_HOPS:-0}
+      HEADQUARTER_TRUSTED_PROXY_SECRET: ${HEADQUARTER_TRUSTED_PROXY_SECRET:-}
     ports:
       - '127.0.0.1:${HEADQUARTER_PORT:-3000}:3000'
     depends_on:
@@ -146,7 +159,13 @@ services:
       - moonwitness
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3000/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

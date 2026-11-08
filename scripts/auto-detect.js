@@ -6,7 +6,6 @@
  *
  * Run `pnpm run audit:repo` for a full report, or `pnpm run lockfile:check` for lockfile drift.
  *
- * @author Codex Super Autonomous v5.0
  * @see docs/24-repository-and-automation-governance.md
  */
 import('./repo-audit.mjs')

@@ -4,17 +4,17 @@ on:
   push:
     branches:
       - main
-      - "feat-*"
-      - "feat/**"
-      - "fix-*"
-      - "fix/**"
-      - "chore-*"
-      - "headquarter/**"
+      - 'feat-*'
+      - 'feat/**'
+      - 'fix-*'
+      - 'fix/**'
+      - 'chore-*'
+      - 'headquarter/**'
   pull_request:
     branches:
       - main
-      - "feat-*"
-      - "feat/**"
+      - 'feat-*'
+      - 'feat/**'
   workflow_dispatch:
 
 concurrency:

@@ -55,7 +55,13 @@ function requiredWorkerId(value: string): string {
   return value
 }
 
-function boundedInteger(value: number | undefined, fallback: number, min: number, max: number, field: string): number {
+function boundedInteger(
+  value: number | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+  field: string
+): number {
   const candidate = value ?? fallback
   if (!Number.isInteger(candidate) || candidate < min || candidate > max) {
     throw new TypeError(`${field} must be an integer between ${min} and ${max}`)
@@ -66,18 +72,21 @@ function boundedInteger(value: number | undefined, fallback: number, min: number
 function requiredOwnerId(value: string): string {
   if (typeof value !== 'string') throw new TypeError('ownerId must be a string')
   const normalized = value.trim()
-  if (!normalized || normalized.length > 128 ||
-      [...normalized].some((character) => {
-        const code = character.charCodeAt(0)
-        return code < 32 || code === 127
-      })) {
+  if (
+    !normalized ||
+    normalized.length > 128 ||
+    [...normalized].some((character) => {
+      const code = character.charCodeAt(0)
+      return code < 32 || code === 127
+    })
+  ) {
     throw new TypeError('ownerId must contain 1-128 printable characters')
   }
   return normalized
 }
 
 function jsonObject(value: unknown): Record<string, unknown> {
-  const parsed = typeof value === 'string' ? JSON.parse(value) as unknown : value
+  const parsed = typeof value === 'string' ? (JSON.parse(value) as unknown) : value
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('Deployment outbox payload must be a JSON object')
   }
@@ -114,7 +123,7 @@ function mapClaim(row: OutboxRow, workerId: string): ClaimedDeploymentOutboxMess
  */
 export async function claimDeploymentOutbox(
   pool: DatabasePool,
-  input: ClaimOutboxInput,
+  input: ClaimOutboxInput
 ): Promise<ClaimedDeploymentOutboxMessage[]> {
   const workerId = requiredWorkerId(input.workerId)
   const ownerId = input.ownerId === undefined ? null : requiredOwnerId(input.ownerId)
@@ -152,7 +161,7 @@ export async function claimDeploymentOutbox(
        attempt_count, max_attempts, created_at, locked_until, lease_token
      FROM claimed
      ORDER BY created_at ASC, id ASC`,
-    [workerId, limit, leaseSeconds, ownerId],
+    [workerId, limit, leaseSeconds, ownerId]
   )
   return queryRows<OutboxRow>(result).map((row) => mapClaim(row, workerId))
 }
@@ -165,7 +174,7 @@ export interface ReapOutboxInput {
 /** Reap at most one bounded batch of expired final-attempt leases. */
 export async function reapExpiredDeploymentOutbox(
   pool: DatabasePool,
-  input: ReapOutboxInput,
+  input: ReapOutboxInput
 ): Promise<number> {
   const limit = boundedInteger(input.limit, 10, 1, 50, 'reaper limit')
   const ownerId = input.ownerId === undefined ? null : requiredOwnerId(input.ownerId)
@@ -191,21 +200,25 @@ export async function reapExpiredDeploymentOutbox(
      FROM expired
      WHERE outbox.id = expired.id
      RETURNING outbox.id`,
-    [limit, ownerId],
+    [limit, ownerId]
   )
   return queryRows<{ id: string }>(result).length
 }
 
 function assertLease(message: ClaimedDeploymentOutboxMessage): void {
-  if (!message || !/^[0-9a-f-]{36}$/i.test(message.leaseToken) ||
-      !message.id || !message.workerId) {
+  if (
+    !message ||
+    !/^[0-9a-f-]{36}$/i.test(message.leaseToken) ||
+    !message.id ||
+    !message.workerId
+  ) {
     throw new TypeError('Outbox lease identity is invalid')
   }
 }
 
 export async function acknowledgeDeploymentOutbox(
   pool: DatabasePool,
-  message: ClaimedDeploymentOutboxMessage,
+  message: ClaimedDeploymentOutboxMessage
 ): Promise<boolean> {
   assertLease(message)
   const result = await pool.query(
@@ -219,7 +232,7 @@ export async function acknowledgeDeploymentOutbox(
        AND locked_until > now()
        AND delivered_at IS NULL AND dead_lettered_at IS NULL
      RETURNING id`,
-    [message.id, message.workerId, message.leaseToken],
+    [message.id, message.workerId, message.leaseToken]
   )
   return queryRows<{ id: string }>(result).length === 1
 }
@@ -227,12 +240,13 @@ export async function acknowledgeDeploymentOutbox(
 export async function retryDeploymentOutbox(
   pool: DatabasePool,
   message: ClaimedDeploymentOutboxMessage,
-  errorCode: string,
+  errorCode: string
 ): Promise<OutboxRetryResult> {
   assertLease(message)
-  const safeCode = typeof errorCode === 'string' && /^[a-z][a-z0-9_]{0,79}$/.test(errorCode)
-    ? errorCode
-    : 'handler_failed'
+  const safeCode =
+    typeof errorCode === 'string' && /^[a-z][a-z0-9_]{0,79}$/.test(errorCode)
+      ? errorCode
+      : 'handler_failed'
   const result = await pool.query(
     `UPDATE arsy_deployment_outbox
      SET locked_by = NULL,
@@ -248,7 +262,7 @@ export async function retryDeploymentOutbox(
        AND locked_until > now()
        AND delivered_at IS NULL AND dead_lettered_at IS NULL
      RETURNING dead_lettered_at`,
-    [message.id, message.workerId, message.leaseToken, safeCode],
+    [message.id, message.workerId, message.leaseToken, safeCode]
   )
   const row = queryRows<{ dead_lettered_at: Date | string | null }>(result)[0]
   if (!row) return 'lease_lost'
