@@ -1,5 +1,5 @@
 export type NavigationGroup = 'Command' | 'Operations' | 'Administration'
-export type NavigationStatus = 'prototype' | 'partial' | 'connected' | 'planned'
+export type NavigationStatus = 'prototype' | 'partial' | 'integrated' | 'planned'
 
 export type NavigationItem = {
   href: string | null
@@ -26,7 +26,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { href: '/aftershock', label: 'AFTERSHOCK', group: 'Operations', status: 'prototype', description: 'Performance insights and experiments' },
   { href: '/mizan-ledger', label: 'MIZAN LEDGER', group: 'Operations', status: 'prototype', description: 'Financial records and reconciliation' },
   { href: '/riot-engine', label: 'RIOT ENGINE', group: 'Operations', status: 'prototype', description: 'Workflow and run operations' },
-  { href: '/infrastructure/docker', label: 'DOCKER', group: 'Operations', status: 'connected', description: 'Authenticated, owner-scoped Docker Engine inspection and container inventory' },
+  { href: '/infrastructure/docker', label: 'DOCKER', group: 'Operations', status: 'integrated', description: 'Owner-scoped Docker Engine inspection integration; requires a configured server' },
   { href: '/scenario-forge', label: 'SCENARIO ARENA', group: 'Operations', status: 'prototype', description: 'Shadow-only counterfactual planning and comparison' },
   { href: '/governance-lab', label: 'GOVERNANCE LAB', group: 'Command', status: 'partial', description: 'Persisted, owner-scoped governance snapshots with an explicitly separate demo mode' },
   { href: '/settings-policy', label: 'WORKSPACE SETTINGS / POLICY', group: 'Administration', status: 'prototype', description: 'Prototype workspace and policy placeholders' },
