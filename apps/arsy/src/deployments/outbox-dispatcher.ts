@@ -3,6 +3,7 @@ import {
   acknowledgeDeploymentOutbox,
   claimDeploymentOutbox,
   retryDeploymentOutbox,
+  reapExpiredDeploymentOutbox,
   type ClaimOutboxInput,
   type ClaimedDeploymentOutboxMessage,
   type DeploymentOutboxMessage,
@@ -52,12 +53,13 @@ export async function dispatchDeploymentOutboxBatch(
   pool: DatabasePool,
   input: DispatchOutboxInput,
 ): Promise<DispatchOutboxResult> {
+  const deadLettered = await reapExpiredDeploymentOutbox(pool, input)
   const claimed = await claimDeploymentOutbox(pool, input)
   const result: DispatchOutboxResult = {
     claimed: claimed.length,
     delivered: 0,
     retryScheduled: 0,
-    deadLettered: 0,
+    deadLettered,
     leaseLost: 0,
   }
 
