@@ -25,9 +25,11 @@ test('operational and unknown routes resolve to Observatory', () => {
 
 test('Headquarter applies the active next-themes mode without replacing the route skin', async () => {
   const shell = await readFile(new URL('../src/components/AppShell.tsx', import.meta.url), 'utf8')
+  const layout = await readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8')
   assert.match(shell, /usePathname/)
   assert.match(shell, /resolveHeadquarterSkin\(pathname\)/)
   assert.match(shell, /<SkinRoot/)
   assert.match(shell, /mode=\{mode\}/)
   assert.match(shell, /setTheme\(isDark \? 'light' : 'dark'\)/)
+  assert.match(layout, /defaultTheme="system"/)
 })
