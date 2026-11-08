@@ -198,6 +198,11 @@
   .mw-skin-root {
     min-width: 0;
     max-width: 100%;
+    min-height: 100vh;
+  }
+
+  .mw-skin-root[data-mw-density="compact"] {
+    --mw-skin-density-scale: 0.875;
   }
 
   .mw-skin-root :is(h1, h2, h3, h4, h5, h6) {
