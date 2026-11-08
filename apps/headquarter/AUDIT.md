@@ -158,7 +158,7 @@ The separate full-workspace typecheck/build workflow was skipped by workflow con
 - Kept the actual theme toggle and command palette controls.
 - Removed the static `Witness` profile badge because it was not backed by a real profile/session identity view.
 - Replaced the static `Workspace: Observatory` label with the non-interactive `Operator console` label; persisted workspace switching remains unimplemented.
-- Navigation now distinguishes `prototype`, `partial`, `connected`, and `planned` maturity. Docker is marked connected because it uses the authenticated ARSY/Docker connector path; Governance Lab is partial because persisted, owner-scoped governance snapshots coexist with explicitly separate demo mode; legacy sample-oriented modules remain prototype.
+- Navigation now distinguishes `prototype`, `partial`, `integrated`, and `planned` maturity. Docker is marked integrated because the authenticated ARSY/Docker connector path is implemented; an operator still has to configure a server before live inventory is available; Governance Lab is partial because persisted, owner-scoped governance snapshots coexist with explicitly separate demo mode; legacy sample-oriented modules remain prototype.
 - Added navigation contract tests for unique route paths, disabled planned entries, and module-maturity labels.
 - Locale routing and notification delivery remain deferred until real platform services and route contracts exist. No fake replacement behavior was added.
 
