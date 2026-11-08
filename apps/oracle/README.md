@@ -57,7 +57,7 @@ The request body is versioned at \`/v1\`; Pydantic rejects unknown fields. Reusi
 - Worker leases have a fencing owner. An expired lease can be reclaimed; an older worker cannot overwrite the newer worker's result. Repeated lease expiry is terminally failed after ORACLE_MAX_JOB_ATTEMPTS.
 - Terminal jobs are pruned after ORACLE_JOB_RETENTION_SECONDS (default 86,400 seconds) and when the configured retained-job ceiling requires it. Queued/running jobs are never pruned. Idempotency replay is guaranteed only while the corresponding job is retained.
 - Apply `apps/oracle/migrations/001_oracle_jobs.sql` explicitly before enabling `ORACLE_DATABASE_URL`. It is safe to apply more than once. Application startup never creates or changes the schema. A missing schema keeps readiness false and job reads/writes fail with HTTP 503.
-- Grant the service a dedicated PostgreSQL login with only the privileges it needs on the `oracle` schema and `oracle.jobs` table (USAGE on schema; SELECT/INSERT/UPDATE/DELETE on table). The root Compose credentials are development-only and must not be reused as production credentials.
+- The ORACLE process connects as the dedicated `oracle_app` login, never as `POSTGRES_USER`. The bootstrap step creates a `NOINHERIT`, non-owner role with no database/schema creation privileges. Migration runs separately under the database migration owner; migration 001 grants the app role only `USAGE` on `oracle` and `SELECT/INSERT/UPDATE/DELETE` on `oracle.jobs`, plus matching default table privileges for future ORACLE-owned tables. The app role receives no grants on ARSY/public tables. Production must provision the equivalent role through the managed secret/migration process; the Compose bootstrap is development/CI only.
 - Bounded submitted input is stored in PostgreSQL so work can resume after a process restart. Treat database access and backups as sensitive; the 24-hour default retention is not a substitute for the deployment's required storage encryption, access control, and backup-retention policy.
 - ORACLE stores computation job lifecycle only. ARSY remains caller identity, policy, authorization and orchestration authority; WITNESS FABRIC remains evidence/provenance authority. The ORACLE schema is not canonical audit or source-evidence storage.
 
@@ -66,7 +66,7 @@ The request body is versioned at \`/v1\`; Pydantic rejects unknown fields. Reusi
 Because Compose enables PostgreSQL-backed jobs by default, apply the ORACLE schema before starting ORACLE/ARSY. The CI workflow uses the same explicit ordering:
 
 ```bash
-docker compose --env-file .env.docker -f docker-compose.yml up -d --wait postgres
+docker compose --env-file .env.docker -f docker-compose.yml up -d --wait postgres oracle-db-bootstrap
 docker compose --env-file .env.docker -f docker-compose.yml exec -T postgres \
   sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
   < apps/oracle/migrations/001_oracle_jobs.sql
@@ -120,7 +120,7 @@ ARSY exposes the caller-facing integration routes:
 
 Both routes are protected by ARSY's existing operator authentication boundary. ARSY forwards only validated contracts to ORACLE and holds a separate `ORACLE_SERVICE_TOKEN` for the private bearer-authenticated upstream call. The ORACLE service credential must not be reused as `ARSY_OPERATOR_TOKEN`.
 
-The Compose example uses `ORACLE_BASE_URL=http://oracle:8010`, `ORACLE_SERVICE_TOKEN`, and `ORACLE_REQUEST_TIMEOUT_MS`. The sample token in `.env.docker` is for local development only; replace it before any shared or non-local environment. Do not expose ORACLE through public ingress or a host-published port.
+The Compose example uses `ORACLE_BASE_URL=http://oracle:8010`, `ORACLE_SERVICE_TOKEN`, and `ORACLE_REQUEST_TIMEOUT_MS`. ORACLE's database URL is built from the separate `oracle_app` login and `ORACLE_DB_PASSWORD`; it does not receive `POSTGRES_USER` or `POSTGRES_PASSWORD`. The sample token in `.env.docker` is for local development only; replace it before any shared or non-local environment. Do not expose ORACLE through public ingress or a host-published port.
 
 The repository's `ORACLE Compose E2E` workflow starts PostgreSQL, Redis, ORACLE, and ARSY as real containers, applies the ORACLE migration explicitly, submits both supported analysis tasks through ARSY, checks computed results and provenance, verifies idempotency replay, restarts ORACLE, and confirms the original job/result/idempotency key survive. It uses ephemeral CI credentials and removes the isolated Compose volumes after the run. This verifies the durable development/test path; it does not prove production readiness.
 
