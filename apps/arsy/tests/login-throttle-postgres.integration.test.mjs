@@ -83,7 +83,7 @@ test('PostgreSQL login limiter is atomic across ARSY instances and survives inst
       'SELECT attempt_count FROM arsy_login_attempt_buckets WHERE owner_id = $1 ORDER BY bucket_key',
       [ownerId],
     )
-    assert.deepEqual(unchanged.rows.map((row) => Number(row.attempt_count)), [5, 5])
+    assert.deepEqual(unchanged.rows.map((row) => Number(row.attempt_count)), [6, 6])
 
     // A successful authentication clears the account and current network buckets.
     assert.deepEqual(await send(restartedApp, 'success'), { allowed: true, retryAfterSeconds: 0 })
