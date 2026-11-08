@@ -8,12 +8,12 @@
 
 - Docker Desktop (or Docker + Docker Compose separately)
 - 4GB+ free disk space for images and volumes
-- Ports 3000 (Headquarter), 3001 (ARSY), 5432 (PostgreSQL), 6379 (Redis) available
+- Ports 3000 (Headquarter), 3001 (ARSY), 3102 (AEGIS), 5432 (PostgreSQL), 6379 (Redis) available
 
 ### Start services
 
 ```bash
-# Start all services (Headquarter, ARSY, PostgreSQL, Redis)
+# Start all local services (Headquarter, ARSY, AEGIS, ORACLE, PostgreSQL, Redis)
 docker-compose up -d
 
 # View logs
@@ -37,12 +37,15 @@ Key variables:
 - `POSTGRES_PASSWORD` — PostgreSQL password (default: postgres)
 - `ARSY_PORT` — ARSY backend port (default: 3001)
 - `HEADQUARTER_PORT` — Headquarter frontend port (default: 3000)
+- `AEGIS_PORT` — AEGIS loopback-only development port (default: 3102)
+- `AEGIS_READ_HEADER_TIMEOUT` / `AEGIS_SHUTDOWN_TIMEOUT` — Go HTTP lifecycle deadlines
 - `NEXT_PUBLIC_ARSY_URL` — Frontend URL for backend API (default: http://localhost:3001)
 
 ### Access services
 
 - **Headquarter frontend**: http://localhost:3000
 - **ARSY backend**: http://localhost:3001
+- **AEGIS health (process only)**: http://localhost:3102/health/ready
 - **PostgreSQL**: localhost:5432 (user: postgres, password: postgres)
 - **Redis**: localhost:6379
 
@@ -71,6 +74,15 @@ ARSY always listens on the fixed internal container port 3001. `ARSY_PORT` chang
 - Depends on PostgreSQL and Redis
 - Mounts local source for development hot-reload
 - Healthcheck enabled
+
+### AEGIS (Go network runtime foundation)
+
+- Standalone Go 1.25 module under `apps/aegis`; not part of the pnpm workspace.
+- Exposes only `/health/live` and `/health/ready`; readiness is process-level, not network-device health.
+- No VPN, WireGuard, Netmaker, RouterOS, firewall, route, DNS or provisioning mutations are implemented.
+- Runs as non-root in a distroless image, with a read-only root filesystem, all Linux capabilities dropped, and no-new-privileges.
+- Host publishing binds to `127.0.0.1`; the service joins the private MOONWITNESS bridge for future service-to-service integration.
+- ARSY remains the only identity, policy, approval, orchestration and audit authority. Headquarter must not call AEGIS directly.
 
 ### Headquarter (Frontend)
 
@@ -189,6 +201,7 @@ Do not use `docker compose down -v` or `docker system prune --volumes` as a star
 ├── docker-compose.yml          # Service orchestration
 ├── Dockerfile.arsy             # ARSY backend image
 ├── Dockerfile.headquarter      # Headquarter frontend image
+├── apps/aegis/                 # Standalone Go network runtime
 ├── .env.docker                 # Docker environment template
 ├── apps/
 │   ├── arsy/                   # Backend source
