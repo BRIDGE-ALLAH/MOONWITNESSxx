@@ -1,6 +1,5 @@
 use std::{
     env,
-    os::unix::fs::{OpenOptionsExt, PermissionsExt},
     path::{Path, PathBuf},
     process::Stdio,
     time::Duration,
@@ -223,6 +222,8 @@ async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
 
 #[cfg(test)]
 mod tests {
+    use std::os::unix::fs::PermissionsExt;
+
     use super::*;
 
     #[tokio::test]
