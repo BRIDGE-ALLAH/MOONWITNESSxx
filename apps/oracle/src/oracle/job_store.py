@@ -11,13 +11,13 @@ from uuid import UUID, uuid4
 
 import asyncpg
 
-from .provenance import sha256_digest
 from .jobs import (
     IdempotencyConflictError,
     JobRecord,
     QueueSaturatedError,
     StorageUnavailableError,
 )
+from .provenance import sha256_digest
 from .schemas import EvidenceRef, JobError, JobStatus, Provenance
 from .settings import Settings
 
