@@ -1,12 +1,12 @@
 use std::{env, time::Duration};
 
 use serde::Serialize;
-use sqlx::{MySqlPool, mysql::MySqlPoolOptions};
+use sqlx::{PgPool, postgres::PgPoolOptions};
 use tokio::sync::OnceCell;
 
 use crate::config::parse_db_max_connections;
 
-static POOL: OnceCell<MySqlPool> = OnceCell::const_new();
+static POOL: OnceCell<PgPool> = OnceCell::const_new();
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -26,7 +26,7 @@ impl DatabaseStatus {
     }
 }
 
-pub async fn pool() -> Result<&'static MySqlPool, sqlx::Error> {
+pub async fn pool() -> Result<&'static PgPool, sqlx::Error> {
     POOL.get_or_try_init(|| async {
         let database_url = env::var("DATABASE_URL")
             .map_err(|error| sqlx::Error::Configuration(Box::new(error)))?;
@@ -40,7 +40,7 @@ pub async fn pool() -> Result<&'static MySqlPool, sqlx::Error> {
             parse_db_max_connections(env::var("DB_MAX_CONNECTIONS").ok().as_deref())
                 .map_err(|error| sqlx::Error::Configuration(std::io::Error::other(error).into()))?;
 
-        MySqlPoolOptions::new()
+        PgPoolOptions::new()
             .max_connections(max_connections)
             .acquire_timeout(Duration::from_secs(3))
             .connect(&database_url)
