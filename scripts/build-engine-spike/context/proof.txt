@@ -1,0 +1,3 @@
+MOONWITNESS isolated BuildKit spike
+This context contains no credentials, Git metadata, ARSY environment, Docker socket, or host paths.
+Source commit: supplied as a non-secret build argument and recorded in OCI revision metadata/provenance.
