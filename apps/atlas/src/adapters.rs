@@ -1,7 +1,7 @@
 use std::{
     env,
     os::unix::fs::{OpenOptionsExt, PermissionsExt},
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Stdio,
     time::Duration,
 };
@@ -97,10 +97,26 @@ fn result(engine: &EngineInstance, state: &'static str, detail: &'static str) ->
     }
 }
 
+struct ProbeSecretFile(PathBuf);
+
+impl ProbeSecretFile {
+    fn path(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl Drop for ProbeSecretFile {
+    fn drop(&mut self) {
+        // Drop also runs when the async probe future is cancelled.
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
+
 /// Create the RADIUS probe secret with restrictive permissions from the first
 /// filesystem operation. Changing permissions after writing leaves a disclosure
-/// window on shared temporary filesystems.
-async fn write_probe_secret(secret: &str) -> std::io::Result<PathBuf> {
+/// window on shared temporary filesystems. The guard removes it on normal return
+/// and on cancellation.
+async fn write_probe_secret(secret: &str) -> std::io::Result<ProbeSecretFile> {
     let path = env::temp_dir().join(format!("atlas-radius-{}.secret", ulid::Ulid::new()));
     let mut options = tokio::fs::OpenOptions::new();
     options.write(true).create_new(true).mode(0o600);
@@ -112,7 +128,7 @@ async fn write_probe_secret(secret: &str) -> std::io::Result<PathBuf> {
         return Err(error);
     }
     drop(file);
-    Ok(path)
+    Ok(ProbeSecretFile(path))
 }
 
 async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
@@ -158,7 +174,7 @@ async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
     let child = Command::new("radclient")
         .arg("-q")
         .arg("-S")
-        .arg(&secret_path)
+        .arg(secret_path.path())
         .arg(format!("{host}:{port}"))
         .arg("status")
         .stdin(Stdio::piped())
@@ -190,7 +206,6 @@ async fn probe_freeradius(engine: &EngineInstance) -> EngineHealth {
             false
         }
     };
-    let _ = tokio::fs::remove_file(&secret_path).await;
     if outcome {
         result(
             engine,
@@ -213,14 +228,15 @@ mod tests {
 
     #[tokio::test]
     async fn radius_probe_secret_is_private_at_creation_and_removed_after_cleanup() {
-        let path = write_probe_secret("test-radius-shared-secret").await.unwrap();
+        let secret = write_probe_secret("test-radius-shared-secret").await.unwrap();
+        let path = secret.path().to_path_buf();
         let metadata = tokio::fs::metadata(&path).await.unwrap();
         assert_eq!(metadata.permissions().mode() & 0o777, 0o600);
         assert_eq!(
             tokio::fs::read_to_string(&path).await.unwrap(),
             "test-radius-shared-secret\n"
         );
-        tokio::fs::remove_file(&path).await.unwrap();
+        drop(secret);
         assert!(!path.exists());
     }
 }
