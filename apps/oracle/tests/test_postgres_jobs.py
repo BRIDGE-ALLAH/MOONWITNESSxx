@@ -555,7 +555,6 @@ def test_missing_migration_keeps_durable_mode_unready_and_returns_503() -> None:
 
         asyncio.run(drop_database())
 
-
 def test_runtime_role_is_confined_to_oracle_jobs() -> None:
     async def scenario() -> None:
         app_dsn = await prepare_database()
