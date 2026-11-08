@@ -66,7 +66,11 @@ test('PostgreSQL login throttle is shared across two ARSY instances and reserves
 
     const success = await send(appB, 'success')
     assert.equal(success.json().data.allowed, true)
-    assert.equal((await send(appA, 'attempt')).json().data.allowed, true)
+    const clearedBuckets = await poolA.query(
+      'SELECT COUNT(*)::int AS count FROM arsy_login_attempt_buckets WHERE owner_id = $1',
+      [ownerId],
+    )
+    assert.equal(clearedBuckets.rows[0].count, 0)
 
     // A burst across two independent ARSY instances reserves at most five KDF slots.
     const concurrentAttempts = await Promise.all(
