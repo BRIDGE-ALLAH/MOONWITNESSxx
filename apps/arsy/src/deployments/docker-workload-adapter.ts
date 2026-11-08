@@ -46,13 +46,26 @@ export class DockerWorkloadTransportError extends Error {
 }
 
 function assertEnginePath(path: string): void {
-  if (path.length > 2048 || path.includes('\\') || /[\\r\\n]/.test(path) ||
-      !(/^\\/containers\\/create(?:\\?|$)/.test(path) ||
-        /^\\/containers\\/[a-f0-9]{12,64}(?:\\/(?:json|start|stop))?(?:\\?|$)/i.test(path) ||
-        /^\\/volumes\\/create$/.test(path) ||
-        /^\\/volumes\\/[a-z0-9][a-z0-9_.-]{0,180}$/.test(path))) {
+  if (path.length > 2048 || path.includes('\\\\') || path.includes('\\r') || path.includes('\\n')) {
     throw new TypeError('Docker workload adapter rejected an unsupported Engine API path')
   }
+  const route = path.split('?', 1)[0]
+  const segments = route.split('/').filter(Boolean)
+  const allowed = (
+    segments.length === 2 && segments[0] === 'containers' && segments[1] === 'create'
+  ) || (
+    (segments.length === 2 || segments.length === 3) &&
+    segments[0] === 'containers' &&
+    /^[a-f0-9]{12,64}$/i.test(segments[1]) &&
+    (segments.length === 2 || ['json', 'start', 'stop'].includes(segments[2]))
+  ) || (
+    segments.length === 2 && segments[0] === 'volumes' &&
+    (segments[1] === 'create' || /^[a-z0-9][a-z0-9_.-]{0,180}$/.test(segments[1]))
+  )
+  if (!allowed) {
+    throw new TypeError('Docker workload adapter rejected an unsupported Engine API path')
+  }
+}
 }
 
 function parseResponseBody(buffer: Buffer): unknown {
@@ -261,9 +274,31 @@ function labelsFor(scope: DockerWorkloadScope): Record<string, string> {
 
 function assertImageReference(image: string): string {
   const value = requiredText(image, 'image', 512)
-  const pattern = /^(?:(?:[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?)(?::[1-9][0-9]{0,4})?\\/)?[a-z0-9]+(?:[._-][a-z0-9]+)*(?:\\/[a-z0-9]+(?:[._-][a-z0-9]+)*)*@sha256:[a-f0-9]{64}$/
-  if (!pattern.test(value)) throw new TypeError('Docker workload image must be a repository pinned to an immutable sha256 digest')
+  const marker = '@sha256:'
+  const digestOffset = value.lastIndexOf(marker)
+  const repository = digestOffset > 0 ? value.slice(0, digestOffset) : ''
+  const digest = digestOffset > 0 ? value.slice(digestOffset + marker.length) : ''
+  if (!/^[a-f0-9]{64}$/.test(digest) || !repository || repository.startsWith('/') || repository.endsWith('/')) {
+    throw new TypeError('Docker workload image must be a repository pinned to an immutable sha256 digest')
+  }
+  const parts = repository.split('/')
+  const first = parts[0]
+  const hasRegistry = parts.length > 1 && (first.includes('.') || first.includes(':') || first === 'localhost')
+  if (hasRegistry) {
+    parts.shift()
+    const hostParts = first.split(':')
+    const hostname = hostParts[0]
+    const port = hostParts[1]
+    if (!/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(hostname) ||
+        (port !== undefined && (!/^[1-9][0-9]{0,4}$/.test(port) || Number(port) > 65535))) {
+      throw new TypeError('Docker workload image registry reference is invalid')
+    }
+  }
+  if (!parts.length || parts.some((part) => !/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/.test(part))) {
+    throw new TypeError('Docker workload image repository reference is invalid')
+  }
   return value
+}
 }
 
 function containerName(input: CreateDockerWorkloadInput): string {
@@ -337,7 +372,10 @@ function normalizeVolumes(scope: DockerWorkloadScope, volumes: DockerWorkloadVol
   const seenKeys = new Set<string>()
   const seenTargets = new Set<string>()
   return volumes.map((volume) => {
-    if (!/^[a-z0-9](?:[a-z0-9-]{0,30})$/.test(volume.key)) {
+    if (!volume.target.startsWith('/data/') ||
+        volume.target.split('/').some((part) => part === '.' || part === '..' || part.includes('\\\\')) ||
+        volume.target.length > 128 ||
+        !volume.target.slice(1).split('/').every((part) => /^[a-zA-Z0-9._-]+$/.test(part))) {
       throw new TypeError('Volume keys must use lowercase alphanumeric and hyphen characters')
     }
     if (seenKeys.has(volume.key)) throw new TypeError('Volume keys must be unique')
@@ -494,6 +532,12 @@ export class DockerWorkloadAdapter implements DockerWorkloadPort {
         NanoCpus: resources.nanoCpus,
         OomKillDisable: false,
         RestartPolicy: { Name: 'unless-stopped' },
+        Tmpfs: {
+          '/tmp': 'rw,noexec,nosuid,size=64m',
+          '/var/tmp': 'rw,noexec,nosuid,size=32m',
+          '/var/run': 'rw,noexec,nosuid,size=16m',
+          '/var/cache/nginx': 'rw,noexec,nosuid,size=64m',
+        },
         Mounts: mounts,
       },
     }
