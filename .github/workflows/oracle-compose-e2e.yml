@@ -52,13 +52,37 @@ jobs:
       - name: Validate Compose configuration
         run: docker compose --env-file .env.docker -f docker-compose.yml config --quiet
 
+      - name: Start PostgreSQL for explicit schema migration
+        run: |
+          docker compose --env-file .env.docker -f docker-compose.yml \
+            up --detach --wait --wait-timeout 120 postgres
+
+      - name: Apply ORACLE job migration explicitly
+        run: |
+          docker compose --env-file .env.docker -f docker-compose.yml \
+            exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < apps/oracle/migrations/001_oracle_jobs.sql
+
       - name: Build and start the real service stack
         run: |
           docker compose --env-file .env.docker -f docker-compose.yml \
-            up --detach --build --wait --wait-timeout 240 postgres redis oracle arsy
+            up --detach --build --wait --wait-timeout 240 redis oracle arsy
 
       - name: Exercise ARSY authentication, ORACLE execution, results and idempotency
+        env:
+          ORACLE_E2E_PERSISTENCE_REPORT: /tmp/oracle-persistence-report.json
         run: node --test apps/arsy/e2e/oracle-compose.e2e.test.mjs
+
+      - name: Restart ORACLE and wait for durable service readiness
+        run: |
+          docker compose --env-file .env.docker -f docker-compose.yml restart oracle
+          docker compose --env-file .env.docker -f docker-compose.yml \
+            up --detach --wait --wait-timeout 120 oracle
+
+      - name: Verify job result and idempotency survive ORACLE restart
+        env:
+          ORACLE_E2E_PERSISTENCE_REPORT: /tmp/oracle-persistence-report.json
+        run: node --test apps/arsy/e2e/oracle-persistence-restart.e2e.test.mjs
 
       - name: Collect service logs on failure
         if: failure()
