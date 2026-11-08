@@ -145,6 +145,23 @@ The workflow is intentionally informational: it exits successfully so ordinary r
 
 The `--require-kvm` preflight mode must be used as a hard gate by any future KVM integration workflow. The `--full` mode additionally verifies the pinned Firecracker v1.17.0 and jailer binary digests, guest kernel/rootfs digests, non-root jailer identity and root-owned non-writable chroot base. These checks still do not replace adversarial guest/network/resource/cleanup tests.
 
+
+## 8. Dedicated KVM runner gate
+
+The hosted `ubuntu-24.04` runner has no accessible `/dev/kvm`, so it is not an approved Firecracker execution host. A later proof run must use a separately provisioned runner with all of these properties:
+
+- Linux x86_64 host with hardware virtualization enabled and a readable/writable `/dev/kvm` character device.
+- Dedicated GitHub Actions runner group scoped to this repository and this workflow only; label exactly `self-hosted`, `linux`, `x64`, `kvm`.
+- No use by untrusted pull-request workflows, fork builds, or arbitrary repository workflows. The KVM job in this repository is manual-dispatch only and executes only when the selected ref is protected `main`.
+- No ARSY, ORACLE, database, Redis, registry or production Docker credentials in runner environment. The preflight explicitly checks the known control-plane/Docker variables and suppresses values.
+- Host-owned, pinned Firecracker and jailer binaries, guest kernel/rootfs images, and a root-owned non-writable jailer chroot base. Binary and guest asset SHA-256 values must be configured on the host for the `--full` preflight.
+- cgroup CPU/memory/PID limits, seccomp, TUN and a controlled egress boundary. The runner itself must not have a route to production data/control-plane networks.
+- The runner registration credential is not stored in repository secrets or on the guest builder; use the organization's approved short-lived runner registration and lifecycle process.
+
+The workflow now keeps the hosted-runner report informational for normal PR CI and adds a separate manual-dispatch-only `dedicated-kvm-proof-preflight` job. It selects only the above runner labels, checks out protected `main`, and runs the hard-failing `--full` preflight. It cannot silently fall back to a GitHub-hosted runner. If no such runner is registered, this job cannot run; that is an infrastructure blocker, not a reason to weaken the isolation boundary.
+
+The dedicated-runner job only checks host prerequisites and pinned asset digests. It does **not** establish the adversarial guest, network, resource, credential-isolation, cancellation, provenance or cleanup proof in §7.
+
 ## 9. Acceptance state
 
 **Proposed / NOT ACCEPTED.** The option analysis, trust boundary and hosted-runner KVM NO-GO are documented. No eligible self-hosted KVM runner is yet evidenced, and no adversarial VM/network/resource/cleanup proof has run. Maintainer review and explicit acceptance are outstanding. Issue #183 must not start implementation until those gates are satisfied.
