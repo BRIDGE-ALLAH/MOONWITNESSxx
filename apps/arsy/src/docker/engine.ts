@@ -5,7 +5,12 @@ import type { DockerTlsCredentials, ResolvedDockerAddress } from './security.ts'
 
 export type DockerConnection =
   | { kind: 'local'; socketPath: string }
-  | { kind: 'remote'; endpointUrl: string; addresses: ResolvedDockerAddress[]; tls: DockerTlsCredentials }
+  | {
+      kind: 'remote'
+      endpointUrl: string
+      addresses: ResolvedDockerAddress[]
+      tls: DockerTlsCredentials
+    }
 
 export interface DockerContainer {
   id: string
@@ -21,49 +26,56 @@ export interface DockerContainerLogs {
   stderr: string
 }
 
-function requestBuffer(connection: DockerConnection, path: string, timeoutMs = 5000): Promise<Buffer> {
+function requestBuffer(
+  connection: DockerConnection,
+  path: string,
+  timeoutMs = 5000
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const remoteUrl = connection.kind === 'remote' ? new URL(connection.endpointUrl) : null
-    const pinnedLookup = connection.kind === 'remote'
-      ? ((_hostname, options, callback) => {
-          const lookupOptions = typeof options === 'object' && options ? options : {}
-          const requestedFamily = lookupOptions.family ?? 0
-          const candidates = connection.addresses.filter(
-            (item) => !requestedFamily || item.family === requestedFamily,
-          )
-          if (candidates.length === 0) {
-            const error = new Error('Docker endpoint has no validated address')
-            return lookupOptions.all
-              ? callback(error, [])
-              : callback(error, '', 0)
-          }
+    const pinnedLookup =
+      connection.kind === 'remote'
+        ? (((_hostname, options, callback) => {
+            const lookupOptions = typeof options === 'object' && options ? options : {}
+            const requestedFamily = lookupOptions.family ?? 0
+            const candidates = connection.addresses.filter(
+              (item) => !requestedFamily || item.family === requestedFamily
+            )
+            if (candidates.length === 0) {
+              const error = new Error('Docker endpoint has no validated address')
+              return lookupOptions.all ? callback(error, []) : callback(error, '', 0)
+            }
 
-          // Node's lookup callback has two contracts. In all-address mode the
-          // callback must receive LookupAddress[]; otherwise it receives one
-          // address and its family. Keep candidates DNS-pinned to addresses
-          // that passed the endpoint policy check.
-          if (lookupOptions.all) {
-            callback(null, candidates.map(({ address, family }) => ({ address, family })))
-          } else {
-            const selected = candidates[0]
-            callback(null, selected.address, selected.family)
+            // Node's lookup callback has two contracts. In all-address mode the
+            // callback must receive LookupAddress[]; otherwise it receives one
+            // address and its family. Keep candidates DNS-pinned to addresses
+            // that passed the endpoint policy check.
+            if (lookupOptions.all) {
+              callback(
+                null,
+                candidates.map(({ address, family }) => ({ address, family }))
+              )
+            } else {
+              const selected = candidates[0]
+              callback(null, selected.address, selected.family)
+            }
+          }) as NonNullable<https.RequestOptions['lookup']>)
+        : undefined
+    const options: https.RequestOptions & http.RequestOptions =
+      connection.kind === 'local'
+        ? { socketPath: connection.socketPath, path, method: 'GET' }
+        : {
+            hostname: remoteUrl!.hostname,
+            port: remoteUrl!.port || 2376,
+            path,
+            method: 'GET',
+            ca: connection.tls.ca,
+            cert: connection.tls.cert,
+            key: connection.tls.key,
+            rejectUnauthorized: true,
+            servername: remoteUrl!.hostname,
+            lookup: pinnedLookup,
           }
-        }) as NonNullable<https.RequestOptions['lookup']>
-      : undefined
-    const options: https.RequestOptions & http.RequestOptions = connection.kind === 'local'
-      ? { socketPath: connection.socketPath, path, method: 'GET' }
-      : {
-          hostname: remoteUrl!.hostname,
-          port: remoteUrl!.port || 2376,
-          path,
-          method: 'GET',
-          ca: connection.tls.ca,
-          cert: connection.tls.cert,
-          key: connection.tls.key,
-          rejectUnauthorized: true,
-          servername: remoteUrl!.hostname,
-          lookup: pinnedLookup,
-        }
 
     const onResponse = (response: IncomingMessage) => {
       if (response.statusCode !== 200) {
@@ -85,16 +97,23 @@ function requestBuffer(connection: DockerConnection, path: string, timeoutMs = 5
       response.on('error', reject)
     }
 
-    const request = connection.kind === 'remote'
-      ? https.request(options as https.RequestOptions, onResponse)
-      : http.request(options as http.RequestOptions, onResponse)
-    request.setTimeout(timeoutMs, () => request.destroy(new Error('Docker Engine request timed out')))
+    const request =
+      connection.kind === 'remote'
+        ? https.request(options as https.RequestOptions, onResponse)
+        : http.request(options as http.RequestOptions, onResponse)
+    request.setTimeout(timeoutMs, () =>
+      request.destroy(new Error('Docker Engine request timed out'))
+    )
     request.on('error', reject)
     request.end()
   })
 }
 
-async function requestJson<T>(connection: DockerConnection, path: string, timeoutMs = 5000): Promise<T> {
+async function requestJson<T>(
+  connection: DockerConnection,
+  path: string,
+  timeoutMs = 5000
+): Promise<T> {
   const body = await requestBuffer(connection, path, timeoutMs)
   try {
     return JSON.parse(body.toString('utf8')) as T
@@ -105,9 +124,12 @@ async function requestJson<T>(connection: DockerConnection, path: string, timeou
 
 function decodeDockerLogs(buffer: Buffer): DockerContainerLogs {
   if (buffer.length === 0) return { stdout: '', stderr: '' }
-  const firstFrameLooksMultiplexed = buffer.length >= 8 &&
+  const firstFrameLooksMultiplexed =
+    buffer.length >= 8 &&
     (buffer[0] === 1 || buffer[0] === 2) &&
-    buffer[1] === 0 && buffer[2] === 0 && buffer[3] === 0
+    buffer[1] === 0 &&
+    buffer[2] === 0 &&
+    buffer[3] === 0
   if (!firstFrameLooksMultiplexed) return { stdout: buffer.toString('utf8'), stderr: '' }
 
   const stdout: Buffer[] = []
@@ -118,8 +140,13 @@ function decodeDockerLogs(buffer: Buffer): DockerContainerLogs {
     const stream = buffer[offset]
     const length = buffer.readUInt32BE(offset + 4)
     const frameEnd = offset + 8 + length
-    if ((stream !== 1 && stream !== 2) || buffer[offset + 1] !== 0 ||
-        buffer[offset + 2] !== 0 || buffer[offset + 3] !== 0 || frameEnd > buffer.length) {
+    if (
+      (stream !== 1 && stream !== 2) ||
+      buffer[offset + 1] !== 0 ||
+      buffer[offset + 2] !== 0 ||
+      buffer[offset + 3] !== 0 ||
+      frameEnd > buffer.length
+    ) {
       throw new Error('Docker Engine returned an invalid log frame')
     }
     const payload = buffer.subarray(offset + 8, frameEnd)
@@ -167,14 +194,12 @@ export interface DockerContainerRuntimeStats {
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
-    ? value as Record<string, unknown>
+    ? (value as Record<string, unknown>)
     : {}
 }
 
 function metricNumber(value: unknown): number | null {
-  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
-    ? value
-    : null
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : null
 }
 
 function positiveMetricNumber(value: unknown): number | null {
@@ -188,7 +213,10 @@ function sumMetric(values: Array<number | null>): number | null {
   return Number.isSafeInteger(total) ? total : null
 }
 
-function sumNetworkMetric(networks: Record<string, unknown>, field: 'rx_bytes' | 'tx_bytes'): number | null {
+function sumNetworkMetric(
+  networks: Record<string, unknown>,
+  field: 'rx_bytes' | 'tx_bytes'
+): number | null {
   const interfaces = Object.values(networks)
   if (!interfaces.length) return null
   return sumMetric(interfaces.map((network) => metricNumber(asRecord(network)[field])))
@@ -197,7 +225,7 @@ function sumNetworkMetric(networks: Record<string, unknown>, field: 'rx_bytes' |
 /** Return one bounded sample; the Docker Engine stream is never left open. */
 export async function getDockerContainerStats(
   connection: DockerConnection,
-  containerId: string,
+  containerId: string
 ): Promise<DockerContainerRuntimeStats> {
   if (!/^[a-f0-9]{12,64}$/i.test(containerId)) {
     throw new TypeError('Invalid Docker container identifier')
@@ -205,7 +233,7 @@ export async function getDockerContainerStats(
 
   const raw = await requestJson<Record<string, unknown>>(
     connection,
-    `/containers/${containerId}/stats?stream=false&one-shot=true`,
+    `/containers/${containerId}/stats?stream=false&one-shot=true`
   )
   const cpu = asRecord(raw.cpu_stats)
   const previousCpu = asRecord(raw.precpu_stats)
@@ -222,41 +250,54 @@ export async function getDockerContainerStats(
     return current !== null && previous !== null && current > previous ? current - previous : null
   })()
   const currentPerCpu = Array.isArray(cpuUsage.percpu_usage) ? cpuUsage.percpu_usage.length : 0
-  const previousPerCpu = Array.isArray(previousCpuUsage.percpu_usage) ? previousCpuUsage.percpu_usage.length : 0
-  const cpuCount = positiveMetricNumber(cpu.online_cpus) ??
+  const previousPerCpu = Array.isArray(previousCpuUsage.percpu_usage)
+    ? previousCpuUsage.percpu_usage.length
+    : 0
+  const cpuCount =
+    positiveMetricNumber(cpu.online_cpus) ??
     positiveMetricNumber(previousCpu.online_cpus) ??
     (currentPerCpu || previousPerCpu || null)
-  const cpuPercent = cpuDelta !== null && systemDelta !== null && cpuCount !== null && cpuCount > 0
-    ? (cpuDelta / systemDelta) * cpuCount * 100
-    : null
+  const cpuPercent =
+    cpuDelta !== null && systemDelta !== null && cpuCount !== null && cpuCount > 0
+      ? (cpuDelta / systemDelta) * cpuCount * 100
+      : null
 
   const memory = asRecord(raw.memory_stats)
   const memoryDetails = asRecord(memory.stats)
   const rawMemoryUsage = metricNumber(memory.usage)
   // Docker uses inactive_file on cgroup v2 and cache on cgroup v1.
   const cacheBytes = metricNumber(memoryDetails.inactive_file) ?? metricNumber(memoryDetails.cache)
-  const memoryUsageBytes = rawMemoryUsage === null
-    ? null
-    : Math.max(0, rawMemoryUsage - (cacheBytes ?? 0))
+  const memoryUsageBytes =
+    rawMemoryUsage === null ? null : Math.max(0, rawMemoryUsage - (cacheBytes ?? 0))
   const memoryLimitBytes = metricNumber(memory.limit)
-  const memoryPercent = memoryUsageBytes !== null && memoryLimitBytes !== null && memoryLimitBytes > 0
-    ? (memoryUsageBytes / memoryLimitBytes) * 100
-    : null
+  const memoryPercent =
+    memoryUsageBytes !== null && memoryLimitBytes !== null && memoryLimitBytes > 0
+      ? (memoryUsageBytes / memoryLimitBytes) * 100
+      : null
 
   const blockIo = asRecord(raw.blkio_stats)
   const ioEntries = Array.isArray(blockIo.io_service_bytes_recursive)
     ? blockIo.io_service_bytes_recursive.map(asRecord)
     : []
   const blockReadBytes = ioEntries.length
-    ? sumMetric(ioEntries.filter((entry) => String(entry.op).toLowerCase() === 'read').map((entry) => metricNumber(entry.value)))
+    ? sumMetric(
+        ioEntries
+          .filter((entry) => String(entry.op).toLowerCase() === 'read')
+          .map((entry) => metricNumber(entry.value))
+      )
     : null
   const blockWriteBytes = ioEntries.length
-    ? sumMetric(ioEntries.filter((entry) => String(entry.op).toLowerCase() === 'write').map((entry) => metricNumber(entry.value)))
+    ? sumMetric(
+        ioEntries
+          .filter((entry) => String(entry.op).toLowerCase() === 'write')
+          .map((entry) => metricNumber(entry.value))
+      )
     : null
 
-  const observedAt = typeof raw.read === 'string' && Number.isFinite(Date.parse(raw.read))
-    ? new Date(raw.read).toISOString()
-    : null
+  const observedAt =
+    typeof raw.read === 'string' && Number.isFinite(Date.parse(raw.read))
+      ? new Date(raw.read).toISOString()
+      : null
 
   return {
     observedAt,
@@ -276,24 +317,39 @@ export async function getDockerInfo(connection: DockerConnection): Promise<Docke
   return requestJson<DockerEngineInfo>(connection, '/info')
 }
 
-export async function listDockerContainers(connection: DockerConnection): Promise<DockerContainer[]> {
-  const result = await requestJson<Array<Record<string, unknown>>>(connection, '/containers/json?all=1&limit=100')
-  if (!Array.isArray(result)) throw new Error('Docker Engine returned an invalid container inventory')
-  return result.slice(0, 100).map((item) => ({
-    id: typeof item.Id === 'string' ? item.Id : '',
-    names: Array.isArray(item.Names) ? item.Names.filter((name): name is string => typeof name === 'string') : [],
-    image: typeof item.Image === 'string' ? item.Image : '',
-    state: typeof item.State === 'string' ? item.State : 'unknown',
-    status: typeof item.Status === 'string' ? item.Status : '',
-    createdAt: typeof item.Created === 'number' ? item.Created : 0,
-  })).filter((item) => item.id.length > 0)
+export async function listDockerContainers(
+  connection: DockerConnection
+): Promise<DockerContainer[]> {
+  const result = await requestJson<Array<Record<string, unknown>>>(
+    connection,
+    '/containers/json?all=1&limit=100'
+  )
+  if (!Array.isArray(result))
+    throw new Error('Docker Engine returned an invalid container inventory')
+  return result
+    .slice(0, 100)
+    .map((item) => ({
+      id: typeof item.Id === 'string' ? item.Id : '',
+      names: Array.isArray(item.Names)
+        ? item.Names.filter((name): name is string => typeof name === 'string')
+        : [],
+      image: typeof item.Image === 'string' ? item.Image : '',
+      state: typeof item.State === 'string' ? item.State : 'unknown',
+      status: typeof item.Status === 'string' ? item.Status : '',
+      createdAt: typeof item.Created === 'number' ? item.Created : 0,
+    }))
+    .filter((item) => item.id.length > 0)
 }
 
-export async function getDockerContainerLogs(connection: DockerConnection, containerId: string): Promise<DockerContainerLogs> {
-  if (!/^[a-f0-9]{12,64}$/i.test(containerId)) throw new Error('Invalid Docker container identifier')
+export async function getDockerContainerLogs(
+  connection: DockerConnection,
+  containerId: string
+): Promise<DockerContainerLogs> {
+  if (!/^[a-f0-9]{12,64}$/i.test(containerId))
+    throw new Error('Invalid Docker container identifier')
   const body = await requestBuffer(
     connection,
-    `/containers/${containerId}/logs?stdout=1&stderr=1&tail=200&timestamps=1`,
+    `/containers/${containerId}/logs?stdout=1&stderr=1&tail=200&timestamps=1`
   )
   return decodeDockerLogs(body)
 }

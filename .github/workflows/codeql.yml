@@ -4,13 +4,13 @@ on:
   push:
     branches:
       - main
-      - "fix/**"
-      - "feat/**"
+      - 'fix/**'
+      - 'feat/**'
   pull_request:
     branches:
       - main
   schedule:
-    - cron: "20 19 * * 1"
+    - cron: '20 19 * * 1'
 
 permissions:
   actions: read
