@@ -26,15 +26,21 @@ function configureEnvironment() {
 }
 
 test('operator login fails closed when session configuration is missing', async () => {
-  const keys = ['HEADQUARTER_OPERATOR_PASSWORD', 'HEADQUARTER_SESSION_SECRET', 'HEADQUARTER_PUBLIC_ORIGIN']
+  const keys = [
+    'HEADQUARTER_OPERATOR_PASSWORD',
+    'HEADQUARTER_SESSION_SECRET',
+    'HEADQUARTER_PUBLIC_ORIGIN',
+  ]
   const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]))
   for (const key of keys) delete process.env[key]
   try {
-    const response = await POST(new Request(`${origin}/api/auth/session`, {
-      method: 'POST',
-      headers: { origin, 'content-type': 'application/json' },
-      body: JSON.stringify({ password }),
-    }))
+    const response = await POST(
+      new Request(`${origin}/api/auth/session`, {
+        method: 'POST',
+        headers: { origin, 'content-type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+    )
     assert.equal(response.status, 503)
   } finally {
     for (const key of keys) {
@@ -47,16 +53,20 @@ test('operator login fails closed when session configuration is missing', async 
 test('operator login rejects cross-origin and incorrect-password requests', async () => {
   const restore = configureEnvironment()
   try {
-    const crossOrigin = await POST(new Request(`${origin}/api/auth/session`, {
-      method: 'POST',
-      headers: { origin: 'https://attacker.example', 'content-type': 'application/json' },
-      body: JSON.stringify({ password }),
-    }))
-    const invalidPassword = await POST(new Request(`${origin}/api/auth/session`, {
-      method: 'POST',
-      headers: { origin, 'content-type': 'application/json' },
-      body: JSON.stringify({ password: 'incorrect' }),
-    }))
+    const crossOrigin = await POST(
+      new Request(`${origin}/api/auth/session`, {
+        method: 'POST',
+        headers: { origin: 'https://attacker.example', 'content-type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+    )
+    const invalidPassword = await POST(
+      new Request(`${origin}/api/auth/session`, {
+        method: 'POST',
+        headers: { origin, 'content-type': 'application/json' },
+        body: JSON.stringify({ password: 'incorrect' }),
+      })
+    )
     assert.equal(crossOrigin.status, 403)
     assert.equal(invalidPassword.status, 401)
   } finally {
@@ -67,27 +77,33 @@ test('operator login rejects cross-origin and incorrect-password requests', asyn
 test('operator login issues an HttpOnly strict cookie that authenticates and can be revoked', async () => {
   const restore = configureEnvironment()
   try {
-    const login = await POST(new Request(`${origin}/api/auth/session`, {
-      method: 'POST',
-      headers: { origin, 'content-type': 'application/json' },
-      body: JSON.stringify({ password }),
-    }))
+    const login = await POST(
+      new Request(`${origin}/api/auth/session`, {
+        method: 'POST',
+        headers: { origin, 'content-type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+    )
     assert.equal(login.status, 200)
     const cookie = login.cookies.get(OPERATOR_SESSION_COOKIE)
     assert.ok(cookie?.value)
     assert.equal(cookie.httpOnly, true)
     assert.equal(cookie.sameSite, 'strict')
 
-    const session = await GET(new Request(`${origin}/api/auth/session`, {
-      headers: { cookie: `${OPERATOR_SESSION_COOKIE}=${cookie.value}` },
-    }))
+    const session = await GET(
+      new Request(`${origin}/api/auth/session`, {
+        headers: { cookie: `${OPERATOR_SESSION_COOKIE}=${cookie.value}` },
+      })
+    )
     assert.equal(session.status, 200)
     assert.equal((await session.json()).data.operatorId, operatorId)
 
-    const logout = await DELETE(new Request(`${origin}/api/auth/session`, {
-      method: 'DELETE',
-      headers: { origin, cookie: `${OPERATOR_SESSION_COOKIE}=${cookie.value}` },
-    }))
+    const logout = await DELETE(
+      new Request(`${origin}/api/auth/session`, {
+        method: 'DELETE',
+        headers: { origin, cookie: `${OPERATOR_SESSION_COOKIE}=${cookie.value}` },
+      })
+    )
     assert.equal(logout.status, 200)
     assert.equal(logout.cookies.get(OPERATOR_SESSION_COOKIE)?.value, '')
   } finally {
@@ -98,11 +114,14 @@ test('operator login issues an HttpOnly strict cookie that authenticates and can
 test('operator login rate-limits repeated invalid credentials', async () => {
   const restore = configureEnvironment()
   try {
-    const attempt = () => POST(new Request(`${origin}/api/auth/session`, {
-      method: 'POST',
-      headers: { origin, 'content-type': 'application/json' },
-      body: JSON.stringify({ password: 'incorrect-password' }),
-    }))
+    const attempt = () =>
+      POST(
+        new Request(`${origin}/api/auth/session`, {
+          method: 'POST',
+          headers: { origin, 'content-type': 'application/json' },
+          body: JSON.stringify({ password: 'incorrect-password' }),
+        })
+      )
     for (let index = 0; index < 5; index += 1) {
       assert.equal((await attempt()).status, 401)
     }

@@ -15,6 +15,6 @@ export async function GET(request: Request, context: RouteContext) {
   return proxyArsyRequest(
     request,
     `/api/v1/infrastructure/docker/servers/${id}/containers/${containerId}/stats`,
-    'GET',
+    'GET'
   )
 }

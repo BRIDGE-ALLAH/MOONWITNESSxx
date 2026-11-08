@@ -42,7 +42,10 @@ export interface DeploymentPolicyResult {
 }
 
 export interface DeploymentPolicyProvider {
-  evaluate(context: DeploymentAuthorizationContext, signal: AbortSignal): Promise<DeploymentPolicyResult>
+  evaluate(
+    context: DeploymentAuthorizationContext,
+    signal: AbortSignal
+  ): Promise<DeploymentPolicyResult>
 }
 
 export interface DeploymentAuthorizationDecision {
@@ -95,7 +98,17 @@ export interface DeploymentApproval {
   signature: string
 }
 
-interface DeploymentApprovalRow extends Omit<DeploymentApproval, 'ownerId' | 'operationId' | 'requestedActorId' | 'approverId' | 'policyVersion' | 'reasonCode' | 'issuedAt' | 'expiresAt'> {
+interface DeploymentApprovalRow extends Omit<
+  DeploymentApproval,
+  | 'ownerId'
+  | 'operationId'
+  | 'requestedActorId'
+  | 'approverId'
+  | 'policyVersion'
+  | 'reasonCode'
+  | 'issuedAt'
+  | 'expiresAt'
+> {
   owner_id: string
   operation_id: string
   requested_actor_id: string
@@ -114,7 +127,10 @@ function stableJson(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null'
   if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`
   const record = value as Record<string, unknown>
-  return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`).join(',')}}`
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`)
+    .join(',')}}`
 }
 
 export function capabilityGrantSigningPayload(grant: CapabilityGrant): string {
@@ -172,7 +188,8 @@ export function createTrustedPublicKeyring(encoded: string | undefined): Trusted
   for (const [issuerId, configured] of Object.entries(parsed as Record<string, unknown>)) {
     if (!issuerId.trim()) throw new Error('Deployment trust key issuer ID must not be empty')
     const pemValues = Array.isArray(configured) ? configured : [configured]
-    if (!pemValues.length || pemValues.length > 4) throw new Error(`Issuer ${issuerId} must have 1-4 public keys`)
+    if (!pemValues.length || pemValues.length > 4)
+      throw new Error(`Issuer ${issuerId} must have 1-4 public keys`)
     const issuerKeys = pemValues.map((pem) => {
       if (typeof pem !== 'string' || !pem.includes('-----BEGIN PUBLIC KEY-----')) {
         throw new Error(`Issuer ${issuerId} requires public-key PEM values`)
@@ -206,7 +223,10 @@ export function createEd25519CapabilityVerifier(keyring: TrustedPublicKeyring) {
   }
 }
 
-function verifyApprovalSignature(approval: DeploymentApproval, keyring: TrustedPublicKeyring): boolean {
+function verifyApprovalSignature(
+  approval: DeploymentApproval,
+  keyring: TrustedPublicKeyring
+): boolean {
   const signature = signatureBuffer(approval.signature)
   if (!signature) return false
   const { signature: _signature, ...payload } = approval
@@ -231,7 +251,11 @@ function rows<T>(result: unknown): T[] {
 function stringArray(value: unknown, field: string): string[] {
   let parsed = value
   if (typeof parsed === 'string') {
-    try { parsed = JSON.parse(parsed) } catch { throw new Error(`Stored ${field} is invalid JSON`) }
+    try {
+      parsed = JSON.parse(parsed)
+    } catch {
+      throw new Error(`Stored ${field} is invalid JSON`)
+    }
   }
   if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === 'string' && item.trim())) {
     throw new Error(`Stored ${field} is not a string array`)
@@ -247,10 +271,14 @@ function dateIso(value: Date | string): string {
 
 function operationAction(kind: OperationContextRow['kind']): string {
   switch (kind) {
-    case 'deploy': return 'deployment:deploy'
-    case 'stop': return 'deployment:stop'
-    case 'restart': return 'deployment:restart'
-    case 'rollback': return 'deployment:rollback'
+    case 'deploy':
+      return 'deployment:deploy'
+    case 'stop':
+      return 'deployment:stop'
+    case 'restart':
+      return 'deployment:restart'
+    case 'rollback':
+      return 'deployment:rollback'
   }
 }
 
@@ -296,7 +324,11 @@ export class PostgresDeploymentAuthorizationStore {
     this.pool = pool
   }
 
-  async loadContext(operationId: string, ownerId: string, authenticatedActorId: string): Promise<DeploymentAuthorizationContext | null> {
+  async loadContext(
+    operationId: string,
+    ownerId: string,
+    authenticatedActorId: string
+  ): Promise<DeploymentAuthorizationContext | null> {
     const result = await this.pool.query(
       `SELECT o.id AS operation_id, o.owner_id, o.actor_id, o.deployment_id,
          d.docker_server_id, o.kind, o.request_hash
@@ -304,7 +336,7 @@ export class PostgresDeploymentAuthorizationStore {
        JOIN arsy_deployments d
          ON d.id = o.deployment_id AND d.owner_id = o.owner_id
        WHERE o.id = $1 AND o.owner_id = $2`,
-      [operationId, ownerId],
+      [operationId, ownerId]
     )
     const row = rows<OperationContextRow>(result)[0]
     if (!row || row.actor_id !== authenticatedActorId) return null
@@ -324,7 +356,9 @@ export class PostgresDeploymentAuthorizationStore {
     }
   }
 
-  async loadCapabilityChains(context: DeploymentAuthorizationContext): Promise<CapabilityGrant[][]> {
+  async loadCapabilityChains(
+    context: DeploymentAuthorizationContext
+  ): Promise<CapabilityGrant[][]> {
     const result = await this.pool.query(
       `SELECT g.id, g.parent_grant_id, g.issuer_id, g.subject_id, g.tenant_id,
          g.purpose, g.session_id, g.actions, g.resources, g.argument_hashes,
@@ -337,16 +371,26 @@ export class PostgresDeploymentAuthorizationStore {
          )
        ORDER BY g.issued_at ASC
        LIMIT $5`,
-      [context.ownerId, context.tenantId, context.purpose, context.sessionId, MAX_GRANTS_PER_OPERATION + 1],
+      [
+        context.ownerId,
+        context.tenantId,
+        context.purpose,
+        context.sessionId,
+        MAX_GRANTS_PER_OPERATION + 1,
+      ]
     )
     const stored = rows<CapabilityGrantRow>(result)
-    if (stored.length > MAX_GRANTS_PER_OPERATION) throw new Error('Too many capability grants for one deployment operation')
+    if (stored.length > MAX_GRANTS_PER_OPERATION)
+      throw new Error('Too many capability grants for one deployment operation')
 
     const byId = new Map<string, { grant: CapabilityGrant; parentId: string | null }>()
-    for (const row of stored) byId.set(row.id, { grant: mapGrant(row), parentId: row.parent_grant_id })
+    for (const row of stored)
+      byId.set(row.id, { grant: mapGrant(row), parentId: row.parent_grant_id })
 
     const chains: CapabilityGrant[][] = []
-    const leaves = [...byId.entries()].filter(([, value]) => value.grant.subjectId === context.actorId)
+    const leaves = [...byId.entries()].filter(
+      ([, value]) => value.grant.subjectId === context.actorId
+    )
     for (const [leafId] of leaves) {
       const reverse: CapabilityGrant[] = []
       const visited = new Set<string>()
@@ -369,7 +413,10 @@ export class PostgresDeploymentAuthorizationStore {
     return chains
   }
 
-  async loadApproval(context: DeploymentAuthorizationContext, policyVersion: string): Promise<DeploymentApproval | null> {
+  async loadApproval(
+    context: DeploymentAuthorizationContext,
+    policyVersion: string
+  ): Promise<DeploymentApproval | null> {
     const result = await this.pool.query(
       `SELECT id, owner_id, operation_id, requested_actor_id, approver_id,
          action, resource, policy_version, decision, reason_code,
@@ -379,7 +426,14 @@ export class PostgresDeploymentAuthorizationStore {
          AND requested_actor_id = $3 AND action = $4 AND resource = $5
          AND policy_version = $6
        LIMIT 1`,
-      [context.ownerId, context.operationId, context.actorId, context.action, context.resource, policyVersion],
+      [
+        context.ownerId,
+        context.operationId,
+        context.actorId,
+        context.action,
+        context.resource,
+        policyVersion,
+      ]
     )
     const row = rows<DeploymentApprovalRow>(result)[0]
     return row ? mapApproval(row) : null
@@ -387,7 +441,7 @@ export class PostgresDeploymentAuthorizationStore {
 
   async recordDecision(
     context: DeploymentAuthorizationContext,
-    decision: DeploymentAuthorizationDecision,
+    decision: DeploymentAuthorizationDecision
   ): Promise<void> {
     await this.pool.query(
       `INSERT INTO arsy_deployment_authorization_decisions
@@ -396,11 +450,20 @@ export class PostgresDeploymentAuthorizationStore {
          capability_grant_id, approval_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13)`,
       [
-        randomUUID(), context.ownerId, context.operationId, context.dockerServerId,
-        context.actorId, context.action, context.resource, context.argumentHash,
-        decision.policyVersion, decision.allowed, JSON.stringify(decision.reasonCodes),
-        decision.capabilityGrantId, decision.approvalId,
-      ],
+        randomUUID(),
+        context.ownerId,
+        context.operationId,
+        context.dockerServerId,
+        context.actorId,
+        context.action,
+        context.resource,
+        context.argumentHash,
+        decision.policyVersion,
+        decision.allowed,
+        JSON.stringify(decision.reasonCodes),
+        decision.capabilityGrantId,
+        decision.approvalId,
+      ]
     )
   }
 }
@@ -413,8 +476,14 @@ export interface AuthorizeDeploymentDependencies {
 }
 
 export async function authorizeDeploymentOperation(
-  input: { operationId: string; ownerId: string; authenticatedActorId: string; now?: string; policyTimeoutMs?: number },
-  dependencies: AuthorizeDeploymentDependencies,
+  input: {
+    operationId: string
+    ownerId: string
+    authenticatedActorId: string
+    now?: string
+    policyTimeoutMs?: number
+  },
+  dependencies: AuthorizeDeploymentDependencies
 ): Promise<DeploymentAuthorizationDecision> {
   const policyTimeoutMs = input.policyTimeoutMs ?? 3_000
   if (!Number.isInteger(policyTimeoutMs) || policyTimeoutMs < 1 || policyTimeoutMs > 10_000) {
@@ -426,13 +495,25 @@ export async function authorizeDeploymentOperation(
     context = await dependencies.store.loadContext(
       input.operationId,
       input.ownerId,
-      input.authenticatedActorId,
+      input.authenticatedActorId
     )
   } catch {
-    return { allowed: false, reasonCodes: ['authorization_store_unavailable'], policyVersion: null, capabilityGrantId: null, approvalId: null }
+    return {
+      allowed: false,
+      reasonCodes: ['authorization_store_unavailable'],
+      policyVersion: null,
+      capabilityGrantId: null,
+      approvalId: null,
+    }
   }
   if (!context) {
-    return { allowed: false, reasonCodes: ['operation_not_found_or_actor_mismatch'], policyVersion: null, capabilityGrantId: null, approvalId: null }
+    return {
+      allowed: false,
+      reasonCodes: ['operation_not_found_or_actor_mismatch'],
+      policyVersion: null,
+      capabilityGrantId: null,
+      approvalId: null,
+    }
   }
 
   let policy: DeploymentPolicyResult | null = null
@@ -455,16 +536,31 @@ export async function authorizeDeploymentOperation(
     ]).finally(() => {
       if (timeout) clearTimeout(timeout)
     })
-    if (!policy || typeof policy.allowed !== 'boolean' ||
-        !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$/.test(policy.policyVersion ?? '') ||
-        !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$/.test(policy.reasonCode ?? '') ||
-        typeof policy.requiresApproval !== 'boolean') {
+    if (
+      !policy ||
+      typeof policy.allowed !== 'boolean' ||
+      !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$/.test(policy.policyVersion ?? '') ||
+      !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,119}$/.test(policy.reasonCode ?? '') ||
+      typeof policy.requiresApproval !== 'boolean'
+    ) {
       throw new Error('policy_response_invalid')
     }
     if (!policy.allowed) {
-      decision = { allowed: false, reasonCodes: ['policy_denied', policy.reasonCode], policyVersion: policy.policyVersion, capabilityGrantId: null, approvalId: null }
+      decision = {
+        allowed: false,
+        reasonCodes: ['policy_denied', policy.reasonCode],
+        policyVersion: policy.policyVersion,
+        capabilityGrantId: null,
+        approvalId: null,
+      }
     } else if (!dependencies.capabilityVerifier) {
-      decision = { allowed: false, reasonCodes: ['capability_verifier_unavailable'], policyVersion: policy.policyVersion, capabilityGrantId: null, approvalId: null }
+      decision = {
+        allowed: false,
+        reasonCodes: ['capability_verifier_unavailable'],
+        policyVersion: policy.policyVersion,
+        capabilityGrantId: null,
+        approvalId: null,
+      }
     } else {
       const chains = await dependencies.store.loadCapabilityChains(context)
       let capabilityDecision: CapabilityDecision = {
@@ -491,14 +587,33 @@ export async function authorizeDeploymentOperation(
       }
       selectedGrantId = capabilityDecision.grantId ?? null
       if (!capabilityDecision.allowed) {
-        decision = { allowed: false, reasonCodes: capabilityDecision.reasonCodes, policyVersion: policy.policyVersion, capabilityGrantId: null, approvalId: null }
+        decision = {
+          allowed: false,
+          reasonCodes: capabilityDecision.reasonCodes,
+          policyVersion: policy.policyVersion,
+          capabilityGrantId: null,
+          approvalId: null,
+        }
       } else if (policy.requiresApproval && !dependencies.approvalKeyring) {
-        decision = { allowed: false, reasonCodes: ['approval_verifier_unavailable'], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: null }
+        decision = {
+          allowed: false,
+          reasonCodes: ['approval_verifier_unavailable'],
+          policyVersion: policy.policyVersion,
+          capabilityGrantId: selectedGrantId,
+          approvalId: null,
+        }
       } else if (policy.requiresApproval) {
         const approval = await dependencies.store.loadApproval(context, policy.policyVersion)
         if (!approval) {
-          decision = { allowed: false, reasonCodes: ['approval_required'], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: null }
-        } else if (approval.approverId === context.actorId ||
+          decision = {
+            allowed: false,
+            reasonCodes: ['approval_required'],
+            policyVersion: policy.policyVersion,
+            capabilityGrantId: selectedGrantId,
+            approvalId: null,
+          }
+        } else if (
+          approval.approverId === context.actorId ||
           approval.ownerId !== context.ownerId ||
           approval.operationId !== context.operationId ||
           approval.requestedActorId !== context.actorId ||
@@ -507,24 +622,56 @@ export async function authorizeDeploymentOperation(
           approval.policyVersion !== policy.policyVersion ||
           Date.parse(approval.issuedAt) > Date.parse(input.now ?? new Date().toISOString()) ||
           Date.parse(approval.expiresAt) <= Date.parse(input.now ?? new Date().toISOString()) ||
-          !verifyApprovalSignature(approval, dependencies.approvalKeyring!)) {
-          decision = { allowed: false, reasonCodes: ['approval_evidence_invalid'], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: approval.id }
+          !verifyApprovalSignature(approval, dependencies.approvalKeyring!)
+        ) {
+          decision = {
+            allowed: false,
+            reasonCodes: ['approval_evidence_invalid'],
+            policyVersion: policy.policyVersion,
+            capabilityGrantId: selectedGrantId,
+            approvalId: approval.id,
+          }
         } else if (approval.decision !== 'approved') {
           selectedApprovalId = approval.id
-          decision = { allowed: false, reasonCodes: ['approval_denied', approval.reasonCode], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: approval.id }
+          decision = {
+            allowed: false,
+            reasonCodes: ['approval_denied', approval.reasonCode],
+            policyVersion: policy.policyVersion,
+            capabilityGrantId: selectedGrantId,
+            approvalId: approval.id,
+          }
         } else {
           selectedApprovalId = approval.id
-          decision = { allowed: true, reasonCodes: [], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: selectedApprovalId }
+          decision = {
+            allowed: true,
+            reasonCodes: [],
+            policyVersion: policy.policyVersion,
+            capabilityGrantId: selectedGrantId,
+            approvalId: selectedApprovalId,
+          }
         }
       } else {
-        decision = { allowed: true, reasonCodes: [], policyVersion: policy.policyVersion, capabilityGrantId: selectedGrantId, approvalId: null }
+        decision = {
+          allowed: true,
+          reasonCodes: [],
+          policyVersion: policy.policyVersion,
+          capabilityGrantId: selectedGrantId,
+          approvalId: null,
+        }
       }
     }
   } catch (error) {
-    const reason = error instanceof Error && /^[a-z][a-z0-9_]{0,79}$/.test(error.message)
-      ? error.message
-      : 'authorization_provider_unavailable'
-    decision = { allowed: false, reasonCodes: [reason], policyVersion: policy?.policyVersion ?? null, capabilityGrantId: selectedGrantId, approvalId: selectedApprovalId }
+    const reason =
+      error instanceof Error && /^[a-z][a-z0-9_]{0,79}$/.test(error.message)
+        ? error.message
+        : 'authorization_provider_unavailable'
+    decision = {
+      allowed: false,
+      reasonCodes: [reason],
+      policyVersion: policy?.policyVersion ?? null,
+      capabilityGrantId: selectedGrantId,
+      approvalId: selectedApprovalId,
+    }
   }
 
   try {

@@ -89,7 +89,7 @@ function queryRows<T>(value: unknown): T[] {
 
 export async function createDeployment(
   pool: DatabasePool,
-  input: CreateDeploymentInput,
+  input: CreateDeploymentInput
 ): Promise<DeploymentRow> {
   const ownerId = requiredText(input.ownerId, 'ownerId', 128)
   const actorId = requiredText(input.actorId, 'actorId', 128)
@@ -105,7 +105,7 @@ export async function createDeployment(
      VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)
      RETURNING id, owner_id, docker_server_id, name, desired_image_digest,
        desired_config, status, created_by, created_at, updated_at`,
-    [randomUUID(), ownerId, dockerServerId, name, imageDigest, desiredConfig, actorId],
+    [randomUUID(), ownerId, dockerServerId, name, imageDigest, desiredConfig, actorId]
   )
   const row = queryRows<DeploymentRow>(result)[0]
   if (!row) throw new Error('Deployment insert did not return a record')
@@ -115,13 +115,14 @@ export async function createDeployment(
 export async function createDeploymentOperation(
   pool: DatabasePool,
   input: CreateOperationInput,
-  options: { enqueueOutbox?: boolean } = {},
+  options: { enqueueOutbox?: boolean } = {}
 ): Promise<{ disposition: 'created' | 'replayed'; operation: DeploymentOperationRow }> {
   const ownerId = requiredText(input.ownerId, 'ownerId', 128)
   const actorId = requiredText(input.actorId, 'actorId', 128)
   const deploymentId = requiredText(input.deploymentId, 'deploymentId', 64)
   const idempotencyKey = requiredText(input.idempotencyKey, 'idempotencyKey', 200)
-  if (idempotencyKey.length < 8) throw new TypeError('idempotencyKey must contain at least 8 characters')
+  if (idempotencyKey.length < 8)
+    throw new TypeError('idempotencyKey must contain at least 8 characters')
 
   const requestPayloadJson = canonicalJsonObject(input.requestPayload ?? {})
   const requestPayload = JSON.parse(requestPayloadJson) as JsonObject
@@ -182,7 +183,7 @@ export async function createDeploymentOperation(
        idempotency_key, request_hash, request_payload, attempt_count,
        created_at, updated_at
      FROM inserted`,
-    values,
+    values
   )
   const created = queryRows<DeploymentOperationRow>(inserted)[0]
   if (created) return { disposition: 'created', operation: created }
@@ -196,7 +197,7 @@ export async function createDeploymentOperation(
        created_at, updated_at
      FROM arsy_deployment_operations
      WHERE owner_id = $1 AND idempotency_key = $2`,
-    [ownerId, idempotencyKey],
+    [ownerId, idempotencyKey]
   )
   const prior = queryRows<DeploymentOperationRow>(priorResult)[0]
   if (!prior) throw new Error('Conflicting deployment operation could not be read')
@@ -206,7 +207,7 @@ export async function createDeploymentOperation(
 
 export async function enqueueDeploymentOperation(
   pool: DatabasePool,
-  input: { operationId: string; ownerId: string },
+  input: { operationId: string; ownerId: string }
 ): Promise<string> {
   const operationId = requiredText(input.operationId, 'operationId', 64)
   const ownerId = requiredText(input.ownerId, 'ownerId', 128)
@@ -219,7 +220,7 @@ export async function enqueueDeploymentOperation(
      FROM arsy_deployment_operations
      WHERE id = $2 AND owner_id = $3 AND status = 'queued'
      RETURNING id`,
-    [outboxId, operationId, ownerId],
+    [outboxId, operationId, ownerId]
   )
   const row = queryRows<{ id: string }>(result)[0]
   if (!row) throw new OperationStateConflictError()
@@ -237,7 +238,7 @@ export async function transitionDeploymentOperation(
     eventType: string
     details?: JsonObject
     errorCode?: string | null
-  },
+  }
 ): Promise<DeploymentOperationRow> {
   assertOperationTransition(input.expectedStatus, input.nextStatus)
   const operationId = requiredText(input.operationId, 'operationId', 64)
@@ -277,7 +278,16 @@ export async function transitionDeploymentOperation(
        idempotency_key, request_hash, request_payload, attempt_count,
        created_at, updated_at
      FROM changed`,
-    [operationId, ownerId, input.expectedStatus, input.nextStatus, eventType, actorId, details, errorCode],
+    [
+      operationId,
+      ownerId,
+      input.expectedStatus,
+      input.nextStatus,
+      eventType,
+      actorId,
+      details,
+      errorCode,
+    ]
   )
   const row = queryRows<DeploymentOperationRow>(result)[0]
   if (!row) throw new OperationStateConflictError()

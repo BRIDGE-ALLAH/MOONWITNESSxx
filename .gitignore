@@ -12,8 +12,13 @@ reports/
 !.env.example
 *.local
 
-# Generated local AI assistance artifacts (never commit these).
-scripts/ai/.ai-*.txt
-
-# Local agent receipts and freshness leases (never commit by default).
+# Local freshness leases (never commit by default).
 .moonwitness/
+
+# Rust build artifacts
+apps/cockpit/src-tauri/target/
+
+
+apps/cockpit/out/
+apps/cockpit/src-tauri/gen/
+
