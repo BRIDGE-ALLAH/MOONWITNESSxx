@@ -127,3 +127,14 @@ test('production image CI performs isolated ARSY migration and service health sm
   assert.match(job, /\/aegis healthcheck/)
   assert.match(job, /docker rm -f moonwitness-container-smoke/)
 })
+
+
+test('production container smoke waits for Docker health status after HTTP readiness', async () => {
+  const ci = await read('.github/workflows/ci.yml')
+  const start = ci.indexOf('  production-container-build:')
+  assert.ok(start >= 0)
+  const job = ci.slice(start)
+  assert.match(job, /health_status=.*State\\.Health\\.Status/)
+  assert.match(job, /did not become healthy/)
+  assert.match(job, /seq 1 45/)
+})
