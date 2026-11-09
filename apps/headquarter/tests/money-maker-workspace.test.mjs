@@ -83,3 +83,20 @@ test('MIZAN operator workflows are evidence-backed and remain currency-separated
   assert.match(proxy, /payouts\/\$\{uuid\}\/status/)
   assert.match(proxy, /fx-conversions/)
 })
+
+
+test('Aftershock presents the persisted cohort contract and does not invent unavailable metrics', async () => {
+  const panel = await readFile(new URL('../src/features/money-maker/aftershock-metrics-panel.tsx', import.meta.url), 'utf8')
+  assert.match(workspace, /AftershockMetricsPanel/)
+  assert.match(workspace, /readData<PortfolioMetrics>/)
+  assert.match(panel, /outcomeCutoffExclusive/)
+  assert.match(panel, /promotionNumerator/)
+  assert.match(panel, /promotionDenominator/)
+  assert.match(panel, /firstSaleNumerator/)
+  assert.match(panel, /firstSaleDenominator/)
+  assert.match(panel, /No portfolio metric response is available/)
+  assert.match(panel, /metrics\.unavailableMetrics\.discoveryToOpportunity\.reason/)
+  assert.match(panel, /metrics\.unavailableMetrics\.supportBurden\.reason/)
+  assert.match(panel, /Source-backed/)
+  assert.doesNotMatch(panel, /estimated revenue|market demand score/i)
+})

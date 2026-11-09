@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@riotworks/ui'
 import { FinancialOperationsPanel, type FinancialEventRecord, type FinancialSummaryRow, type FxConversionRecord, type PayoutChannelOption, type PayoutRecord } from './financial-operations-panel.tsx'
+import { AftershockMetricsPanel, type PortfolioMetrics } from './aftershock-metrics-panel.tsx'
 
 type ScoreKey = 'demandEvidence' | 'competitionGap' | 'usefulnessDifferentiation' | 'marketplaceFit' | 'productionFeasibility' | 'durability' | 'distributionReadiness'
 type GateKey = 'rights' | 'countryEligibility' | 'channelPolicy' | 'payoutFeasibility'
@@ -65,7 +66,7 @@ type WorkspaceData = {
   payouts: PayoutRecord[]
   fxConversions: FxConversionRecord[]
   financialSummary: FinancialSummaryRow[]
-  portfolioMetrics: unknown
+  portfolioMetrics: PortfolioMetrics | null
 }
 type IntakeForm = {
   title: string
@@ -136,7 +137,7 @@ export function MoneyMakerWorkspace() {
         readData<PayoutRecord[]>('/api/money-maker/payouts'),
         readData<FxConversionRecord[]>('/api/money-maker/fx-conversions'),
         readData<FinancialSummaryRow[]>('/api/money-maker/financial-summary'),
-        readData<unknown>(`/api/money-maker/portfolio-metrics?${metricsQuery.toString()}`),
+        readData<PortfolioMetrics>(`/api/money-maker/portfolio-metrics?${metricsQuery.toString()}`),
       ])
       setData({
         opportunities: opportunities ?? [],
@@ -402,15 +403,7 @@ export function MoneyMakerWorkspace() {
         <RecordPanel title="Listings" items={data.listings} empty="No manual listing packages yet." />
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Portfolio analytics · rolling 30 days</CardTitle>
-          <CardDescription>Window uses UTC and [from, to) semantics. Metrics without a verified event source are explicitly marked unavailable.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <pre className="max-h-72 overflow-auto rounded bg-muted p-3 text-xs">{JSON.stringify(data.portfolioMetrics, null, 2)}</pre>
-        </CardContent>
-      </Card>
+      <AftershockMetricsPanel metrics={data.portfolioMetrics} loading={loading} />
 
       <FinancialOperationsPanel
         products={data.products.map((product) => ({ id: product.id, title: product.title }))}
