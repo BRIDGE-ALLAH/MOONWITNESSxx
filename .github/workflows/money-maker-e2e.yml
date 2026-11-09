@@ -53,6 +53,7 @@ jobs:
       NODE_ENV: development
       DATABASE_URL: postgres://arsy:arsy_test_password@127.0.0.1:5432/arsy_test
       ARSY_OPERATOR_ID: ci-money-maker-operator
+      ARSY_GLOBAL_RATE_LIMIT_MAX: "1000"
       ARSY_API_BASE_URL: http://127.0.0.1:3101
       HEADQUARTER_PUBLIC_ORIGIN: http://127.0.0.1:3000
       HEADQUARTER_E2E_URL: http://127.0.0.1:3000
