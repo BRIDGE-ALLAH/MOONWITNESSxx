@@ -11,7 +11,7 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json turbo.json ./
 COPY packages ./packages
 COPY apps/arsy ./apps/arsy
 
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --filter @riotworks/arsy... --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @riotworks/arsy build
 RUN pnpm --filter @riotworks/arsy --prod deploy /out/arsy
 
