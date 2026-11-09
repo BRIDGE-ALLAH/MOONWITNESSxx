@@ -121,6 +121,8 @@ function ProductRecordEditor({ product, onSaved }: {
       if (!response.ok) {
         if (response.status === 409) {
           setError('Version conflict: this product changed after it was loaded. The latest persisted version has been refreshed; review it before saving again.')
+          setHistory(null)
+          setHistoryOpen(false)
           await onSaved()
           return
         }
