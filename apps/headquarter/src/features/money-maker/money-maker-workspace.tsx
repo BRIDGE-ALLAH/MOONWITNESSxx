@@ -30,6 +30,7 @@ type WorkspaceData = {
   payouts: RecordItem[]
   fxConversions: RecordItem[]
   financialSummary: unknown
+  portfolioMetrics: unknown
 }
 type IntakeForm = {
   title: string
@@ -52,7 +53,7 @@ type IntakeForm = {
 
 const emptyData: WorkspaceData = {
   opportunities: [], products: [], assets: [], channels: [], listings: [],
-  financialEvents: [], payouts: [], fxConversions: [], financialSummary: null,
+  financialEvents: [], payouts: [], fxConversions: [], financialSummary: null, portfolioMetrics: null,
 }
 const initialForm: IntakeForm = {
   title: '', buyerProblem: '', buyerSegment: '', jobToBeDone: '', productHypothesis: '',
@@ -87,7 +88,10 @@ export function MoneyMakerWorkspace() {
     setLoading(true)
     setError('')
     try {
-      const [opportunities, products, assets, channels, listings, financialEvents, payouts, fxConversions, financialSummary] = await Promise.all([
+      const metricsTo = new Date()
+      const metricsFrom = new Date(metricsTo.getTime() - 30 * 24 * 60 * 60 * 1000)
+      const metricsQuery = new URLSearchParams({ from: metricsFrom.toISOString(), to: metricsTo.toISOString() })
+      const [opportunities, products, assets, channels, listings, financialEvents, payouts, fxConversions, financialSummary, portfolioMetrics] = await Promise.all([
         readData<Opportunity[]>('/api/money-maker/opportunities'),
         readData<Product[]>('/api/money-maker/products'),
         readData<Asset[]>('/api/money-maker/assets'),
@@ -97,8 +101,9 @@ export function MoneyMakerWorkspace() {
         readData<RecordItem[]>('/api/money-maker/payouts'),
         readData<RecordItem[]>('/api/money-maker/fx-conversions'),
         readData<unknown>('/api/money-maker/financial-summary'),
+        readData<unknown>(`/api/money-maker/portfolio-metrics?${metricsQuery.toString()}`),
       ])
-      setData({ opportunities, products, assets, channels, listings, financialEvents, payouts, fxConversions, financialSummary })
+      setData({ opportunities, products, assets, channels, listings, financialEvents, payouts, fxConversions, financialSummary, portfolioMetrics })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to load Money Maker records.')
     } finally {
@@ -349,6 +354,16 @@ export function MoneyMakerWorkspace() {
         <RecordPanel title="Payouts" items={data.payouts} empty="No payout records yet." />
         <RecordPanel title="FX conversions" items={data.fxConversions} empty="No FX conversion records yet." />
       </section>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Portfolio analytics · rolling 30 days</CardTitle>
+          <CardDescription>Window uses UTC and [from, to) semantics. Metrics without a verified event source are explicitly marked unavailable.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <pre className="max-h-72 overflow-auto rounded bg-muted p-3 text-xs">{JSON.stringify(data.portfolioMetrics, null, 2)}</pre>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
