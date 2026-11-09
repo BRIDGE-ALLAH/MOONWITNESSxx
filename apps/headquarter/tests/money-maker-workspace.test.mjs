@@ -47,3 +47,17 @@ test('Money Maker workspace is routable and discoverable in Headquarter navigati
   assert.match(page, /MoneyMakerWorkspace/)
   assert.match(navigation, /href: '\/money-maker'/)
 })
+
+test('product detail editor uses persisted ARSY versions and server-approved lifecycle transitions', () => {
+  assert.match(workspace, /type ProductVersion/)
+  assert.match(workspace, /allowedNextLifecycleStates/)
+  assert.match(workspace, /Current immutable version/)
+  assert.match(workspace, /Version history/)
+  assert.match(workspace, /expectedVersion, brief, acceptanceCriteria/)
+  assert.match(workspace, /response\\.status === 409/)
+  assert.match(workspace, /current version and history were refreshed/)
+  assert.match(workspace, /READY is derived from completed inspections/)
+  assert.match(workspace, /LISTED requires a verified publication receipt/)
+  assert.ok(proxy.includes('products/${uuid}/versions'))
+  assert.ok(proxy.includes('products/${uuid}/lifecycle'))
+})
