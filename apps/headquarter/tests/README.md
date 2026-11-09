@@ -21,7 +21,7 @@ The suite uses Node 24's built-in test runner and native TypeScript type strippi
 - starts an isolated PostgreSQL 17 service and applies the complete ARSY migration set twice;
 - starts the actual ARSY API and Headquarter Next.js application with ephemeral CI-only operator credentials;
 - uses pinned Playwright 1.65.0 with Chromium, without replacing the Headquarter-to-ARSY path with a mock;
-- signs in, creates an evidence-backed opportunity, reloads the browser to prove read-after-restart persistence, archives it, and queries PostgreSQL to verify the durable row and create/archive audit events.
+- signs in, creates an evidence-backed opportunity, reloads the browser page to prove read-after-reload persistence, archives it, and queries PostgreSQL to verify the durable row and create/archive audit events.
 
 The E2E writes only synthetic records to the disposable CI database. Its source URL and evidence summary are explicit fixtures, not market research. It does not contact marketplace providers, publish listings, or move money.
 
