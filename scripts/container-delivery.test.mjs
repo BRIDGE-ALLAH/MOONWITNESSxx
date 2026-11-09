@@ -35,6 +35,10 @@ test('ARSY and Headquarter use production-only workspace deployments and non-roo
     assert.match(dockerfile, new RegExp('pnpm --filter ' + item.packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' --prod deploy ' + item.appPath.replaceAll('/', '\\/')), item.path)
     assert.match(dockerfile, /FROM node:24\.22\.2-alpine3\.23 AS runtime/, item.path)
     assert.match(dockerfile, /COPY --from=build --chown=node:node/, item.path)
+    if (item.path === 'Dockerfile.arsy') {
+      assert.match(dockerfile, /WORKDIR \/workspace\/apps\/arsy/)
+      assert.match(dockerfile, /COPY --from=build --chown=node:node \/workspace\/packages\//)
+    }
     if (item.path === 'Dockerfile.headquarter') assert.match(dockerfile, /cp -a \/workspace\/apps\/headquarter\/\.next\/\./)
     assert.match(dockerfile, /ENV NODE_ENV=production/, item.path)
     assert.match(dockerfile, /USER node\s/, item.path)
