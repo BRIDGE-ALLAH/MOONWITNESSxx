@@ -9,7 +9,7 @@
 - Archive: durable records, knowledge, retrieval, and provenance.
 - RIOTWORKS: independent creative/engineering studio identity; not the product master brand.
 
-See [Design DNA](../10-design-dna.md), [Design System](../11-design-system.md), [Brand Architecture](../12-brand-architecture.md), and [Asset Brand Kit](../../packages/assets/BRAND.md).
+See [Design DNA](../10-design-dna.md), [Design System](../11-design-system.md), [Brand Architecture](../12-brand-architecture.md), and [Asset Brand Kit](../../packages/assets/BRAND.md). Route mapping and skin-token ownership are documented in [Headquarter Route Skin Runtime](../36-headquarter-route-skin-integration-2026-11-09.md).
 
 ## Experiences
 
