@@ -8,11 +8,13 @@ const page = await readFile(new URL('../src/app/money-maker/page.tsx', import.me
 const navigation = await readFile(new URL('../src/shell/navigation.ts', import.meta.url), 'utf8')
 
 test('Money Maker workspace reads persisted ARSY resources without demo fixtures', () => {
-  for (const resource of ['opportunities', 'products', 'assets', 'channels', 'listings', 'financial-events', 'payouts', 'fx-conversions', 'financial-summary']) {
+  for (const resource of ['opportunities', 'products', 'assets', 'channels', 'listings', 'financial-events', 'payouts', 'fx-conversions', 'financial-summary', 'portfolio-metrics']) {
     assert.ok(workspace.includes(`/api/money-maker/${resource}`), `Missing live resource: ${resource}`)
   }
   assert.doesNotMatch(workspace, /DEMO DATA|sample opportunity|fake revenue/i)
   assert.match(workspace, /cache: 'no-store'/)
+  assert.match(workspace, /metricsFrom\.toISOString\(\)/)
+  assert.match(workspace, /metricsTo\.toISOString\(\)/)
 })
 
 test('opportunity intake is evidence-backed and starts unscored with unknown hard gates', () => {
