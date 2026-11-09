@@ -8,6 +8,7 @@ type GateKey = 'rights' | 'countryEligibility' | 'channelPolicy' | 'payoutFeasib
 type Opportunity = {
   id: string
   title: string
+  version: number
   buyerProblem: string
   buyerSegment: string
   jobToBeDone: string
