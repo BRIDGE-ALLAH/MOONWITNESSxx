@@ -217,6 +217,7 @@ The ARSY and Headquarter Dockerfiles are production-runtime images, not the loca
 
 - Multi-stage build: the build stage installs the pinned workspace graph, type-checks/builds the selected app, and uses `pnpm deploy --prod` to create a portable production dependency tree.
 - Runtime stage copies only that deployed package graph and application build output, runs as the unprivileged `node` user, sets `NODE_ENV=production`, and defines an HTTP healthcheck.
+- ARSY uses the local asset adapter at `/var/lib/arsy/assets`, owned by the non-root `node` user and declared as a Docker volume. Production must mount persistent storage at this path; the image's writable layer is not durable storage across container replacement.
 - The root `.dockerignore` keeps Git metadata, local `.env*`, node_modules, generated output, private keys and local certificates out of root-context builds.
 
 ### Build and publish policy
