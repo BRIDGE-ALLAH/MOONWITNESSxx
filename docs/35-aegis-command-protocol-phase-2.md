@@ -18,9 +18,9 @@ The Go package `internal/protocol` validates the structural envelope:
 - `operation`: exact operation identifier checked against an explicit allowlist.
 - `target_id`: opaque inventory identifier, never an arbitrary host or URL.
 - `issued_at` / `expires_at`: bounded validity window.
-- `payload`: JSON object; operation-specific schemas must be added before any operation is enabled.
+- `payload`: JSON object; operation-specific schemas must be added before any operation is enabled. The validator requires an explicit payload size limit.
 
-The validator rejects missing/invalid identifiers, unknown operations, malformed payloads, expired/future commands, and validity windows over the configured maximum TTL. An empty allowlist denies every operation.
+The strict decoder rejects oversized envelopes, unknown fields, and trailing JSON values. The validator rejects missing/invalid identifiers, oversized or malformed payloads, unknown operations, expired/future commands, and validity windows over the configured maximum TTL. An empty allowlist denies every operation.
 
 ## Deliberately absent
 

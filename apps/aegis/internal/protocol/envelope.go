@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"time"
 )
 
 const VersionV1 = "v1"
+
+const MaxEnvelopeBytes = 128 * 1024
 
 var identifierPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$`)
 
@@ -27,8 +30,28 @@ type Envelope struct {
 type Validator struct {
 	AllowedOperations map[string]struct{}
 	MaxTTL            time.Duration
+	MaxPayloadBytes   int
 	ClockSkew         time.Duration
 	Now               func() time.Time
+}
+
+// DecodeEnvelope rejects oversized documents, unknown fields, and trailing JSON values.
+func DecodeEnvelope(data []byte) (Envelope, error) {
+	if len(data) == 0 || len(data) > MaxEnvelopeBytes {
+		return Envelope{}, errors.New("command envelope is empty or exceeds the maximum size")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+
+	var envelope Envelope
+	if err := decoder.Decode(&envelope); err != nil {
+		return Envelope{}, fmt.Errorf("decode command envelope: %w", err)
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		return Envelope{}, errors.New("command envelope must contain exactly one JSON object")
+	}
+	return envelope, nil
 }
 
 func (v Validator) Validate(e Envelope) error {
@@ -43,7 +66,10 @@ func (v Validator) Validate(e Envelope) error {
 			return fmt.Errorf("%s is missing or has invalid characters", name)
 		}
 	}
-	if len(e.Payload) == 0 || !json.Valid(e.Payload) || !bytes.HasPrefix(bytes.TrimSpace(e.Payload), []byte("{")) {
+	if v.MaxPayloadBytes <= 0 {
+		return errors.New("validator MaxPayloadBytes must be configured")
+	}
+	if len(e.Payload) == 0 || len(e.Payload) > v.MaxPayloadBytes || !json.Valid(e.Payload) || !bytes.HasPrefix(bytes.TrimSpace(e.Payload), []byte("{")) {
 		return errors.New("payload must be a valid JSON object")
 	}
 	if e.IssuedAt.IsZero() || e.ExpiresAt.IsZero() || !e.ExpiresAt.After(e.IssuedAt) {

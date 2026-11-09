@@ -19,7 +19,7 @@ func validEnvelope(now time.Time) Envelope {
 func validator(now time.Time) Validator {
 	return Validator{
 		AllowedOperations: map[string]struct{}{"inventory.read": {}},
-		MaxTTL:            2 * time.Minute, ClockSkew: 5 * time.Second,
+		MaxTTL:            2 * time.Minute, MaxPayloadBytes: 1024, ClockSkew: 5 * time.Second,
 		Now: func() time.Time { return now },
 	}
 }
@@ -74,5 +74,36 @@ func TestValidateRequiresConfiguredMaxTTL(t *testing.T) {
 	v.MaxTTL = 0
 	if err := v.Validate(validEnvelope(now)); err == nil {
 		t.Fatal("expected missing MaxTTL to be rejected")
+	}
+}
+
+func TestDecodeEnvelopeRejectsUnknownFields(t *testing.T) {
+	_, err := DecodeEnvelope([]byte(`{"version":"v1","unexpected":true}`))
+	if err == nil {
+		t.Fatal("expected unknown field to be rejected")
+	}
+}
+
+func TestDecodeEnvelopeRejectsTrailingJSON(t *testing.T) {
+	_, err := DecodeEnvelope([]byte(`{"version":"v1"} {"version":"v1"}`))
+	if err == nil {
+		t.Fatal("expected trailing JSON value to be rejected")
+	}
+}
+
+func TestDecodeEnvelopeRejectsOversizedInput(t *testing.T) {
+	data := make([]byte, MaxEnvelopeBytes+1)
+	if _, err := DecodeEnvelope(data); err == nil {
+		t.Fatal("expected oversized envelope to be rejected")
+	}
+}
+
+func TestValidateRejectsOversizedPayload(t *testing.T) {
+	now := time.Date(2026, 11, 9, 0, 0, 0, 0, time.UTC)
+	e := validEnvelope(now)
+	v := validator(now)
+	v.MaxPayloadBytes = 4
+	if err := v.Validate(e); err == nil {
+		t.Fatal("expected oversized payload to be rejected")
 	}
 }
