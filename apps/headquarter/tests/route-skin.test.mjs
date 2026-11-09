@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { resolveHeadquarterSkin } from '../src/shell/route-skin.ts'
 
 const appShell = await readFile(new URL('../src/components/AppShell.tsx', import.meta.url), 'utf8')
+const archivePage = await readFile(new URL('../src/app/sidra-archive/page.tsx', import.meta.url), 'utf8')
 
 test('operational routes use Observatory by default', () => {
   for (const path of ['/', '/dashboard', '/settings', '/arsy/opportunities', '/cockpit']) {
@@ -20,6 +21,10 @@ test('SIDRA Archive routes use the reading-first Archive skin', () => {
 test('route matching ignores query strings, hashes and trailing slashes', () => {
   assert.equal(resolveHeadquarterSkin('/sidra-archive/records/?q=moon#source').skin, 'archive')
   assert.equal(resolveHeadquarterSkin(null).skin, 'observatory')
+})
+
+test('Archive page inherits route tokens without a nested legacy skin override', () => {
+  assert.doesNotMatch(archivePage, /theme-archive/)
 })
 
 test('AppShell applies route skin and keeps user appearance switching connected', () => {
