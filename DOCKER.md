@@ -211,6 +211,34 @@ Do not use `docker compose down -v` or `docker system prune --volumes` as a star
 - Runs read-only, drops all Linux capabilities, and enables `no-new-privileges`.
 - Does not yet execute WireGuard, RouterOS, firewall, routing, DNS, provisioning, or arbitrary commands. ARSY-to-AEGIS authenticated authorization/protocol integration is not implemented.
 
+## Production container delivery (partial)
+
+The ARSY and Headquarter Dockerfiles are production-runtime images, not the local development containers:
+
+- Multi-stage build: the build stage installs the pinned workspace graph, type-checks/builds the selected app, and uses `pnpm deploy --prod` to create a portable production dependency tree.
+- Runtime stage copies only that deployed package graph and application build output, runs as the unprivileged `node` user, sets `NODE_ENV=production`, and defines an HTTP healthcheck.
+- The root `.dockerignore` keeps Git metadata, local `.env*`, node_modules, generated output, private keys and local certificates out of root-context builds.
+
+### Build and publish policy
+
+`.github/workflows/container-release.yml` is deliberately separate from pull-request CI:
+
+- A manual run is accepted only from `main`; a version-tag run is accepted only for `v*` tags.
+- It publishes commit-addressed `sha-<commit>` candidates to GHCR. It never writes a floating `latest` tag.
+- BuildKit emits an SBOM and max-mode provenance; Trivy blocks high/critical vulnerabilities with fixes available; the GitHub artifact attestation is attached to the pushed digest.
+- A semantic-version alias is created from the same immutable digest only after the image scan passes.
+- No production deployment, host mutation, DNS change, registry permission change, or secret provisioning is performed by this workflow.
+
+The current publish matrix includes **ARSY, Headquarter and AEGIS only**. It intentionally does not claim a complete application stack: ORACLE does not yet have a committed Python dependency lock, and ATLAS's Cargo.lock is currently generated as a CI artifact rather than committed source. Those runtime images must be made lockfile-backed and separately verified before being added to the production delivery matrix. AEGIS is currently a health/control-plane foundation; its integration with ARSY is a separate acceptance gate.
+
+### How to publish a candidate
+
+From the GitHub Actions tab, select **Production container delivery** and run it against `main`. The workflow produces the candidate image under its commit SHA. For a version tag, the workflow also creates a version alias after scanning. Use the immutable digest in deployment records; do not deploy a moving tag.
+
+The GHCR packages are published with the repository's GitHub Actions token. Registry visibility and pull credentials still need to be configured for the intended deployment environment. The workflow is an artifact pipeline, not a production deployment pipeline.
+
+**Production remains NO-GO** until ORACLE/ATLAS image contracts, least-privilege database credentials, ingress/TLS and trusted-proxy signing, production secrets, private networking, backup/restore, monitoring, rollback, and a real target smoke test are verified. The default Compose stack below remains local-development-only.
+
 ## Docker Connector
 
 See [docs/29-docker-connector.md](docs/29-docker-connector.md) for the read-only Docker Engine connector, operator authentication requirements, remote mutual-TLS allowlist, database migration, and the explicit local-socket security boundary. The host Docker socket is intentionally not mounted into ARSY by default.
