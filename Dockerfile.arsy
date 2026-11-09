@@ -16,6 +16,8 @@ RUN pnpm install --filter @riotworks/arsy... --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @riotworks/arsy build
 RUN node scripts/prepare-arsy-runtime-packages.mjs
 RUN pnpm --filter @riotworks/arsy --prod deploy /out/arsy
+RUN node scripts/prepare-arsy-runtime-packages.mjs --deployed-root /out/arsy
+RUN cd /out/arsy && node --input-type=module -e "import { governanceSnapshotInputSchema } from '@riotworks/contract'; import { authorizeCapability } from '@riotworks/arsy-core'; if (typeof governanceSnapshotInputSchema.safeParse !== 'function' || typeof authorizeCapability !== 'function') process.exit(1); console.log('ARSY production workspace package exports verified')"
 
 FROM node:24.22.2-alpine3.23 AS runtime
 ENV NODE_ENV=production
