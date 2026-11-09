@@ -27,6 +27,11 @@ test('opportunity intake is evidence-backed and starts unscored with unknown har
   assert.match(workspace, /channelPolicy: 'unknown'/)
   assert.match(workspace, /payoutFeasibility: 'unknown'/)
   assert.match(workspace, /An operator review with supporting evidence is required/)
+  assert.match(workspace, /Review scores & hard gates/)
+  assert.match(workspace, /expectedVersion: opportunity.version/)
+  assert.match(workspace, /evidenceIds: \[evidenceId\]/)
+  assert.match(workspace, /Create product brief/)
+  assert.match(workspace, /acceptanceCriteria/)
 })
 
 test('the server proxy uses the authenticated ARSY boundary and a finite route/method allowlist', () => {
