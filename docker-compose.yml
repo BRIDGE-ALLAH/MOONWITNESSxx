@@ -172,6 +172,36 @@ services:
       timeout: 10s
       retries: 3
 
+  # AEGIS network runtime — health-only foundation; no device mutation API.
+  aegis:
+    build:
+      context: ./apps/aegis
+      dockerfile: Dockerfile
+    container_name: moonwitness-aegis
+    environment:
+      AEGIS_HOST: 0.0.0.0
+      AEGIS_PORT: 3102
+      AEGIS_READ_HEADER_TIMEOUT: ${AEGIS_READ_HEADER_TIMEOUT:-5s}
+      AEGIS_SHUTDOWN_TIMEOUT: ${AEGIS_SHUTDOWN_TIMEOUT:-10s}
+    ports:
+      - '127.0.0.1:${AEGIS_PORT:-3102}:3102'
+    networks:
+      - moonwitness
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    healthcheck:
+      test: ['CMD', '/aegis', 'healthcheck']
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
   # Headquarter frontend — Next.js application
   headquarter:
     build:

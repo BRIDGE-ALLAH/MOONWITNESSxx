@@ -1,0 +1,57 @@
+name: AEGIS Go Runtime
+
+on:
+  pull_request:
+    paths:
+      - "apps/aegis/**"
+      - "docker-compose.yml"
+      - ".github/workflows/aegis.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/aegis/**"
+      - "docker-compose.yml"
+      - ".github/workflows/aegis.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    name: Go format, vet, race tests, and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache-dependency-path: apps/aegis/go.mod
+      - name: Verify gofmt
+        working-directory: apps/aegis
+        run: |
+          files="$(gofmt -l ./cmd ./internal)"
+          test -z "$files" || { printf '%s\n' "$files"; exit 1; }
+      - name: Vet
+        working-directory: apps/aegis
+        run: go vet ./...
+      - name: Race tests
+        working-directory: apps/aegis
+        run: go test -race ./...
+      - name: Build
+        working-directory: apps/aegis
+        run: CGO_ENABLED=0 go build -trimpath ./cmd/aegis
+
+  compose:
+    name: Compose validation and image build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose
+        env:
+          POSTGRES_PASSWORD: ci-placeholder-only
+          ORACLE_APP_DB_PASSWORD: ci-placeholder-only
+          ORACLE_MIGRATOR_DB_PASSWORD: ci-placeholder-only
+          ORACLE_SERVICE_TOKEN: ci-placeholder-only
+        run: docker compose config --quiet
+      - name: Build AEGIS image
+        run: docker build -t moonwitness-aegis:ci ./apps/aegis
