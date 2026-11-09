@@ -1,0 +1,147 @@
+name: Production container delivery
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-container-delivery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build, scan and attest ${{ matrix.image }}
+    if: >-
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: arsy
+            context: .
+            file: Dockerfile.arsy
+          - image: headquarter
+            context: .
+            file: Dockerfile.headquarter
+          - image: aegis
+            context: ./apps/aegis
+            file: Dockerfile
+
+    steps:
+      - name: Checkout the exact tagged or mainline source
+        uses: actions/checkout@v7
+
+      - name: Normalize GHCR owner
+        id: owner
+        shell: bash
+        run: echo "value=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Derive immutable image identity
+        id: meta
+        shell: bash
+        env:
+          IMAGE_OWNER: ${{ steps.owner.outputs.value }}
+          IMAGE_NAME: ${{ matrix.image }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${IMAGE_OWNER}/moonwitness-${IMAGE_NAME}"
+          sha_tag="sha-${GITHUB_SHA}"
+          {
+            echo "image=${image}"
+            echo "sha_tag=${sha_tag}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.4.1
+
+      - name: Authenticate to GitHub Container Registry
+        uses: docker/login-action@v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push commit-addressed candidate with SBOM and provenance
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/${{ matrix.file }}
+          pull: true
+          push: true
+          tags: ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha_tag }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+          sbom: true
+          provenance: mode=max
+          cache-from: type=gha,scope=release-${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=release-${{ matrix.image }}
+
+      - name: Reject images with unfixed or fixed high/critical vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha_tag }}
+          format: table
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Add the immutable version alias only after the image scan passes
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          IMAGE: ${{ steps.meta.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          docker buildx imagetools create \
+            --tag "${IMAGE}:${VERSION}" \
+            "${IMAGE}@${DIGEST}"
+
+      - name: Publish a GitHub artifact attestation for the pushed digest
+        uses: actions/attest@v4.2.2
+        with:
+          subject-name: ${{ steps.meta.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Record immutable artifact details
+        shell: bash
+        env:
+          IMAGE: ${{ steps.meta.outputs.image }}
+          SHA_TAG: ${{ steps.meta.outputs.sha_tag }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          {
+            echo "### ${{ matrix.image }}"
+            echo
+            echo "- Candidate: `${IMAGE}:${SHA_TAG}`"
+            echo "- Immutable reference: `${IMAGE}@${DIGEST}`"
+            if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+              echo "- Version alias: `${IMAGE}:${VERSION}` (created after scan)"
+            else
+              echo "- Version alias: not created (manual mainline candidate)"
+            fi
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
