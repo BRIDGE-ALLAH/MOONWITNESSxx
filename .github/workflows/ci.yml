@@ -381,3 +381,48 @@ jobs:
 
       - name: Run real PostgreSQL login-throttle integration
         run: pnpm --filter @riotworks/arsy exec node --experimental-transform-types --test tests/login-throttle-postgres.integration.test.mjs
+
+  production-container-build:
+    name: Production container image build
+    needs:
+      - full-workspace-quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: moonwitness-arsy
+            dockerfile: Dockerfile.arsy
+          - image: moonwitness-headquarter
+            dockerfile: Dockerfile.headquarter
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.4.1
+
+      - name: Build production image without publishing
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          pull: true
+          push: false
+          load: true
+          tags: ${{ matrix.image }}:ci
+
+      - name: Verify non-root runtime identity and healthcheck
+        shell: bash
+        env:
+          IMAGE: ${{ matrix.image }}:ci
+        run: |
+          set -euo pipefail
+          configured_user="$(docker image inspect --format '{{.Config.User}}' "$IMAGE")"
+          test "$configured_user" = "node"
+          docker run --rm --entrypoint node "$IMAGE" -e 'if (typeof process.getuid !== "function" || process.getuid() === 0) process.exit(1)'
+          healthcheck="$(docker image inspect --format '{{if .Config.Healthcheck}}configured{{else}}missing{{end}}' "$IMAGE")"
+          test "$healthcheck" = "configured"
+          docker image inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$IMAGE" | grep -qx 'NODE_ENV=production'
+
