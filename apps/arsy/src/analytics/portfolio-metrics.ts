@@ -59,8 +59,8 @@ export class PortfolioMetricsRepository {
           (
             SELECT MIN(l.published_at)
             FROM arsy_listings l
-            JOIN arsy_product_versions pv ON pv.id = l.product_version_id
-            WHERE l.owner_id = p.owner_id AND pv.product_id = p.id
+            JOIN arsy_product_versions pv ON pv.product_id = l.product_id AND pv.version = l.product_version
+            WHERE l.owner_id = p.owner_id AND l.product_id = p.id
               AND l.status = 'published' AND l.published_at IS NOT NULL
           ) AS first_published_at,
           (

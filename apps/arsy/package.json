@@ -5,9 +5,9 @@
   "description": "ARSY HTTP application with rate-limited database health checks",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "node --watch --experimental-strip-types src/index.ts",
+    "dev": "node --watch --experimental-transform-types src/index.ts",
     "build": "pnpm run type-check",
-    "start": "node --experimental-strip-types src/index.ts",
+    "start": "node --experimental-transform-types src/index.ts",
     "lint": "eslint src --max-warnings 0",
     "type-check": "tsc --noEmit",
     "test": "node --experimental-transform-types --test tests/*.test.mjs",

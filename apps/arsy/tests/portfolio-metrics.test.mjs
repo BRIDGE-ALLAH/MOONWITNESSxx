@@ -74,6 +74,8 @@ test('portfolio metrics return database cohort aggregates and preserve unavailab
     assert.equal(response.json().data.products.averageCompletedLifetimeSeconds, '86400.00')
     assert.equal(response.json().data.unavailableMetrics.discoveryToOpportunity.available, false)
     assert.deepEqual(db.calls[0].values, ['metrics-owner', '2026-10-01T00:00:00Z', '2026-11-01T00:00:00Z'])
+    assert.match(db.calls[0].sql, /JOIN arsy_product_versions pv ON pv.product_id = l.product_id AND pv.version = l.product_version/)
+    assert.doesNotMatch(db.calls[0].sql, /l\.product_version_id/)
     assert.match(db.calls[0].sql, /reconciliation_state = 'verified'/)
     assert.match(db.calls[0].sql, /metadata ->> 'to' = 'retired'/)
   } finally {
