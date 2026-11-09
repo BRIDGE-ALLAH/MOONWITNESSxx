@@ -3,10 +3,22 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@riotworks/ui'
 
+type ScoreKey = 'demandEvidence' | 'competitionGap' | 'usefulnessDifferentiation' | 'marketplaceFit' | 'productionFeasibility' | 'durability' | 'distributionReadiness'
+type GateKey = 'rights' | 'countryEligibility' | 'channelPolicy' | 'payoutFeasibility'
 type Opportunity = {
   id: string
   title: string
-  version: number
+  buyerProblem: string
+  buyerSegment: string
+  jobToBeDone: string
+  productHypothesis: string
+  productFamily: string
+  candidateChannels: string[]
+  evidence: Array<{ evidenceId: string; sourceName: string; sourceUrl: string; summary: string }>
+  scores: Partial<Record<ScoreKey, number>>
+  scoreDetails: Partial<Record<ScoreKey, { rationale: string; confidence: 'high' | 'medium' | 'low' | 'unknown'; evidenceIds: string[] }>>
+  hardGates: Record<GateKey, 'pass' | 'blocked' | 'unknown'>
+  hardGateDetails: Record<GateKey, { status: 'pass' | 'blocked' | 'unknown'; rationale: string; evidenceIds: string[] }>
   evaluation: {
     score: number | null
     decision: string
@@ -250,19 +262,22 @@ export function MoneyMakerWorkspace() {
             ) : (
               <div className="space-y-3">
                 {data.opportunities.map((item) => (
-                  <article key={item.id} className="flex flex-wrap items-start justify-between gap-3 rounded border border-border p-4">
-                    <div className="min-w-0 space-y-2">
-                      <h3 className="font-semibold">{item.title}</h3>
-                      <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <Badge variant="outline">{item.evaluation.decision}</Badge>
-                        <span className="text-muted-foreground">Version {item.version}</span>
-                        <span className="text-muted-foreground">{item.evaluation.score === null ? 'Unscored' : `Score ${item.evaluation.score}/100`}</span>
+                  <article key={item.id} className="space-y-3 rounded border border-border p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-2">
+                        <h3 className="font-semibold">{item.title}</h3>
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <Badge variant="outline">{item.evaluation.decision}</Badge>
+                          <span className="text-muted-foreground">Version {item.version}</span>
+                          <span className="text-muted-foreground">{item.evaluation.score === null ? 'Unscored' : `Score ${item.evaluation.score}/100`}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {item.evaluation.unknownGates.length} unknown gates · {item.evaluation.blockedGates.length} blocked gates · {item.evaluation.missingScoreDimensions.length} unscored dimensions
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {item.evaluation.unknownGates.length} unknown gates · {item.evaluation.blockedGates.length} blocked gates · {item.evaluation.missingScoreDimensions.length} unscored dimensions
-                      </p>
+                      <button type="button" onClick={() => void archiveOpportunity(item.id)} className="rounded border border-border px-3 py-1.5 text-xs hover:bg-muted">Archive</button>
                     </div>
-                    <button type="button" onClick={() => void archiveOpportunity(item.id)} className="rounded border border-border px-3 py-1.5 text-xs hover:bg-muted">Archive</button>
+                    <OpportunityReviewForm opportunity={item} onSaved={refresh} onError={setError} onNotice={setNotice} />
                   </article>
                 ))}
               </div>
@@ -376,6 +391,170 @@ export function MoneyMakerWorkspace() {
         </CardContent>
       </Card>
     </main>
+  )
+}
+
+const scoreFields: Array<{ key: ScoreKey; label: string; max: number }> = [
+  { key: 'demandEvidence', label: 'Demand evidence', max: 25 },
+  { key: 'competitionGap', label: 'Competition gap', max: 20 },
+  { key: 'usefulnessDifferentiation', label: 'Usefulness / differentiation', max: 15 },
+  { key: 'marketplaceFit', label: 'Marketplace fit', max: 15 },
+  { key: 'productionFeasibility', label: 'Production feasibility', max: 10 },
+  { key: 'durability', label: 'Durability', max: 10 },
+  { key: 'distributionReadiness', label: 'Distribution readiness', max: 5 },
+]
+const gateFields: Array<{ key: GateKey; label: string }> = [
+  { key: 'rights', label: 'Rights' },
+  { key: 'countryEligibility', label: 'Country eligibility' },
+  { key: 'channelPolicy', label: 'Channel policy' },
+  { key: 'payoutFeasibility', label: 'Payout feasibility' },
+]
+
+function OpportunityReviewForm({
+  opportunity, onSaved, onError, onNotice,
+}: {
+  opportunity: Opportunity
+  onSaved: () => Promise<void>
+  onError: (value: string) => void
+  onNotice: (value: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [promoting, setPromoting] = useState(false)
+  const [evidenceId, setEvidenceId] = useState(opportunity.evidence[0]?.evidenceId ?? '')
+  const [scores, setScores] = useState<Record<ScoreKey, string>>(() => Object.fromEntries(scoreFields.map(({ key }) => [key, opportunity.scores[key] === undefined ? '' : String(opportunity.scores[key])])) as Record<ScoreKey, string>)
+  const [scoreRationales, setScoreRationales] = useState<Record<ScoreKey, string>>(() => Object.fromEntries(scoreFields.map(({ key }) => [key, opportunity.scoreDetails[key]?.rationale ?? ''])) as Record<ScoreKey, string>)
+  const [confidences, setConfidences] = useState<Record<ScoreKey, 'high' | 'medium' | 'low' | 'unknown'>>(() => Object.fromEntries(scoreFields.map(({ key }) => [key, opportunity.scoreDetails[key]?.confidence ?? 'unknown'])) as Record<ScoreKey, 'high' | 'medium' | 'low' | 'unknown'>)
+  const [gates, setGates] = useState<Record<GateKey, 'pass' | 'blocked' | 'unknown'>>({ ...opportunity.hardGates })
+  const [gateRationales, setGateRationales] = useState<Record<GateKey, string>>(() => Object.fromEntries(gateFields.map(({ key }) => [key, opportunity.hardGateDetails[key]?.rationale ?? 'Not yet verified; operator review required.'])) as Record<GateKey, string>)
+  const [criteria, setCriteria] = useState('')
+
+  async function saveReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!evidenceId) { onError('Select a supporting evidence record before saving a review.'); return }
+    setSaving(true); onError(''); onNotice('')
+    try {
+      const nextScores: Partial<Record<ScoreKey, number>> = {}
+      const nextScoreDetails: Opportunity['scoreDetails'] = {}
+      for (const { key, max, label } of scoreFields) {
+        const raw = scores[key].trim()
+        if (!raw) continue
+        const value = Number(raw)
+        if (!Number.isFinite(value) || value < 0 || value > max) throw new Error(`${label} must be between 0 and ${max}.`)
+        if (scoreRationales[key].trim().length < 10) throw new Error(`Add an evidence-based rationale (at least 10 characters) for ${label}.`)
+        nextScores[key] = value
+        nextScoreDetails[key] = { rationale: scoreRationales[key].trim(), confidence: confidences[key], evidenceIds: [evidenceId] }
+      }
+      const hardGateDetails = Object.fromEntries(gateFields.map(({ key }) => {
+        const rationale = gateRationales[key].trim()
+        if (rationale.length < 5) throw new Error(`Add a rationale for ${key}.`)
+        return [key, { status: gates[key], rationale, evidenceIds: gates[key] === 'unknown' ? [] : [evidenceId] }]
+      }))
+      const input = {
+        title: opportunity.title,
+        buyerProblem: opportunity.buyerProblem,
+        buyerSegment: opportunity.buyerSegment,
+        jobToBeDone: opportunity.jobToBeDone,
+        productHypothesis: opportunity.productHypothesis,
+        productFamily: opportunity.productFamily,
+        candidateChannels: opportunity.candidateChannels,
+        evidence: opportunity.evidence,
+        scores: nextScores,
+        scoreDetails: nextScoreDetails,
+        hardGates: gates,
+        hardGateDetails,
+      }
+      const response = await fetch(`/api/money-maker/opportunities/${encodeURIComponent(opportunity.id)}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ expectedVersion: opportunity.version, input }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error?.message ?? 'Unable to save opportunity review.')
+      onNotice('Evidence review saved. Promotion remains subject to the complete score and all hard gates.')
+      setOpen(false)
+      await onSaved()
+    } catch (cause) {
+      onError(cause instanceof Error ? cause.message : 'Unable to save opportunity review.')
+    } finally { setSaving(false) }
+  }
+
+  async function createProduct(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const acceptanceCriteria = criteria.split('\n').map((value) => value.trim()).filter(Boolean)
+    if (acceptanceCriteria.length === 0) { onError('Add at least one acceptance criterion before creating the product brief.'); return }
+    setPromoting(true); onError(''); onNotice('')
+    try {
+      const response = await fetch('/api/money-maker/products/from-opportunity', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ opportunityId: opportunity.id, acceptanceCriteria }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error?.message ?? 'Unable to create product brief.')
+      onNotice('Product brief created from the reviewed opportunity snapshot.')
+      await onSaved()
+    } catch (cause) {
+      onError(cause instanceof Error ? cause.message : 'Unable to create product brief.')
+    } finally { setPromoting(false) }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => setOpen((value) => !value)} className="rounded border border-border px-3 py-1.5 text-xs hover:bg-muted">
+          {open ? 'Close evidence review' : 'Review scores & hard gates'}
+        </button>
+        {opportunity.evaluation.decision === 'prototype-candidate' && (
+          <form onSubmit={createProduct} className="flex min-w-0 flex-1 flex-wrap gap-2">
+            <textarea required value={criteria} onChange={(event) => setCriteria(event.target.value)} placeholder="Acceptance criteria, one per line" className="min-h-10 min-w-48 flex-1 rounded border border-input bg-background px-3 py-2 text-xs" />
+            <button type="submit" disabled={promoting} className="rounded bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">{promoting ? 'Creating…' : 'Create product brief'}</button>
+          </form>
+        )}
+      </div>
+      {open && (
+        <form onSubmit={saveReview} className="space-y-4 rounded border border-border bg-muted/20 p-3">
+          <div className="space-y-1">
+            <label className="block text-xs font-medium">Evidence record used for this review</label>
+            <select required value={evidenceId} onChange={(event) => setEvidenceId(event.target.value)} className="w-full rounded border border-input bg-background px-3 py-2 text-xs">
+              {opportunity.evidence.map((item) => <option key={item.evidenceId} value={item.evidenceId}>{item.sourceName} · {item.evidenceId}</option>)}
+            </select>
+            <p className="text-xs text-muted-foreground">Only evidence already attached to this opportunity can support scores or non-unknown hard gates.</p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {scoreFields.map(({ key, label, max }) => (
+              <div key={key} className="space-y-1 rounded border border-border p-2">
+                <label className="block text-xs font-semibold">{label} (0–{max})
+                  <input type="number" min="0" max={max} step="0.01" value={scores[key]} onChange={(event) => setScores((current) => ({ ...current, [key]: event.target.value }))} className="mt-1 w-full rounded border border-input bg-background px-2 py-1.5 text-xs" />
+                </label>
+                {scores[key] !== '' && <>
+                  <textarea required minLength={10} value={scoreRationales[key]} onChange={(event) => setScoreRationales((current) => ({ ...current, [key]: event.target.value }))} placeholder="Why does the evidence justify this score?" className="min-h-16 w-full rounded border border-input bg-background px-2 py-1.5 text-xs" />
+                  <select value={confidences[key]} onChange={(event) => setConfidences((current) => ({ ...current, [key]: event.target.value as typeof current[ScoreKey] }))} className="w-full rounded border border-input bg-background px-2 py-1.5 text-xs">
+                    {['high', 'medium', 'low', 'unknown'].map((value) => <option key={value} value={value}>Confidence: {value}</option>)}
+                  </select>
+                </>}
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold">Hard gates</h4>
+            <div className="grid gap-3 md:grid-cols-2">
+              {gateFields.map(({ key, label }) => (
+                <div key={key} className="space-y-1 rounded border border-border p-2">
+                  <label className="block text-xs font-semibold">{label}
+                    <select value={gates[key]} onChange={(event) => setGates((current) => ({ ...current, [key]: event.target.value as typeof current[GateKey] }))} className="mt-1 w-full rounded border border-input bg-background px-2 py-1.5 text-xs">
+                      {['unknown', 'pass', 'blocked'].map((value) => <option key={value} value={value}>{value}</option>)}
+                    </select>
+                  </label>
+                  <textarea required minLength={5} value={gateRationales[key]} onChange={(event) => setGateRationales((current) => ({ ...current, [key]: event.target.value }))} placeholder="Explain the gate status" className="min-h-14 w-full rounded border border-input bg-background px-2 py-1.5 text-xs" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <button type="submit" disabled={saving} className="rounded bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">{saving ? 'Saving review…' : 'Save review with evidence references'}</button>
+        </form>
+      )}
+    </div>
   )
 }
 
