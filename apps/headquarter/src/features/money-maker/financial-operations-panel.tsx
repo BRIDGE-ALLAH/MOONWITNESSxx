@@ -601,9 +601,9 @@ function FxConversionForm({
         rateNumerator, rateDenominator, rateSource, sourceUrl, observedAt: toIso(observedAt),
         idempotencyKey: 'hq-fx-conversion-' + crypto.randomUUID(),
       })
-      onNotice('FX conversion provenance recorded. Original financial event and its currency remain unchanged.')
       setSourceUrl('')
       await onRefresh()
+      onNotice('FX conversion provenance recorded. Original financial event and its currency remain unchanged.')
     } catch (cause) {
       onError(cause instanceof Error ? cause.message : 'Unable to record FX conversion.')
     } finally {
