@@ -393,9 +393,23 @@ jobs:
       matrix:
         include:
           - image: moonwitness-arsy
+            context: .
             dockerfile: Dockerfile.arsy
+            runtime_user: node
+            runtime_kind: node
+            healthcheck: true
           - image: moonwitness-headquarter
+            context: .
             dockerfile: Dockerfile.headquarter
+            runtime_user: node
+            runtime_kind: node
+            healthcheck: true
+          - image: moonwitness-aegis
+            context: ./apps/aegis
+            dockerfile: Dockerfile
+            runtime_user: nonroot:nonroot
+            runtime_kind: distroless
+            healthcheck: false
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -406,23 +420,33 @@ jobs:
       - name: Build production image without publishing
         uses: docker/build-push-action@v7
         with:
-          context: .
-          file: ${{ matrix.dockerfile }}
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/${{ matrix.dockerfile }}
           pull: true
           push: false
           load: true
           tags: ${{ matrix.image }}:ci
 
-      - name: Verify non-root runtime identity and healthcheck
+      - name: Verify non-root runtime identity and production metadata
         shell: bash
         env:
           IMAGE: ${{ matrix.image }}:ci
+          EXPECTED_USER: ${{ matrix.runtime_user }}
+          RUNTIME_KIND: ${{ matrix.runtime_kind }}
+          EXPECT_HEALTHCHECK: ${{ matrix.healthcheck }}
         run: |
           set -euo pipefail
           configured_user="$(docker image inspect --format '{{.Config.User}}' "$IMAGE")"
-          test "$configured_user" = "node"
-          docker run --rm --entrypoint node "$IMAGE" -e 'if (typeof process.getuid !== "function" || process.getuid() === 0) process.exit(1)'
-          healthcheck="$(docker image inspect --format '{{if .Config.Healthcheck}}configured{{else}}missing{{end}}' "$IMAGE")"
-          test "$healthcheck" = "configured"
-          docker image inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$IMAGE" | grep -qx 'NODE_ENV=production'
+          test "$configured_user" = "$EXPECTED_USER"
+          if [[ "$RUNTIME_KIND" == "node" ]]; then
+            docker run --rm --entrypoint node "$IMAGE" -e 'if (typeof process.getuid !== "function" || process.getuid() === 0) process.exit(1)'
+            docker image inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$IMAGE" | grep -qx 'NODE_ENV=production'
+          else
+            entrypoint="$(docker image inspect --format '{{json .Config.Entrypoint}}' "$IMAGE")"
+            test "$entrypoint" = '["/aegis"]'
+          fi
+          if [[ "$EXPECT_HEALTHCHECK" == "true" ]]; then
+            healthcheck="$(docker image inspect --format '{{if .Config.Healthcheck}}configured{{else}}missing{{end}}' "$IMAGE")"
+            test "$healthcheck" = "configured"
+          fi
 
