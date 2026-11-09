@@ -1,0 +1,189 @@
+name: Money Maker PostgreSQL Browser E2E
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/money-maker-e2e.yml"
+      - "apps/arsy/**"
+      - "apps/headquarter/**"
+      - "packages/contract/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/money-maker-e2e.yml"
+      - "apps/arsy/**"
+      - "apps/headquarter/**"
+      - "packages/contract/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: money-maker-postgres-browser-e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  money-maker-browser-e2e:
+    name: Money Maker real PostgreSQL browser workflow
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: arsy
+          POSTGRES_PASSWORD: arsy_test_password
+          POSTGRES_DB: arsy_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arsy -d arsy_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      NODE_ENV: development
+      DATABASE_URL: postgres://arsy:arsy_test_password@127.0.0.1:5432/arsy_test
+      ARSY_OPERATOR_ID: ci-money-maker-operator
+      ARSY_API_BASE_URL: http://127.0.0.1:3101
+      HEADQUARTER_PUBLIC_ORIGIN: http://127.0.0.1:3000
+      HEADQUARTER_E2E_URL: http://127.0.0.1:3000
+      HOST: 127.0.0.1
+      PORT: 3101
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.16.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create ephemeral CI-only operator credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          arsy_token="$(openssl rand -hex 32)"
+          operator_password="$(openssl rand -hex 24)"
+          session_secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$arsy_token"
+          echo "::add-mask::$operator_password"
+          echo "::add-mask::$session_secret"
+          {
+            echo "ARSY_OPERATOR_TOKEN=$arsy_token"
+            echo "HEADQUARTER_OPERATOR_PASSWORD=$operator_password"
+            echo "HEADQUARTER_SESSION_SECRET=$session_secret"
+          } >> "$GITHUB_ENV"
+
+      - name: Apply every ARSY migration twice to isolated PostgreSQL
+        run: |
+          pnpm --filter @riotworks/arsy migrate:up
+          pnpm --filter @riotworks/arsy migrate:up
+
+      - name: Install pinned Playwright and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          playwright_dir="$RUNNER_TEMP/playwright"
+          mkdir -p "$playwright_dir"
+          npm install --prefix "$playwright_dir" --no-save --no-audit --no-fund playwright@1.65.0
+          echo "PLAYWRIGHT_PACKAGE_PATH=$playwright_dir/node_modules/playwright" >> "$GITHUB_ENV"
+          "$playwright_dir/node_modules/.bin/playwright" install --with-deps chromium
+          "$playwright_dir/node_modules/.bin/playwright" --version
+
+      - name: Start real ARSY and Headquarter services
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/money-maker-e2e"
+
+          pnpm --filter @riotworks/arsy start > "$RUNNER_TEMP/money-maker-e2e/arsy.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/money-maker-e2e/arsy.pid"
+
+          arsy_ready=false
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail --max-time 3 http://127.0.0.1:3101/health/ready >/dev/null; then
+              arsy_ready=true
+              break
+            fi
+            if ! kill -0 "$(cat "$RUNNER_TEMP/money-maker-e2e/arsy.pid")" 2>/dev/null; then
+              cat "$RUNNER_TEMP/money-maker-e2e/arsy.log"
+              exit 1
+            fi
+            sleep 2
+          done
+          if [ "$arsy_ready" != true ]; then
+            cat "$RUNNER_TEMP/money-maker-e2e/arsy.log"
+            echo "ARSY did not become ready against the isolated PostgreSQL database."
+            exit 1
+          fi
+
+          pnpm --filter @riotworks/headquarter exec next dev --hostname 127.0.0.1 --port 3000 > "$RUNNER_TEMP/money-maker-e2e/headquarter.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/money-maker-e2e/headquarter.pid"
+
+          headquarter_ready=false
+          for attempt in $(seq 1 90); do
+            if curl --silent --fail --max-time 3 http://127.0.0.1:3000/login >/dev/null; then
+              headquarter_ready=true
+              break
+            fi
+            if ! kill -0 "$(cat "$RUNNER_TEMP/money-maker-e2e/headquarter.pid")" 2>/dev/null; then
+              cat "$RUNNER_TEMP/money-maker-e2e/headquarter.log"
+              exit 1
+            fi
+            sleep 2
+          done
+          if [ "$headquarter_ready" != true ]; then
+            cat "$RUNNER_TEMP/money-maker-e2e/headquarter.log"
+            echo "Headquarter did not become ready."
+            exit 1
+          fi
+
+      - name: Exercise login, create, reload, archive and durable audit in Chromium
+        run: |
+          node --experimental-strip-types --test --test-reporter=spec apps/headquarter/tests/money-maker-workspace.browser.e2e.mjs
+
+      - name: Collect server diagnostics
+        if: failure()
+        run: |
+          tail -n 250 "$RUNNER_TEMP/money-maker-e2e/arsy.log" 2>/dev/null || true
+          tail -n 250 "$RUNNER_TEMP/money-maker-e2e/headquarter.log" 2>/dev/null || true
+
+      - name: Upload E2E failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: money-maker-browser-e2e-failure
+          path: |
+            ${{ runner.temp }}/money-maker-e2e/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Stop isolated application processes
+        if: always()
+        shell: bash
+        run: |
+          for pid_file in "$RUNNER_TEMP/money-maker-e2e/arsy.pid" "$RUNNER_TEMP/money-maker-e2e/headquarter.pid"; do
+            if [ -f "$pid_file" ]; then
+              pid="$(cat "$pid_file")"
+              kill "$pid" 2>/dev/null || true
+            fi
+          done
