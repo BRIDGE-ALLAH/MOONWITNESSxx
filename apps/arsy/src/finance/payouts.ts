@@ -142,7 +142,11 @@ function mapPayout(row: PayoutRow): PayoutRecord {
     createdAt: new Date(row.created_at).toISOString(),
     recordedAt: new Date(row.recorded_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
-    history: row.history ?? [],
+    history: (row.history ?? []).map((event) => ({
+      ...event,
+      ...(typeof event.occurredAt === 'string' ? { occurredAt: new Date(event.occurredAt).toISOString() } : {}),
+      ...(typeof event.recordedAt === 'string' ? { recordedAt: new Date(event.recordedAt).toISOString() } : {}),
+    })),
     allowedNextStatuses: allowedPayoutTransitions(row.status, row.paid_at),
   }
 }
