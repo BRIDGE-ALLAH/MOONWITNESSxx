@@ -153,3 +153,19 @@ test('ARSY production build emits JavaScript workspace packages before pnpm depl
   assert.ok(script.includes('manifest.type = \'module\''))
   assert.ok(!dockerfile.includes('--experimental-strip-private-modules'))
 })
+
+
+test('ARSY deploy output receives compiled JS package exports and a Node import preflight', async () => {
+  const dockerfile = await read('Dockerfile.arsy')
+  const script = await read('scripts/prepare-arsy-runtime-packages.mjs')
+  assert.ok(dockerfile.includes('RUN node scripts/prepare-arsy-runtime-packages.mjs --deployed-root /out/arsy'))
+  assert.ok(dockerfile.includes("import { governanceSnapshotInputSchema } from '@riotworks/contract'"))
+  assert.ok(dockerfile.includes("import { authorizeCapability } from '@riotworks/arsy-core'"))
+  assert.ok(dockerfile.indexOf('--deployed-root /out/arsy') < dockerfile.indexOf('ARSY production workspace package exports verified'))
+  assert.ok(script.includes('realpathSync(packageLink)'))
+  assert.ok(script.includes('cpSync(distSource, distTarget'))
+  assert.ok(script.includes("manifest.main = './dist/index.js'"))
+  assert.ok(script.includes("manifest.type = 'module'"))
+  assert.ok(script.includes("shortName: 'arsy-core'"))
+  assert.ok(script.includes("shortName: 'contract'"))
+})
