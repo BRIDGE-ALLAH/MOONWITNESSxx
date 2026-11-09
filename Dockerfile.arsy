@@ -13,7 +13,7 @@ COPY apps/arsy ./apps/arsy
 
 RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @riotworks/arsy build
-RUN pnpm --filter @riotworks/arsy deploy --prod /out/arsy
+RUN pnpm --filter @riotworks/arsy --prod deploy /out/arsy
 
 FROM node:24.22.2-alpine3.23 AS runtime
 ENV NODE_ENV=production
