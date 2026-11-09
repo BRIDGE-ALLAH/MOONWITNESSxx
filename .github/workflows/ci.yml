@@ -388,6 +388,20 @@ jobs:
       - full-workspace-quality
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: moonwitness_container_ci
+          POSTGRES_USER: moonwitness_container_ci
+          POSTGRES_PASSWORD: moonwitness_container_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U moonwitness_container_ci -d moonwitness_container_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     strategy:
       fail-fast: false
       matrix:
@@ -449,4 +463,82 @@ jobs:
             healthcheck="$(docker image inspect --format '{{if .Config.Healthcheck}}configured{{else}}missing{{end}}' "$IMAGE")"
             test "$healthcheck" = "configured"
           fi
+
+      - name: Smoke test the built production runtime against isolated services
+        shell: bash
+        env:
+          IMAGE: ${{ matrix.image }}:ci
+          IMAGE_NAME: ${{ matrix.image }}
+          DATABASE_URL: postgresql://moonwitness_container_ci:moonwitness_container_ci_password@127.0.0.1:5432/moonwitness_container_ci
+        run: |
+          set -euo pipefail
+          name="moonwitness-container-smoke"
+          docker rm -f "$name" >/dev/null 2>&1 || true
+
+          case "$IMAGE_NAME" in
+            moonwitness-arsy)
+              docker run --rm --network host \
+                -e DATABASE_URL="$DATABASE_URL" \
+                --entrypoint node "$IMAGE" \
+                --experimental-transform-types src/migrations/runner.ts
+
+              docker run --detach --name "$name" --network host \
+                -e NODE_ENV=production \
+                -e HOST=0.0.0.0 -e PORT=3001 \
+                -e DATABASE_URL="$DATABASE_URL" \
+                -e ARSY_OPERATOR_ID=container-ci-owner \
+                -e ARSY_OPERATOR_TOKEN=container-ci-only-token-0123456789abcdef0123456789abcdef \
+                "$IMAGE"
+
+              for attempt in $(seq 1 30); do
+                if curl --fail --silent http://127.0.0.1:3001/health/ready >/dev/null; then
+                  break
+                fi
+                if [ "$attempt" -eq 30 ]; then
+                  docker logs "$name"
+                  exit 1
+                fi
+                sleep 2
+              done
+              curl --fail --silent http://127.0.0.1:3001/health/live >/dev/null
+              test "$(docker inspect --format '{{.State.Health.Status}}' "$name")" = "healthy"
+              ;;
+            moonwitness-headquarter)
+              docker run --detach --name "$name" --network host "$IMAGE"
+              for attempt in $(seq 1 30); do
+                if curl --fail --silent http://127.0.0.1:3000/ >/dev/null; then
+                  break
+                fi
+                if [ "$attempt" -eq 30 ]; then
+                  docker logs "$name"
+                  exit 1
+                fi
+                sleep 2
+              done
+              test "$(docker inspect --format '{{.State.Health.Status}}' "$name")" = "healthy"
+              ;;
+            moonwitness-aegis)
+              docker run --detach --name "$name" --network host "$IMAGE"
+              for attempt in $(seq 1 30); do
+                if curl --fail --silent http://127.0.0.1:3102/health/live >/dev/null; then
+                  break
+                fi
+                if [ "$attempt" -eq 30 ]; then
+                  docker logs "$name"
+                  exit 1
+                fi
+                sleep 2
+              done
+              docker exec "$name" /aegis healthcheck
+              ;;
+            *)
+              echo "Unrecognized production image: $IMAGE_NAME" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Remove production smoke-test containers
+        if: always()
+        shell: bash
+        run: docker rm -f moonwitness-container-smoke >/dev/null 2>&1 || true
 
