@@ -1,30 +1,44 @@
-# ARSY Backend Dockerfile
-FROM node:24-alpine
+# syntax=docker/dockerfile:1.7
 
-WORKDIR /app
-ENV HOST=0.0.0.0 PORT=3001
+FROM node:24.22.2-alpine3.23 AS build
+WORKDIR /workspace
+ENV PNPM_HOME=/pnpm
+ENV PATH=${PNPM_HOME}:${PATH}
 
-# Install pnpm
-RUN npm install -g pnpm@12.16.1
+RUN npm install --global pnpm@12.16.1
 
-# Copy workspace manifests
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json turbo.json ./
-
-# Copy packages and apps
 COPY packages ./packages
 COPY apps/arsy ./apps/arsy
+COPY scripts/prepare-arsy-runtime-packages.mjs ./scripts/prepare-arsy-runtime-packages.mjs
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --filter @riotworks/arsy... --frozen-lockfile --ignore-scripts
+RUN pnpm --filter @riotworks/arsy build
+RUN node scripts/prepare-arsy-runtime-packages.mjs
+RUN pnpm --filter @riotworks/arsy --prod deploy /out/arsy
+RUN node scripts/prepare-arsy-runtime-packages.mjs --deployed-root /out/arsy
+RUN cd /out/arsy && node --input-type=module -e "import { governanceSnapshotInputSchema } from '@riotworks/contract'; import { authorizeCapability } from '@riotworks/arsy-core'; if (typeof governanceSnapshotInputSchema.safeParse !== 'function' || typeof authorizeCapability !== 'function') process.exit(1); console.log('ARSY production workspace package exports verified')"
 
-# Build packages and ARSY
-RUN pnpm run build --filter="@riotworks/arsy..."
-
+FROM node:24.22.2-alpine3.23 AS runtime
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3001
+ENV ASSET_STORAGE_DRIVER=local
+ENV ASSET_STORAGE_PATH=/var/lib/arsy/assets
+WORKDIR /workspace/apps/arsy
 
-# Expose port
+# ARSY has one existing type-only source import that resolves through the original
+# monorepo-relative packages/ path. Preserve that minimal source layout while the
+# deployed package supplies the pruned production node_modules tree.
+COPY --from=build --chown=node:node /workspace/packages/ /workspace/packages/
+COPY --from=build --chown=node:node /out/arsy/ ./
+RUN mkdir -p /var/lib/arsy/assets && chown node:node /var/lib/arsy/assets
+VOLUME ["/var/lib/arsy/assets"]
+
+USER node
 EXPOSE 3001
 
-# Start ARSY
-WORKDIR /app/apps/arsy
-CMD ["pnpm", "start"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3001/health/ready').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+
+CMD ["node", "--experimental-transform-types", "src/index.ts"]

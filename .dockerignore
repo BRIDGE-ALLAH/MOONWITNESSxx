@@ -1,0 +1,39 @@
+# Never send developer credentials, local env files, or Git metadata to the builder.
+.git
+.git/**
+.github
+.github/**
+
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Workspace/package install and generated build output.
+node_modules
+**/node_modules
+.next
+**/.next
+.turbo
+**/.turbo
+coverage
+**/coverage
+dist
+**/dist
+target
+**/target
+
+# Local tooling state and logs.
+.artifacts
+.plan
+**/.venv
+**/__pycache__
+**/*.pyc
+*.log
+**/*.log
+
+# Private keys and local certificates are never build inputs.
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx

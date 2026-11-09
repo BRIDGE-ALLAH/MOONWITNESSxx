@@ -381,3 +381,184 @@ jobs:
 
       - name: Run real PostgreSQL login-throttle integration
         run: pnpm --filter @riotworks/arsy exec node --experimental-transform-types --test tests/login-throttle-postgres.integration.test.mjs
+
+  production-container-build:
+    name: Production container image build
+    needs:
+      - full-workspace-quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: moonwitness_container_ci
+          POSTGRES_USER: moonwitness_container_ci
+          POSTGRES_PASSWORD: moonwitness_container_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U moonwitness_container_ci -d moonwitness_container_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: moonwitness-arsy
+            context: .
+            dockerfile: Dockerfile.arsy
+            runtime_user: node
+            runtime_kind: node
+            healthcheck: true
+          - image: moonwitness-headquarter
+            context: .
+            dockerfile: Dockerfile.headquarter
+            runtime_user: node
+            runtime_kind: node
+            healthcheck: true
+          - image: moonwitness-aegis
+            context: ./apps/aegis
+            dockerfile: Dockerfile
+            runtime_user: nonroot:nonroot
+            runtime_kind: distroless
+            healthcheck: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.4.1
+
+      - name: Build production image without publishing
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/${{ matrix.dockerfile }}
+          pull: true
+          push: false
+          load: true
+          tags: ${{ matrix.image }}:ci
+
+      - name: Verify non-root runtime identity and production metadata
+        shell: bash
+        env:
+          IMAGE: ${{ matrix.image }}:ci
+          EXPECTED_USER: ${{ matrix.runtime_user }}
+          RUNTIME_KIND: ${{ matrix.runtime_kind }}
+          EXPECT_HEALTHCHECK: ${{ matrix.healthcheck }}
+        run: |
+          set -euo pipefail
+          configured_user="$(docker image inspect --format '{{.Config.User}}' "$IMAGE")"
+          test "$configured_user" = "$EXPECTED_USER"
+          if [[ "$RUNTIME_KIND" == "node" ]]; then
+            docker run --rm --entrypoint node "$IMAGE" -e 'if (typeof process.getuid !== "function" || process.getuid() === 0) process.exit(1)'
+            docker image inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$IMAGE" | grep -qx 'NODE_ENV=production'
+          else
+            entrypoint="$(docker image inspect --format '{{json .Config.Entrypoint}}' "$IMAGE")"
+            test "$entrypoint" = '["/aegis"]'
+          fi
+          if [[ "$EXPECT_HEALTHCHECK" == "true" ]]; then
+            healthcheck="$(docker image inspect --format '{{if .Config.Healthcheck}}configured{{else}}missing{{end}}' "$IMAGE")"
+            test "$healthcheck" = "configured"
+          fi
+
+      - name: Smoke test the built production runtime against isolated services
+        shell: bash
+        env:
+          IMAGE: ${{ matrix.image }}:ci
+          IMAGE_NAME: ${{ matrix.image }}
+          DATABASE_URL: postgresql://moonwitness_container_ci:moonwitness_container_ci_password@127.0.0.1:5432/moonwitness_container_ci
+        run: |
+          set -euo pipefail
+          name="moonwitness-container-smoke"
+          docker rm -f "$name" >/dev/null 2>&1 || true
+
+          case "$IMAGE_NAME" in
+            moonwitness-arsy)
+              docker run --rm --network host \
+                -e DATABASE_URL="$DATABASE_URL" \
+                --entrypoint node "$IMAGE" \
+                --experimental-transform-types src/migrations/runner.ts
+
+              docker run --detach --name "$name" --network host \
+                -e NODE_ENV=production \
+                -e HOST=0.0.0.0 -e PORT=3001 \
+                -e DATABASE_URL="$DATABASE_URL" \
+                -e ARSY_OPERATOR_ID=container-ci-owner \
+                -e ARSY_OPERATOR_TOKEN=container-ci-only-token-0123456789abcdef0123456789abcdef \
+                -e ASSET_STORAGE_DRIVER=local \
+                -e ASSET_STORAGE_PATH=/var/lib/arsy/assets \
+                "$IMAGE"
+
+              for attempt in $(seq 1 30); do
+                if curl --fail --silent http://127.0.0.1:3001/health/ready >/dev/null; then
+                  break
+                fi
+                if [ "$attempt" -eq 30 ]; then
+                  docker logs "$name"
+                  exit 1
+                fi
+                sleep 2
+              done
+              curl --fail --silent http://127.0.0.1:3001/health/live >/dev/null
+              for attempt in $(seq 1 45); do
+                health_status="$(docker inspect --format '{{.State.Health.Status}}' "$name")"
+                if [[ "$health_status" == "healthy" ]]; then break; fi
+                if [ "$attempt" -eq 45 ]; then
+                  docker logs "$name"
+                  echo "ARSY container did not become healthy (status: $health_status)" >&2
+                  exit 1
+                fi
+                sleep 2
+              done
+              ;;
+            moonwitness-headquarter)
+              docker run --detach --name "$name" --network host "$IMAGE"
+              for attempt in $(seq 1 30); do
+                if curl --fail --silent http://127.0.0.1:3000/ >/dev/null; then
+                  break
+                fi
+                if [ "$attempt" -eq 30 ]; then
+                  docker logs "$name"
+                  exit 1
+                fi
+                sleep 2
+              done
+              for attempt in $(seq 1 45); do
+                health_status="$(docker inspect --format '{{.State.Health.Status}}' "$name")"
+                if [[ "$health_status" == "healthy" ]]; then break; fi
+                if [ "$attempt" -eq 45 ]; then
+                  docker logs "$name"
+                  echo "Headquarter container did not become healthy (status: $health_status)" >&2
+                  exit 1
+                fi
+                sleep 2
+              done
+              ;;
+            moonwitness-aegis)
+              docker run --detach --name "$name" --network host "$IMAGE"
+              for attempt in $(seq 1 30); do
+                if curl --fail --silent http://127.0.0.1:3102/health/live >/dev/null; then
+                  break
+                fi
+                if [ "$attempt" -eq 30 ]; then
+                  docker logs "$name"
+                  exit 1
+                fi
+                sleep 2
+              done
+              docker exec "$name" /aegis healthcheck
+              ;;
+            *)
+              echo "Unrecognized production image: $IMAGE_NAME" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Remove production smoke-test containers
+        if: always()
+        shell: bash
+        run: docker rm -f moonwitness-container-smoke >/dev/null 2>&1 || true
+
