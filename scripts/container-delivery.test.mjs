@@ -138,3 +138,18 @@ test('production container smoke waits for Docker health status after HTTP readi
   assert.ok(job.includes('did not become healthy'))
   assert.ok(job.includes('seq 1 45'))
 })
+
+
+test('ARSY production build emits JavaScript workspace packages before pnpm deploy', async () => {
+  const dockerfile = await read('Dockerfile.arsy')
+  const script = await read('scripts/prepare-arsy-runtime-packages.mjs')
+  assert.ok(dockerfile.includes('COPY scripts/prepare-arsy-runtime-packages.mjs ./scripts/prepare-arsy-runtime-packages.mjs'))
+  assert.ok(dockerfile.includes('RUN node scripts/prepare-arsy-runtime-packages.mjs'))
+  assert.ok(dockerfile.indexOf('RUN node scripts/prepare-arsy-runtime-packages.mjs') < dockerfile.indexOf('pnpm --filter @riotworks/arsy --prod deploy'))
+  assert.ok(script.includes('@riotworks/arsy-core'))
+  assert.ok(script.includes('@riotworks/contract'))
+  assert.ok(script.includes('--rewriteRelativeImportExtensions'))
+  assert.ok(script.includes('./dist/index.js'))
+  assert.ok(script.includes('manifest.type = \'module\''))
+  assert.ok(!dockerfile.includes('--experimental-strip-private-modules'))
+})
