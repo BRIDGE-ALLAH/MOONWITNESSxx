@@ -10,9 +10,11 @@ RUN npm install --global pnpm@12.16.1
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json turbo.json ./
 COPY packages ./packages
 COPY apps/arsy ./apps/arsy
+COPY scripts/prepare-arsy-runtime-packages.mjs ./scripts/prepare-arsy-runtime-packages.mjs
 
 RUN pnpm install --filter @riotworks/arsy... --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @riotworks/arsy build
+RUN node scripts/prepare-arsy-runtime-packages.mjs
 RUN pnpm --filter @riotworks/arsy --prod deploy /out/arsy
 
 FROM node:24.22.2-alpine3.23 AS runtime
