@@ -28,7 +28,29 @@ type Opportunity = {
     missingScoreDimensions: string[]
   }
 }
-type Product = { id: string; title?: string; name?: string; lifecycleState: string; version: number }
+type ProductLifecycleState = 'brief' | 'production' | 'review' | 'ready' | 'listed' | 'retired'
+type Product = {
+  id: string
+  opportunityId: string | null
+  title: string
+  productFamily: string
+  lifecycleState: ProductLifecycleState
+  allowedNextLifecycleStates: ProductLifecycleState[]
+  version: number
+  versionId: string
+  brief: Record<string, unknown>
+  acceptanceCriteria: string[]
+  createdAt: string
+  updatedAt: string
+}
+type ProductVersion = {
+  id: string
+  version: number
+  brief: Record<string, unknown>
+  acceptanceCriteria: string[]
+  createdAt: string
+  createdBy: string
+}
 type Channel = { id: string; displayName: string; capability: string; channelStatus: string; accountEligibility: string; payoutSetupStatus: string }
 type Listing = { id: string; productId: string; channelId: string; status: string; createdAt: string }
 type Asset = { id: string; fileName: string; mediaType: string; byteSize: number; sha256: string }
@@ -363,7 +385,7 @@ export function MoneyMakerWorkspace() {
       </section>
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <RecordPanel title="Products" items={data.products} empty="No products promoted yet." />
+        <ProductRecordPanel products={data.products} onRefresh={refresh} onError={setError} onNotice={setNotice} />
         <RecordPanel title="Assets" items={data.assets} empty="No assets registered yet." />
         <RecordPanel title="Channels" items={data.channels} empty="No channel records yet." />
         <RecordPanel title="Listings" items={data.listings} empty="No manual listing packages yet." />
@@ -556,6 +578,296 @@ function OpportunityReviewForm({
         </form>
       )}
     </div>
+  )
+}
+
+function ProductRecordPanel({
+  products,
+  onRefresh,
+  onError,
+  onNotice,
+}: {
+  products: Product[]
+  onRefresh: () => Promise<void>
+  onError: (value: string) => void
+  onNotice: (value: string) => void
+}) {
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [versions, setVersions] = useState<ProductVersion[]>([])
+  const [detailsLoading, setDetailsLoading] = useState(false)
+  const [savingVersion, setSavingVersion] = useState(false)
+  const [transitioning, setTransitioning] = useState<ProductLifecycleState | null>(null)
+  const [briefDraft, setBriefDraft] = useState('{}')
+  const [criteriaDraft, setCriteriaDraft] = useState('')
+  const [detailsError, setDetailsError] = useState('')
+  const [conflict, setConflict] = useState('')
+
+  async function loadProduct(productId: string) {
+    setDetailsLoading(true)
+    setDetailsError('')
+    setConflict('')
+    try {
+      const encodedId = encodeURIComponent(productId)
+      const [product, history] = await Promise.all([
+        readData<Product>('/api/money-maker/products/' + encodedId),
+        readData<ProductVersion[]>('/api/money-maker/products/' + encodedId + '/versions'),
+      ])
+      setSelectedProduct(product)
+      setVersions(history)
+      setBriefDraft(JSON.stringify(product.brief, null, 2))
+      setCriteriaDraft(product.acceptanceCriteria.join('\n'))
+    } catch (cause) {
+      setDetailsError(cause instanceof Error ? cause.message : 'Unable to load product details.')
+    } finally {
+      setDetailsLoading(false)
+    }
+  }
+
+  async function toggleProduct(productId: string) {
+    if (selectedProductId === productId) {
+      setSelectedProductId(null)
+      setSelectedProduct(null)
+      setVersions([])
+      setConflict('')
+      setDetailsError('')
+      return
+    }
+    setSelectedProductId(productId)
+    setSelectedProduct(null)
+    setVersions([])
+    await loadProduct(productId)
+  }
+
+  async function createVersion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selectedProduct) return
+    setDetailsError('')
+    setConflict('')
+    onError('')
+    onNotice('')
+
+    let brief: unknown
+    try {
+      brief = JSON.parse(briefDraft)
+    } catch {
+      setDetailsError('Product brief must be valid JSON.')
+      return
+    }
+    if (!brief || typeof brief !== 'object' || Array.isArray(brief)) {
+      setDetailsError('Product brief must be a JSON object.')
+      return
+    }
+
+    const acceptanceCriteria = criteriaDraft.split(/\r?\n/).map((item) => item.trim()).filter(Boolean)
+    if (acceptanceCriteria.length === 0 || acceptanceCriteria.some((item) => item.length < 3)) {
+      setDetailsError('Add at least one acceptance criterion with three or more characters.')
+      return
+    }
+
+    const productId = selectedProduct.id
+    const expectedVersion = selectedProduct.version
+    setSavingVersion(true)
+    try {
+      const response = await fetch('/api/money-maker/products/' + encodeURIComponent(productId) + '/versions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ expectedVersion, brief, acceptanceCriteria }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (response.status === 409) {
+        await loadProduct(productId)
+        setConflict('This product changed after it was loaded. The current version and history were refreshed; review them before saving again.')
+        return
+      }
+      if (!response.ok) throw new Error(payload.error?.message ?? 'Unable to create a product version.')
+      await loadProduct(productId)
+      await onRefresh()
+      onNotice('Product version ' + String(payload.data.version) + ' saved to ARSY.')
+    } catch (cause) {
+      setDetailsError(cause instanceof Error ? cause.message : 'Unable to create a product version.')
+    } finally {
+      setSavingVersion(false)
+    }
+  }
+
+  async function changeLifecycle(nextState: ProductLifecycleState) {
+    if (!selectedProduct) return
+    const productId = selectedProduct.id
+    setDetailsError('')
+    setConflict('')
+    onError('')
+    onNotice('')
+    setTransitioning(nextState)
+    try {
+      const response = await fetch('/api/money-maker/products/' + encodeURIComponent(productId) + '/lifecycle', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ lifecycleState: nextState }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (response.status === 409) {
+        await loadProduct(productId)
+        setConflict('The product lifecycle changed or that transition is not allowed. The latest server state has been loaded.')
+        return
+      }
+      if (!response.ok) throw new Error(payload.error?.message ?? 'Unable to update the product lifecycle.')
+      await loadProduct(productId)
+      await onRefresh()
+      onNotice('Product lifecycle updated to ' + nextState + '.')
+    } catch (cause) {
+      setDetailsError(cause instanceof Error ? cause.message : 'Unable to update the product lifecycle.')
+    } finally {
+      setTransitioning(null)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Products</CardTitle>
+        <CardDescription>Versioned product records and domain-controlled lifecycle operations from ARSY.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {products.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No products promoted yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {products.map((product) => (
+              <li key={product.id} className="rounded border border-border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1">
+                    <h3 className="font-semibold">{product.title}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {product.productFamily} · v{product.version} · {product.lifecycleState}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-expanded={selectedProductId === product.id}
+                    aria-controls={'product-details-' + product.id}
+                    onClick={() => void toggleProduct(product.id)}
+                    className="rounded border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+                  >
+                    {selectedProductId === product.id ? 'Close product details' : 'Open product details'}
+                  </button>
+                </div>
+                {selectedProductId === product.id && (
+                  <div id={'product-details-' + product.id} className="mt-4 space-y-4 border-t border-border pt-4">
+                    {detailsLoading && <p role="status" className="text-sm text-muted-foreground">Loading product and version history…</p>}
+                    {detailsError && <p role="alert" className="rounded border border-destructive/40 bg-destructive/10 p-3 text-sm">{detailsError}</p>}
+                    {conflict && <p role="alert" className="rounded border border-warning/40 bg-warning/10 p-3 text-sm">{conflict}</p>}
+                    {selectedProduct && !detailsLoading && (
+                      <>
+                        <section className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline">Current lifecycle: {selectedProduct.lifecycleState}</Badge>
+                            <Badge variant="outline">Current immutable version: v{selectedProduct.version}</Badge>
+                          </div>
+                          <p className="break-all text-xs text-muted-foreground">Version ID: {selectedProduct.versionId}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Product ID: {selectedProduct.id} · Updated {new Date(selectedProduct.updatedAt).toLocaleString()}
+                          </p>
+                          <h4 className="text-sm font-semibold">Current brief</h4>
+                          <pre className="max-h-48 overflow-auto rounded bg-muted p-3 text-xs">{JSON.stringify(selectedProduct.brief, null, 2)}</pre>
+                          <h4 className="text-sm font-semibold">Current acceptance criteria</h4>
+                          {selectedProduct.acceptanceCriteria.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No acceptance criteria recorded.</p>
+                          ) : (
+                            <ul className="list-disc space-y-1 pl-5 text-sm">
+                              {selectedProduct.acceptanceCriteria.map((criterion, index) => <li key={index}>{criterion}</li>)}
+                            </ul>
+                          )}
+                        </section>
+
+                        <section className="space-y-2">
+                          <h4 className="text-sm font-semibold">Version history</h4>
+                          {versions.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No version history is available.</p>
+                          ) : (
+                            <ol className="space-y-2">
+                              {versions.map((version) => (
+                                <li key={version.id} className="rounded border border-border p-3 text-sm">
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <strong>Version {version.version}</strong>
+                                    <span className="text-xs text-muted-foreground">{new Date(version.createdAt).toLocaleString()}</span>
+                                  </div>
+                                  <p className="break-all text-xs text-muted-foreground">Immutable version ID: {version.id}</p>
+                                  <p className="text-xs text-muted-foreground">Created by: {version.createdBy}</p>
+                                  <p className="mt-2 text-xs font-medium">Acceptance criteria</p>
+                                  <ul className="list-disc pl-5 text-xs">
+                                    {version.acceptanceCriteria.map((criterion, index) => <li key={index}>{criterion}</li>)}
+                                  </ul>
+                                </li>
+                              ))}
+                            </ol>
+                          )}
+                        </section>
+
+                        <form onSubmit={createVersion} className="space-y-3 rounded border border-border p-3">
+                          <div>
+                            <h4 className="text-sm font-semibold">Create immutable version</h4>
+                            <p className="text-xs text-muted-foreground">The current expected version is v{selectedProduct.version}. Saving creates a new version; previous versions are retained.</p>
+                          </div>
+                          <label className="block space-y-1 text-xs font-medium">
+                            New product brief (JSON)
+                            <textarea
+                              required
+                              aria-label="New product brief (JSON)"
+                              value={briefDraft}
+                              onChange={(event) => setBriefDraft(event.target.value)}
+                              className="min-h-28 w-full rounded border border-input bg-background px-3 py-2 font-mono text-xs"
+                            />
+                          </label>
+                          <label className="block space-y-1 text-xs font-medium">
+                            Acceptance criteria (one per line)
+                            <textarea
+                              required
+                              aria-label="Acceptance criteria (one per line)"
+                              value={criteriaDraft}
+                              onChange={(event) => setCriteriaDraft(event.target.value)}
+                              className="min-h-20 w-full rounded border border-input bg-background px-3 py-2 text-sm"
+                            />
+                          </label>
+                          <button type="submit" disabled={savingVersion || detailsLoading} className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                            {savingVersion ? 'Saving version…' : 'Create version from v' + selectedProduct.version}
+                          </button>
+                        </form>
+
+                        <section className="space-y-2">
+                          <h4 className="text-sm font-semibold">Lifecycle controls</h4>
+                          <p className="text-xs text-muted-foreground">Only transitions authorized by the ARSY domain state are shown.</p>
+                          {selectedProduct.allowedNextLifecycleStates.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No further lifecycle transitions are available.</p>
+                          ) : (
+                            <div className="flex flex-wrap gap-2" role="group" aria-label="Lifecycle actions">
+                              {selectedProduct.allowedNextLifecycleStates.map((nextState) => (
+                                <button
+                                  key={nextState}
+                                  type="button"
+                                  disabled={transitioning !== null}
+                                  onClick={() => void changeLifecycle(nextState)}
+                                  className="rounded border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
+                                >
+                                  {transitioning === nextState ? 'Updating…' : 'Move to ' + nextState}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            READY is derived from completed inspections and cannot be set manually. LISTED requires a verified publication receipt and cannot be set manually. Retired products have no further transitions.
+                          </p>
+                        </section>
+                      </>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
