@@ -92,6 +92,7 @@ Use the committed lockfile and repository scripts. If frozen install fails becau
 | [35 — Current-State Revalidation](./docs/35-current-state-revalidation-2026-11-09.md)       | Latest mainline CI, release, integration queue, and production gate snapshot      |
 | [36 — Headquarter Route Skin Runtime](./docs/36-headquarter-route-skin-integration-2026-11-09.md) | Route-aware Observatory/Archive skin mapping, appearance modes, and token ownership |
 | [37 — Money Maker Product Lifecycle](./docs/37-money-maker-product-version-lifecycle-2026-11-09.md) | Product version history, optimistic concurrency, lifecycle controls, and browser acceptance |
+| [38 — Aftershock Metric Contracts](./docs/38-aftershock-metric-contracts-2026-11-09.md) | Cohort windows, numerator/denominator rules, freshness and unavailable metrics |
 | [29 — Docker Connector](./docs/29-docker-connector.md)                                      | Read-only Docker integration and security boundaries                             |
 | [30 — ARSY Hardening](./docs/30-arsy-phases-18-20-hardening.md)                             | Runtime trust-boundary hardening                                                 |
 | [31 — Product Integrity](./docs/31-product-integrity-phases-36-38.md)                       | Data-truth and release preflight                                                 |
