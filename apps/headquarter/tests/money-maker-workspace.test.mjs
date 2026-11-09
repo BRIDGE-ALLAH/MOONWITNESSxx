@@ -6,6 +6,7 @@ const workspace = await readFile(new URL('../src/features/money-maker/money-make
 const proxy = await readFile(new URL('../src/app/api/money-maker/[...path]/route.ts', import.meta.url), 'utf8')
 const page = await readFile(new URL('../src/app/money-maker/page.tsx', import.meta.url), 'utf8')
 const navigation = await readFile(new URL('../src/shell/navigation.ts', import.meta.url), 'utf8')
+const productPanel = await readFile(new URL('../src/features/money-maker/product-record-panel.tsx', import.meta.url), 'utf8')
 
 test('Money Maker workspace reads persisted ARSY resources without demo fixtures', () => {
   for (const resource of ['opportunities', 'products', 'assets', 'channels', 'listings', 'financial-events', 'payouts', 'fx-conversions', 'financial-summary', 'portfolio-metrics']) {
@@ -46,4 +47,25 @@ test('the server proxy uses the authenticated ARSY boundary and a finite route/m
 test('Money Maker workspace is routable and discoverable in Headquarter navigation', () => {
   assert.match(page, /MoneyMakerWorkspace/)
   assert.match(navigation, /href: '\/money-maker'/)
+})
+
+
+test('product records expose immutable version history and persist new versions with optimistic concurrency', () => {
+  assert.match(workspace, /ProductRecordPanel products={data\.products}/)
+  assert.match(productPanel, /\/api\/money-maker\/products\/\$\{encodeURIComponent\(product\.id\)\}\/versions/)
+  assert.match(productPanel, /expectedVersion: product\.version/)
+  assert.match(productPanel, /Version conflict/)
+  assert.match(productPanel, /View version history/)
+  assert.match(productPanel, /Immutable version ID/)
+  assert.match(productPanel, /acceptanceCriteria/)
+})
+
+test('product lifecycle actions are server-authoritative and derived states are not manually selectable', () => {
+  assert.match(productPanel, /product\.allowedNextLifecycleStates\.map/)
+  assert.match(productPanel, /\/api\/money-maker\/products\/\$\{encodeURIComponent\(product\.id\)\}\/lifecycle/)
+  assert.match(productPanel, /Ready is derived from completed inspections/)
+  assert.match(productPanel, /listed is derived from a verified publication receipt/)
+  assert.match(productPanel, /Lifecycle conflict/)
+  assert.match(proxy, /products\\/\\$\\{uuid\\}\\/versions/)
+  assert.match(proxy, /products\\/\\$\\{uuid\\}\\/lifecycle/)
 })
