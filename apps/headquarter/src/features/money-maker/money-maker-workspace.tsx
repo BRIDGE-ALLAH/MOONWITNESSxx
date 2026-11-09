@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@riotworks/ui'
+import { ProductRecordPanel, type ProductRecord } from './product-record-panel.tsx'
 
 type ScoreKey = 'demandEvidence' | 'competitionGap' | 'usefulnessDifferentiation' | 'marketplaceFit' | 'productionFeasibility' | 'durability' | 'distributionReadiness'
 type GateKey = 'rights' | 'countryEligibility' | 'channelPolicy' | 'payoutFeasibility'
@@ -28,7 +29,7 @@ type Opportunity = {
     missingScoreDimensions: string[]
   }
 }
-type Product = { id: string; title?: string; name?: string; lifecycleState: string; version: number }
+type Product = ProductRecord
 type Channel = { id: string; displayName: string; capability: string; channelStatus: string; accountEligibility: string; payoutSetupStatus: string }
 type Listing = { id: string; productId: string; channelId: string; status: string; createdAt: string }
 type Asset = { id: string; fileName: string; mediaType: string; byteSize: number; sha256: string }
@@ -363,7 +364,7 @@ export function MoneyMakerWorkspace() {
       </section>
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <RecordPanel title="Products" items={data.products} empty="No products promoted yet." />
+        <ProductRecordPanel products={data.products} onSaved={refresh} />
         <RecordPanel title="Assets" items={data.assets} empty="No assets registered yet." />
         <RecordPanel title="Channels" items={data.channels} empty="No channel records yet." />
         <RecordPanel title="Listings" items={data.listings} empty="No manual listing packages yet." />
