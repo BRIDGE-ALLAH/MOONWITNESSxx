@@ -138,7 +138,18 @@ export function MoneyMakerWorkspace() {
         readData<FinancialSummaryRow[]>('/api/money-maker/financial-summary'),
         readData<unknown>(`/api/money-maker/portfolio-metrics?${metricsQuery.toString()}`),
       ])
-      setData({ opportunities, products, assets, channels, listings, financialEvents, payouts, fxConversions, financialSummary, portfolioMetrics })
+      setData({
+        opportunities: opportunities ?? [],
+        products: products ?? [],
+        assets: assets ?? [],
+        channels: channels ?? [],
+        listings: listings ?? [],
+        financialEvents: financialEvents ?? [],
+        payouts: payouts ?? [],
+        fxConversions: fxConversions ?? [],
+        financialSummary: financialSummary ?? [],
+        portfolioMetrics,
+      })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to load Money Maker records.')
     } finally {
