@@ -12,7 +12,7 @@ test('ARSY and Headquarter use production-only workspace deployments and non-roo
     {
       path: 'Dockerfile.arsy',
       packageName: '@riotworks/arsy',
-      appPath: '/out/arsy/',
+      appPath: '/out/arsy',
       command: /CMD\s+\["node",\s+"--experimental-transform-types",\s+"src\/index\.ts"\]/,
       port: '3001',
       healthPath: '/health/ready',
@@ -20,7 +20,7 @@ test('ARSY and Headquarter use production-only workspace deployments and non-roo
     {
       path: 'Dockerfile.headquarter',
       packageName: '@riotworks/headquarter',
-      appPath: '/out/headquarter/',
+      appPath: '/out/headquarter',
       command: /CMD\s+\["node",\s+"node_modules\/next\/dist\/bin\/next",\s+"start"/,
       port: '3000',
       healthPath: '/',
