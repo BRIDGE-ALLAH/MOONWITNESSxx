@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 
 const workspace = await readFile(new URL('../src/features/money-maker/money-maker-workspace.tsx', import.meta.url), 'utf8')
 const proxy = await readFile(new URL('../src/app/api/money-maker/[...path]/route.ts', import.meta.url), 'utf8')
@@ -60,4 +61,25 @@ test('product detail editor uses persisted ARSY versions and server-approved lif
   assert.match(workspace, /LISTED requires a verified publication receipt/)
   assert.ok(proxy.includes('products/${uuid}/versions'))
   assert.ok(proxy.includes('products/${uuid}/lifecycle'))
+})
+
+
+test('MIZAN operator workflows are evidence-backed and remain currency-separated', () => {
+  const finance = readFileSync(new URL('../src/features/money-maker/financial-operations-panel.tsx', import.meta.url), 'utf8')
+  for (const path of [
+    '/api/money-maker/financial-events',
+    '/api/money-maker/financial-events/',
+    '/api/money-maker/payouts',
+    '/api/money-maker/fx-conversions',
+  ]) assert.ok(finance.includes(path), 'Missing MIZAN route: ' + path)
+  assert.match(finance, /allowedNextStatuses/)
+  assert.match(finance, /occurredAt: toIso\(occurredAt\)/)
+  assert.match(finance, /evidenceCapturedAt: toIso\(evidenceCapturedAt\)/)
+  assert.match(finance, /reconciliationState === 'verified'/)
+  assert.match(finance, /BigInt\(amount\)/)
+  assert.match(finance, /No transfer was initiated/)
+  assert.match(finance, /no cross-currency total is inferred/i)
+  assert.match(proxy, /financial-events/)
+  assert.match(proxy, /payouts\/\$\{uuid\}\/status/)
+  assert.match(proxy, /fx-conversions/)
 })
