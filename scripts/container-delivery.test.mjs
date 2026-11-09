@@ -66,10 +66,10 @@ test('published images are commit-addressed, scanned, and attested before versio
   const workflow = await read('.github/workflows/container-release.yml')
   const buildStep = workflow.indexOf('Build and push commit-addressed candidate')
   const scanStep = workflow.indexOf('Reject images with unfixed or fixed high/critical vulnerabilities')
-  const aliasStep = workflow.indexOf('Add the immutable version alias only after the image scan passes')
+  const aliasStep = workflow.indexOf('Add the immutable version alias only after scan and attestation pass')
   const attestStep = workflow.indexOf('Publish a GitHub artifact attestation for the pushed digest')
 
-  assert.ok(buildStep >= 0 && scanStep > buildStep && aliasStep > scanStep && attestStep > aliasStep)
+  assert.ok(buildStep >= 0 && scanStep > buildStep && attestStep > scanStep && aliasStep > attestStep)
   assert.match(workflow, /sha-\$\{GITHUB_SHA\}/)
   assert.match(workflow, /provenance:\s*mode=max/)
   assert.match(workflow, /sbom:\s*true/)
