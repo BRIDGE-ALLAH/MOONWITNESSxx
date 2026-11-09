@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -14,6 +14,7 @@ if (!existsSync(compiler)) {
 const packages = [
   {
     name: '@riotworks/arsy-core',
+    shortName: 'arsy-core',
     directory: 'packages/arsy-core',
     entrypoint: 'src/index.ts',
     exports: {
@@ -23,6 +24,7 @@ const packages = [
   },
   {
     name: '@riotworks/contract',
+    shortName: 'contract',
     directory: 'packages/contract',
     entrypoint: 'src/index.ts',
     exports: null,
@@ -75,4 +77,37 @@ for (const item of packages) {
 
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
   process.stdout.write(`Prepared production JavaScript package: ${item.name}\n`)
+}
+
+
+function patchDeployedPackage(deployRoot, item) {
+  const packageLink = resolve(deployRoot, 'node_modules', '@riotworks', item.shortName)
+  if (!existsSync(packageLink)) {
+    throw new Error(`pnpm deploy did not include ${item.name} at ${packageLink}`)
+  }
+
+  const packageRoot = realpathSync(packageLink)
+  const distSource = resolve(workspaceRoot, item.directory, 'dist')
+  const distTarget = resolve(packageRoot, 'dist')
+  cpSync(distSource, distTarget, { recursive: true, force: true })
+  if (!existsSync(resolve(distTarget, 'index.js'))) {
+    throw new Error(`Deployed package is missing compiled JavaScript: ${item.name}`)
+  }
+
+  const manifestPath = resolve(packageRoot, 'package.json')
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+  if (manifest.name !== item.name || manifest.private !== true) {
+    throw new Error(`Unexpected deployed package identity for ${item.name}`)
+  }
+
+  manifest.main = './dist/index.js'
+  manifest.type = 'module'
+  if (item.exports) manifest.exports = item.exports
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+  process.stdout.write(`Patched deployed JavaScript package: ${item.name} -> ${packageRoot}\n`)
+}
+
+if (process.argv[2] === '--deployed-root') {
+  const deployRoot = resolve(process.argv[3] ?? '/out/arsy')
+  for (const item of packages) patchDeployedPackage(deployRoot, item)
 }
