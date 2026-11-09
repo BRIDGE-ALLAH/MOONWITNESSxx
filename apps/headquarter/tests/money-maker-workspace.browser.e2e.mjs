@@ -361,7 +361,7 @@ test(
       await page.getByLabel('Currency', { exact: true }).first().fill('IDR')
       await page.getByLabel('Event occurred at', { exact: true }).fill(new Date(Date.now() - 60_000 - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16))
       await page.getByTestId('financial-event-form').getByLabel('Source', { exact: true }).fill('Synthetic CI bank statement')
-      await page.getByLabel('Provider reference (optional)', { exact: true }).fill(providerReference)
+      await financialEventForm.getByLabel('Provider reference (optional)', { exact: true }).fill(providerReference)
       await page.getByRole('button', { name: 'Record pending event', exact: true }).click()
       await page.getByText('Financial event recorded as pending.', { exact: false }).waitFor({ timeout: 30_000 })
 
