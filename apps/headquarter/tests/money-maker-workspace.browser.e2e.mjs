@@ -1,7 +1,6 @@
 import test from 'node:test'
 import { randomUUID } from 'node:crypto'
 import assert from 'node:assert/strict'
-import { expect } from '@playwright/test'
 import { createRequire } from 'node:module'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
@@ -376,7 +375,7 @@ test(
       await reconciliationForm.getByRole('button', { name: 'Save reconciliation', exact: true }).click()
       await page.getByText('Financial event reconciliation saved as verified.', { exact: true }).waitFor({ timeout: 30_000 })
       await pendingEvent.waitFor({ state: 'visible' })
-      await expect(pendingEvent).toHaveAttribute('data-reconciliation-state', 'verified')
+      await page.locator('[data-testid="financial-event-item"][data-reconciliation-state="verified"]').filter({ hasText: providerReference }).waitFor({ state: 'visible', timeout: 30_000 })
 
       await page.getByTestId('fx-conversion-form').getByTestId('verified-source-event').selectOption({ index: 0 })
       await page.getByLabel('Target currency', { exact: true }).fill('USD')
