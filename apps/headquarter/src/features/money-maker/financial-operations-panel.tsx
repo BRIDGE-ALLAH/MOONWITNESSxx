@@ -207,7 +207,7 @@ export function FinancialOperationsPanel(props: Props) {
             <CardDescription>Choose a verified source event and record the observed rational rate. This stores conversion provenance; it does not rewrite the original event or fetch a quote.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FxConversionForm events={financialEvents} onRefresh={onRefresh} onError={onError} onNotice={onNotice} />
+            <FxConversionForm financialEvents={financialEvents} onRefresh={onRefresh} onError={onError} onNotice={onNotice} />
           </CardContent>
         </Card>
       </div>
@@ -235,8 +235,10 @@ export function FinancialOperationsPanel(props: Props) {
                   {event.reconciliationState === 'pending' && (
                     <EventReconciliationForm event={event} onRefresh={onRefresh} onError={onError} onNotice={onNotice} />
                   )}
-                  {event.metadata?.reconciliation && (
-                    <p className="text-xs text-muted-foreground">Reconciliation: {String((event.metadata.reconciliation as Record<string, unknown>).rationale ?? 'Evidence attached')}</p>
+                  {Boolean(event.metadata?.reconciliation)
+                    && typeof event.metadata.reconciliation === 'object'
+                    && event.metadata.reconciliation !== null && (
+                    <p className="text-xs text-muted-foreground">Reconciliation: {typeof (event.metadata.reconciliation as Record<string, unknown>).rationale === 'string' ? (event.metadata.reconciliation as Record<string, string>).rationale : 'Evidence attached'}</p>
                   )}
                 </article>
               ))}
@@ -567,9 +569,9 @@ function PayoutTransitionForm({
 }
 
 function FxConversionForm({
-  events, onRefresh, onError, onNotice,
+  financialEvents, onRefresh, onError, onNotice,
 }: Pick<Props, 'financialEvents' | 'onRefresh' | 'onError' | 'onNotice'>) {
-  const verifiedEvents = useMemo(() => events.filter((event) => event.reconciliationState === 'verified'), [events])
+  const verifiedEvents = useMemo(() => financialEvents.filter((event) => event.reconciliationState === 'verified'), [financialEvents])
   const [sourceEventId, setSourceEventId] = useState('')
   const [toCurrency, setToCurrency] = useState('USD')
   const [rateNumerator, setRateNumerator] = useState('1')
