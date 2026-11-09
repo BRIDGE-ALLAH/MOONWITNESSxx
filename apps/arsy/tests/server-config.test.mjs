@@ -15,3 +15,24 @@ test('server config rejects malformed and out-of-range ports', () => {
     assert.throws(() => resolveServerConfig({ PORT }), /PORT must be an integer/)
   }
 })
+
+
+test('global ARSY rate limit defaults to 120 requests per minute', async () => {
+  const { resolveGlobalRateLimitMax } = await import('../src/config.ts')
+  assert.equal(resolveGlobalRateLimitMax({}), 120)
+})
+
+test('global ARSY rate limit accepts a bounded operator override', async () => {
+  const { resolveGlobalRateLimitMax } = await import('../src/config.ts')
+  assert.equal(resolveGlobalRateLimitMax({ ARSY_GLOBAL_RATE_LIMIT_MAX: '1000' }), 1000)
+})
+
+test('global ARSY rate limit rejects malformed and out-of-range overrides', async () => {
+  const { resolveGlobalRateLimitMax } = await import('../src/config.ts')
+  for (const ARSY_GLOBAL_RATE_LIMIT_MAX of ['', '0', '1001', '3.5', 'abc']) {
+    assert.throws(
+      () => resolveGlobalRateLimitMax({ ARSY_GLOBAL_RATE_LIMIT_MAX }),
+      /ARSY_GLOBAL_RATE_LIMIT_MAX must be an integer between 1 and 1000/,
+    )
+  }
+})
