@@ -27,6 +27,7 @@ jobs:
       packages: write
       id-token: write
       attestations: write
+      artifact-metadata: write
     strategy:
       fail-fast: false
       matrix:
@@ -107,7 +108,15 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
 
-      - name: Add the immutable version alias only after the image scan passes
+      - name: Publish a GitHub artifact attestation for the pushed digest
+        uses: actions/attest@v4.2.2
+        with:
+          subject-name: ${{ steps.meta.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add the immutable version alias only after scan and attestation pass
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         env:
@@ -119,14 +128,6 @@ jobs:
           docker buildx imagetools create \
             --tag "${IMAGE}:${VERSION}" \
             "${IMAGE}@${DIGEST}"
-
-      - name: Publish a GitHub artifact attestation for the pushed digest
-        uses: actions/attest@v4.2.2
-        with:
-          subject-name: ${{ steps.meta.outputs.image }}
-          subject-digest: ${{ steps.build.outputs.digest }}
-          push-to-registry: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Record immutable artifact details
         shell: bash
