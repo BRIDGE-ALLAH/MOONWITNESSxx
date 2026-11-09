@@ -54,7 +54,7 @@ test('product detail editor uses persisted ARSY versions and server-approved lif
   assert.match(workspace, /Current immutable version/)
   assert.match(workspace, /Version history/)
   assert.match(workspace, /expectedVersion, brief, acceptanceCriteria/)
-  assert.match(workspace, /response\\.status === 409/)
+  assert.ok(workspace.includes('if (response.status === 409)'))
   assert.match(workspace, /current version and history were refreshed/)
   assert.match(workspace, /READY is derived from completed inspections/)
   assert.match(workspace, /LISTED requires a verified publication receipt/)
