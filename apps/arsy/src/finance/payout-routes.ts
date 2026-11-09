@@ -33,6 +33,7 @@ const payoutTransitionSchema = z.object({
   rationale: z.string().trim().min(10).max(2000),
   evidenceUrl: httpUrlSchema,
   evidenceCapturedAt: z.string().datetime({ offset: true }),
+  occurredAt: z.string().datetime({ offset: true }),
 })
 
 const fxInputSchema = z.object({
@@ -92,7 +93,7 @@ export function registerPayoutAndFxRoutes(
     if (!params.success || !parsed.success) return reply.code(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Payout transition input is invalid.' } })
     const payout = await payouts.transition(
       ownerId, actorId, params.data.id, parsed.data.status,
-      parsed.data.rationale, parsed.data.evidenceUrl, parsed.data.evidenceCapturedAt,
+      parsed.data.rationale, parsed.data.evidenceUrl, parsed.data.evidenceCapturedAt, parsed.data.occurredAt,
     )
     if (!payout) return reply.code(409).send({ error: { code: 'PAYOUT_TRANSITION_CONFLICT', message: 'Payout was not found or the requested status transition is not allowed.' } })
     return { data: payout }

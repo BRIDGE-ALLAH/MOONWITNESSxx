@@ -21,6 +21,7 @@ const payoutRow = {
   source_evidence: { evidenceUrl: 'https://example.com/payout', capturedAt: '2026-11-08T00:00:00Z', summary: 'Pending payout from statement.' },
   reconciliation_evidence: {},
   created_at: '2026-11-08T00:00:00Z',
+  recorded_at: '2026-11-08T00:01:00Z',
   updated_at: '2026-11-08T00:00:00Z',
   history: [],
 }
@@ -116,6 +117,7 @@ test('payout API records pending payout and requires evidence for status transit
         rationale: 'Matched against the bank statement.',
         evidenceUrl: 'https://example.com/bank-statement',
         evidenceCapturedAt: '2026-11-08T01:00:00Z',
+        occurredAt: '2026-11-08T00:59:30Z',
       },
     })
     assert.equal(paid.statusCode, 200)

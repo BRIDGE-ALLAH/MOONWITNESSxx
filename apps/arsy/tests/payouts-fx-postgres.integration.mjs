@@ -20,6 +20,9 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
   try {
     const channels = new ChannelRepository(pool)
     const now = new Date().toISOString()
+    const paidOccurredAt = new Date(Date.now() - 60_000).toISOString()
+    const disputedOccurredAt = new Date(Date.now() - 30_000).toISOString()
+    const reversedOccurredAt = new Date().toISOString()
     const channel = await channels.create(ownerId, ownerId, {
       channelKey: slug,
       displayName: 'Payout FX integration fixture',
@@ -126,9 +129,10 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
     const paid = await payouts.transition(
       ownerId, ownerId, created.payout.id, 'paid',
       'Synthetic integration fixture matched to a bank statement.',
-      'https://example.com/paid-statement', now,
+      'https://example.com/paid-statement', now, paidOccurredAt,
     )
     assert.equal(paid?.status, 'paid')
+    assert.equal(paid?.paidAt, paidOccurredAt)
 
     // A paid payout may later be disputed, but it cannot become failed without
     // a reversal ledger movement. A paid_at value is evidence that payment
@@ -136,7 +140,7 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
     const disputed = await payouts.transition(
       ownerId, ownerId, created.payout.id, 'disputed',
       'Synthetic integration fixture tests a post-payment dispute.',
-      'https://example.com/dispute-statement', now,
+      'https://example.com/dispute-statement', now, disputedOccurredAt,
     )
     assert.equal(disputed?.status, 'disputed')
     assert.deepEqual(disputed?.allowedNextStatuses, ['paid', 'reversed'])
@@ -144,22 +148,51 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
     assert.equal(await payouts.transition(
       ownerId, ownerId, created.payout.id, 'failed',
       'A previously paid payout cannot be marked failed without a reversal.',
-      'https://example.com/invalid-failed-after-paid', now,
+      'https://example.com/invalid-failed-after-paid', now, now,
     ), null)
 
     const reversed = await payouts.transition(
       ownerId, ownerId, created.payout.id, 'reversed',
       'Synthetic integration fixture tests a payout reversal.',
-      'https://example.com/reversal-statement', now,
+      'https://example.com/reversal-statement', now, reversedOccurredAt,
     )
     assert.equal(reversed?.status, 'reversed')
     assert.equal(await payouts.transition(
       ownerId, ownerId, created.payout.id, 'paid',
       'A reversed payout cannot return to paid.',
-      'https://example.com/invalid-transition', now,
+      'https://example.com/invalid-transition', now, now,
     ), null)
 
+    assert.equal(reversed?.history[1]?.occurredAt, paidOccurredAt)
+    assert.equal(typeof reversed?.history[1]?.recordedAt, 'string')
+    assert.ok(Number.isFinite(Date.parse(reversed?.recordedAt ?? '')))
+
     const finance = new FinancialRepository(pool)
+    const failedPayout = await payouts.create(ownerId, ownerId, {
+      ...payoutInput,
+      providerReference: `provider-failed-payout-${randomUUID()}`,
+      idempotencyKey: `payout-failed-${randomUUID()}`,
+    })
+    assert.ok(failedPayout)
+    const failed = await payouts.transition(
+      ownerId, ownerId, failedPayout.payout.id, 'failed',
+      'Synthetic fixture confirms this statement line failed before payment.',
+      'https://example.com/failed-statement', now, now,
+    )
+    assert.equal(failed?.status, 'failed')
+    const failedDispute = await payouts.transition(
+      ownerId, ownerId, failedPayout.payout.id, 'disputed',
+      'Synthetic fixture disputes the recorded failed payout status.',
+      'https://example.com/failed-dispute', now, now,
+    )
+    assert.deepEqual(failedDispute?.allowedNextStatuses, ['paid', 'failed'])
+    const failedResolved = await payouts.transition(
+      ownerId, ownerId, failedPayout.payout.id, 'failed',
+      'Synthetic fixture resolves the dispute as unpaid.',
+      'https://example.com/failed-resolution', now, now,
+    )
+    assert.equal(failedResolved?.status, 'failed')
+
     const sourceEvent = await finance.create(ownerId, ownerId, {
       eventType: 'gross-receipt',
       amountMinor: '10000',
@@ -201,14 +234,20 @@ test('PostgreSQL persists payout lifecycle, linked ledger movements and exact FX
 
     const persistedPayouts = new PayoutRepository(pool)
     const payoutRows = await persistedPayouts.list(ownerId)
-    assert.equal(payoutRows.length, 1)
-    assert.equal(payoutRows[0].status, 'reversed')
-    assert.equal(payoutRows[0].history.length, 4)
+    assert.equal(payoutRows.length, 2)
+    const persistedPaid = payoutRows.find((payout) => payout.id === created.payout.id)
+    const persistedFailed = payoutRows.find((payout) => payout.id === failedPayout.payout.id)
+    assert.equal(persistedPaid?.status, 'reversed')
+    assert.equal(persistedPaid?.history.length, 4)
+    assert.equal(persistedPaid?.history[1]?.occurredAt, paidOccurredAt)
+    assert.equal(persistedFailed?.status, 'failed')
+    assert.equal(persistedFailed?.history.length, 4)
     assert.equal((await persistedPayouts.list(otherOwner)).length, 0)
 
     const events = await new FinancialRepository(pool).list(ownerId)
     const payoutMovements = events.filter((event) => event.providerReference === payoutInput.providerReference)
     assert.deepEqual(payoutMovements.map((event) => event.eventType).sort(), ['payout', 'payout-reversal'])
+    assert.equal(events.some((event) => event.providerReference === failedPayout.payout.providerReference), false)
     assert.ok(payoutMovements.every((event) => event.reconciliationState === 'verified'))
 
     const [summary] = await new FinancialRepository(pool).summary(ownerId)

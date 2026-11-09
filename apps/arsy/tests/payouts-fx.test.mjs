@@ -26,6 +26,7 @@ const payoutRow = {
   reconciliation_evidence: {},
   request_hash: 'a'.repeat(64),
   created_at: '2026-11-08T00:00:00Z',
+  recorded_at: '2026-11-08T00:01:00Z',
   updated_at: '2026-11-08T00:00:00Z',
   history: [],
 }
@@ -133,12 +134,16 @@ test('payout transitions append evidence and create only explicit paid/reversal 
     'Matched the payout to the bank statement.',
     'https://example.com/bank-statement',
     '2026-11-08T01:00:00Z',
+    '2026-11-08T00:59:30Z',
   )
   assert.equal(result?.status, 'paid')
   assert.match(captured.sql, /arsy_payout_events/)
   assert.match(captured.sql, /arsy_financial_events/)
   assert.equal(captured.values[2], 'paid')
-  assert.equal(captured.values[8], 'payout')
+  assert.equal(captured.values[4], '2026-11-08T00:59:30Z')
+  assert.equal(captured.values[9], 'payout')
+  assert.match(captured.sql, /occurred_at\)/)
+  assert.match(captured.sql, /recordedAt/)
 })
 
 test('FX conversion repository links only a verified source event and preserves the rational rate', async () => {
