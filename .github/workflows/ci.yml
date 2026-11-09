@@ -488,6 +488,8 @@ jobs:
                 -e DATABASE_URL="$DATABASE_URL" \
                 -e ARSY_OPERATOR_ID=container-ci-owner \
                 -e ARSY_OPERATOR_TOKEN=container-ci-only-token-0123456789abcdef0123456789abcdef \
+                -e ASSET_STORAGE_DRIVER=local \
+                -e ASSET_STORAGE_PATH=/var/lib/arsy/assets \
                 "$IMAGE"
 
               for attempt in $(seq 1 30); do
