@@ -94,7 +94,7 @@ jobs:
           cache-from: type=gha,scope=release-${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=release-${{ matrix.image }}
 
-      - name: Reject images with unfixed or fixed high/critical vulnerabilities
+      - name: Reject high/critical vulnerabilities with available fixes
         uses: aquasecurity/trivy-action@v0.36.0
         env:
           TRIVY_USERNAME: ${{ github.actor }}
