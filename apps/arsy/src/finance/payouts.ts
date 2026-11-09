@@ -348,7 +348,7 @@ export class PayoutRepository {
           'Manual payout statement reconciliation', provider_reference, id,
           $11, $12, 'verified', $4::jsonb, $6
         FROM changed
-        WHERE $9::text IS NOT NULL
+        WHERE $10::text IS NOT NULL
         ON CONFLICT (owner_id, idempotency_key) DO NOTHING
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
