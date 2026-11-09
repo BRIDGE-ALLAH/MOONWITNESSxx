@@ -95,6 +95,9 @@ jobs:
 
       - name: Reject images with unfixed or fixed high/critical vulnerabilities
         uses: aquasecurity/trivy-action@v0.36.0
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         with:
           scan-type: image
           image-ref: ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha_tag }}
