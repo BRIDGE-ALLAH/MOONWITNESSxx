@@ -15,6 +15,7 @@ MOONWITNESS is the master product identity within the wider **GODPROMISE → EMP
 - `apps/gate` — public entrance and universe discovery workspace.
 - `apps/id` — identity workspace; server-side identity authority remains in ARSY.
 - `apps/arsy` — Fastify API/runtime, application orchestration, health/readiness, and bounded integrations.
+- `apps/aegis` — standalone Go network-runtime foundation; currently health-only, with no privileged network mutations or ARSY command protocol.
 - `apps/oracle` — standalone Python/FastAPI deterministic computation service; intentionally outside the pnpm workspace and reached privately through ARSY.
 - `packages/*` — shared UI, contracts/types, policy, notifications, feature flags, assets, evidence, Divine research, and developer tooling.
 - `services/*` — legacy prototypes intentionally excluded from the pnpm workspace; not a second runtime ownership layer.
@@ -35,6 +36,7 @@ This is a product catalog, not a statement that nine apps exist in the current w
 
 - HEADQUARTER is a Next.js prototype. Demo/sample data must not be mistaken for live production data.
 - ARSY is the canonical Fastify backend application. It owns HTTP lifecycle and the central application/API authority.
+- AEGIS is a separate Go runtime foundation. Its current scope is process health and lifecycle only; authenticated ARSY-to-AEGIS command integration and network-device adapters are not implemented.
 - ORACLE provides bounded deterministic analysis behind ARSY. Its current Stage 2 implementation persists job lifecycle and idempotency in PostgreSQL, uses bounded leased workers with fencing/retry/retention, and verifies restart recovery in Compose E2E. Production remains disabled pending managed secrets, monitoring/alerting, network policy, backup/restore drills, retention review, and deployment/rollback validation.
 - The authenticated Docker connector is deliberately read-only and bounded; it does not provide container start/stop/exec/deploy or production deployment management.
 - WITNESS FABRIC, Divine research tooling, repository automation, and developer-experience capabilities have implementation evidence in the repository.
@@ -95,6 +97,7 @@ Use the committed lockfile and repository scripts. If frozen install fails becau
 | [30 — ARSY Hardening](./docs/30-arsy-phases-18-20-hardening.md)                             | Runtime trust-boundary hardening                                                 |
 | [31 — Product Integrity](./docs/31-product-integrity-phases-36-38.md)                       | Data-truth and release preflight                                                 |
 | [32 — Universe & Product Registry](./docs/32-universe-and-product-architecture-registry.md) | Wider product universe, nine target experiences, domains, and platform ownership |
+| [34 — AEGIS Network Runtime Blueprint](./docs/34-aegis-network-infrastructure-blueprint.md) | AEGIS runtime scope, trust boundaries, phased implementation, and acceptance gates |
 | [34 — COCKPIT RIOT RELEASE](./docs/34-cockpit-riot-release-offline-first.md) | Offline-first local software release workflow and optional provider boundary |
 
 For contribution rules and verified commands, start with [CONTRIBUTING.md](./CONTRIBUTING.md) and [docs/24](./docs/24-repository-and-automation-governance.md).
