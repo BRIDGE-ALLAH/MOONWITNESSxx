@@ -72,7 +72,7 @@ function ProductRecordEditor({ product, onSaved }: {
   useEffect(() => {
     setBriefDraft(JSON.stringify(product.brief, null, 2))
     setCriteriaDraft(product.acceptanceCriteria.join('\n'))
-  }, [product.version, product.versionId])
+  }, [product.version, product.versionId, product.brief, product.acceptanceCriteria])
 
   async function loadHistory() {
     setError('')
