@@ -7,7 +7,7 @@ export interface PortfolioMetricDefinition {
   denominator: string
   source: string
   interpretation: string
-  currency: 'not-applicable' | 'event-count'
+  currency: 'not-applicable' | 'product-count'
 }
 
 export interface PortfolioMetrics {
