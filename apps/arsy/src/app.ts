@@ -1,4 +1,5 @@
 import rateLimit from '@fastify/rate-limit'
+import { resolveGlobalRateLimitMax } from './config.ts'
 import Fastify from 'fastify'
 import type { Pool } from 'pg'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
@@ -43,7 +44,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.register(async (instance) => {
     // Register the onRoute hook before declaring routes in this encapsulated scope.
-    await instance.register(rateLimit, { global: true, max: 120, timeWindow: '1 minute' })
+    await instance.register(rateLimit, { global: true, max: resolveGlobalRateLimitMax(env), timeWindow: '1 minute' })
     instance.setValidatorCompiler(validatorCompiler)
 
     const typedApp = instance.withTypeProvider<ZodTypeProvider>()
