@@ -28,7 +28,38 @@ type Opportunity = {
     missingScoreDimensions: string[]
   }
 }
-type Product = { id: string; title?: string; name?: string; lifecycleState: string; version: number }
+type ProductLifecycleState = 'brief' | 'production' | 'review' | 'ready' | 'listed' | 'retired'
+type Product = {
+  id: string
+  opportunityId: string | null
+  title: string
+  productFamily: string
+  lifecycleState: ProductLifecycleState
+  allowedNextLifecycleStates: ProductLifecycleState[]
+  version: number
+  versionId: string
+  brief: Record<string, unknown>
+  acceptanceCriteria: string[]
+  createdAt: string
+  updatedAt: string
+}
+type ProductVersion = {
+  id: string
+  version: number
+  brief: Record<string, unknown>
+  acceptanceCriteria: string[]
+  createdAt: string
+  createdBy: string
+}
+type ProductVersionDraft = {
+  summary: string
+  buyerProblem: string
+  buyerSegment: string
+  jobToBeDone: string
+  productHypothesis: string
+  candidateChannels: string
+  acceptanceCriteria: string
+}
 type Channel = { id: string; displayName: string; capability: string; channelStatus: string; accountEligibility: string; payoutSetupStatus: string }
 type Listing = { id: string; productId: string; channelId: string; status: string; createdAt: string }
 type Asset = { id: string; fileName: string; mediaType: string; byteSize: number; sha256: string }
@@ -363,7 +394,7 @@ export function MoneyMakerWorkspace() {
       </section>
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <RecordPanel title="Products" items={data.products} empty="No products promoted yet." />
+        <ProductManagementPanel items={data.products} onSaved={refresh} onError={setError} onNotice={setNotice} />
         <RecordPanel title="Assets" items={data.assets} empty="No assets registered yet." />
         <RecordPanel title="Channels" items={data.channels} empty="No channel records yet." />
         <RecordPanel title="Listings" items={data.listings} empty="No manual listing packages yet." />
@@ -580,3 +611,291 @@ function RecordPanel<T extends { id?: string; title?: unknown; displayName?: unk
     </Card>
   )
 }
+
+function briefText(brief: Record<string, unknown>, key: string): string {
+  const value = brief[key]
+  return typeof value === 'string' ? value : ''
+}
+
+function briefList(brief: Record<string, unknown>, key: string): string[] {
+  const value = brief[key]
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
+}
+
+function ProductManagementPanel({
+  items, onSaved, onError, onNotice,
+}: {
+  items: Product[]
+  onSaved: () => Promise<void>
+  onError: (value: string) => void
+  onNotice: (value: string) => void
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Products · version & lifecycle control</CardTitle>
+        <CardDescription>
+          Version snapshots are immutable. Lifecycle actions are limited to transitions approved by ARSY; readiness and publication states are derived from their evidence records.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No products promoted yet. A product brief appears only after an opportunity passes its score and hard-gate requirements.</p>
+        ) : (
+          <div className="space-y-3">
+            {items.map((product) => (
+              <ProductManagementItem
+                key={`${product.id}:${product.version}:${product.lifecycleState}`}
+                product={product}
+                onSaved={onSaved}
+                onError={onError}
+                onNotice={onNotice}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function ProductManagementItem({
+  product, onSaved, onError, onNotice,
+}: {
+  product: Product
+  onSaved: () => Promise<void>
+  onError: (value: string) => void
+  onNotice: (value: string) => void
+}) {
+  const [showVersions, setShowVersions] = useState(false)
+  const [versions, setVersions] = useState<ProductVersion[]>([])
+  const [versionsLoaded, setVersionsLoaded] = useState(false)
+  const [loadingVersions, setLoadingVersions] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [savingVersion, setSavingVersion] = useState(false)
+  const [transitioning, setTransitioning] = useState<ProductLifecycleState | null>(null)
+  const [draft, setDraft] = useState<ProductVersionDraft>({
+    summary: briefText(product.brief, 'summary'),
+    buyerProblem: briefText(product.brief, 'buyerProblem'),
+    buyerSegment: briefText(product.brief, 'buyerSegment'),
+    jobToBeDone: briefText(product.brief, 'jobToBeDone'),
+    productHypothesis: briefText(product.brief, 'productHypothesis'),
+    candidateChannels: briefList(product.brief, 'candidateChannels').join(', '),
+    acceptanceCriteria: product.acceptanceCriteria.join('\n'),
+  })
+
+  async function toggleVersionHistory() {
+    if (showVersions) {
+      setShowVersions(false)
+      return
+    }
+    setShowVersions(true)
+    if (versionsLoaded || loadingVersions) return
+    setLoadingVersions(true)
+    onError('')
+    try {
+      const history = await readData<ProductVersion[]>(`/api/money-maker/products/${encodeURIComponent(product.id)}/versions`)
+      setVersions(history)
+      setVersionsLoaded(true)
+    } catch (cause) {
+      onError(cause instanceof Error ? cause.message : 'Unable to load product version history.')
+      setShowVersions(false)
+    } finally {
+      setLoadingVersions(false)
+    }
+  }
+
+  function openVersionEditor() {
+    setDraft({
+      summary: briefText(product.brief, 'summary'),
+      buyerProblem: briefText(product.brief, 'buyerProblem'),
+      buyerSegment: briefText(product.brief, 'buyerSegment'),
+      jobToBeDone: briefText(product.brief, 'jobToBeDone'),
+      productHypothesis: briefText(product.brief, 'productHypothesis'),
+      candidateChannels: briefList(product.brief, 'candidateChannels').join(', '),
+      acceptanceCriteria: product.acceptanceCriteria.join('\n'),
+    })
+    setEditing((value) => !value)
+    onError('')
+    onNotice('')
+  }
+
+  async function saveVersion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const acceptanceCriteria = draft.acceptanceCriteria.split('\n').map((value) => value.trim()).filter(Boolean)
+    if (acceptanceCriteria.length === 0) {
+      onError('Add at least one acceptance criterion before saving a product version.')
+      return
+    }
+    setSavingVersion(true)
+    onError('')
+    onNotice('')
+    const brief = {
+      ...product.brief,
+      summary: draft.summary.trim(),
+      buyerProblem: draft.buyerProblem.trim(),
+      buyerSegment: draft.buyerSegment.trim(),
+      jobToBeDone: draft.jobToBeDone.trim(),
+      productHypothesis: draft.productHypothesis.trim(),
+      candidateChannels: draft.candidateChannels.split(',').map((value) => value.trim()).filter(Boolean),
+    }
+    try {
+      const response = await fetch(`/api/money-maker/products/${encodeURIComponent(product.id)}/versions`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ expectedVersion: product.version, brief, acceptanceCriteria }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        if (response.status === 409) await onSaved()
+        throw new Error(result.error?.message ?? 'Product version changed. Refresh before retrying.')
+      }
+      setEditing(false)
+      setShowVersions(false)
+      setVersions([])
+      setVersionsLoaded(false)
+      onNotice(`Product version ${result.data.version} saved. Lifecycle moved to production for rework.`)
+      await onSaved()
+    } catch (cause) {
+      onError(cause instanceof Error ? cause.message : 'Unable to save product version.')
+    } finally {
+      setSavingVersion(false)
+    }
+  }
+
+  async function transitionLifecycle(nextState: ProductLifecycleState) {
+    if (!product.allowedNextLifecycleStates.includes(nextState)) {
+      onError(`ARSY does not allow ${product.lifecycleState} → ${nextState}.`)
+      return
+    }
+    if (nextState === 'retired' && !window.confirm('Retire this product? Its version and audit history will be retained.')) return
+    setTransitioning(nextState)
+    onError('')
+    onNotice('')
+    try {
+      const response = await fetch(`/api/money-maker/products/${encodeURIComponent(product.id)}/lifecycle`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ lifecycleState: nextState }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        if (response.status === 409) await onSaved()
+        throw new Error(result.error?.message ?? 'Product lifecycle changed. Refresh before retrying.')
+      }
+      onNotice(`Product lifecycle changed to ${result.data.lifecycleState}.`)
+      await onSaved()
+    } catch (cause) {
+      onError(cause instanceof Error ? cause.message : 'Unable to change product lifecycle.')
+    } finally {
+      setTransitioning(null)
+    }
+  }
+
+  const derivedStatusNote = product.lifecycleState === 'ready'
+    ? 'Ready is derived from asset inspections. It cannot be set manually.'
+    : product.lifecycleState === 'listed'
+      ? 'Listed is derived from a verified publication receipt. It cannot be set manually.'
+      : null
+
+  return (
+    <article className="space-y-3 rounded border border-border p-4" data-testid={`product-control-${product.id}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-2">
+          <h3 className="font-semibold">{product.title}</h3>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <Badge variant="outline">{product.lifecycleState}</Badge>
+            <span className="text-muted-foreground">Version {product.version}</span>
+            <span className="text-muted-foreground">{product.productFamily}</span>
+          </div>
+          <p className="max-w-3xl text-xs text-muted-foreground">
+            {briefText(product.brief, 'summary') || 'No product summary has been recorded in this version.'}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => void toggleVersionHistory()} disabled={loadingVersions} className="rounded border border-border px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50">
+            {loadingVersions ? 'Loading versions…' : showVersions ? 'Hide version history' : 'View version history'}
+          </button>
+          <button type="button" onClick={openVersionEditor} className="rounded border border-border px-3 py-1.5 text-xs hover:bg-muted">
+            {editing ? 'Close version editor' : 'Create new version'}
+          </button>
+        </div>
+      </div>
+
+      {derivedStatusNote && <p className="rounded border border-border bg-muted/30 p-2 text-xs text-muted-foreground">{derivedStatusNote}</p>}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground">Allowed lifecycle transitions:</span>
+        {product.allowedNextLifecycleStates.length === 0 ? (
+          <span className="text-xs text-muted-foreground">No further transitions.</span>
+        ) : product.allowedNextLifecycleStates.map((state) => (
+          <button
+            key={state}
+            type="button"
+            disabled={transitioning !== null}
+            onClick={() => void transitionLifecycle(state)}
+            className="rounded border border-border px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50"
+          >
+            {transitioning === state ? 'Saving…' : state === 'retired' ? 'Retire product' : `Move to ${state}`}
+          </button>
+        ))}
+      </div>
+
+      {showVersions && (
+        <section className="space-y-2 rounded border border-border bg-muted/20 p-3" aria-label={`Version history for ${product.title}`}>
+          <h4 className="text-xs font-semibold">Immutable version history</h4>
+          {versions.length === 0 ? <p className="text-xs text-muted-foreground">No saved versions returned.</p> : (
+            <ol className="space-y-2">
+              {versions.map((version) => (
+                <li key={version.id} className="rounded border border-border bg-background p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-semibold">Version {version.version}</span>
+                    <span className="text-xs text-muted-foreground">{new Date(version.createdAt).toLocaleString()}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{briefText(version.brief, 'summary') || 'No summary recorded.'}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Created by {version.createdBy}</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                    {version.acceptanceCriteria.map((criterion, index) => <li key={index}>{criterion}</li>)}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      )}
+
+      {editing && (
+        <form onSubmit={saveVersion} className="space-y-3 rounded border border-border bg-muted/20 p-3">
+          <p className="text-xs text-muted-foreground">Saving creates version {product.version + 1}. Existing versions remain immutable. Current version: {product.version}.</p>
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="block space-y-1 text-xs font-medium">Product summary
+              <textarea required minLength={3} maxLength={2000} value={draft.summary} onChange={(event) => setDraft((current) => ({ ...current, summary: event.target.value }))} className="min-h-16 w-full rounded border border-input bg-background px-3 py-2 text-xs" />
+            </label>
+            <label className="block space-y-1 text-xs font-medium">Buyer problem
+              <textarea required minLength={5} maxLength={3000} value={draft.buyerProblem} onChange={(event) => setDraft((current) => ({ ...current, buyerProblem: event.target.value }))} className="min-h-16 w-full rounded border border-input bg-background px-3 py-2 text-xs" />
+            </label>
+            <label className="block space-y-1 text-xs font-medium">Buyer segment
+              <input required minLength={2} maxLength={300} value={draft.buyerSegment} onChange={(event) => setDraft((current) => ({ ...current, buyerSegment: event.target.value }))} className="w-full rounded border border-input bg-background px-3 py-2 text-xs" />
+            </label>
+            <label className="block space-y-1 text-xs font-medium">Job to be done
+              <textarea required minLength={5} maxLength={1000} value={draft.jobToBeDone} onChange={(event) => setDraft((current) => ({ ...current, jobToBeDone: event.target.value }))} className="min-h-16 w-full rounded border border-input bg-background px-3 py-2 text-xs" />
+            </label>
+            <label className="block space-y-1 text-xs font-medium">Product hypothesis
+              <textarea required minLength={5} maxLength={2000} value={draft.productHypothesis} onChange={(event) => setDraft((current) => ({ ...current, productHypothesis: event.target.value }))} className="min-h-16 w-full rounded border border-input bg-background px-3 py-2 text-xs" />
+            </label>
+            <label className="block space-y-1 text-xs font-medium">Candidate channels
+              <input value={draft.candidateChannels} onChange={(event) => setDraft((current) => ({ ...current, candidateChannels: event.target.value }))} placeholder="Gumroad, Etsy" className="w-full rounded border border-input bg-background px-3 py-2 text-xs" />
+            </label>
+          </div>
+          <label className="block space-y-1 text-xs font-medium">Acceptance criteria (one per line)
+            <textarea required value={draft.acceptanceCriteria} onChange={(event) => setDraft((current) => ({ ...current, acceptanceCriteria: event.target.value }))} className="min-h-24 w-full rounded border border-input bg-background px-3 py-2 text-xs" />
+          </label>
+          <button type="submit" disabled={savingVersion} className="rounded bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50">
+            {savingVersion ? 'Saving version…' : `Save version ${product.version + 1}`}
+          </button>
+        </form>
+      )}
+    </article>
+  )
+}
+
