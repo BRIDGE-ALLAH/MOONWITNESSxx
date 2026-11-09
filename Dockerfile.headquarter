@@ -17,7 +17,7 @@ RUN pnpm --filter @riotworks/headquarter --prod deploy /out/headquarter
 
 # Next.js keeps compiled server output under .next; pnpm deploy only installs
 # the portable package dependency graph, so copy that build output explicitly.
-COPY --from=build --chown=node:node /workspace/apps/headquarter/.next/ /out/headquarter/.next/
+RUN mkdir -p /out/headquarter/.next && cp -a /workspace/apps/headquarter/.next/. /out/headquarter/.next/
 
 FROM node:24.22.2-alpine3.23 AS runtime
 ENV NODE_ENV=production
