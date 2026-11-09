@@ -19,7 +19,7 @@ func validEnvelope(now time.Time) Envelope {
 func validator(now time.Time) Validator {
 	return Validator{
 		AllowedOperations: map[string]struct{}{"inventory.read": {}},
-		MaxTTL: 2 * time.Minute, ClockSkew: 5 * time.Second,
+		MaxTTL:            2 * time.Minute, ClockSkew: 5 * time.Second,
 		Now: func() time.Time { return now },
 	}
 }

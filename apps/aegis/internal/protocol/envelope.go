@@ -26,9 +26,9 @@ type Envelope struct {
 
 type Validator struct {
 	AllowedOperations map[string]struct{}
-	MaxTTL             time.Duration
-	ClockSkew          time.Duration
-	Now                func() time.Time
+	MaxTTL            time.Duration
+	ClockSkew         time.Duration
+	Now               func() time.Time
 }
 
 func (v Validator) Validate(e Envelope) error {
