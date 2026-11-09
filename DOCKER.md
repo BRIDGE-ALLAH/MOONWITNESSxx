@@ -8,12 +8,12 @@
 
 - Docker Desktop (or Docker + Docker Compose separately)
 - 4GB+ free disk space for images and volumes
-- Ports 3000 (Headquarter), 3001 (ARSY), 5432 (PostgreSQL), 6379 (Redis) available
+- Ports 3000 (Headquarter), 3001 (ARSY), 3102 (AEGIS), 5432 (PostgreSQL), 6379 (Redis) available
 
 ### Start services
 
 ```bash
-# Start all services (Headquarter, ARSY, PostgreSQL, Redis)
+# Start all services (Headquarter, ARSY, AEGIS, ORACLE, PostgreSQL, Redis)
 docker-compose up -d
 
 # View logs
@@ -99,6 +99,7 @@ docker-compose up --build
 ```bash
 docker-compose logs -f arsy
 docker-compose logs -f headquarter
+docker-compose logs -f aegis
 docker-compose logs -f postgres
 ```
 
@@ -202,6 +203,13 @@ Do not use `docker compose down -v` or `docker system prune --volumes` as a star
 - [docs/08-technical-architecture.md](../docs/08-technical-architecture.md) — Backend/ORM architecture
 - [docs/24-repository-and-automation-governance.md](../docs/24-repository-and-automation-governance.md) — Git/CI setup
 - [README.md](../README.md) — Project overview
+
+### AEGIS (Network Runtime Foundation)
+
+- Built from `apps/aegis/Dockerfile` using a multi-stage Go build and a non-root distroless runtime.
+- Exposes only `/health/live` and `/health/ready` in this phase; host publishing is loopback-only on port 3102.
+- Runs read-only, drops all Linux capabilities, and enables `no-new-privileges`.
+- Does not yet execute WireGuard, RouterOS, firewall, routing, DNS, provisioning, or arbitrary commands. ARSY-to-AEGIS authenticated authorization/protocol integration is not implemented.
 
 ## Docker Connector
 
