@@ -30,7 +30,7 @@ jobs:
         working-directory: apps/aegis
         run: |
           files="$(gofmt -l ./cmd ./internal)"
-          test -z "$files" || { printf '%s\\n' "$files"; exit 1; }
+          test -z "$files" || { printf '%s\n' "$files"; exit 1; }
       - name: Vet
         working-directory: apps/aegis
         run: go vet ./...
@@ -49,6 +49,8 @@ jobs:
       - name: Validate Compose
         env:
           POSTGRES_PASSWORD: ci-placeholder-only
+          ORACLE_APP_DB_PASSWORD: ci-placeholder-only
+          ORACLE_MIGRATOR_DB_PASSWORD: ci-placeholder-only
           ORACLE_SERVICE_TOKEN: ci-placeholder-only
         run: docker compose config --quiet
       - name: Build AEGIS image
