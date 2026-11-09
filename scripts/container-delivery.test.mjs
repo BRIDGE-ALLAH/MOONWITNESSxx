@@ -65,7 +65,7 @@ test('container publication is limited to version tags or manual dispatch from m
 test('published images are commit-addressed, scanned, and attested before version aliases', async () => {
   const workflow = await read('.github/workflows/container-release.yml')
   const buildStep = workflow.indexOf('Build and push commit-addressed candidate')
-  const scanStep = workflow.indexOf('Reject images with unfixed or fixed high/critical vulnerabilities')
+  const scanStep = workflow.indexOf('Reject high/critical vulnerabilities with available fixes')
   const aliasStep = workflow.indexOf('Add the immutable version alias only after scan and attestation pass')
   const attestStep = workflow.indexOf('Publish a GitHub artifact attestation for the pushed digest')
 
@@ -100,4 +100,22 @@ test('pull-request container CI builds locally and verifies non-root runtime plu
   assert.match(job, /process\.getuid\(\) === 0/)
   assert.match(job, /Config\.Healthcheck/)
   assert.match(job, /NODE_ENV=production/)
+})
+
+
+test('production image CI performs isolated ARSY migration and service health smoke tests', async () => {
+  const ci = await read('.github/workflows/ci.yml')
+  const start = ci.indexOf('  production-container-build:')
+  assert.ok(start >= 0)
+  const job = ci.slice(start)
+  assert.match(job, /image: postgres:16-alpine/)
+  assert.match(job, /POSTGRES_DB: moonwitness_container_ci/)
+  assert.match(job, /5432:5432/)
+  assert.match(job, /src\/migrations\/runner\.ts/)
+  assert.match(job, /\/health\/ready/)
+  assert.match(job, /\/health\/live/)
+  assert.match(job, /http:\/\/127\.0\.0\.1:3000\//)
+  assert.match(job, /\/health\/live/)
+  assert.match(job, /\/aegis healthcheck/)
+  assert.match(job, /docker rm -f moonwitness-container-smoke/)
 })
