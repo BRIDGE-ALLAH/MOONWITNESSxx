@@ -529,7 +529,7 @@ function OpportunityReviewForm({
                 </label>
                 {scores[key] !== '' && <>
                   <textarea required minLength={10} value={scoreRationales[key]} onChange={(event) => setScoreRationales((current) => ({ ...current, [key]: event.target.value }))} placeholder="Why does the evidence justify this score?" className="min-h-16 w-full rounded border border-input bg-background px-2 py-1.5 text-xs" />
-                  <select value={confidences[key]} onChange={(event) => setConfidences((current) => ({ ...current, [key]: event.target.value as typeof current[ScoreKey] }))} className="w-full rounded border border-input bg-background px-2 py-1.5 text-xs">
+                  <select value={confidences[key]} onChange={(event) => setConfidences((current) => ({ ...current, [key]: event.target.value as 'high' | 'medium' | 'low' | 'unknown' }))} className="w-full rounded border border-input bg-background px-2 py-1.5 text-xs">
                     {['high', 'medium', 'low', 'unknown'].map((value) => <option key={value} value={value}>Confidence: {value}</option>)}
                   </select>
                 </>}
@@ -542,7 +542,7 @@ function OpportunityReviewForm({
               {gateFields.map(({ key, label }) => (
                 <div key={key} className="space-y-1 rounded border border-border p-2">
                   <label className="block text-xs font-semibold">{label}
-                    <select value={gates[key]} onChange={(event) => setGates((current) => ({ ...current, [key]: event.target.value as typeof current[GateKey] }))} className="mt-1 w-full rounded border border-input bg-background px-2 py-1.5 text-xs">
+                    <select value={gates[key]} onChange={(event) => setGates((current) => ({ ...current, [key]: event.target.value as 'pass' | 'blocked' | 'unknown' }))} className="mt-1 w-full rounded border border-input bg-background px-2 py-1.5 text-xs">
                       {['unknown', 'pass', 'blocked'].map((value) => <option key={value} value={value}>{value}</option>)}
                     </select>
                   </label>
