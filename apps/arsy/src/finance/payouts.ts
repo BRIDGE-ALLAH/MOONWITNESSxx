@@ -37,6 +37,7 @@ export interface PayoutRecord {
   sourceEvidence: PayoutEvidence
   reconciliationEvidence: Record<string, unknown>
   createdAt: string
+  recordedAt: string
   updatedAt: string
   history: Array<Record<string, unknown>>
   allowedNextStatuses: PayoutStatus[]
@@ -57,6 +58,7 @@ interface PayoutRow {
   request_hash: string
   reconciliation_evidence: Record<string, unknown>
   created_at: Date | string
+  recorded_at: Date | string
   updated_at: Date | string
   history?: Array<Record<string, unknown>>
   from_status?: PayoutStatus
@@ -138,6 +140,7 @@ function mapPayout(row: PayoutRow): PayoutRecord {
     sourceEvidence: row.source_evidence,
     reconciliationEvidence: row.reconciliation_evidence,
     createdAt: new Date(row.created_at).toISOString(),
+    recordedAt: new Date(row.recorded_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
     history: row.history ?? [],
     allowedNextStatuses: allowedPayoutTransitions(row.status, row.paid_at),
@@ -164,13 +167,14 @@ function mapFx(row: FxConversionRow): FxConversionRecord {
 const payoutColumns = `p.id, p.channel_id, c.display_name AS channel_name,
   p.amount_minor::text AS amount_minor, p.currency, p.status, p.provider_reference,
   p.expected_at, p.paid_at, p.source, p.source_evidence, p.request_hash, p.reconciliation_evidence,
-  p.created_at, p.updated_at,
+  p.created_at, p.recorded_at, p.updated_at,
   COALESCE((
     SELECT jsonb_agg(jsonb_build_object(
       'fromStatus', pe.from_status, 'toStatus', pe.to_status,
       'rationale', pe.rationale, 'evidence', pe.evidence,
-      'actorId', pe.actor_id, 'occurredAt', pe.occurred_at
-    ) ORDER BY pe.occurred_at ASC)
+      'actorId', pe.actor_id, 'occurredAt', pe.occurred_at,
+      'recordedAt', pe.recorded_at
+    ) ORDER BY pe.occurred_at ASC, pe.recorded_at ASC, pe.id ASC)
     FROM arsy_payout_events pe
     WHERE pe.owner_id = p.owner_id AND pe.payout_id = p.id
   ), '[]'::jsonb) AS history`
@@ -292,6 +296,7 @@ export class PayoutRepository {
     rationale: string,
     evidenceUrl: string,
     evidenceCapturedAt: string,
+    occurredAt: string,
   ): Promise<PayoutRecord | null> {
     const historyId = randomUUID()
     const auditId = randomUUID()
@@ -299,11 +304,12 @@ export class PayoutRepository {
     const eventType = status === 'paid' ? 'payout' : status === 'reversed' ? 'payout-reversal' : null
     const eventIdempotencyKey = `payout-${id}-${status}`
     const eventRequestHash = createHash('sha256')
-      .update(JSON.stringify({ payoutId: id, status, rationale, evidenceUrl, evidenceCapturedAt }))
+      .update(JSON.stringify({ payoutId: id, status, rationale, evidenceUrl, evidenceCapturedAt, occurredAt }))
       .digest('hex')
     const evidence = {
       evidenceUrl,
       capturedAt: evidenceCapturedAt,
+      occurredAt,
       rationale,
       verificationMethod: 'operator-manual-statement-review',
     }
@@ -313,10 +319,10 @@ export class PayoutRepository {
       ), changed AS (
         UPDATE arsy_payouts p SET
           status = $3,
-          paid_at = CASE WHEN $3 = 'paid' THEN COALESCE(p.paid_at, now()) ELSE p.paid_at END,
+          paid_at = CASE WHEN $3 = 'paid' THEN COALESCE(p.paid_at, $5::timestamptz) ELSE p.paid_at END,
           reconciliation_evidence = $4::jsonb,
           updated_at = now(),
-          updated_by = $5
+          updated_by = $6
         WHERE p.owner_id = $1 AND p.id = $2
           AND (
             (p.status = 'pending' AND $3 IN ('paid', 'failed', 'disputed')) OR
@@ -330,30 +336,30 @@ export class PayoutRepository {
         RETURNING p.*, (SELECT status FROM current) AS from_status
       ), history AS (
         INSERT INTO arsy_payout_events
-          (id, owner_id, payout_id, from_status, to_status, rationale, evidence, actor_id)
-        SELECT $6, owner_id, id, from_status, status, $7, $4::jsonb, $5
+          (id, owner_id, payout_id, from_status, to_status, rationale, evidence, actor_id, occurred_at)
+        SELECT $7, owner_id, id, from_status, status, $8, $4::jsonb, $6, $5::timestamptz
         FROM changed
       ), finance AS (
         INSERT INTO arsy_financial_events
           (id, owner_id, product_id, listing_id, event_type, amount_minor, currency,
            occurred_at, source, provider_reference, payout_id, idempotency_key,
            request_hash, reconciliation_state, metadata, created_by)
-        SELECT $8, owner_id, NULL, NULL, $9, amount_minor, currency, now(),
+        SELECT $9, owner_id, NULL, NULL, $10, amount_minor, currency, $5::timestamptz,
           'Manual payout statement reconciliation', provider_reference, id,
-          $10, $11, 'verified', $4::jsonb, $5
+          $11, $12, 'verified', $4::jsonb, $6
         FROM changed
         WHERE $9::text IS NOT NULL
         ON CONFLICT (owner_id, idempotency_key) DO NOTHING
       ), audited AS (
         INSERT INTO arsy_commerce_audit_events
           (id, owner_id, aggregate_type, aggregate_id, action, actor_id, metadata)
-        SELECT $12, owner_id, 'payout', id, 'status-' || status, $5,
-          jsonb_build_object('fromStatus', from_status, 'toStatus', status, 'evidence', $4::jsonb)
+        SELECT $13, owner_id, 'payout', id, 'status-' || status, $6,
+          jsonb_build_object('fromStatus', from_status, 'toStatus', status, 'occurredAt', $5::timestamptz, 'evidence', $4::jsonb)
         FROM changed
       )
       SELECT ${payoutColumns} FROM changed p
       LEFT JOIN arsy_channels c ON c.id = p.channel_id`,
-      [ownerId, id, status, JSON.stringify(evidence), actorId, historyId, rationale,
+      [ownerId, id, status, JSON.stringify(evidence), occurredAt, actorId, historyId, rationale,
         financeId, eventType, eventIdempotencyKey, eventRequestHash, auditId],
     )
     const row = rows<PayoutRow>(result)[0]
