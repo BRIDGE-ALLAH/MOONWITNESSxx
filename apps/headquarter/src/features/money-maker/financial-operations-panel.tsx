@@ -223,7 +223,7 @@ export function FinancialOperationsPanel(props: Props) {
           ) : (
             <div className="space-y-3">
               {financialEvents.map((event) => (
-                <article key={event.id} className="space-y-3 rounded border border-border p-4">
+                <article data-testid="financial-event-item" data-reconciliation-state={event.reconciliationState} key={event.id} className="space-y-3 rounded border border-border p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0 space-y-1">
                       <h3 className="font-semibold">{event.eventType} · {minor(event.amountMinor, event.currency)}</h3>
@@ -415,9 +415,9 @@ function EventReconciliationForm({
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-3 rounded bg-muted/40 p-3 md:grid-cols-[minmax(130px,0.4fr)_minmax(180px,1fr)_minmax(180px,1fr)_auto] md:items-end">
+    <form data-testid="event-reconciliation-form" onSubmit={submit} className="grid gap-3 rounded bg-muted/40 p-3 md:grid-cols-[minmax(130px,0.4fr)_minmax(180px,1fr)_minmax(180px,1fr)_auto] md:items-end">
       <label className="block space-y-1 text-xs font-medium">Reconciliation result
-        <select value={state} onChange={(event) => setState(event.target.value as typeof state)} className="w-full rounded border border-input bg-background px-2 py-2 text-sm">
+        <select data-testid="event-reconciliation-result" value={state} onChange={(event) => setState(event.target.value as typeof state)} className="w-full rounded border border-input bg-background px-2 py-2 text-sm">
           <option value="verified">verified</option><option value="disputed">disputed</option><option value="reversed">reversed</option>
         </select>
       </label>
