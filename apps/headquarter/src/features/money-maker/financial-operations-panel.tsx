@@ -152,6 +152,7 @@ export function FinancialOperationsPanel(props: Props) {
     products, channels, financialEvents, payouts, fxConversions, financialSummary,
     onRefresh, onError, onNotice,
   } = props
+  const summaryRows = Array.isArray(financialSummary) ? financialSummary : []
 
   return (
     <div className="space-y-6">
@@ -164,11 +165,11 @@ export function FinancialOperationsPanel(props: Props) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {financialSummary.length === 0 ? (
+          {summaryRows.length === 0 ? (
             <p className="rounded border border-dashed border-border p-4 text-sm text-muted-foreground">No reconciled balances yet. Pending entries remain separate from verified totals.</p>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {financialSummary.map((row) => (
+              {summaryRows.map((row) => (
                 <article key={row.currency} className="space-y-3 rounded border border-border p-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">{row.currency}</h3>
