@@ -252,18 +252,14 @@ test('deployment operation rolls back when authorization evidence cannot be pers
 })
 
 
-const officialImageRepository = 'ghcr.io/bridge-allah/moonwitness-arsy'
+const officialImageRepository = 'ghcr.io/bridge-allah/moonwitness-headquarter'
 const officialImageDigest = 'sha256:' + 'a'.repeat(64)
 const officialImageReference = officialImageRepository + '@' + officialImageDigest
 
 test('prebuilt deployment intent stores an allowlisted immutable GHCR image without enabling provider side effects', async () => {
   const pool = createPool()
   const app = createTestApp(pool, {
-    ARSY_DEPLOYMENT_IMAGE_ALLOWLIST: [
-      'ghcr.io/bridge-allah/moonwitness-arsy',
-      'ghcr.io/bridge-allah/moonwitness-headquarter',
-      'ghcr.io/bridge-allah/moonwitness-aegis',
-    ].join(','),
+    ARSY_DEPLOYMENT_IMAGE_ALLOWLIST: officialImageRepository,
   })
   try {
     const response = await app.inject({
@@ -294,7 +290,12 @@ test('prebuilt deployment intent stores an allowlisted immutable GHCR image with
 })
 
 test('prebuilt image deployment fails closed when its trusted allowlist is absent or malformed', async () => {
-  for (const allowlist of [undefined, 'ghcr.io/Bridge-ALLAH/moonwitness-arsy']) {
+  for (const allowlist of [
+    undefined,
+    'ghcr.io/Bridge-ALLAH/moonwitness-headquarter',
+    'ghcr.io/bridge-allah/moonwitness-aegis',
+    'ghcr.io/bridge-allah/moonwitness-arsy',
+  ]) {
     const pool = createPool()
     const app = createTestApp(
       pool,
@@ -334,7 +335,7 @@ test('prebuilt image deployment rejects repositories outside the trusted allowli
       },
       payload: {
         kind: 'deploy',
-        image: 'ghcr.io/untrusted/rogue-app@' + officialImageDigest,
+        image: 'ghcr.io/bridge-allah/rogue-app@' + officialImageDigest,
       },
     })
     assert.equal(response.statusCode, 400)
@@ -347,10 +348,11 @@ test('prebuilt image deployment rejects repositories outside the trusted allowli
 
 test('prebuilt image deployment rejects tags, non-GHCR registries and non-canonical digests', async () => {
   const invalidImages = [
-    'ghcr.io/bridge-allah/moonwitness-arsy:latest',
+    'ghcr.io/bridge-allah/moonwitness-headquarter:latest',
     officialImageRepository + '@sha256:' + 'A'.repeat(64),
-    'docker.io/bridge-allah/moonwitness-arsy@' + officialImageDigest,
+    'docker.io/bridge-allah/moonwitness-headquarter@' + officialImageDigest,
     officialImageRepository + ':v1.2.0@' + officialImageDigest,
+    'ghcr.io/other-owner/moonwitness-headquarter@' + officialImageDigest,
   ]
   for (const image of invalidImages) {
     const pool = createPool()

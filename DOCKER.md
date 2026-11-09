@@ -243,10 +243,12 @@ The deployment API accepts a prebuilt image only when all of the following hold:
 Example trusted configuration for the images built by this workflow:
 
 ```bash
-ARSY_DEPLOYMENT_IMAGE_ALLOWLIST=ghcr.io/bridge-allah/moonwitness-arsy,ghcr.io/bridge-allah/moonwitness-headquarter,ghcr.io/bridge-allah/moonwitness-aegis
+ARSY_DEPLOYMENT_IMAGE_ALLOWLIST=ghcr.io/bridge-allah/moonwitness-headquarter
 ```
 
-An example request value is `ghcr.io/bridge-allah/moonwitness-arsy@sha256:<digest>`; obtain the actual digest from a successful container-release workflow summary. Never substitute a mutable tag.
+An example request value is `ghcr.io/bridge-allah/moonwitness-headquarter@sha256:<digest>`; obtain the actual digest from a successful container-release workflow summary. Never substitute a mutable tag.
+
+Only application repositories belong in this list. The ARSY and AEGIS control-plane images are rejected by the v1 allowlist parser; their lifecycle is outside this application-deployment path.
 
 **This is an intent-contract slice, not an executable deployment path.** The current API still reports the worker as disabled and provider side effects as not started. It does not pull images, verify GHCR/GitHub artifact attestations, provision registry credentials, invoke Docker, or claim a running/healthy release. Those are separate acceptance gates in the ARSY deployment lifecycle. Registry package visibility and a least-privilege pull credential must be configured and verified for the eventual target.
 

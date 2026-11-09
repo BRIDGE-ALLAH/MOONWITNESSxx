@@ -135,12 +135,17 @@ const createDeploymentSchema = z
   .strict()
 
 const deploymentImageRepositoryPattern =
-  /^ghcr\.io\/[a-z0-9]+(?:[._-][a-z0-9]+)*(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)+$/
+  /^ghcr\.io\/bridge-allah(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)+$/
 const deploymentImageReferenceSchema = z
   .string()
   .min(1)
   .max(512)
-  .regex(/^ghcr\.io\/[a-z0-9]+(?:[._-][a-z0-9]+)*(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)+@sha256:[a-f0-9]{64}$/)
+  .regex(/^ghcr\.io\/bridge-allah(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)+@sha256:[a-f0-9]{64}$/)
+
+const nonDeployableSystemImageRepositories = new Set([
+  'ghcr.io/bridge-allah/moonwitness-arsy',
+  'ghcr.io/bridge-allah/moonwitness-aegis',
+])
 
 function parseDeploymentImageAllowlist(raw: string | undefined): Set<string> | null {
   if (!raw?.trim()) return null
@@ -148,7 +153,11 @@ function parseDeploymentImageAllowlist(raw: string | undefined): Set<string> | n
   if (
     repositories.length === 0 ||
     repositories.length > 32 ||
-    repositories.some((repository) => !deploymentImageRepositoryPattern.test(repository))
+    repositories.some(
+      (repository) =>
+        !deploymentImageRepositoryPattern.test(repository) ||
+        nonDeployableSystemImageRepositories.has(repository)
+    )
   ) {
     return null
   }
