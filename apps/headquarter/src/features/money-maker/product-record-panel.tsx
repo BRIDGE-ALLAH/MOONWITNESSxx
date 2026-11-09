@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from
 
 export type ProductRecord = {
   id: string
+  opportunityId: string | null
   title: string
   productFamily: string
   lifecycleState: 'brief' | 'production' | 'review' | 'ready' | 'listed' | 'retired'
