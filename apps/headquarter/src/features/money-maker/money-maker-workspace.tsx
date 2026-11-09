@@ -88,7 +88,7 @@ type IntakeForm = {
 
 const emptyData: WorkspaceData = {
   opportunities: [], products: [], assets: [], channels: [], listings: [],
-  financialEvents: [], payouts: [], fxConversions: [], financialSummary: null, portfolioMetrics: null,
+  financialEvents: [], payouts: [], fxConversions: [], financialSummary: [], portfolioMetrics: null,
 }
 const initialForm: IntakeForm = {
   title: '', buyerProblem: '', buyerSegment: '', jobToBeDone: '', productHypothesis: '',
