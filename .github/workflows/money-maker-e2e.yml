@@ -159,7 +159,7 @@ jobs:
 
       - name: Exercise login, create, reload, archive and durable audit in Chromium
         run: |
-          node --experimental-strip-types --test --test-reporter=spec apps/headquarter/tests/money-maker-workspace.browser.e2e.mjs
+          node --experimental-strip-types --test --test-reporter=spec apps/headquarter/tests/money-maker-workspace.browser.e2e.mjs apps/headquarter/tests/money-maker-products.browser.e2e.mjs
 
       - name: Collect server diagnostics
         if: failure()
