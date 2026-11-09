@@ -13,7 +13,7 @@ COPY apps/headquarter ./apps/headquarter
 
 RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @riotworks/headquarter build
-RUN pnpm --filter @riotworks/headquarter deploy --prod /out/headquarter
+RUN pnpm --filter @riotworks/headquarter --prod deploy /out/headquarter
 
 # Next.js keeps compiled server output under .next; pnpm deploy only installs
 # the portable package dependency graph, so copy that build output explicitly.
