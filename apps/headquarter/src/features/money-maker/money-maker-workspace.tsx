@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@riotworks/ui'
+import { FinancialOperationsPanel, type FinancialEventRecord, type FinancialSummaryRow, type FxConversionRecord, type PayoutChannelOption, type PayoutRecord } from './financial-operations-panel.tsx'
+import { AftershockMetricsPanel, type PortfolioMetrics } from './aftershock-metrics-panel.tsx'
 
 type ScoreKey = 'demandEvidence' | 'competitionGap' | 'usefulnessDifferentiation' | 'marketplaceFit' | 'productionFeasibility' | 'durability' | 'distributionReadiness'
 type GateKey = 'rights' | 'countryEligibility' | 'channelPolicy' | 'payoutFeasibility'
@@ -51,21 +53,20 @@ type ProductVersion = {
   createdAt: string
   createdBy: string
 }
-type Channel = { id: string; displayName: string; capability: string; channelStatus: string; accountEligibility: string; payoutSetupStatus: string }
+type Channel = PayoutChannelOption
 type Listing = { id: string; productId: string; channelId: string; status: string; createdAt: string }
 type Asset = { id: string; fileName: string; mediaType: string; byteSize: number; sha256: string }
-type RecordItem = Record<string, unknown>
 type WorkspaceData = {
   opportunities: Opportunity[]
   products: Product[]
   assets: Asset[]
   channels: Channel[]
   listings: Listing[]
-  financialEvents: RecordItem[]
-  payouts: RecordItem[]
-  fxConversions: RecordItem[]
-  financialSummary: unknown
-  portfolioMetrics: unknown
+  financialEvents: FinancialEventRecord[]
+  payouts: PayoutRecord[]
+  fxConversions: FxConversionRecord[]
+  financialSummary: FinancialSummaryRow[]
+  portfolioMetrics: PortfolioMetrics | null
 }
 type IntakeForm = {
   title: string
@@ -88,7 +89,7 @@ type IntakeForm = {
 
 const emptyData: WorkspaceData = {
   opportunities: [], products: [], assets: [], channels: [], listings: [],
-  financialEvents: [], payouts: [], fxConversions: [], financialSummary: null, portfolioMetrics: null,
+  financialEvents: [], payouts: [], fxConversions: [], financialSummary: [], portfolioMetrics: null,
 }
 const initialForm: IntakeForm = {
   title: '', buyerProblem: '', buyerSegment: '', jobToBeDone: '', productHypothesis: '',
@@ -132,13 +133,24 @@ export function MoneyMakerWorkspace() {
         readData<Asset[]>('/api/money-maker/assets'),
         readData<Channel[]>('/api/money-maker/channels'),
         readData<Listing[]>('/api/money-maker/listings'),
-        readData<RecordItem[]>('/api/money-maker/financial-events'),
-        readData<RecordItem[]>('/api/money-maker/payouts'),
-        readData<RecordItem[]>('/api/money-maker/fx-conversions'),
-        readData<unknown>('/api/money-maker/financial-summary'),
-        readData<unknown>(`/api/money-maker/portfolio-metrics?${metricsQuery.toString()}`),
+        readData<FinancialEventRecord[]>('/api/money-maker/financial-events'),
+        readData<PayoutRecord[]>('/api/money-maker/payouts'),
+        readData<FxConversionRecord[]>('/api/money-maker/fx-conversions'),
+        readData<FinancialSummaryRow[]>('/api/money-maker/financial-summary'),
+        readData<PortfolioMetrics>(`/api/money-maker/portfolio-metrics?${metricsQuery.toString()}`),
       ])
-      setData({ opportunities, products, assets, channels, listings, financialEvents, payouts, fxConversions, financialSummary, portfolioMetrics })
+      setData({
+        opportunities: opportunities ?? [],
+        products: products ?? [],
+        assets: assets ?? [],
+        channels: channels ?? [],
+        listings: listings ?? [],
+        financialEvents: financialEvents ?? [],
+        payouts: payouts ?? [],
+        fxConversions: fxConversions ?? [],
+        financialSummary: financialSummary ?? [],
+        portfolioMetrics,
+      })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to load Money Maker records.')
     } finally {
@@ -389,30 +401,21 @@ export function MoneyMakerWorkspace() {
         <RecordPanel title="Assets" items={data.assets} empty="No assets registered yet." />
         <RecordPanel title="Channels" items={data.channels} empty="No channel records yet." />
         <RecordPanel title="Listings" items={data.listings} empty="No manual listing packages yet." />
-        <RecordPanel title="Payouts" items={data.payouts} empty="No payout records yet." />
-        <RecordPanel title="FX conversions" items={data.fxConversions} empty="No FX conversion records yet." />
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Portfolio analytics · rolling 30 days</CardTitle>
-          <CardDescription>Window uses UTC and [from, to) semantics. Metrics without a verified event source are explicitly marked unavailable.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <pre className="max-h-72 overflow-auto rounded bg-muted p-3 text-xs">{JSON.stringify(data.portfolioMetrics, null, 2)}</pre>
-        </CardContent>
-      </Card>
+      <AftershockMetricsPanel metrics={data.portfolioMetrics} loading={loading} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Financial reconciliation</CardTitle>
-          <CardDescription>Persisted financial events and summary; this workspace does not execute transfers or fetch FX quotes.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">{data.financialEvents.length} financial events recorded.</p>
-          <pre className="max-h-72 overflow-auto rounded bg-muted p-3 text-xs">{JSON.stringify(data.financialSummary, null, 2)}</pre>
-        </CardContent>
-      </Card>
+      <FinancialOperationsPanel
+        products={data.products.map((product) => ({ id: product.id, title: product.title }))}
+        channels={data.channels}
+        financialEvents={data.financialEvents}
+        payouts={data.payouts}
+        fxConversions={data.fxConversions}
+        financialSummary={data.financialSummary}
+        onRefresh={refresh}
+        onError={setError}
+        onNotice={setNotice}
+      />
     </main>
   )
 }

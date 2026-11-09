@@ -63,7 +63,8 @@ test(
       await page.getByLabel('Source URL', { exact: true }).fill('https://example.org/ci-evidence-fixture')
       await page.getByLabel('Source type').selectOption('official-documentation')
       await page.getByLabel('Evidence class').selectOption('hypothesis')
-      await page.getByLabel('Evidence summary', { exact: true }).fill('Synthetic CI fixture used only to verify the persisted opportunity workflow; it is not market research.')
+      const intakeForm = page.locator('form').filter({ has: page.getByLabel('Opportunity title', { exact: true }) })
+      await intakeForm.getByLabel('Evidence summary', { exact: true }).fill('Synthetic CI fixture used only to verify the persisted opportunity workflow; it is not market research.')
       await page.getByLabel('Reliability').selectOption('unknown')
       await page.getByLabel('Limitations', { exact: true }).fill('Synthetic test data. No buyer demand, marketplace policy, or payout eligibility is asserted.')
       await page.getByLabel('Collection method', { exact: true }).fill('Created by the isolated Money Maker browser E2E test.')
@@ -282,6 +283,198 @@ test(
     } finally {
       await context?.close()
       await browser.close()
+      await pool.end()
+    }
+  }
+)
+
+
+test(
+  'operator records, verifies and converts a financial event through Headquarter and PostgreSQL',
+  { timeout: 180_000 },
+  async () => {
+    const browser = await chromium.launch({ headless: true })
+    const pool = new Pool({ connectionString: databaseUrl })
+    let context
+    let page
+    const pageErrors = []
+    const apiFailures = []
+    const providerReference = 'ci-mizan-' + randomUUID()
+    const payoutProviderReference = 'ci-mizan-payout-' + randomUUID()
+    const payoutChannelId = randomUUID()
+    const payoutChannelKey = 'mizan-ci-' + randomUUID()
+    const artifactDirectory = process.env.E2E_ARTIFACT_DIR?.trim()
+
+    try {
+      const policyReviewedAt = new Date()
+      const policyRecheckAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
+      await pool.query(
+        `INSERT INTO arsy_channels
+          (id, owner_id, channel_key, display_name, country_code, account_eligibility,
+           official_policy_url, policy_reviewed_at, policy_recheck_at, payout_requirements,
+           listing_requirements, payout_setup_status, capability, granted_scopes, quota_notes,
+           channel_status, created_by, updated_by)
+         VALUES ($1, $2, $3, 'MIZAN synthetic CI payout channel', 'ID', 'eligible',
+           'https://example.com/ci-policy', $4, $5, '{}'::jsonb, '{}'::jsonb, 'configured',
+           'C1', '[]'::jsonb, '{}'::jsonb, 'active', $2, $2)`,
+        [payoutChannelId, operatorId, payoutChannelKey, policyReviewedAt, policyRecheckAt],
+      )
+      for (const evidenceType of ['official-policy', 'account-eligibility', 'payout-requirements', 'format-requirements']) {
+        await pool.query(
+          `INSERT INTO arsy_channel_evidence
+            (id, owner_id, channel_id, evidence_type, source_name, source_url, captured_at,
+             reviewed_at, evidence_class, summary, limitations, created_by)
+           VALUES ($1, $2, $3, $4, 'Synthetic MIZAN browser fixture',
+             $5, now(), now(), 'observed-fact', $6, 'Synthetic CI only; no real provider access.', $2)`,
+          [
+            randomUUID(), operatorId, payoutChannelId, evidenceType,
+            'https://example.com/ci-evidence/' + evidenceType,
+            'Synthetic source fixture for ' + evidenceType + ' acceptance.',
+          ],
+        )
+      }
+
+      context = await browser.newContext()
+      page = await context.newPage()
+      page.on('pageerror', (error) => pageErrors.push(error.message))
+      page.on('response', (response) => {
+        if (response.url().includes('/api/money-maker/') && response.status() >= 500) {
+          apiFailures.push({ url: response.url(), status: response.status() })
+        }
+      })
+
+      await page.goto(baseUrl + '/login?returnTo=%2Fmoney-maker', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle')
+      await page.getByTestId('operator-login-form').waitFor()
+      await page.getByLabel('Operator password', { exact: true }).fill(operatorPassword)
+      await page.getByRole('button', { name: 'Enter Headquarter', exact: true }).click()
+      await page.waitForURL('**/money-maker')
+      await page.getByRole('heading', { name: 'Money Maker Workspace', exact: true }).waitFor()
+      await page.getByRole('heading', { name: 'MIZAN · Currency-separated ledger', exact: true }).waitFor()
+      await page.getByText('No reconciled balances yet. Pending entries remain separate from verified totals.', { exact: true }).waitFor()
+
+      const financialEventForm = page.getByTestId('financial-event-form')
+      await financialEventForm.waitFor({ state: 'visible', timeout: 30_000 })
+      assert.equal(await financialEventForm.getByTestId('financial-event-type').count(), 1)
+      await financialEventForm.getByTestId('financial-event-type').selectOption('gross-receipt')
+      await page.getByLabel('Amount in minor units', { exact: true }).first().fill('12500')
+      await page.getByLabel('Currency', { exact: true }).first().fill('IDR')
+      await page.getByLabel('Event occurred at', { exact: true }).fill(new Date(Date.now() - 60_000 - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16))
+      await page.getByTestId('financial-event-form').getByLabel('Source', { exact: true }).fill('Synthetic CI bank statement')
+      await page.getByLabel('Provider reference (optional)', { exact: true }).fill(providerReference)
+      await page.getByRole('button', { name: 'Record pending event', exact: true }).click()
+      await page.getByText('Financial event recorded as pending.', { exact: false }).waitFor({ timeout: 30_000 })
+
+      const pendingEvent = page.locator('article').filter({ hasText: providerReference }).first()
+      await pendingEvent.getByLabel('Reconciliation result', { exact: true }).selectOption('verified')
+      await pendingEvent.getByLabel('Rationale', { exact: true }).fill('Matched against the synthetic CI statement row.')
+      await pendingEvent.getByLabel('Evidence URL', { exact: true }).fill('https://example.com/ci-mizan-statement')
+      await pendingEvent.getByRole('button', { name: 'Save reconciliation', exact: true }).click()
+      await page.getByText('Financial event reconciliation saved as verified.', { exact: true }).waitFor({ timeout: 30_000 })
+
+      await page.getByTestId('fx-conversion-form').getByLabel('Verified source event', { exact: true }).selectOption({ index: 0 })
+      await page.getByLabel('Target currency', { exact: true }).fill('USD')
+      await page.getByLabel('Rate numerator', { exact: true }).fill('1')
+      await page.getByLabel('Rate denominator', { exact: true }).fill('100')
+      await page.getByLabel('Rate source', { exact: true }).fill('Synthetic CI fixed rational rate')
+      await page.getByText('Calculated target amount: 125', { exact: false }).waitFor()
+      await page.getByLabel('FX evidence URL', { exact: true }).fill('https://example.com/ci-mizan-fx-rate')
+      await page.getByLabel('Rate observed at', { exact: true }).fill(new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16))
+      await page.getByRole('button', { name: 'Record FX conversion', exact: true }).click()
+      await page.getByText('FX conversion provenance recorded.', { exact: true }).waitFor({ timeout: 30_000 })
+
+      const payoutForm = page.getByTestId('payout-create-form')
+      await payoutForm.getByLabel('Payout channel', { exact: true }).selectOption({ label: 'MIZAN synthetic CI payout channel' })
+      await payoutForm.getByLabel('Amount in minor units', { exact: true }).fill('5100')
+      await payoutForm.getByLabel('Currency', { exact: true }).fill('IDR')
+      await payoutForm.getByLabel('Provider reference (optional)', { exact: true }).fill(payoutProviderReference)
+      await payoutForm.getByLabel('Source', { exact: true }).fill('Synthetic CI payout statement')
+      await payoutForm.getByLabel('Initial statement evidence URL', { exact: true }).fill('https://example.com/ci-payout-statement')
+      await payoutForm.getByLabel('Evidence captured at', { exact: true }).fill(new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16))
+      await payoutForm.getByLabel('Evidence summary', { exact: true }).fill('Synthetic CI statement row for the operator payout workflow.')
+      await payoutForm.getByRole('button', { name: 'Record pending payout', exact: true }).click()
+      await page.getByText('Payout recorded as pending.', { exact: false }).waitFor({ timeout: 30_000 })
+
+      const payoutCard = page.locator('article').filter({ hasText: payoutProviderReference }).first()
+      await payoutCard.getByLabel('Next allowed status', { exact: true }).selectOption('paid')
+      const payoutOccurredAtInput = new Date(Date.now() - 120_000 - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+      const payoutOccurredAt = new Date(payoutOccurredAtInput).toISOString()
+      await payoutCard.getByLabel('Statement event occurred at', { exact: true }).fill(payoutOccurredAtInput)
+      await payoutCard.getByLabel('Evidence captured at', { exact: true }).fill(new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16))
+      await payoutCard.getByLabel('Statement evidence URL', { exact: true }).fill('https://example.com/ci-paid-statement')
+      await payoutCard.getByLabel('Reconciliation rationale', { exact: true }).fill('Synthetic CI payout statement confirms the paid event.')
+      await payoutCard.getByRole('button', { name: 'Save payout transition', exact: true }).click()
+      await page.getByText('Payout status saved as paid.', { exact: false }).waitFor({ timeout: 30_000 })
+
+      const persistedPayout = await pool.query(
+        'SELECT id, status, paid_at FROM arsy_payouts WHERE owner_id = $1 AND provider_reference = $2',
+        [operatorId, payoutProviderReference]
+      )
+      assert.equal(persistedPayout.rows.length, 1)
+      assert.equal(persistedPayout.rows[0].status, 'paid')
+      assert.equal(new Date(persistedPayout.rows[0].paid_at).toISOString(), payoutOccurredAt)
+
+      const payoutHistory = await pool.query(
+        'SELECT to_status, occurred_at, recorded_at FROM arsy_payout_events WHERE owner_id = $1 AND payout_id = $2 ORDER BY recorded_at ASC',
+        [operatorId, persistedPayout.rows[0].id]
+      )
+      assert.deepEqual(payoutHistory.rows.map((row) => row.to_status), ['pending', 'paid'])
+      assert.equal(new Date(payoutHistory.rows[1].occurred_at).toISOString(), payoutOccurredAt)
+      assert.ok(Date.parse(payoutHistory.rows[1].recorded_at) >= Date.parse(payoutHistory.rows[0].recorded_at))
+
+      const payoutLedger = await pool.query(
+        'SELECT event_type, amount_minor::text AS amount_minor, currency, reconciliation_state FROM arsy_financial_events WHERE owner_id = $1 AND provider_reference = $2',
+        [operatorId, payoutProviderReference]
+      )
+      assert.deepEqual(payoutLedger.rows, [{
+        event_type: 'payout',
+        amount_minor: '5100',
+        currency: 'IDR',
+        reconciliation_state: 'verified',
+      }])
+
+      const persistedEvent = await pool.query(
+        'SELECT id, reconciliation_state, amount_minor::text AS amount_minor, currency FROM arsy_financial_events WHERE owner_id = $1 AND provider_reference = $2',
+        [operatorId, providerReference]
+      )
+      assert.equal(persistedEvent.rows.length, 1)
+      assert.equal(persistedEvent.rows[0].reconciliation_state, 'verified')
+      assert.equal(persistedEvent.rows[0].amount_minor, '12500')
+      assert.equal(persistedEvent.rows[0].currency, 'IDR')
+
+      const persistedFx = await pool.query(
+        'SELECT from_amount_minor::text AS from_amount_minor, from_currency, to_amount_minor::text AS to_amount_minor, to_currency, rate_numerator::text AS numerator, rate_denominator::text AS denominator FROM arsy_fx_conversions WHERE owner_id = $1 AND source_event_id = $2',
+        [operatorId, persistedEvent.rows[0].id]
+      )
+      assert.equal(persistedFx.rows.length, 1)
+      assert.deepEqual(persistedFx.rows[0], {
+        from_amount_minor: '12500',
+        from_currency: 'IDR',
+        to_amount_minor: '125',
+        to_currency: 'USD',
+        numerator: '1',
+        denominator: '100',
+      })
+      assert.deepEqual(pageErrors, [])
+      assert.deepEqual(apiFailures, [])
+    } finally {
+      if (page && artifactDirectory) {
+        await page.screenshot({ path: path.join(artifactDirectory, 'mizan-ledger-workflow.png'), fullPage: true }).catch(() => undefined)
+      }
+      await context?.close()
+      await browser.close()
+      await pool.query('DELETE FROM arsy_fx_conversions WHERE owner_id = $1 AND source_event_id IN (SELECT id FROM arsy_financial_events WHERE provider_reference = $2)', [operatorId, providerReference]).catch(() => undefined)
+      await pool.query('DELETE FROM arsy_payout_events WHERE owner_id = $1 AND payout_id IN (SELECT id FROM arsy_payouts WHERE owner_id = $1 AND channel_id = $2)', [operatorId, payoutChannelId]).catch(() => undefined)
+      await pool.query(`DELETE FROM arsy_commerce_audit_events WHERE owner_id = $1 AND (
+        (aggregate_type = 'channel' AND aggregate_id = $2)
+        OR (aggregate_type = 'payout' AND aggregate_id IN (
+          SELECT id FROM arsy_payouts WHERE owner_id = $1 AND channel_id = $2
+        ))
+      )`, [operatorId, payoutChannelId]).catch(() => undefined)
+      await pool.query('DELETE FROM arsy_financial_events WHERE owner_id = $1 AND provider_reference IN ($2, $3)', [operatorId, providerReference, payoutProviderReference]).catch(() => undefined)
+      await pool.query('DELETE FROM arsy_payouts WHERE owner_id = $1 AND channel_id = $2', [operatorId, payoutChannelId]).catch(() => undefined)
+      await pool.query('DELETE FROM arsy_channel_evidence WHERE owner_id = $1 AND channel_id = $2', [operatorId, payoutChannelId]).catch(() => undefined)
+      await pool.query('DELETE FROM arsy_channels WHERE owner_id = $1 AND id = $2', [operatorId, payoutChannelId]).catch(() => undefined)
       await pool.end()
     }
   }
