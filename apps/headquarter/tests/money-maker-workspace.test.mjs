@@ -47,3 +47,14 @@ test('Money Maker workspace is routable and discoverable in Headquarter navigati
   assert.match(page, /MoneyMakerWorkspace/)
   assert.match(navigation, /href: '\/money-maker'/)
 })
+
+test('product controls use persisted version history and server-authorized lifecycle transitions', () => {
+  assert.match(workspace, /\/api\/money-maker\/products\/\$\{encodeURIComponent\(product\.id\)\}\/versions/)
+  assert.match(workspace, /expectedVersion: product\.version/)
+  assert.match(workspace, /allowedNextLifecycleStates\.map/)
+  assert.match(workspace, /Version history/)
+  assert.match(workspace, /INVALID_LIFECYCLE_TRANSITION|allowedNextLifecycleStates/)
+  assert.match(workspace, /Ready is derived from asset inspections/)
+  assert.match(workspace, /Listed is derived from a verified publication receipt/)
+  assert.doesNotMatch(workspace, /lifecycleState:\s*'ready'|lifecycleState:\s*'listed'/)
+})
