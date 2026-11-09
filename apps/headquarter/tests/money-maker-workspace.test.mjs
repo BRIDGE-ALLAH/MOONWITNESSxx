@@ -66,6 +66,6 @@ test('product lifecycle actions are server-authoritative and derived states are 
   assert.match(productPanel, /Ready is derived from completed inspections/)
   assert.match(productPanel, /listed is derived from a verified publication receipt/)
   assert.match(productPanel, /Lifecycle conflict/)
-  assert.match(proxy, /products\\/\\$\\{uuid\\}\\/versions/)
-  assert.match(proxy, /products\\/\\$\\{uuid\\}\\/lifecycle/)
+  assert.ok(proxy.includes('new RegExp(`^products/${uuid}/versions$`)'))
+  assert.ok(proxy.includes('new RegExp(`^products/${uuid}/lifecycle$`)'))
 })
