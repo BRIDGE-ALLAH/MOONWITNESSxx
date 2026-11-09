@@ -501,7 +501,16 @@ jobs:
                 sleep 2
               done
               curl --fail --silent http://127.0.0.1:3001/health/live >/dev/null
-              test "$(docker inspect --format '{{.State.Health.Status}}' "$name")" = "healthy"
+              for attempt in $(seq 1 45); do
+                health_status="$(docker inspect --format '{{.State.Health.Status}}' "$name")"
+                if [[ "$health_status" == "healthy" ]]; then break; fi
+                if [ "$attempt" -eq 45 ]; then
+                  docker logs "$name"
+                  echo "ARSY container did not become healthy (status: $health_status)" >&2
+                  exit 1
+                fi
+                sleep 2
+              done
               ;;
             moonwitness-headquarter)
               docker run --detach --name "$name" --network host "$IMAGE"
@@ -515,7 +524,16 @@ jobs:
                 fi
                 sleep 2
               done
-              test "$(docker inspect --format '{{.State.Health.Status}}' "$name")" = "healthy"
+              for attempt in $(seq 1 45); do
+                health_status="$(docker inspect --format '{{.State.Health.Status}}' "$name")"
+                if [[ "$health_status" == "healthy" ]]; then break; fi
+                if [ "$attempt" -eq 45 ]; then
+                  docker logs "$name"
+                  echo "Headquarter container did not become healthy (status: $health_status)" >&2
+                  exit 1
+                fi
+                sleep 2
+              done
               ;;
             moonwitness-aegis)
               docker run --detach --name "$name" --network host "$IMAGE"
