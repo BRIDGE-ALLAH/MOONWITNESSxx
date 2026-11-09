@@ -16,6 +16,7 @@ export type NavigationItem = {
  */
 export const NAVIGATION_ITEMS: NavigationItem[] = [
   { href: '/arsy-deck', label: 'ARSY DECK', group: 'Command', status: 'prototype', description: 'Workspace pulse and operational review' },
+  { href: '/money-maker', label: 'MONEY MAKER', group: 'Operations', status: 'partial', description: 'Persisted opportunity intake, product, asset, channel, listing and finance records' },
   { href: '/signal-room', label: 'SIGNAL ROOM', group: 'Command', status: 'prototype', description: 'Evidence and market research' },
   { href: '/riot-radar', label: 'RIOT RADAR', group: 'Command', status: 'prototype', description: 'Opportunity evaluation' },
   { href: '/the-forge', label: 'THE FORGE', group: 'Command', status: 'prototype', description: 'Product and asset production' },
