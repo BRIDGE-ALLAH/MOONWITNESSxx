@@ -355,7 +355,8 @@ test(
 
       const financialEventForm = page.getByTestId('financial-event-form')
       await financialEventForm.waitFor({ state: 'visible', timeout: 30_000 })
-      await financialEventForm.getByLabel('Event type', { exact: true }).selectOption('gross-receipt')
+      assert.equal(await financialEventForm.getByTestId('financial-event-type').count(), 1)
+      await financialEventForm.getByTestId('financial-event-type').selectOption('gross-receipt')
       await page.getByLabel('Amount in minor units', { exact: true }).first().fill('12500')
       await page.getByLabel('Currency', { exact: true }).first().fill('IDR')
       await page.getByLabel('Event occurred at', { exact: true }).fill(new Date(Date.now() - 60_000 - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16))
