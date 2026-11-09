@@ -178,7 +178,7 @@ const payoutColumns = `p.id, p.channel_id, c.display_name AS channel_name,
       'rationale', pe.rationale, 'evidence', pe.evidence,
       'actorId', pe.actor_id, 'occurredAt', pe.occurred_at,
       'recordedAt', pe.recorded_at
-    ) ORDER BY pe.occurred_at ASC, pe.recorded_at ASC, pe.id ASC)
+    ) ORDER BY pe.recorded_at ASC, pe.occurred_at ASC, pe.id ASC)
     FROM arsy_payout_events pe
     WHERE pe.owner_id = p.owner_id AND pe.payout_id = p.id
   ), '[]'::jsonb) AS history`
