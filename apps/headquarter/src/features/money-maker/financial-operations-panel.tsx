@@ -405,8 +405,8 @@ function EventReconciliationForm({
       await send('/api/money-maker/financial-events/' + encodeURIComponent(event.id) + '/reconciliation', 'PATCH', {
         state, rationale, evidenceUrl,
       })
-      onNotice('Financial event reconciliation saved as ' + state + '.')
       await onRefresh()
+      onNotice('Financial event reconciliation saved as ' + state + '.')
     } catch (cause) {
       onError(cause instanceof Error ? cause.message : 'Unable to reconcile financial event.')
     } finally {
@@ -618,7 +618,7 @@ function FxConversionForm({
       ) : (
         <>
           <label className="block space-y-1 text-xs font-medium">Verified source event
-            <select required value={sourceEvent?.id ?? ''} onChange={(event) => setSourceEventId(event.target.value)} className="w-full rounded border border-input bg-background px-3 py-2 text-sm">
+            <select data-testid="verified-source-event" required value={sourceEvent?.id ?? ''} onChange={(event) => setSourceEventId(event.target.value)} className="w-full rounded border border-input bg-background px-3 py-2 text-sm">
               {verifiedEvents.map((item) => <option key={item.id} value={item.id}>{item.eventType} · {minor(item.amountMinor, item.currency)} · {item.id.slice(0, 8)}</option>)}
             </select>
           </label>
