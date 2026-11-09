@@ -134,7 +134,7 @@ test('production container smoke waits for Docker health status after HTTP readi
   const start = ci.indexOf('  production-container-build:')
   assert.ok(start >= 0)
   const job = ci.slice(start)
-  assert.match(job, /health_status=.*State\\.Health\\.Status/)
+  assert.match(job, /health_status=[\\s\\S]*?State\\.Health\\.Status/)
   assert.match(job, /did not become healthy/)
   assert.match(job, /seq 1 45/)
 })
