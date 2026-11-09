@@ -30,6 +30,7 @@ test('ARSY and Headquarter use production-only workspace deployments and non-roo
   for (const item of cases) {
     const dockerfile = await read(item.path)
     assert.match(dockerfile, /FROM node:24\.22\.2-alpine3\.23 AS build/, item.path)
+    assert.ok(dockerfile.includes('pnpm install --filter ' + item.packageName + '... --frozen-lockfile --ignore-scripts'), item.path)
     assert.match(dockerfile, new RegExp('pnpm --filter ' + item.packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' build'), item.path)
     assert.match(dockerfile, new RegExp('pnpm --filter ' + item.packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' --prod deploy ' + item.appPath.replaceAll('/', '\\/')), item.path)
     assert.match(dockerfile, /FROM node:24\.22\.2-alpine3\.23 AS runtime/, item.path)
