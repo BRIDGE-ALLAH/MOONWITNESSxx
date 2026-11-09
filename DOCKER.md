@@ -232,6 +232,24 @@ The ARSY and Headquarter Dockerfiles are production-runtime images, not the loca
 
 The current publish matrix includes **ARSY, Headquarter and AEGIS only**. It intentionally does not claim a complete application stack: ORACLE does not yet have a committed Python dependency lock, and ATLAS's Cargo.lock is currently generated as a CI artifact rather than committed source. Those runtime images must be made lockfile-backed and separately verified before being added to the production delivery matrix. AEGIS is currently a health/control-plane foundation; its integration with ARSY is a separate acceptance gate.
 
+### First-party prebuilt image intent (API groundwork only)
+
+The deployment API accepts a prebuilt image only when all of the following hold:
+
+- The reference is a lowercase GHCR repository pinned to `@sha256:<64 lowercase hex characters>`; tags such as `latest` or `v1.2.0` are rejected.
+- The repository is present in the trusted, server-side `ARSY_DEPLOYMENT_IMAGE_ALLOWLIST` setting. This is a comma-separated list of canonical repository names, not full image references.
+- The operation is authenticated and passes the existing ARSY authorization/approval gate. The image reference is persisted in the existing idempotent operation payload; no migration is required.
+
+Example trusted configuration for the images built by this workflow:
+
+```bash
+ARSY_DEPLOYMENT_IMAGE_ALLOWLIST=ghcr.io/bridge-allah/moonwitness-arsy,ghcr.io/bridge-allah/moonwitness-headquarter,ghcr.io/bridge-allah/moonwitness-aegis
+```
+
+An example request value is `ghcr.io/bridge-allah/moonwitness-arsy@sha256:<digest>`; obtain the actual digest from a successful container-release workflow summary. Never substitute a mutable tag.
+
+**This is an intent-contract slice, not an executable deployment path.** The current API still reports the worker as disabled and provider side effects as not started. It does not pull images, verify GHCR/GitHub artifact attestations, provision registry credentials, invoke Docker, or claim a running/healthy release. Those are separate acceptance gates in the ARSY deployment lifecycle. Registry package visibility and a least-privilege pull credential must be configured and verified for the eventual target.
+
 ### How to publish a candidate
 
 From the GitHub Actions tab, select **Production container delivery** and run it against `main`. The workflow produces the candidate image under its commit SHA. For a version tag, the workflow also creates a version alias after scanning. Use the immutable digest in deployment records; do not deploy a moving tag.
