@@ -358,7 +358,7 @@ function FinancialEventCaptureForm({
   return (
     <form data-testid="financial-event-form" onSubmit={submit} className="space-y-3">
       <label className="block space-y-1 text-xs font-medium">Event type
-        <select required value={eventType} onChange={(event) => setEventType(event.target.value as (typeof eventTypes)[number])} className="w-full rounded border border-input bg-background px-3 py-2 text-sm">
+        <select data-testid="financial-event-type" required value={eventType} onChange={(event) => setEventType(event.target.value as (typeof eventTypes)[number])} className="w-full rounded border border-input bg-background px-3 py-2 text-sm">
           {eventTypes.map((value) => <option key={value} value={value}>{value}</option>)}
         </select>
       </label>
