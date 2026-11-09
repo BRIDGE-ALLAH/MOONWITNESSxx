@@ -226,7 +226,7 @@ The ARSY and Headquarter Dockerfiles are production-runtime images, not the loca
 - A manual run is accepted only from `main`; a version-tag run is accepted only for `v*` tags.
 - It publishes commit-addressed `sha-<commit>` candidates to GHCR. It never writes a floating `latest` tag.
 - BuildKit emits an SBOM and max-mode provenance; Trivy blocks high/critical vulnerabilities with fixes available; the GitHub artifact attestation is attached to the pushed digest.
-- A semantic-version alias is created from the same immutable digest only after the image scan passes.
+- A semantic-version alias is created from the same immutable digest only after the image scan and GitHub artifact attestation pass.
 - No production deployment, host mutation, DNS change, registry permission change, or secret provisioning is performed by this workflow.
 
 The current publish matrix includes **ARSY, Headquarter and AEGIS only**. It intentionally does not claim a complete application stack: ORACLE does not yet have a committed Python dependency lock, and ATLAS's Cargo.lock is currently generated as a CI artifact rather than committed source. Those runtime images must be made lockfile-backed and separately verified before being added to the production delivery matrix. AEGIS is currently a health/control-plane foundation; its integration with ARSY is a separate acceptance gate.
