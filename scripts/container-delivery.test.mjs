@@ -169,3 +169,15 @@ test('ARSY deploy output receives compiled JS package exports and a Node import 
   assert.ok(script.includes("shortName: 'arsy-core'"))
   assert.ok(script.includes("shortName: 'contract'"))
 })
+
+
+test('ARSY production image declares a persistent non-root asset storage volume', async () => {
+  const dockerfile = await read('Dockerfile.arsy')
+  const ci = await read('.github/workflows/ci.yml')
+  assert.ok(dockerfile.includes('ENV ASSET_STORAGE_DRIVER=local'))
+  assert.ok(dockerfile.includes('ENV ASSET_STORAGE_PATH=/var/lib/arsy/assets'))
+  assert.ok(dockerfile.includes('VOLUME ["/var/lib/arsy/assets"]'))
+  assert.ok(dockerfile.includes('chown node:node /var/lib/arsy/assets'))
+  assert.ok(ci.includes('ASSET_STORAGE_DRIVER=local'))
+  assert.ok(ci.includes('ASSET_STORAGE_PATH=/var/lib/arsy/assets'))
+})
