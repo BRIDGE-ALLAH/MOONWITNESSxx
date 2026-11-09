@@ -134,25 +134,56 @@ const createDeploymentSchema = z
   })
   .strict()
 
+const deploymentImageRepositoryPattern =
+  /^ghcr\.io\/bridge-allah(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)+$/
+const deploymentImageReferenceSchema = z
+  .string()
+  .min(1)
+  .max(512)
+  .regex(/^ghcr\.io\/bridge-allah(?:\/[a-z0-9]+(?:[._-][a-z0-9]+)*)+@sha256:[a-f0-9]{64}$/)
+
+const nonDeployableSystemImageRepositories = new Set([
+  'ghcr.io/bridge-allah/moonwitness-arsy',
+  'ghcr.io/bridge-allah/moonwitness-aegis',
+])
+
+function parseDeploymentImageAllowlist(raw: string | undefined): Set<string> | null {
+  if (!raw?.trim()) return null
+  const repositories = raw.split(',').map((entry) => entry.trim())
+  if (
+    repositories.length === 0 ||
+    repositories.length > 32 ||
+    repositories.some(
+      (repository) =>
+        !deploymentImageRepositoryPattern.test(repository) ||
+        nonDeployableSystemImageRepositories.has(repository)
+    )
+  ) {
+    return null
+  }
+  return new Set(repositories)
+}
+
 const createOperationSchema = z
   .object({
     kind: z.enum(['deploy', 'stop', 'restart', 'rollback']),
     source: sourceSchema.optional(),
+    image: deploymentImageReferenceSchema.optional(),
   })
   .strict()
   .superRefine((value, context) => {
-    if (value.kind === 'deploy' && !value.source) {
+    if (value.kind === 'deploy' && Boolean(value.source) === Boolean(value.image)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['source'],
-        message: 'A deploy operation requires an immutable Git commit and Dockerfile path',
+        path: ['image'],
+        message: 'A deploy operation requires exactly one immutable Git source or prebuilt GHCR image digest',
       })
     }
-    if (value.kind !== 'deploy' && value.source) {
+    if (value.kind !== 'deploy' && (value.source || value.image)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['source'],
-        message: 'Source builds are only valid for deploy operations',
+        path: ['image'],
+        message: 'Source and prebuilt images are only valid for deploy operations',
       })
     }
   })
@@ -417,6 +448,23 @@ export function registerDeploymentRoutes(
       return reply.code(503).send({ error: { code: 'DEPLOYMENT_TRANSACTION_UNAVAILABLE' } })
     }
 
+    if (parsed.data.image) {
+      const allowlist = parseDeploymentImageAllowlist(
+        (options.env ?? process.env).ARSY_DEPLOYMENT_IMAGE_ALLOWLIST
+      )
+      if (!allowlist) {
+        return reply.code(503).send({
+          error: { code: 'DEPLOYMENT_IMAGE_ALLOWLIST_NOT_CONFIGURED' },
+        })
+      }
+      const repository = parsed.data.image.slice(0, parsed.data.image.indexOf('@sha256:'))
+      if (!allowlist.has(repository)) {
+        return reply.code(400).send({
+          error: { code: 'DEPLOYMENT_IMAGE_NOT_ALLOWLISTED' },
+        })
+      }
+    }
+
     const requestPayload: JsonObject = parsed.data.source
       ? {
           source: {
@@ -425,7 +473,9 @@ export function registerDeploymentRoutes(
             dockerfile: parsed.data.source.dockerfile,
           },
         }
-      : {}
+      : parsed.data.image
+        ? { image: parsed.data.image }
+        : {}
     let client: Awaited<ReturnType<NonNullable<DatabasePool['connect']>>> | null = null
     let transactionOpen = false
     try {

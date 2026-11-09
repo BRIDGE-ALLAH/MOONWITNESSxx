@@ -250,3 +250,166 @@ test('deployment operation rolls back when authorization evidence cannot be pers
     await app.close()
   }
 })
+
+
+const officialImageRepository = 'ghcr.io/bridge-allah/moonwitness-headquarter'
+const officialImageDigest = 'sha256:' + 'a'.repeat(64)
+const officialImageReference = officialImageRepository + '@' + officialImageDigest
+
+test('prebuilt deployment intent stores an allowlisted immutable GHCR image without enabling provider side effects', async () => {
+  const pool = createPool()
+  const app = createTestApp(pool, {
+    ARSY_DEPLOYMENT_IMAGE_ALLOWLIST: officialImageRepository,
+  })
+  try {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/deployments/10000000-0000-4000-8000-000000000001/operations',
+      headers: {
+        'x-arsy-operator-token': operatorToken,
+        'idempotency-key': 'prebuilt-image-intent-0001',
+      },
+      payload: { kind: 'deploy', image: officialImageReference },
+    })
+    assert.equal(response.statusCode, 202)
+    assert.equal(response.json().data.status, 'blocked')
+    assert.deepEqual(response.json().data.request_payload, { image: officialImageReference })
+    assert.equal(response.json().authorization.allowed, false)
+    assert.deepEqual(response.json().dispatch, {
+      outbox: 'not_enqueued',
+      worker: 'disabled',
+      providerSideEffects: 'not_started',
+    })
+    assert.equal(
+      pool.calls.some((call) => call.sql.includes('INSERT INTO arsy_deployment_outbox')),
+      false
+    )
+  } finally {
+    await app.close()
+  }
+})
+
+test('prebuilt image deployment fails closed when its trusted allowlist is absent or malformed', async () => {
+  for (const allowlist of [
+    undefined,
+    'ghcr.io/Bridge-ALLAH/moonwitness-headquarter',
+    'ghcr.io/bridge-allah/moonwitness-aegis',
+    'ghcr.io/bridge-allah/moonwitness-arsy',
+  ]) {
+    const pool = createPool()
+    const app = createTestApp(
+      pool,
+      allowlist === undefined ? {} : { ARSY_DEPLOYMENT_IMAGE_ALLOWLIST: allowlist }
+    )
+    try {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/deployments/10000000-0000-4000-8000-000000000001/operations',
+        headers: {
+          'x-arsy-operator-token': operatorToken,
+          'idempotency-key': 'prebuilt-image-allowlist-0001',
+        },
+        payload: { kind: 'deploy', image: officialImageReference },
+      })
+      assert.equal(response.statusCode, 503)
+      assert.equal(response.json().error.code, 'DEPLOYMENT_IMAGE_ALLOWLIST_NOT_CONFIGURED')
+      assert.equal(pool.calls.length, 0)
+    } finally {
+      await app.close()
+    }
+  }
+})
+
+test('prebuilt image deployment rejects repositories outside the trusted allowlist before database access', async () => {
+  const pool = createPool()
+  const app = createTestApp(pool, {
+    ARSY_DEPLOYMENT_IMAGE_ALLOWLIST: officialImageRepository,
+  })
+  try {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/deployments/10000000-0000-4000-8000-000000000001/operations',
+      headers: {
+        'x-arsy-operator-token': operatorToken,
+        'idempotency-key': 'prebuilt-image-unlisted-0001',
+      },
+      payload: {
+        kind: 'deploy',
+        image: 'ghcr.io/bridge-allah/rogue-app@' + officialImageDigest,
+      },
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(response.json().error.code, 'DEPLOYMENT_IMAGE_NOT_ALLOWLISTED')
+    assert.equal(pool.calls.length, 0)
+  } finally {
+    await app.close()
+  }
+})
+
+test('prebuilt image deployment rejects tags, non-GHCR registries and non-canonical digests', async () => {
+  const invalidImages = [
+    'ghcr.io/bridge-allah/moonwitness-headquarter:latest',
+    officialImageRepository + '@sha256:' + 'A'.repeat(64),
+    'docker.io/bridge-allah/moonwitness-headquarter@' + officialImageDigest,
+    officialImageRepository + ':v1.2.0@' + officialImageDigest,
+    'ghcr.io/other-owner/moonwitness-headquarter@' + officialImageDigest,
+  ]
+  for (const image of invalidImages) {
+    const pool = createPool()
+    const app = createTestApp(pool, {
+      ARSY_DEPLOYMENT_IMAGE_ALLOWLIST: officialImageRepository,
+    })
+    try {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/deployments/10000000-0000-4000-8000-000000000001/operations',
+        headers: {
+          'x-arsy-operator-token': operatorToken,
+          'idempotency-key': 'prebuilt-image-invalid-0001',
+        },
+        payload: { kind: 'deploy', image },
+      })
+      assert.equal(response.statusCode, 400, image)
+      assert.equal(pool.calls.length, 0, image)
+    } finally {
+      await app.close()
+    }
+  }
+})
+
+test('deployment API requires exactly one deploy input and rejects image fields for other operations', async () => {
+  const invalidPayloads = [
+    { kind: 'deploy' },
+    {
+      kind: 'deploy',
+      source: {
+        repository: 'https://github.com/example/app',
+        commit: 'a'.repeat(40),
+        dockerfile: 'Dockerfile',
+      },
+      image: officialImageReference,
+    },
+    { kind: 'stop', image: officialImageReference },
+  ]
+  for (const payload of invalidPayloads) {
+    const pool = createPool()
+    const app = createTestApp(pool, {
+      ARSY_DEPLOYMENT_IMAGE_ALLOWLIST: officialImageRepository,
+    })
+    try {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/deployments/10000000-0000-4000-8000-000000000001/operations',
+        headers: {
+          'x-arsy-operator-token': operatorToken,
+          'idempotency-key': 'prebuilt-image-shape-0001',
+        },
+        payload,
+      })
+      assert.equal(response.statusCode, 400)
+      assert.equal(pool.calls.length, 0)
+    } finally {
+      await app.close()
+    }
+  }
+})
