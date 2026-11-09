@@ -438,8 +438,7 @@ function PayoutCreateForm({
   const candidates = useMemo(() => channels.filter((channel) =>
     channel.channelStatus === 'active' && channel.capability === 'C1'
     && channel.accountEligibility === 'eligible' && channel.payoutSetupStatus === 'configured'
-    && Boolean(channel.officialPolicyUrl && channel.policyReviewedAt && channel.policyRecheckAt
-      && Date.parse(channel.policyRecheckAt) > Date.now())
+    && Boolean(channel.officialPolicyUrl && channel.policyReviewedAt && channel.policyRecheckAt)
   ), [channels])
   const [channelId, setChannelId] = useState('')
   const [amountMinor, setAmountMinor] = useState('')
@@ -456,6 +455,11 @@ function PayoutCreateForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedChannelId) { onError('No channel candidate is currently eligible. Review the channel policy and payout evidence first.'); return }
+    const selectedChannel = candidates.find((channel) => channel.id === selectedChannelId)
+    if (!selectedChannel?.policyRecheckAt || Date.parse(selectedChannel.policyRecheckAt) <= Date.now()) {
+      onError('This channel policy evidence has expired. Refresh the workspace and review current source evidence before recording a payout.')
+      return
+    }
     setSaving(true); onError(''); onNotice('')
     try {
       await send('/api/money-maker/payouts', 'POST', {
