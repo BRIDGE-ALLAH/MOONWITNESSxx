@@ -55,6 +55,8 @@ test('Docker build context excludes local secrets, Git metadata and generated de
 test('container publication is limited to version tags or manual dispatch from main', async () => {
   const workflow = await read('.github/workflows/container-release.yml')
   assert.match(workflow, /workflow_dispatch:/)
+  assert.match(workflow, /fetch-depth: 0/)
+  assert.match(workflow, /git merge-base --is-ancestor/)
   assert.match(workflow, /tags:\s*\n\s*-\s+"v\*"/)
   assert.match(workflow, /github\.ref == 'refs\/heads\/main'/)
   assert.doesNotMatch(workflow, /pull_request:/)
