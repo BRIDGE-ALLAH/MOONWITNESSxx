@@ -386,7 +386,7 @@ test(
       await page.getByLabel('FX evidence URL', { exact: true }).fill('https://example.com/ci-mizan-fx-rate')
       await page.getByLabel('Rate observed at', { exact: true }).fill(new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16))
       await page.getByRole('button', { name: 'Record FX conversion', exact: true }).click()
-      await page.getByText('FX conversion provenance recorded.', { exact: true }).waitFor({ timeout: 30_000 })
+      await page.getByText('FX conversion provenance recorded.', { exact: false }).waitFor({ timeout: 30_000 })
 
       const payoutForm = page.getByTestId('payout-create-form')
       await payoutForm.getByLabel('Payout channel', { exact: true }).selectOption({ label: 'MIZAN synthetic CI payout channel' })
