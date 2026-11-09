@@ -271,6 +271,68 @@ test('asset upload rejects unsupported media and malformed base64 before storage
   }
 })
 
+test('inspection evidence URLs reject non-HTTP schemes and embedded credentials before persistence', async () => {
+  const database = createPool()
+  const storage = createMemoryStorage()
+  const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env })
+  const bytes = Buffer.from('asset for URL validation')
+  try {
+    await app.inject({
+      method: 'POST',
+      url: '/api/v1/assets',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'asset-url-validation-0001' },
+      payload: { productId, productVersion, fileName: 'asset.txt', mediaType: 'text/plain', contentBase64: bytes.toString('base64'), provenance },
+    })
+    const inspectionUrl = `/api/v1/assets/${assetId}/inspections`
+    const headers = { 'x-arsy-operator-token': token }
+    const invalidValues = [
+      'javascript:alert(1)',
+      'data:text/html,unsafe',
+      'file:///etc/passwd',
+      'ftp://example.com/evidence',
+      'https://operator:secret@example.com/evidence',
+      'not-a-url',
+    ]
+    const callsBeforeInvalidRequests = database.calls.length
+    for (const url of invalidValues) {
+      const response = await app.inject({
+        method: 'POST',
+        url: inspectionUrl,
+        headers,
+        payload: {
+          inspectionType: 'rights',
+          status: 'pass',
+          inspectionSource: 'operator-attestation',
+          rationale: 'Evidence URL validation must reject non-canonical sources.',
+          findings: [],
+          evidence: [{ label: 'External evidence', url }],
+        },
+      })
+      assert.equal(response.statusCode, 400, url)
+      assert.equal(response.json().error.code, 'VALIDATION_ERROR', url)
+    }
+    assert.equal(database.calls.length, callsBeforeInvalidRequests, 'invalid URLs must be rejected before an inspection insert')
+
+    const accepted = await app.inject({
+      method: 'POST',
+      url: inspectionUrl,
+      headers,
+      payload: {
+        inspectionType: 'rights',
+        status: 'pass',
+        inspectionSource: 'operator-attestation',
+        rationale: 'Evidence URL validation accepts canonical public web sources.',
+        findings: [],
+        evidence: [{ label: 'Public source document', url: 'https://example.org/source/evidence' }],
+      },
+    })
+    assert.equal(accepted.statusCode, 201)
+    assert.equal(accepted.json().data.evidence[0].url, 'https://example.org/source/evidence')
+  } finally {
+    await app.close()
+  }
+})
+
 test('inspection records preserve source type and readiness fails closed until all checks pass', async () => {
   const database = createPool()
   const storage = createMemoryStorage()

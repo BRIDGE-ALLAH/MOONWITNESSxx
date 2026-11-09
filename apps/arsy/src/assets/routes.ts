@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import type { FastifyInstance } from 'fastify'
 import type { DatabasePool } from '../db.ts'
+import { httpUrlSchema } from '../http-url.ts'
 import { AssetRepository, type AssetInput, type InspectionInput } from './repository.ts'
 import { createAssetStorage, type AssetStorage } from './storage.ts'
 
@@ -42,7 +43,7 @@ const inspectionSchema = z.object({
   })).max(100),
   evidence: z.array(z.object({
     label: z.string().trim().min(1).max(200),
-    url: z.string().url().max(2048).optional(),
+    url: httpUrlSchema.optional(),
     reference: z.string().trim().max(500).optional(),
   })).max(100),
 }).superRefine((value, context) => {
