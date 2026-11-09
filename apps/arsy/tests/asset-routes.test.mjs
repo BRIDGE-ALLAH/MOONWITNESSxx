@@ -305,3 +305,72 @@ test('inspection records preserve source type and readiness fails closed until a
     await app.close()
   }
 })
+
+
+test('asset inspection evidence URLs only accept HTTP(S) and reject unsafe schemes before database access', async () => {
+  const database = createPool()
+  const storage = createMemoryStorage()
+  const app = await createApp({ databasePool: database, assetStorage: storage, logger: false, env })
+  try {
+    const upload = await app.inject({
+      method: 'POST',
+      url: '/api/v1/assets',
+      headers: { 'x-arsy-operator-token': token, 'idempotency-key': 'asset-http-evidence-0001' },
+      payload: {
+        productId,
+        productVersion,
+        fileName: 'evidence.txt',
+        mediaType: 'text/plain',
+        contentBase64: Buffer.from('asset for URL validation').toString('base64'),
+        provenance,
+      },
+    })
+    assert.equal(upload.statusCode, 201)
+
+    for (const url of ['http://example.com/evidence', 'https://example.com/evidence?q=1']) {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/v1/assets/${assetId}/inspections`,
+        headers: { 'x-arsy-operator-token': token },
+        payload: {
+          inspectionType: 'rights',
+          status: 'unknown',
+          inspectionSource: 'operator-attestation',
+          rationale: 'Source evidence is recorded pending an independent rights review.',
+          findings: [],
+          evidence: [{ label: 'Evidence source', url }],
+        },
+      })
+      assert.equal(response.statusCode, 201, url)
+    }
+
+    const callsBeforeInvalidEvidence = database.calls.length
+    for (const url of [
+      'javascript:alert(1)',
+      'data:text/html,unsafe',
+      'file:///etc/passwd',
+      'ftp://example.com/evidence',
+      'https://user:pass@example.com/evidence',
+      'not-a-url',
+    ]) {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/v1/assets/${assetId}/inspections`,
+        headers: { 'x-arsy-operator-token': token },
+        payload: {
+          inspectionType: 'rights',
+          status: 'unknown',
+          inspectionSource: 'operator-attestation',
+          rationale: 'Source evidence is recorded pending an independent rights review.',
+          findings: [],
+          evidence: [{ label: 'Untrusted evidence source', url }],
+        },
+      })
+      assert.equal(response.statusCode, 400, url)
+      assert.equal(database.calls.length, callsBeforeInvalidEvidence, `invalid URL must be rejected before database access: ${url}`)
+    }
+    assert.equal(database.inspections.length, 2)
+  } finally {
+    await app.close()
+  }
+})
