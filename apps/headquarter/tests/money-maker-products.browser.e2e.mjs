@@ -86,6 +86,8 @@ test(
       await page.getByLabel('Acceptance criteria (one per line)').fill('Version three is durable after a browser reload.')
       await page.getByRole('button', { name: 'Create version', exact: true }).click()
       await page.getByText('Version 3 saved. Previous versions remain immutable.', { exact: true }).waitFor({ timeout: 30_000 })
+      const historyRegion = page.getByRole('region', { name: 'Product version history' })
+      await historyRegion.getByText('Version 3', { exact: true }).waitFor({ timeout: 30_000 })
       await page.getByRole('button', { name: 'Move to review', exact: true }).waitFor({ timeout: 30_000 })
       await page.getByRole('button', { name: 'Move to review', exact: true }).click()
       await page.getByText('Product moved to review.', { exact: true }).waitFor({ timeout: 30_000 })
