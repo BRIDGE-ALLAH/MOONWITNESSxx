@@ -350,6 +350,7 @@ test(
       await page.waitForURL('**/money-maker')
       await page.getByRole('heading', { name: 'Money Maker Workspace', exact: true }).waitFor()
       await page.getByRole('heading', { name: 'MIZAN · Currency-separated ledger', exact: true }).waitFor()
+      await page.getByText('No reconciled balances yet. Pending entries remain separate from verified totals.', { exact: true }).waitFor()
 
       await page.getByLabel('Event type', { exact: true }).selectOption('gross-receipt')
       await page.getByLabel('Amount in minor units', { exact: true }).first().fill('12500')
