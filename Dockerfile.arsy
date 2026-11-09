@@ -23,6 +23,8 @@ FROM node:24.22.2-alpine3.23 AS runtime
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3001
+ENV ASSET_STORAGE_DRIVER=local
+ENV ASSET_STORAGE_PATH=/var/lib/arsy/assets
 WORKDIR /workspace/apps/arsy
 
 # ARSY has one existing type-only source import that resolves through the original
@@ -30,6 +32,8 @@ WORKDIR /workspace/apps/arsy
 # deployed package supplies the pruned production node_modules tree.
 COPY --from=build --chown=node:node /workspace/packages/ /workspace/packages/
 COPY --from=build --chown=node:node /out/arsy/ ./
+RUN mkdir -p /var/lib/arsy/assets && chown node:node /var/lib/arsy/assets
+VOLUME ["/var/lib/arsy/assets"]
 
 USER node
 EXPOSE 3001
