@@ -171,7 +171,7 @@ export class PortfolioMetricsRepository {
           denominator: 'Products created in [window.from, window.to).',
           source: 'arsy_products.created_at and arsy_financial_events.event_type/reconciliation_state/occurred_at.',
           interpretation: 'Counts products with a first verified sale, not revenue. Each product counts once regardless of sale count. Amounts and currencies are not combined.',
-          currency: 'event-count',
+          currency: 'product-count',
         },
         productRetirementCount: {
           numerator: 'Products in the creation cohort with an audited lifecycle-changed event to retired on or after product creation and before window.to.',
