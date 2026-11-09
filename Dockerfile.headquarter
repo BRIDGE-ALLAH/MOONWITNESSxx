@@ -11,7 +11,7 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json turbo.json ./
 COPY packages ./packages
 COPY apps/headquarter ./apps/headquarter
 
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --filter @riotworks/headquarter... --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @riotworks/headquarter build
 RUN pnpm --filter @riotworks/headquarter --prod deploy /out/headquarter
 
