@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { randomUUID } from 'node:crypto'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { mkdir } from 'node:fs/promises'
@@ -128,6 +129,156 @@ test(
         await page.screenshot({ path: path.join(artifactDirectory, 'money-maker-failure.png'), fullPage: true }).catch(() => undefined)
       }
       throw error
+    } finally {
+      await context?.close()
+      await browser.close()
+      await pool.end()
+    }
+  }
+)
+
+
+test(
+  'operator creates immutable product versions, handles stale writes and applies only domain-approved lifecycle transitions',
+  { timeout: 180_000 },
+  async () => {
+    const browser = await chromium.launch({ headless: true })
+    const pool = new Pool({ connectionString: databaseUrl })
+    let context
+    let page
+    const productId = randomUUID()
+    const initialVersionId = randomUUID()
+    const title = 'CI product lifecycle ' + Date.now()
+
+    try {
+      await pool.query(
+        "INSERT INTO arsy_products " +
+          "(id, owner_id, opportunity_id, title, product_family, lifecycle_state, created_by, updated_by) " +
+          "VALUES ($1, $2, NULL, $3, 'digital-utility', 'brief', $2, $2)",
+        [productId, operatorId, title]
+      )
+      await pool.query(
+        "INSERT INTO arsy_product_versions " +
+          "(id, product_id, version, brief, acceptance_criteria, created_by) " +
+          "VALUES ($1, $2, 1, $3::jsonb, $4::jsonb, $5)",
+        [
+          initialVersionId,
+          productId,
+          JSON.stringify({ buyerProblem: 'Inventory mismatches are hard to audit.' }),
+          JSON.stringify(['Imports a source inventory file']),
+          operatorId,
+        ]
+      )
+
+      context = await browser.newContext()
+      page = await context.newPage()
+      await page.goto(baseUrl + '/login?returnTo=%2Fmoney-maker', { waitUntil: 'domcontentloaded' })
+      await page.waitForLoadState('networkidle')
+      await page.getByTestId('operator-login-form').waitFor()
+      await page.getByLabel('Operator password', { exact: true }).fill(operatorPassword)
+      await page.getByRole('button', { name: 'Enter Headquarter', exact: true }).click()
+      await page.waitForURL('**/money-maker')
+      await page.getByRole('heading', { name: title, exact: true }).waitFor({ timeout: 30_000 })
+      await page.getByRole('button', { name: 'Open product details', exact: true }).click()
+      await page.getByText('Current immutable version: v1', { exact: true }).waitFor()
+      await page.getByText('Version history', { exact: true }).waitFor()
+      await page.getByText('Version 1', { exact: true }).waitFor()
+
+      await page.getByLabel('New product brief (JSON)', { exact: true }).fill(JSON.stringify({
+        buyerProblem: 'A stale operator edit must not overwrite a newer product version.',
+      }, null, 2))
+      await page.getByLabel('Acceptance criteria (one per line)', { exact: true }).fill('Reject stale expected versions')
+
+      // Simulate a second authenticated operator action after the UI loaded v1.
+      // This uses the real Headquarter BFF -> ARSY -> PostgreSQL path, not an API mock.
+      const competingWrite = await page.evaluate(async ({ id }) => {
+        const response = await fetch('/api/money-maker/products/' + id + '/versions', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            expectedVersion: 1,
+            brief: { buyerProblem: 'A concurrent operator update won the version race.' },
+            acceptanceCriteria: ['Preserves the concurrent operator change'],
+          }),
+        })
+        return { status: response.status, payload: await response.json() }
+      }, { id: productId })
+      assert.equal(competingWrite.status, 201, 'the concurrent version 2 write must succeed')
+      assert.equal(competingWrite.payload.data.version, 2)
+
+      await page.getByRole('button', { name: 'Create version from v1', exact: true }).click()
+      await page.getByText(
+        'This product changed after it was loaded. The current version and history were refreshed; review them before saving again.',
+        { exact: true }
+      ).waitFor({ timeout: 30_000 })
+      await page.getByText('Current immutable version: v2', { exact: true }).waitFor()
+      await page.getByText('Version 2', { exact: true }).waitFor()
+
+      await page.getByLabel('New product brief (JSON)', { exact: true }).fill(JSON.stringify({
+        buyerProblem: 'Inventory reconciliation needs traceable imports and exports.',
+        operatorRevision: 'version-three',
+      }, null, 2))
+      await page.getByLabel('Acceptance criteria (one per line)', { exact: true }).fill(
+        'Imports source inventory rows\nExports a traceable reconciliation report'
+      )
+      await page.getByRole('button', { name: 'Create version from v2', exact: true }).click()
+      await page.getByText('Product version 3 saved to ARSY.', { exact: true }).waitFor({ timeout: 30_000 })
+      await page.getByText('Current immutable version: v3', { exact: true }).waitFor()
+      await page.getByText('Current lifecycle: production', { exact: true }).waitFor()
+
+      const invalidTransition = await page.evaluate(async ({ id }) => {
+        const response = await fetch('/api/money-maker/products/' + id + '/lifecycle', {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ lifecycleState: 'ready' }),
+        })
+        return { status: response.status, payload: await response.json() }
+      }, { id: productId })
+      assert.equal(invalidTransition.status, 409, 'READY must not be operator-settable')
+      assert.equal(invalidTransition.payload.error.code, 'INVALID_LIFECYCLE_TRANSITION')
+      assert.equal(await page.getByRole('button', { name: 'Move to ready', exact: true }).count(), 0)
+      assert.equal(await page.getByRole('button', { name: 'Move to listed', exact: true }).count(), 0)
+
+      await page.getByRole('button', { name: 'Move to review', exact: true }).click()
+      await page.getByText('Current lifecycle: review', { exact: true }).waitFor({ timeout: 30_000 })
+
+      await page.reload({ waitUntil: 'domcontentloaded' })
+      await page.getByRole('heading', { name: title, exact: true }).waitFor({ timeout: 30_000 })
+      await page.getByRole('button', { name: 'Open product details', exact: true }).click()
+      await page.getByText('Current immutable version: v3', { exact: true }).waitFor()
+      await page.getByText('Current lifecycle: review', { exact: true }).waitFor()
+      for (const version of [1, 2, 3]) {
+        await page.getByText('Version ' + version, { exact: true }).waitFor()
+      }
+
+      const stored = await pool.query(
+        'SELECT lifecycle_state FROM arsy_products WHERE owner_id = $1 AND id = $2',
+        [operatorId, productId]
+      )
+      assert.equal(stored.rows.length, 1)
+      assert.equal(stored.rows[0].lifecycle_state, 'review')
+
+      const persistedVersions = await pool.query(
+        'SELECT version, brief, acceptance_criteria FROM arsy_product_versions WHERE product_id = $1 ORDER BY version',
+        [productId]
+      )
+      assert.deepEqual(persistedVersions.rows.map((row) => row.version), [1, 2, 3])
+      assert.equal(persistedVersions.rows[1].brief.buyerProblem, 'A concurrent operator update won the version race.')
+      assert.equal(persistedVersions.rows[2].brief.operatorRevision, 'version-three')
+      assert.deepEqual(persistedVersions.rows[2].acceptance_criteria, [
+        'Imports source inventory rows',
+        'Exports a traceable reconciliation report',
+      ])
+
+      const audit = await pool.query(
+        'SELECT action FROM arsy_commerce_audit_events WHERE owner_id = $1 AND aggregate_type = $2 AND aggregate_id = $3 ORDER BY occurred_at',
+        [operatorId, 'product', productId]
+      )
+      assert.deepEqual(
+        audit.rows.map((row) => row.action).sort(),
+        ['lifecycle-changed', 'version-created', 'version-created'],
+        'each accepted version and lifecycle change must be represented in the durable audit trail'
+      )
     } finally {
       await context?.close()
       await browser.close()

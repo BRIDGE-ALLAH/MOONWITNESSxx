@@ -4,6 +4,10 @@ All notable changes to the RIOTWORKS monorepo will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added Headquarter product detail, immutable version history, optimistic-concurrency conflict handling, and ARSY-authorized lifecycle controls for the Money Maker workflow; PostgreSQL browser acceptance is included in the dedicated CI workflow.
+
 ### Fixed
 
 - Restored the workspace ESLint quality gate after the ESLint v10 bump removed legacy `.eslintrc`/`ESLINT_USE_FLAT_CONFIG` support: migrated `@riotworks/lint`, ARSY, COCKPIT, Gate, ID and UI to flat config (`eslint.config.js`) backed by a shared FlatCompat wrapper, and Headquarter to native `eslint-config-next@16` flat config.
