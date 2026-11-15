@@ -276,8 +276,8 @@ importers:
         specifier: ^8.5.1
         version: 8.5.32
       tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19(tsx@4.23.15)
+        specifier: ^4.3.5
+        version: 4.3.5
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -328,8 +328,8 @@ importers:
         specifier: ^8.5.1
         version: 8.5.32
       tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19(tsx@4.23.15)
+        specifier: ^4.3.5
+        version: 4.3.5
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -380,8 +380,8 @@ importers:
         specifier: ^8.5.1
         version: 8.5.32
       tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19(tsx@4.23.15)
+        specifier: ^4.3.5
+        version: 4.3.5
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -435,8 +435,8 @@ importers:
         specifier: ^8.5.1
         version: 8.5.32
       tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19(tsx@4.23.15)
+        specifier: ^4.3.5
+        version: 4.3.5
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -3964,6 +3964,9 @@ packages:
     resolution: {integrity: sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ==}
     engines: {node: '>=14.0.0'}
     hasBin: true
+
+  tailwindcss@4.3.5:
+    resolution: {integrity: sha512-FcQk9BuffmEHJP2G0XmB2SplU1aLTI7j07Kunk+U74Ny+XiWOtzXz9aujFZ/avntw1e2cOv/3PkgzflQ7gX2vQ==}
 
   thenify-all@1.6.0:
     resolution: {integrity: sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA==}
@@ -7655,6 +7658,8 @@ snapshots:
     transitivePeerDependencies:
       - tsx
       - yaml
+
+  tailwindcss@4.3.5: {}
 
   thenify-all@1.6.0:
     dependencies:
