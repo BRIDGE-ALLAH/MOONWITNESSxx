@@ -14,7 +14,7 @@
     "eslint": "^10.14.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-unicorn": "^56.0.0",
-    "globals": "^15.15.0"
+    "globals": "^17.14.0"
   },
   "main": "index.js"
 }
