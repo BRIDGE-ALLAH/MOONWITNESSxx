@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@riotworks/lint": "workspace:*",
-    "@types/node": "^22.10.2",
+    "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
     "eslint": "^10.14.0",
     "fastify-cli": "^8.0.3",
